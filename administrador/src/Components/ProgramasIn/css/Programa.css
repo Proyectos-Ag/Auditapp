@@ -1,0 +1,70 @@
+.programas-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    background-color: #D9D9D9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .programas-container h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .programas-container form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .programas-container form > div {
+    margin-bottom: 15px;
+  }
+  
+  .programas-container label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+  }
+  
+  .programas-container input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .programas-container button {
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #00B096;
+    color: #ffffff;
+    cursor: pointer;
+  }
+  
+  .programas-container button[type="button"] {
+    background-color: #ffffff;
+    border: 2px solid #00B096;
+    color: #00B096;
+  }
+  
+  .programas-container button:hover[type="button"] {
+    background-color:  #02fca8;
+    color: #000000;
+  }
+
+  .programas-container button:hover {
+    background-color:  #006d5d;
+  }
+
+  /* Resto de los estilos... */
+
+.programas-container textarea {
+    width: 99%; /* Ajusta el ancho según sea necesario */
+    height: 90px; /* Ajusta la altura según sea necesario */
+  }
+  
+  

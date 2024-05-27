@@ -1,0 +1,57 @@
+.navbar-container {
+  background-color: #faf74500;
+}
+
+.navbar-custom {
+  background-color: #FFFFFF;
+  border: 2px solid #ffffff;
+  border-radius: 15%;
+}
+
+.menu-icon {
+  color: #000000;
+  font-size: 3rem;
+  margin: -5px;
+}
+
+.drawer-container {
+  width: 250px;
+  height: 100%;
+  background-color: #FFFFFF;
+}
+
+.logo-img {
+  margin: auto;
+  height: 20%;
+  width: 204px;
+  display: block;
+  border-radius: 10px;
+}
+
+.dropdown-toggle {
+  border: none;
+  background: transparent;
+  color: #000000;
+}
+
+.icono-lista {
+  color: #000000;
+}
+
+.link-button {
+  border: none;
+  background: transparent;
+  color: #000000;
+}
+
+.list-item {
+  padding-top: 10px; /* Mover hacia abajo */
+  padding-bottom: 10px; /* Mover hacia abajo */
+}
+
+.list-item-text {
+  text-align: center; /* Centrar el texto */
+}
+
+
+

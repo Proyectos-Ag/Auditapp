@@ -1,0 +1,81 @@
+/* login.css */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #86DC54; /* Fondo de página verde claro */
+}
+
+.login-container {
+    width: 100%;
+    max-width: 400px; /* Tamaño máximo del contenedor */
+    height: auto; /* Ajusta la altura automáticamente */
+    margin: 100px auto; /* Centra el contenedor verticalmente */
+    padding: 30px;
+    background-color: #FAF845; /* Color de fondo amarillo claro */
+    border: 3px solid #ffffff; /* Borde blanco */
+    border-radius: 3%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+    text-align: center; /* Centra el contenido horizontalmente */
+}
+
+.login-container .logo {
+    width: 200px; /* Ajusta el tamaño de la imagen */
+    height: 70px;
+    margin-bottom: 20px; /* Espacio entre la imagen y el encabezado */
+}
+
+.login-container h2 {
+    margin-bottom: 20px;
+    color: #228b22; /* Color de texto verde oscuro */
+}
+
+.login-form .form-group {
+    margin-bottom: 40px; /* Ajusta la separación entre los campos del formulario */
+}
+
+.login-form label {
+    display: none; /* Oculta las etiquetas de los campos */
+}
+
+.login-form input[type="email"],
+.login-form input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #228b22; /* Borde verde */
+    border-radius: 5px;
+    box-sizing: border-box;
+    text-align: center; /* Centra el texto en el campo de entrada */
+    font-size: 16px; /* Aumenta el tamaño del texto */
+    background-color: #ffffff; /* Fondo blanco para los campos de entrada */
+}
+
+.btn-login {
+    display: inline-block;
+    padding: 15px 30px; /* Ajusta el tamaño del botón */
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 25px; /* Borde redondeado */
+    background-color: #37D70F; /* Fondo amarillo */
+    color: #000000; /* Texto verde oscuro */
+    cursor: pointer;
+    transition: background-color 0.3s ease; /* Transición suave */
+    width: 100%; /* Ancho completo del botón */
+}
+
+.btn-login:hover {
+    background-color: #ffff00; /* Cambia el color de fondo al pasar el ratón */
+}
+
+/* Mensaje de error */
+.error-message {
+    color: red;
+    margin-bottom: 20px;
+    font-weight: bold;
+    height: 20px; /* Espacio reservado para el mensaje de error */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
