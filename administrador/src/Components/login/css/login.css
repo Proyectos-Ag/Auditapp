@@ -1,27 +1,26 @@
-/* login.css */
 body {
+    background-color: #81FF6C; /* Fondo de página verde claro */
+}
+
+.login-container-all{
     margin: 0;
     padding: 0;
-    background-color: #86DC54; /* Fondo de página verde claro */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
 }
 
 .login-container {
-    width: 100%;
+    width: 90%;
     max-width: 400px; /* Tamaño máximo del contenedor */
-    height: auto; /* Ajusta la altura automáticamente */
-    margin: 100px auto; /* Centra el contenedor verticalmente */
-    padding: 30px;
-    background-color: #FAF845; /* Color de fondo amarillo claro */
-    border: 3px solid #ffffff; /* Borde blanco */
-    border-radius: 3%;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Sombra ligera */
-    text-align: center; /* Centra el contenido horizontalmente */
-}
-
-.login-container .logo {
-    width: 200px; /* Ajusta el tamaño de la imagen */
-    height: 70px;
-    margin-bottom: 20px; /* Espacio entre la imagen y el encabezado */
+    height: 400px; 
+    padding: 20px;
+    background-color: #ffffff; 
+    border: 3px solid #000000;
+    border-radius: 3%; 
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); 
+    text-align: center; 
 }
 
 .login-container h2 {
@@ -30,16 +29,32 @@ body {
 }
 
 .login-form .form-group {
-    margin-bottom: 40px; /* Ajusta la separación entre los campos del formulario */
+    margin-bottom: 50px;
+}
+
+.espacio {
+    margin-bottom: 60px;
 }
 
 .login-form label {
     display: none; /* Oculta las etiquetas de los campos */
 }
 
+.error-message {
+    color: red;
+    font-weight: bold;
+    background-color: #ffffff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    text-align: center;
+    margin: 0 auto 20px auto;
+}
+
 .login-form input[type="email"],
 .login-form input[type="password"] {
-    width: 100%;
+    width: 90%;
     padding: 12px;
     border: 1px solid #228b22; /* Borde verde */
     border-radius: 5px;
@@ -57,25 +72,73 @@ body {
     text-transform: uppercase;
     border: none;
     border-radius: 25px; /* Borde redondeado */
-    background-color: #37D70F; /* Fondo amarillo */
-    color: #000000; /* Texto verde oscuro */
+    background-color: #00B096; /* Fondo verde */
+    color: #ffffff; /* Texto blanco */
     cursor: pointer;
     transition: background-color 0.3s ease; /* Transición suave */
-    width: 100%; /* Ancho completo del botón */
+    width: 90%; /* Ancho completo del botón */
 }
 
 .btn-login:hover {
-    background-color: #ffff00; /* Cambia el color de fondo al pasar el ratón */
+    background-color: #37D70F; 
 }
 
-/* Mensaje de error */
 .error-message {
     color: red;
     margin-bottom: 20px;
     font-weight: bold;
-    height: 20px; /* Espacio reservado para el mensaje de error */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+}
+
+.logo-empresa-login {
+    height: auto;
+    max-width: 60%;
+    border-radius: 10px;
+    margin: 0 auto 20px auto; 
+    display: block;
+}
+
+/* Consultas de medios para pantallas pequeñas */
+@media (max-width: 768px) {
+    .login-container {
+        width: 90%;
+        max-width: 300px; /* Tamaño máximo para pantallas pequeñas */
+        padding: 15px;
+    }
+
+    .login-form input[type="email"],
+    .login-form input[type="password"] {
+        font-size: 14px; /* Reduce el tamaño del texto para pantallas pequeñas */
+    }
+
+    .btn-login {
+        padding: 10px 20px; /* Ajusta el tamaño del botón */
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-container {
+        width: 90%;
+        height: 370px; 
+        max-width: 250px; 
+        padding: 10px;
+    }
+
+    .login-form input[type="email"],
+    .login-form input[type="password"] {
+        font-size: 12px; 
+    }
+
+    .btn-login {
+        padding: 15px 16px;
+        font-size: 12px;
+    }
+
+    .logo-empresa-login{
+        max-width: 75%;
+    }
+
+    .login-form .form-group {
+        margin-bottom: 40px;
+    }
 }

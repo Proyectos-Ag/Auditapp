@@ -9,7 +9,7 @@
 }
 
 .registro-form {
-  background-color: #FAF845;
+  background-color: #FFFD70;
   padding: 20px;
   border-radius: 5px;
   border: 2px solid #fff; /* Agregar borde blanco */
@@ -34,7 +34,7 @@
   background-color: #fff; /* Fondo blanco */
 }
 
-.btn-registrar {
+.btn-registrar-us {
   background-color: #33CC33;
   color: white;
   padding: 10px 20px; /* Ajustar el relleno para que sea mediano */
@@ -45,6 +45,6 @@
   display: inline-block; /* Mostrar como bloque en línea */
   margin-left: 464px; /* Mover el botón a la derecha */
 }
-.btn-registrar:hover {
-  background-color: #28a745;
+.btn-registrar-us:hover {
+  background-color: #181818;
 }

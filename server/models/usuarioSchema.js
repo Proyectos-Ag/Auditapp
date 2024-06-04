@@ -11,10 +11,32 @@ const UsuariosSchema = new mongoose.Schema({
   },
   AñosExperiencia: { type: Number, default: 0 },
   Contraseña: { type: String, required: true },
-  Puesto: { type: String, required: function () { return this.TipoUsuario === 'auditor'; } },
-  FechaIngreso: { type: Date, required: function () { return this.TipoUsuario === 'auditor'; } },
-  Escolaridad: { type: String, required: function () { return this.TipoUsuario === 'auditor'; } },
+  Puesto: {
+    type: String,
+    required: function() {
+      return this.TipoUsuario === 'auditor';
+    }
+  },
+  FechaIngreso: {
+    type: Date,
+    required: function() {
+      return this.TipoUsuario === 'auditor';
+    }
+  },
+  Escolaridad: {
+    type: String,
+    required: function() {
+      return this.TipoUsuario === 'auditor';
+    }
+  },
+  Carrera: {
+    type: String,
+    required: function() {
+      return this.TipoUsuario === 'auditor';
+    }
+  },
   TipoUsuario: { type: String, required: true },
+  Área: { type: String, required: true },
   PromedioEvaluacion: { type: Number, default: 0 },
   PuntuacionEspecialidad: { type: Number, default: 0 },
   FormaParteEquipoInocuidad: { type: Boolean, default: false },
@@ -28,15 +50,22 @@ const UsuariosSchema = new mongoose.Schema({
 });
 
 // Hash de la contraseña antes de guardar
-UsuariosSchema.pre('save', async function (next) {
+UsuariosSchema.pre('save', async function(next) {
   if (this.isModified('Contraseña')) {
-    this.Contraseña = await bcrypt.hash(this.Contraseña, 10);
+    try {
+      const salt = await bcrypt.genSalt(10);
+      this.Contraseña = await bcrypt.hash(this.Contraseña, salt);
+      next();
+    } catch (error) {
+      next(error);
+    }
+  } else {
+    next();
   }
-  next();
 });
 
 // Métodos para verificar la contraseña
-UsuariosSchema.methods.comparePassword = function (candidatePassword) {
+UsuariosSchema.methods.comparePassword = function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.Contraseña);
 };
 

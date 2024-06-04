@@ -1,5 +1,6 @@
-// Navbar.jsx
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { UserContext } from '../../App';
 import "./css/Navbar.css";
 import Container from "react-bootstrap/Container";
 import Navbar from "react-bootstrap/Navbar";
@@ -11,32 +12,32 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
-import { BsCheckCircle, BsClockHistory} from "react-icons/bs"; // Íconos de react-icons/bs
 import Dropdown from 'react-bootstrap/Dropdown';
-import logo from "./assets/img/logoAguida.png";
+import logo from "../../assets/img/logoAguida.png";
 
 export default function Navigation() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const { setUserData } = useContext(UserContext);
 
   const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
   };
 
   const handleLogout = () => {
-    const confirmLogout = window.confirm("¿Estás seguro de que deseas cerrar sesión?");
-    if (confirmLogout) {
-      // Lógica para cerrar sesión
-      // Redirigir a la página de inicio de sesión
-      window.location.href = "/"; // Cambiar la URL según sea necesario
+    if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+      localStorage.removeItem('token');
+      setUserData(null);
+      navigate('/');
     }
   };
 
   return (
-    <div style={{ backgroundColor: '#faf74500'}}>
-      <Navbar className="navbar-custom barra-verde">
+    <div className="navbar-container">
+      <Navbar className="navbar-custom">
         <Container>
-          <IconButton onClick={toggleDrawer(true)} aria-label="menu" >
-            <MenuIcon style={{ color: '#000000', fontSize: '4rem', margin:'-3px'}} /> {/* Color blanco */}
+          <IconButton onClick={toggleDrawer(true)} aria-label="menu">
+            <MenuIcon className="menu-icon" style={{ fontSize: '200%' }} />
           </IconButton>
           <Drawer open={open} onClose={toggleDrawer(false)}>
             <DrawerList handleLogout={handleLogout} />
@@ -48,52 +49,67 @@ export default function Navigation() {
 }
 
 function DrawerList({ handleLogout }) {
+  const [showSubmenu, setShowSubmenu] = useState(false); // Estado para controlar la visibilidad del submenú
+
+  const toggleSubmenu = () => {
+    setShowSubmenu(!showSubmenu); // Cambia el estado de visibilidad del submenú
+  };
+
   const drawerItems = [
-    { text: "Inicio", href: "/home", icon: <BsClockHistory /> },
-    { text: "Auditorias pendientes", icon: <BsCheckCircle />},
-    { text: "Auditorias Realizadas", icon: <BsCheckCircle />},
+    { text: "Inicio", href: "/home" },
+    {
+      text: "Auditorias", subItems: [
+        { text: "Pendiente", href: "/pendiente" },
+        { text: "Finalizada", href: "/home" }
+      ]
+    },
+    { text: "Cerrar sesión", onClick: handleLogout } // Añadido el botón de cierre de sesión
   ];
 
   return (
-    <Box sx={{ width: 250, height: '100%', backgroundColor: '#FAF845' }} role="presentation">
+    <Box className="drawer-container">
       <List>
-        <img src={logo} alt="Logo Empresa" style={{ margin: 'auto', height: '20%', width: '204px', display: 'block', borderRadius: '10px' }} />
+        <a href="/home">
+          <img src={logo} alt="Logo Empresa" className="logo-img" />
+        </a>
         {drawerItems.map((item, index) => (
           <div key={index}>
             {item.subItems ? (
               <Dropdown>
-                <Dropdown.Toggle variant="transparent" style={{ border: 'none', background: 'transparent', color: '#ffffff' }}>
-                  <ListItem disablePadding>
+                <Dropdown.Toggle variant="transparent" className="dropdown-toggle">
+                  <ListItem disablePadding className="list-item" onClick={toggleSubmenu}> {}
                     <ListItemButton>
-                      <span className="icono-lista" style={{ color: '#000000' }}>{item.icon}</span>
-                      <ListItemText primary={item.text} style={{ color: '#000000' }} />
+                      <ListItemText primary={item.text} className="list-item-text" />
                     </ListItemButton>
                   </ListItem>
                 </Dropdown.Toggle>
-                <Dropdown.Menu>
+                <Dropdown.Menu style={{ display: showSubmenu ? 'block' : 'none' }}> {}
                   {item.subItems.map((subItem, subIndex) => (
-                    <Dropdown.Item href={subItem.href} key={subIndex} className="sub-menu-item">
-                      {subItem.text}
+                    <Dropdown.Item key={subIndex}>
+                      <button className="link-button" onClick={() => window.location.href = subItem.href}>
+                        {subItem.text}
+                      </button>
                     </Dropdown.Item>
                   ))}
                 </Dropdown.Menu>
               </Dropdown>
             ) : (
-              <ListItem disablePadding>
-                <ListItemButton component="a" href={item.href}>
-                  <span className="icono-lista" style={{ color: '#000000' }}>{item.icon}</span>
-                  <ListItemText primary={item.text} style={{ color: '#000000' }} />
+              <ListItem disablePadding className="list-item">
+                <ListItemButton>
+                  {item.onClick ? (
+                    <button className="link-button" onClick={item.onClick}>
+                      <ListItemText primary={item.text} className="list-item-text" />
+                    </button>
+                  ) : (
+                    <button className="link-button" onClick={() => window.location.href = item.href}>
+                      <ListItemText primary={item.text} className="list-item-text" />
+                    </button>
+                  )}
                 </ListItemButton>
               </ListItem>
             )}
           </div>
         ))}
-        <ListItem disablePadding>
-          <ListItemButton onClick={handleLogout} className="botón-cerrar-sesión">
-            <span className="icono-lista" style={{ color: '#000000' }}></span>
-            <ListItemText primary="Cerrar sesión" style={{ color: '#000000' }} />
-          </ListItemButton>
-        </ListItem>
       </List>
     </Box>
   );

@@ -1,0 +1,91 @@
+.datos-container2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 2rem auto 0;
+    width: 56.9rem;
+    max-width: 57rem;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.logo-empresa {
+    height: auto;
+    max-width: 20%;
+    border-radius: 10px;
+    margin: 0 0 20px 0;
+}
+
+.button-group-datos {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-registrar-datos {
+    background-color: #00B096;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-registrar-datos:hover {
+    background-color: #00e7c5;
+    color: #000000;
+}
+
+.btn-registrar-datos:not(:last-child) {
+    margin-right: 10px;
+}
+
+.header-container-datos {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.duracion-bloque {
+    width: 68vw;
+    margin-bottom: 20px;
+    background-color: #00B096;
+    cursor: pointer;
+}
+
+.duracion-bloque h2 {
+    margin: 0;
+    padding: 10px 0;
+    color: #333;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #BFFF99;
+}
+
+th.conformity-header {
+    text-align: center;
+    vertical-align: middle;
+}

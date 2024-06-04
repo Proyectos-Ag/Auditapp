@@ -1,124 +1,103 @@
 .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-  }
-  
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-main {
+  position: fixed;
+  width: 60%;
+  max-width: 700px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  border-radius: 8px;
+}
+
+@media (max-width: 400px) {
   .modal-main {
-    position: fixed;
-    width: 60%;
-    max-width: 700px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 20px;
-    border-radius: 8px;
+    width: 80%;
   }
-  .modal-close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.2em;
-  }
-  
-  .display-block {
-    display: block;
-  }
-  
-  .display-none {
-    display: none;
-  }
-  
-  .registro-form {
+}
+
+.modal-close {
+  position: absolute;
+  top: 0%;
+  right: 1%;
+  background: #ff0000;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.5em;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #ffffff;
+  padding: 0;
+  transition: width 0.3s ease, height 0.3s ease, background 0.3s ease;
+}
+
+.modal-close:hover {
+  background: #ff0000;
+  width: 40px;
+  height: 40px;
+}
+
+.display-block {
+  display: block;
+}
+
+.display-none {
+  display: none;
+}
+
+.registro-form {
   overflow-y: auto;
   max-height: 70vh;
 }
-  .form-group {
-    margin-bottom: 8px;
-    font-size: 0.8em;
 
-  }
-  
-  label {
-    display: block;
-    margin-bottom: 4px;
-  }
-  
-  input,
-  select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
-    font-size: 14px;
-    outline: none;
-  }
-  
-  button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background-color: #0056b3;
-  }
-  
-  additional-fields {
-    border-top: 1px solid #ccc;
-    padding-top: 10px;
-    margin-top: 10px;
-  }
-  .form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-  }
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
 
-  .form-group input,
-  .form-group select {
-    width: 100%;
-    padding: 8px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-  }
+.modal-buttons {
+  margin-top: 20px;
+  display: flex; /* Usar flexbox */
+  justify-content: flex-end; /* Alinear botones a la derecha */
+  gap: 10px; /* Espacio entre botones */
+}
 
-  .modal-buttons {
-    margin-top: 20px;
-  }
+.modal-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
 
-  .modal-buttons button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-right: 10px;
-  }
+.btn-registrar {
+  background-color: #00B096;
+  color: #fff;
+}
 
-  .btn-registrar {
-    background-color: #007bff;
-    color: #fff;
-  }
+.btn-cancelar {
+  background-color: #ccc;
+  color: #333;
+}
 
-  .btn-cancelar {
-    background-color: #ccc;
-    color: #333;
-  }
+.btn-registrar:hover{
+  background-color: #0056b3;
+}
 
-  .btn-registrar:hover,
-  .btn-cancelar:hover {
-    opacity: 0.8;
-  }
+.btn-cancelar:hover{
+  color: #ffffff;
+  background-color: #b30000;
+}

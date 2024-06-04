@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './css/usuarios.css';
-import Navigation from '../Navigation/Navbar'; // Importa el componente Navigation
 
 const RegistroUsuario = () => {
   const [formData, setFormData] = useState({
@@ -76,7 +75,6 @@ const RegistroUsuario = () => {
   return (
     <div className="registro-folder">
       <div className="registro-tab"></div>
-      <Navigation style={{ backgroundColor: '#ffffff' }} />
       <div className="registro-container">
         <form onSubmit={handleSubmit} className="registro-form">
           <h2>Registro de usuario:</h2>
@@ -105,7 +103,7 @@ const RegistroUsuario = () => {
             <input type="password" name="ConfirmarContraseña" value={formData.ConfirmarContraseña} onChange={handleChange} required />
           </div>
           {renderAdditionalFields()}
-          <button type="submit" className="btn-registrar">Registrar</button>
+          <button type="submit" className="btn-registrar-us">Registrar</button>
         </form>
       </div>
     </div>

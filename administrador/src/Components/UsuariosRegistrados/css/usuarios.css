@@ -1,11 +1,39 @@
 .usuarios-container {
-  padding: 20px;
+  width: 85vw; 
+  max-width: 90vw; 
+  margin: 0 auto; 
+  padding: 2vh; 
+  border-radius: 1vw; 
+  margin-top: 5vh; 
+  border: 3px solid #ffffff;
+  background-color: #FFFD70;
+  margin-top: 50px;
 }
 
 .filters {
-  display: flex;
-  justify-content: space-between;
+  display: block;
   margin-bottom: 20px;
+}
+
+.botonA{
+  background-color: #00B096;
+  border-radius: 10px;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  padding: 10px 20px;
+  cursor: pointer;
+  width: 8em;
+  height: 3em;
+}
+
+.botonA-pos{
+  display: flex;
+  justify-content: end;
+  margin-bottom: 20px;
+}
+
+.botonA:hover{
+  background-color: #0056b3;
 }
 
 .filters select {
@@ -22,17 +50,17 @@
 }
 
 .card {
-  background-color: #f0f0f0;
-  border: 2px solid #fff;
-  border-radius: 8px;
+  background-color: #ffffff;
+  border: 2px solid #e2e2e2;
+  border-radius: 1.5vw;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   padding: 20px;
   transition: transform 0.3s ease;
-  max-width: 100%;
+  max-width: 100vw;
 }
 
 .card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-15px);
 }
 
 .card h3 {
@@ -50,14 +78,21 @@
 }
 
 .card button {
-  background-color: #007bff;
-  border: none;
-  color: white;
-  padding: 10px;
-  border-radius: 5px;
+  background-color: #00B096;
+  border-radius: 10px;
+  border: 2px solid #ffffff;
+  color: #ffffff;
   cursor: pointer;
-  width: 100%;
-  margin-bottom: 5px;
+  width: 100%; /* Se ajusta al tamaño de la celda */
+  height: 3em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.botones-cards-2 {
+  width: 90%;
+  margin-left: 5%;
 }
 
 .card button.editar {
@@ -114,5 +149,38 @@
 
 .edit-form button:hover {
   opacity: 0.9;
+}
+
+.h1-small-margin {
+  margin-left: 41%;
+  margin-top: 0px;
+  font-size: 50px;
+}
+
+@media (max-width: 400px) {
+  .h1-small-margin {
+    margin-left: 19%;
+  }
+  
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filters select {
+  padding: 8px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+}
+
+.filters select:focus {
+  outline: none;
+  border-color: #00B096;
 }
 

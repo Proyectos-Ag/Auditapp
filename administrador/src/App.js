@@ -1,5 +1,5 @@
 // App.js
-import React from "react";
+import React, { createContext } from 'react';
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Usuarios from "./Components/RegistroUsuarios/Usuarios";
 import Login from "./Components/login/LoginForm"; // Importa el componente de inicio de sesión
@@ -7,9 +7,13 @@ import Inicio from './Components/Home/inicio';
 import UsuariosRegis from './Components/UsuariosRegistrados/usuariosRegistro'; // Importa el componente UsuariosRegistrados
 import Datos from './Components/DatosGenerales/Datos'
 import Programas from './Components/ProgramasIn/Programa';
+import AuthProvider from './authProvider';
+
+export const UserContext = createContext(null);
 
 function App() {
   return (
+    <AuthProvider>
     <div className="App">
       <Router>
         <Routes>
@@ -24,6 +28,7 @@ function App() {
         </Routes>
       </Router>
     </div>
+    </AuthProvider>
   );
 }
 

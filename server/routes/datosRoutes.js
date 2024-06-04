@@ -6,5 +6,7 @@ const datosController = require('../controllers/datosController');
 
 // Ruta para el registro
 router.post('/', datosController.nuevoAuditoria);
+router.get('/', datosController.obtenerTodosDatos);
+
 
 module.exports = router;

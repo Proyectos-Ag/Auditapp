@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './css/modal.css';
+import Swal from 'sweetalert2';
 
 const Modal = ({ handleClose, show, children }) => {
   const showHideClassName = show ? "modal display-block" : "modal display-none";
@@ -9,7 +10,7 @@ const Modal = ({ handleClose, show, children }) => {
     <div className={showHideClassName}>
       <section className="modal-main">
         {children}
-        <button className="modal-close" onClick={handleClose}>Cerrar</button>
+        <button className="modal-close" onClick={handleClose}>X</button>
       </section>
     </div>
   );
@@ -23,13 +24,19 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
     ConfirmarContraseña: '',
     Puesto: '',
     FechaIngreso: '',
-    Escolaridad: '',
+    Escolaridad: 'Profesional',
+    Carrera: '',
     TipoUsuario: 'auditor',
     AñosExperiencia: ''
   });
 
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const predefinedAreas = [
+    'Calidad', 'Mantenimiento', 'Planta', 'Sistema de Gestión de Calidad e Inocuidad', 
+    'Almacenes', 'preparación', 'envasado y embalaje', 'Proceso de Producción', 
+    'Aseguramiento de Calidad', 'Áreas de Proceso', 'SGCI Envasadora Aguida'
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -62,10 +69,19 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
 
     try {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/usuarios`, formData);
-      alert("Usuario registrado con éxito");
+      Swal.fire({
+        icon: 'success',
+        title: 'Usuario registrado con éxito',
+        showConfirmButton: false,
+        timer: 1500
+      });
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+
       console.log(response.data);
 
-      // Limpiar los campos del formulario después de agregar un usuario exitosamente
       setFormData({
         Nombre: '',
         Correo: '',
@@ -78,11 +94,8 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
         AñosExperiencia: ''
       });
 
-      // Cerrar el modal después de registrar el usuario
       handleClose();
 
-      // Actualizar automáticamente la página
-      window.location.reload();
     } catch (error) {
       console.error(error);
       alert("El correo no puede ser duplicado");
@@ -98,9 +111,17 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
             <input type="date" name="FechaIngreso" value={formData.FechaIngreso} onChange={handleChange} required />
           </div>
           <div className="form-group">
-            <label>Escolaridad:</label>
-            <input type="text" name="Escolaridad" value={formData.Escolaridad} onChange={handleChange} required />
-          </div>
+          <label>Escolaridad:</label>
+          <select name="Escolaridad" value={formData.Escolaridad} onChange={handleChange} required>
+          <option value="TSU">TSU</option>
+                   <option value="Profesional">Profesional</option>
+                   <option value="Preparatoria">Preparatoria</option>
+          </select>
+        </div>
+          <div className="form-group">
+  <label>Carrera:</label>
+  <input type="text" name="Carrera" value={formData.Carrera} onChange={handleChange} required />
+</div>
           <div className="form-group">
             <label>Años de Experiencia:</label>
             <input type="number" name="AñosExperiencia" value={formData.AñosExperiencia} onChange={handleChange} required />
@@ -161,10 +182,32 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
             {showPassword ? 'Ocultar' : 'Mostrar'}
           </button>
         </div>
+        <div className="form-group">
+          <label>Área:</label>
+          <select name="Área" value={formData.Área} onChange={handleChange} required>
+            <option value="">Seleccione un área</option>
+            {predefinedAreas.map((area) => (
+              <option key={area} value={area}>
+                {area}
+              </option>
+            ))}
+            <option value="custom">Otra</option>
+          </select>
+          {formData.Área === 'custom' && (
+            <input
+              type="text"
+              name="customArea"
+              value={formData.customArea}
+              onChange={handleChange}
+              placeholder="Ingrese un área personalizada"
+              required
+            />
+          )}
+        </div>
         {renderAdditionalFields()}
         <div className="modal-buttons">
-          <button type="submit" className="btn-registrar">Registrar</button>
           <button type="button" onClick={handleClose} className="btn-cancelar">Cancelar</button>
+          <button type="submit" className="btn-registrar">Registrar</button>
         </div>
       </form>
     </Modal>

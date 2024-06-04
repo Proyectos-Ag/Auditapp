@@ -1,16 +1,38 @@
 const Usuarios = require('../models/usuarioSchema');
+const transporter = require('../emailConfig');
+
 
 // Controlador para registrar un nuevo usuario
 const registroUsuario = async (req, res) => {
   try {
     const nuevoUsuario = new Usuarios(req.body);
     await nuevoUsuario.save();
+
+    // Enviar correo electrónico si el nuevo usuario es un auditor
+    if (nuevoUsuario.TipoUsuario === 'auditor') {
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: nuevoUsuario.Correo,
+        subject: 'Bienvenido al equipo de auditores',
+        text: `Hola ${nuevoUsuario.Nombre},\n\nBienvenido al equipo de auditores. Nos alegra tenerte con nosotros.\n\nSaludos,\nEl equipo de la empresa`,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error('Error al enviar el correo electrónico:', error);
+        } else {
+          console.log('Correo electrónico enviado:', info.response);
+        }
+      });
+    }
+
     res.status(201).json({ message: 'Usuario registrado exitosamente' });
   } catch (error) {
     console.error('Error al registrar el usuario:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
+
 
 // Controlador para obtener todos los usuarios
 const obtenerUsuarios = async (req, res) => {
@@ -66,6 +88,21 @@ const actualizarUsuario = async (req, res) => {
   }
 };
 
+// Controlador para obtener un usuario por su nombre
+const obtenerUsuarioPorNombre = async (req, res) => {
+  try {
+    const nombreUsuario = req.params.nombre;
+    const usuario = await Usuarios.findOne({ Nombre: nombreUsuario });
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    res.json(usuario);
+  } catch (error) {
+    console.error('Error al obtener el usuario por nombre:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
 // Controlador para eliminar un usuario por su ID
 const eliminarUsuario = async (req, res) => {
   try {
@@ -85,5 +122,6 @@ module.exports = {
   obtenerUsuarios,
   obtenerUsuarioPorId,
   actualizarUsuario,
-  eliminarUsuario
+  eliminarUsuario,
+  obtenerUsuarioPorNombre
 };
