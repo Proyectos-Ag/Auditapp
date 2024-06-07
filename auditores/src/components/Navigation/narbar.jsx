@@ -60,7 +60,7 @@ function DrawerList({ handleLogout }) {
     {
       text: "Auditorias", subItems: [
         { text: "Pendiente", href: "/pendiente" },
-        { text: "Finalizada", href: "/home" }
+        { text: "Finalizada", href: "/reporte" }
       ]
     },
     { text: "Cerrar sesión", onClick: handleLogout } // Añadido el botón de cierre de sesión

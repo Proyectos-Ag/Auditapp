@@ -6,6 +6,8 @@ import Inicio from './components/Home/inicio';
 import AuthProvider from './authProvider';
 import Pendiente from './components/Pendientes/Pendiente';
 import Fotos from './components/Pendientes/Foto';
+import Reporte from './components/Reportes/Reporte';
+
 
 export const UserContext = createContext(null);
 
@@ -19,6 +21,7 @@ function App() {
           <Route path="/home" element={<Inicio/>}/> {}
           <Route path="/pendiente" element={<Pendiente/>}/> {}
           <Route path="/foto" element={<Fotos/>}/> {}
+          <Route path="/reporte" element={<Reporte/>}/> {}
         </Routes>
       </Router>
     </div>

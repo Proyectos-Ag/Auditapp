@@ -21,7 +21,7 @@ const Datos = () => {
     NombresObservadores: '',
     Programa: [],
     Estado: '',
-    Observaciones: '',
+    PorcentajeTotal: '',
   });
 
   const [buttonText, setButtonText] = useState({
@@ -169,12 +169,12 @@ const Datos = () => {
     e.preventDefault();
     try {
       const defaultEstado = "pendiente";
-      const defaultObservaciones = "";
+      const defaultPorcentaje = "0";
   
       const formDataWithDefaults = {
         ...formData,
         Estado: defaultEstado,
-        Observaciones: defaultObservaciones
+        PorcentajeTotal: defaultPorcentaje
       };
   
       if (formData.Programa.length === 0) {
@@ -225,7 +225,7 @@ const Datos = () => {
         NombresObservadores: '',
         Programa: [],
         Estado: '',
-        Observaciones: '',
+        PorcentajeTotal: '',
       });
       setFormStep(1);
     } catch (error) {
@@ -312,12 +312,13 @@ const Datos = () => {
     if (selectedProgram) {
       // Modificar el objeto seleccionado para que tenga la estructura esperada por el esquema
       const formattedProgram = {
+        Porcentaje: '0',
         Nombre: selectedProgram.Nombre,
         Descripcion: selectedProgram.Descripcion.map(desc => ({
           ID: desc.ID,
           Requisito: desc.Requisito,
-          Observacion: desc.Observacion || 'Ninguna',
-          Hallazgo: desc.Hallazgo || 'Ninguno'
+          Observacion: desc.Observacion || " ",
+          Hallazgo: desc.Hallazgo || " "
         }))
       };
       console.log(selectedProgram);

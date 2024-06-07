@@ -1,19 +1,17 @@
-import { Container, Card, Icon, Button } from 'semantic-ui-react';
+import { Container, Card, Icon, Button, Modal } from 'semantic-ui-react';
 import './css/Camara.css';
 import { useEffect, useRef, useState } from 'react';
-import axios from 'axios';
 
-function Fotos() {
+function Fotos({ open, onClose, onCapture }) {
   const videoDiv = useRef(null);
   const fotoDiv = useRef(null);
   const [hayFoto, setHayFoto] = useState(false);
   const [stream, setStream] = useState(null);
-  const [camaraActiva, setCamaraActiva] = useState(false);
 
   const verCamara = async () => {
     try {
       const currentStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 420, height: 240 }
+        video: { width: 420, height: 210 }
       });
       setStream(currentStream);
       if (videoDiv.current) {
@@ -48,16 +46,7 @@ function Fotos() {
 
       // Captura la imagen como una base64 string
       const dataUrl = foto.toDataURL('image/png');
-      enviarFoto(dataUrl);
-    }
-  };
-
-  const enviarFoto = async (dataUrl) => {
-    try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/foto`, { image: dataUrl });
-      console.log('Foto enviada exitosa mente');
-    } catch (err) {
-      console.log('Error al enviar la foto:', err);
+      onCapture(dataUrl);
     }
   };
 
@@ -71,7 +60,7 @@ function Fotos() {
   };
 
   useEffect(() => {
-    if (camaraActiva) {
+    if (open) {
       verCamara();
     } else {
       detenerCamara();
@@ -80,34 +69,41 @@ function Fotos() {
     return () => {
       detenerCamara();
     };
-  }, [camaraActiva]);
+  }, [open]);
 
   return (
-    <Container className="miApp" fluid textAlign="center">
-      <Card.Group centered>
-        <Card>
-          {camaraActiva && <video ref={videoDiv}></video>}
-          <Card.Content>
-            <Button color="teal" onClick={tomarFoto} disabled={!camaraActiva}>
-              <Icon name="camera" /> Tomar foto
-            </Button>
-            <Button color={camaraActiva ? 'red' : 'green'} onClick={() => setCamaraActiva(prev => !prev)}>
-              <Icon name={camaraActiva ? 'pause' : 'play'} /> {camaraActiva ? 'Desactivar' : 'Activar'} Cámara
-            </Button>
-          </Card.Content>
-        </Card>
-        <Card>
-          <canvas ref={fotoDiv}></canvas>
-          {hayFoto && (
-            <Card.Content>
-              <Button color="red" onClick={cerrarFoto}>
-                <Icon name="close" /> Cerrar
-              </Button>
-            </Card.Content>
-          )}
-        </Card>
-      </Card.Group>
-    </Container>
+    <Modal open={open} onClose={onClose} size="small" className="fixed-modal">
+      <Modal.Content>
+        <Container className="miApp" fluid textAlign="center">
+          <Card.Group centered>
+            <Card>
+              <video ref={videoDiv} style={{ width: '100%' }}></video>
+              <Card.Content>
+                <Button className="camera-button" color="teal" onClick={tomarFoto} disabled={!open}>
+                <span class="material-symbols-outlined">
+                photo_camera
+                </span>
+                </Button>
+                <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+                <Button color="red" onClick={onClose}>
+                  <Icon name="close" /> Cerrar
+                </Button>
+              </Card.Content>
+            </Card>
+            <Card>
+              <canvas ref={fotoDiv}></canvas>
+              {hayFoto && (
+                <Card.Content>
+                  <Button color="red" onClick={cerrarFoto}>
+                    <Icon name="close" /> Cerrar Foto
+                  </Button>
+                </Card.Content>
+              )}
+            </Card>
+          </Card.Group>
+        </Container>
+      </Modal.Content>
+    </Modal>
   );
 }
 

@@ -3,7 +3,7 @@ const transporter = require('../emailConfig');
 
 const nuevoAuditoria = async (req, res) => {
   try {
-    console.log('Payload recibido:', req.body); // Registrar el payload recibido
+    console.log('Payload recibido:', req.body);
 
     const {
       TipoAuditoria,
@@ -18,7 +18,7 @@ const nuevoAuditoria = async (req, res) => {
       NombresObservadores,
       Programa,
       Estado,
-      Observaciones
+      PorcentajeTotal
     } = req.body;
 
     // Crear una nueva auditoría
@@ -35,7 +35,7 @@ const nuevoAuditoria = async (req, res) => {
       NombresObservadores,
       Programa,
       Estado,
-      Observaciones
+      PorcentajeTotal
     });
 
     await nuevaAuditoria.save();
@@ -45,10 +45,9 @@ const nuevoAuditoria = async (req, res) => {
       from: process.env.EMAIL_USER,
       to: AuditorLiderEmail,
       subject: 'Tienes una nueva auditoría',
-      text: `Hola ${AuditorLider},\n\nSe te ha asignado como auditor lider para una nueva auditoría programada ${Duracion} .\n\nSaludos,\nEl equipo de la empresa`,
+      text: `Hola ${AuditorLider},\n\nSe te ha asignado como auditor líder para una nueva auditoría programada por ${Duracion}.\n\nSaludos,\nEl equipo de la empresa`,
     };
 
-    // Enviar correo electrónico al Auditor Líder
     transporter.sendMail(mailOptionsAuditorLider, (error, info) => {
       if (error) {
         console.error('Error al enviar el correo electrónico al Auditor Líder:', error);
@@ -64,10 +63,10 @@ const nuevoAuditoria = async (req, res) => {
       equipoAuditor.forEach((miembro, index) => {
         setTimeout(() => {
           const mailOptionsMiembro = {
-            from: process.env.EMAIL_USER, 
+            from: process.env.EMAIL_USER,
             to: miembro.Correo,
             subject: 'Tienes una nueva auditoría',
-            text: `Hola ${miembro.Nombre},\n\nSe te ha asignado como miembro de equipo auditor liderado por ${AuditorLider},\n\npara una nueva auditoría programada ${Duracion}.\n\nSaludos,\nEl equipo de la empresa`,
+            text: `Hola ${miembro.Nombre},\n\nSe te ha asignado como miembro del equipo auditor liderado por ${AuditorLider} para una nueva auditoría programada por ${Duracion}.\n\nSaludos,\nEl equipo de la empresa`,
           };
 
           transporter.sendMail(mailOptionsMiembro, (error, info) => {
@@ -80,7 +79,6 @@ const nuevoAuditoria = async (req, res) => {
         }, index * 1000); // Ajusta el intervalo de tiempo según sea necesario (en milisegundos)
       });
     };
-
 
     res.status(201).json({ message: 'Auditoría generada exitosamente' });
   } catch (error) {

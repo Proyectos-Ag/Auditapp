@@ -4,10 +4,11 @@ const DescripcionSchema = new mongoose.Schema({
   ID: { type: String, required: true },
   Requisito: { type: String, required: true },
   Observacion: { type: String, required: true },
-  Hallazgo: { type: String, required: true }
+  Hallazgo: String,
 });
 
 const ProgramaSchema = new mongoose.Schema({
+  Porcentaje: { type: String, required: true },
   Nombre: { type: String, required: true },
   Descripcion: [DescripcionSchema]
 });
@@ -30,7 +31,9 @@ const DatosSchema = new mongoose.Schema({
   NombresObservadores: { type: String, required: false },
   Programa: [ProgramaSchema],
   Estado: { type: String, required: false },
-  Observaciones: { type: String, required: false }
+  PorcentajeTotal: { type: String, required: false }
 });
 
-module.exports = mongoose.model("Datos", DatosSchema);
+const Datos = mongoose.model("Datos", DatosSchema);
+
+module.exports = Datos;
