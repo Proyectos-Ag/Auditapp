@@ -96,13 +96,13 @@ const Pendientes = () => {
         const key = `${periodIdx}_${programIdx}_${descIdx}`;
         setSelectedCheckboxes(prevState => {
             const updated = { ...prevState, [key]: checkboxName };
-
+    
             // Update percentage
             const programKey = `${periodIdx}_${programIdx}`;
             const relevantCheckboxes = Object.keys(updated).filter(k => k.startsWith(`${periodIdx}_${programIdx}_`));
             let totalValue = 0;
             let validPrograms = 0;
-
+    
             relevantCheckboxes.forEach(k => {
                 const value = checkboxValues[updated[k]];
                 if (value !== null) {
@@ -110,17 +110,18 @@ const Pendientes = () => {
                     validPrograms++;
                 }
             });
-
+    
             const percentage = validPrograms > 0 ? (totalValue / validPrograms) * 100 : 0;
-
+    
             setPercentages(prevPercentages => ({
                 ...prevPercentages,
                 [programKey]: percentage
             }));
-
+    
             return updated;
         });
     };
+        
 
     const handleOpenModal = (fieldKey) => {
         setSelectedField(fieldKey);
@@ -148,6 +149,7 @@ const Pendientes = () => {
                     const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
                     return {
                         ID: desc.ID,
+                        Criterio: selectedCheckboxes[fieldKey] || '',  // Agrega el valor del Criterio
                         Observacion: document.querySelector(`textarea[name=Observaciones_${periodIdx}_${programIdx}_${descIdx}]`).value,
                         Hallazgo: capturedPhotos[fieldKey] || ''
                     };
@@ -184,7 +186,7 @@ const Pendientes = () => {
         } catch (error) {
             console.error('Error en handleUpdatePeriod:', error);
         }
-    };  
+    };       
 
     return (
         <div>

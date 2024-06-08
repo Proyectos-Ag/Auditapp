@@ -30,6 +30,7 @@ router.put('/:id', async (req, res) => {
             observaciones.forEach((obs) => {
                 const descripcion = programa.Descripcion.find((desc) => desc.ID === obs.ID);
                 if (descripcion) {
+                    descripcion.Criterio = obs.Criterio; // Agrega esta línea para actualizar el Criterio
                     descripcion.Observacion = obs.Observacion;
                     descripcion.Hallazgo = obs.Hallazgo;
                 }

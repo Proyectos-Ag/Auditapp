@@ -36,7 +36,6 @@ const UsuariosSchema = new mongoose.Schema({
     }
   },
   TipoUsuario: { type: String, required: true },
-  Área: { type: String, required: true },
   PromedioEvaluacion: { type: Number, default: 0 },
   PuntuacionEspecialidad: { type: Number, default: 0 },
   FormaParteEquipoInocuidad: { type: Boolean, default: false },
@@ -46,7 +45,8 @@ const UsuariosSchema = new mongoose.Schema({
       nombreCurso: { type: String, required: true },
       calificacion: { type: Number, required: true }
     }
-  ]
+  ],
+  Departamento: { type: String, required: true } // Añadido
 });
 
 // Hash de la contraseña antes de guardar

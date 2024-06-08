@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './css/modal.css';
-import Swal from 'sweetalert2';
 
 const Modal = ({ handleClose, show, children }) => {
   const showHideClassName = show ? "modal display-block" : "modal display-none";
@@ -10,7 +9,7 @@ const Modal = ({ handleClose, show, children }) => {
     <div className={showHideClassName}>
       <section className="modal-main">
         {children}
-        <button className="modal-close" onClick={handleClose}>X</button>
+        <button className="modal-close" onClick={handleClose}>Cerrar</button>
       </section>
     </div>
   );
@@ -24,19 +23,16 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
     ConfirmarContraseña: '',
     Puesto: '',
     FechaIngreso: '',
-    Escolaridad: 'Profesional',
+    Escolaridad: 'TSU',
     Carrera: '',
     TipoUsuario: 'auditor',
-    AñosExperiencia: ''
+    AñosExperiencia: '',
+    Departamento: '',
+    customDepartamento: ''
   });
 
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const predefinedAreas = [
-    'Calidad', 'Mantenimiento', 'Planta', 'Sistema de Gestión de Calidad e Inocuidad', 
-    'Almacenes', 'preparación', 'envasado y embalaje', 'Proceso de Producción', 
-    'Aseguramiento de Calidad', 'Áreas de Proceso', 'SGCI Envasadora Aguida'
-  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -53,7 +49,7 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { Contraseña, ConfirmarContraseña } = formData;
+    const { Contraseña, ConfirmarContraseña, customDepartamento, Departamento } = formData;
 
     if (!validatePassword(Contraseña)) {
       setError('La contraseña debe tener exactamente 8 caracteres y al menos un número.');
@@ -67,19 +63,14 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
 
     setError('');
 
+    const data = { ...formData };
+    if (Departamento === 'otro') {
+      data.Departamento = customDepartamento;
+    }
+
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/usuarios`, formData);
-      Swal.fire({
-        icon: 'success',
-        title: 'Usuario registrado con éxito',
-        showConfirmButton: false,
-        timer: 1500
-      });
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/usuarios`, data);
+      alert("Usuario registrado con éxito");
       console.log(response.data);
 
       setFormData({
@@ -91,11 +82,14 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
         FechaIngreso: '',
         Escolaridad: '',
         TipoUsuario: 'auditor',
-        AñosExperiencia: ''
+        AñosExperiencia: '',
+        Departamento: '',
+        customDepartamento: ''
       });
 
       handleClose();
 
+      window.location.reload();
     } catch (error) {
       console.error(error);
       alert("El correo no puede ser duplicado");
@@ -111,21 +105,39 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
             <input type="date" name="FechaIngreso" value={formData.FechaIngreso} onChange={handleChange} required />
           </div>
           <div className="form-group">
-          <label>Escolaridad:</label>
-          <select name="Escolaridad" value={formData.Escolaridad} onChange={handleChange} required>
-          <option value="TSU">TSU</option>
-                   <option value="Profesional">Profesional</option>
-                   <option value="Preparatoria">Preparatoria</option>
-          </select>
-        </div>
+            <label>Escolaridad:</label>
+            <select name="Escolaridad" value={formData.Escolaridad} onChange={handleChange} required>
+              <option value="TSU">TSU</option>
+              <option value="Profesional">Profesional</option>
+              <option value="Preparatoria">Preparatoria</option>
+            </select>
+          </div>
           <div className="form-group">
-  <label>Carrera:</label>
-  <input type="text" name="Carrera" value={formData.Carrera} onChange={handleChange} required />
-</div>
+            <label>Carrera:</label>
+            <input type="text" name="Carrera" value={formData.Carrera} onChange={handleChange} required />
+          </div>
           <div className="form-group">
             <label>Años de Experiencia:</label>
             <input type="number" name="AñosExperiencia" value={formData.AñosExperiencia} onChange={handleChange} required />
           </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderCustomDepartamento = () => {
+    if (formData.Departamento === 'otro') {
+      return (
+        <div className="form-group">
+          <label>Especificar departamento:</label>
+          <input
+            type="text"
+            name="customDepartamento"
+            value={formData.customDepartamento}
+            onChange={handleChange}
+            required
+          />
         </div>
       );
     }
@@ -183,31 +195,25 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
           </button>
         </div>
         <div className="form-group">
-          <label>Área:</label>
-          <select name="Área" value={formData.Área} onChange={handleChange} required>
-            <option value="">Seleccione un área</option>
-            {predefinedAreas.map((area) => (
-              <option key={area} value={area}>
-                {area}
-              </option>
-            ))}
-            <option value="custom">Otra</option>
+          <label>Departamento:</label>
+          <select name="Departamento" value={formData.Departamento} onChange={handleChange} required>
+            <option value="">Seleccione una opción</option>
+            <option value="Administración">Administración</option>
+            <option value="Aseguramiento de calidad">Aseguramiento de calidad</option>
+            <option value="Gestión para la calidad">Gestión para la calidad</option>
+            <option value="Gestión para la productividad">Gestión para la productividad</option>
+            <option value="Ingeniería">Ingeniería</option>
+            <option value="Mantenimiento">Mantenimiento</option>
+            <option value="Planeación y Logística">Planeación y Logística</option>
+            <option value="Producción">Producción</option>
+            <option value="otro">Otro</option>
           </select>
-          {formData.Área === 'custom' && (
-            <input
-              type="text"
-              name="customArea"
-              value={formData.customArea}
-              onChange={handleChange}
-              placeholder="Ingrese un área personalizada"
-              required
-            />
-          )}
         </div>
+        {renderCustomDepartamento()}
         {renderAdditionalFields()}
         <div className="modal-buttons">
-          <button type="button" onClick={handleClose} className="btn-cancelar">Cancelar</button>
           <button type="submit" className="btn-registrar">Registrar</button>
+          <button type="button" onClick={handleClose} className="btn-cancelar">Cancelar</button>
         </div>
       </form>
     </Modal>

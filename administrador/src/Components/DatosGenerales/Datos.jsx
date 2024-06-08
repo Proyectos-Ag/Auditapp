@@ -39,6 +39,9 @@ const Datos = () => {
   const [showOtherAreaInput, setShowOtherAreaInput] = useState(false);
   const [auditorLiderSeleccionado, setAuditorLiderSeleccionado] = useState('');
   const [equipoAuditorDisabled, setEquipoAuditorDisabled] = useState(false);
+  const filteredUsuarios = selectedDepartamento
+  ? usuarios.filter(usuario => usuario.Departamento === selectedDepartamento)
+  : usuarios;
 
   useEffect(() => {
     const fetchAreas = async () => {
@@ -316,8 +319,9 @@ const Datos = () => {
         Nombre: selectedProgram.Nombre,
         Descripcion: selectedProgram.Descripcion.map(desc => ({
           ID: desc.ID,
+          Criterio: desc.Criterio || null,
           Requisito: desc.Requisito,
-          Observacion: desc.Observacion || " ",
+          Observacion: desc.Observacion || "",
           Hallazgo: desc.Hallazgo || " "
         }))
       };
@@ -352,7 +356,6 @@ const Datos = () => {
     const dept = areas.find(area => area.departamento === selectedDept);
     setFilteredAreas(dept ? dept.areas : []);
     
-    // Actualiza formData con el departamento seleccionado
     setFormData({
       ...formData,
       Departamento: selectedDept
@@ -398,6 +401,7 @@ const Datos = () => {
         return {};
     }
   };
+  
   
   const getRequiredFieldsForStep = (step) => {
     switch (step) {
@@ -529,9 +533,15 @@ const Datos = () => {
             </div>
             <div className="form-group-datos">
               <label>Auditados:</label>
-              <select name="Auditados" value={formData.Auditados} onChange={handleChange} required>
+              <select
+                id="Auditados"
+                name="Auditados"
+                value={formData.Auditados}
+                onChange={handleChange}
+                required
+              >
                 <option value="">Seleccione...</option>
-                {usuarios && usuarios.filter(usuario => usuario.TipoUsuario === 'auditado').map(usuario =>(
+                {filteredUsuarios.map((usuario) => (
                   <option key={usuario._id} value={usuario.Nombre}>{usuario.Nombre}</option>
                 ))}
               </select>
@@ -695,7 +705,6 @@ const Datos = () => {
     </form>
   </div>
 )}
-
 
     </div>
   );

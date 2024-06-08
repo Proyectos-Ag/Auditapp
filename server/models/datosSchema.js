@@ -2,8 +2,9 @@ const mongoose = require("mongoose");
 
 const DescripcionSchema = new mongoose.Schema({
   ID: { type: String, required: true },
+  Criterio: { type: String },
   Requisito: { type: String, required: true },
-  Observacion: { type: String, required: true },
+  Observacion: { type: String },
   Hallazgo: String,
 });
 
