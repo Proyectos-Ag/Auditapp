@@ -34,7 +34,7 @@ const iniciarSesion = async (req, res) => {
         break;
     }
 
-    const token = jwt.sign({ userId: usuario._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: usuario._id }, process.env.JWT_SECRET, { expiresIn: '8h' });
    
 
     return res.status(200).json({ token, tipo: tipoUsuario, usuario: { Correo: usuario.Correo, Nombre: usuario.Nombre, TipoUsuario: tipoUsuario } });

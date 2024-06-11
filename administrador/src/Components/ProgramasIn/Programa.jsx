@@ -158,7 +158,7 @@ const Programas = () => {
         <button type="submit">Crear Programa</button>
       </form>
     )}
-    <h2>Carga Masiva</h2>
+    <h2>Cargar archivo</h2>
     <form onSubmit={handleFileUpload} onDragOver={handleDragOver} onDrop={handleDrop}>
       <div className="file-drag-drop" onClick={handleClick}>
         {file ? file.name : "Arrastra y suelta el archivo aquí, o haz clic para seleccionar"}
@@ -171,7 +171,7 @@ const Programas = () => {
         style={{ display: 'none' }} 
         required 
       />
-      <button type="submit">Cargar Archivo</button>
+      <button type="submit">Cargar</button>
     </form>
   </div>
   </div>

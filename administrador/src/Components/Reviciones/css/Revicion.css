@@ -1,0 +1,38 @@
+.hallazgo-imagen {
+    width: 100%;
+    height: 100%; 
+    object-fit: cover;
+}
+
+.datos-container-repo{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 2rem auto 0;
+    width: 80rem;
+    max-width: 100rem;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.duracion-bloque-repo {
+    width: 95vw;
+    margin-bottom: 20px;
+    background-color: #00B096;
+    cursor: pointer;
+}
+
+.duracion-bloque-repo h2 {
+    margin: 0;
+    padding: 10px 0;
+    color: #333;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.espacio-repo{
+    margin-top: 70px;
+}

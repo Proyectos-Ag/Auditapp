@@ -59,7 +59,7 @@
 .duracion-bloque h2 {
     margin: 0;
     padding: 10px 0;
-    color: #333;
+    color: #ffffff;
     font-size: 18px;
     font-weight: bold;
     text-align: center;
@@ -77,11 +77,27 @@ table, th, td {
 
 th, td {
     padding: 8px;
-    text-align: left;
+    text-align: center;
 }
 
-th {
+.padingH{
+    padding: 0px;
+}
+
+.alingR{
+   text-align: justify;
+}
+
+table th:nth-child(8), table td:nth-child(8) { width: 12em; }
+
+.datos-container2 th {
     background-color: #BFFF99;
+}
+
+.conforme-fuente{
+    display: flex;
+    margin-left: 0%;
+
 }
 
 th.conformity-header {
@@ -92,6 +108,18 @@ th.conformity-header {
 .update-button {
     margin-top: 10px;
     margin-bottom: 10px;
+    background-color: #00ca3d;
+    color: #ffffff;
+    border: none;
+    width: 14%;
+    height: 40px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 11px;
+}
+
+.update-button:hover {
+    background-color: #00967f;
 }
 
 .material-symbols-outlined {
@@ -106,8 +134,7 @@ th.conformity-header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 20px;
-    width: 100%;
+
 }
 
 .update-button-container.hidden {
@@ -116,4 +143,63 @@ th.conformity-header {
 
 .form-group-datos p{
     font-size: 50px;
+}
+
+.textarea-custom {
+    width: auto;
+    height: 90px;
+}
+
+.espacio-test{
+    display: flex;
+    padding: 0%;
+}
+
+.textarea-custom {
+    width: 100%;
+    height: 100px;
+    box-sizing: border-box;
+    border: none;
+}
+
+
+
+.selected-conforme {
+    background-color: rgb(106, 255, 77);
+}
+
+.selected-m {
+    background-color: rgb(255, 255, 91);
+}
+
+.selected-M {
+    background-color: rgb(255, 180, 40);
+}
+
+.selected-C {
+    background-color: rgb(255, 73, 73);
+}
+
+.selected-NA {
+    background-color: rgb(161, 161, 161);
+}
+
+.percentage-green {
+    background-color: rgb(106, 255, 77) !important;
+    color: white;
+}
+
+.percentage-yellow {
+    background-color: rgb(241, 241, 17) !important;
+    color: white;
+}
+
+.percentage-orange {
+    background-color: orange !important;
+    color: white;
+}
+
+.percentage-red {
+    background-color: red !important;
+    color: white;
 }

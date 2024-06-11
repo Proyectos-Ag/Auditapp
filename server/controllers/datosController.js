@@ -18,7 +18,9 @@ const nuevoAuditoria = async (req, res) => {
       NombresObservadores,
       Programa,
       Estado,
-      PorcentajeTotal
+      PorcentajeTotal,
+      FechaElaboracion,
+      Estatus
     } = req.body;
 
     // Crear una nueva auditoría
@@ -35,7 +37,9 @@ const nuevoAuditoria = async (req, res) => {
       NombresObservadores,
       Programa,
       Estado,
-      PorcentajeTotal
+      PorcentajeTotal,
+      FechaElaboracion,
+      Estatus
     });
 
     await nuevaAuditoria.save();
@@ -66,7 +70,7 @@ const nuevoAuditoria = async (req, res) => {
             from: process.env.EMAIL_USER,
             to: miembro.Correo,
             subject: 'Tienes una nueva auditoría',
-            text: `Hola ${miembro.Nombre},\n\nSe te ha asignado como miembro del equipo auditor liderado por ${AuditorLider} para una nueva auditoría programada por ${Duracion}.\n\nSaludos,\nEl equipo de la empresa`,
+            text: `Hola ${miembro.Nombre},\n\nSe te ha asignado como miembro del equipo auditor liderado por ${AuditorLider} para una nueva auditoría programada ${Duracion}.\n\nSaludos,\nEl equipo de la empresa`,
           };
 
           transporter.sendMail(mailOptionsMiembro, (error, info) => {

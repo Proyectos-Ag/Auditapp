@@ -22,6 +22,8 @@ const Datos = () => {
     Programa: [],
     Estado: '',
     PorcentajeTotal: '',
+    FechaElaboracion:'',
+    Estatus:''
   });
 
   const [buttonText, setButtonText] = useState({
@@ -322,7 +324,9 @@ const Datos = () => {
           Criterio: desc.Criterio || null,
           Requisito: desc.Requisito,
           Observacion: desc.Observacion || "",
-          Hallazgo: desc.Hallazgo || " "
+          Hallazgo: desc.Hallazgo || " ",
+          FechaElaboracion: desc.Hallazgo || " ",
+          Estatus: desc.Hallazgo || " "
         }))
       };
       console.log(selectedProgram);

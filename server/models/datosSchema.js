@@ -32,7 +32,9 @@ const DatosSchema = new mongoose.Schema({
   NombresObservadores: { type: String, required: false },
   Programa: [ProgramaSchema],
   Estado: { type: String, required: false },
-  PorcentajeTotal: { type: String, required: false }
+  PorcentajeTotal: { type: String, required: false },
+  FechaElaboracion: { type: String, required: false },
+  Estatus:{ type: String, required: false }
 });
 
 const Datos = mongoose.model("Datos", DatosSchema);

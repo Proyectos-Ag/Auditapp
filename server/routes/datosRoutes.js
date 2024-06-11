@@ -20,6 +20,20 @@ router.put('/:id', async (req, res) => {
         if (PorcentajeTotal !== undefined) {
             datos.PorcentajeTotal = PorcentajeTotal;
             datos.Estado = Estado;  // Actualiza el estado a "Realizada"
+
+            // Actualizar Estatus basado en PorcentajeTotal
+            if (PorcentajeTotal === 100) {
+                datos.Estatus = 'Excelente';
+            } else if (PorcentajeTotal >= 90) {
+                datos.Estatus = 'Aceptable';
+            } else if (PorcentajeTotal >= 80) {
+                datos.Estatus = 'Poco aceptable';
+            } else if (PorcentajeTotal < 80) {
+                datos.Estatus = 'No aceptable';
+            }
+
+            // Actualizar FechaElaboracion con la fecha actual
+            datos.FechaElaboracion = new Date().toISOString();
         } else {
             const programa = datos.Programa[programIdx];
             if (!programa) {

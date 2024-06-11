@@ -8,6 +8,7 @@ import UsuariosRegis from './Components/UsuariosRegistrados/usuariosRegistro'; /
 import Datos from './Components/DatosGenerales/Datos'
 import Programas from './Components/ProgramasIn/Programa';
 import AuthProvider from './authProvider';
+import Revicion from './Components/Reviciones/Revicion';
 
 export const UserContext = createContext(null);
 
@@ -22,8 +23,8 @@ function App() {
           <Route path="/programa" element={<Programas/>}/>
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/home" element={<Inicio/>}/>
-          <Route path="/usuariosRegistrados" element={<UsuariosRegis />} /> {/* Agrega la ruta para UsuariosRegistrados */}
-          
+          <Route path="/usuariosRegistrados" element={<UsuariosRegis />} /> {}
+          <Route path="/revicion" element={<Revicion />} /> {}
           {/* Agrega más rutas aquí si es necesario */}
         </Routes>
       </Router>
