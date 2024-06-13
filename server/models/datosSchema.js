@@ -21,6 +21,8 @@ const EquipoSchema = new mongoose.Schema({
 
 const DatosSchema = new mongoose.Schema({
   TipoAuditoria: { type: String, required: true },
+  FechaInicio: { type: String, required: true },
+  FechaFin: { type: String, required: true },
   Duracion: { type: String, required: true },
   Departamento: { type: String, required: true },
   AreasAudi: { type: String, required: true },

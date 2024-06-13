@@ -241,14 +241,20 @@ th.conformity-header {
 }
 
 .centrado{
-  margin: 2rem auto 0;
+  margin: 4vh auto 0;
 }
+
+@media (min-width: 1440px) {
+  .centrado {
+    margin: 9vh auto 0;
+  }
+} 
 
 @media (max-width: 886px) {
   .centrado {
     margin: 4rem auto 0;
   }
-}
+} 
 
 /*Programas*/
 
@@ -300,8 +306,6 @@ th.conformity-header {
 }
 
 .form-group-datos {
-  flex: 1; /* Ajusta la proporción de cada combo box */
-  min-width: 150px; /* Ancho mínimo para que no se solapen en pantallas pequeñas */
+  flex: 1;
+  min-width: 150px;
 }
-
-

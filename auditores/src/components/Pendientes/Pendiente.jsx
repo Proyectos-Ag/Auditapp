@@ -7,7 +7,7 @@ import Navigation from '../Navigation/narbar';
 import Fotos from './Foto'; 
 import { Button } from 'semantic-ui-react';
 import Swal from 'sweetalert2';
-
+import { useNavigate } from 'react-router-dom';
 
 const Pendientes = () => {
     const { userData } = useContext(UserContext);
@@ -140,6 +140,8 @@ const Pendientes = () => {
         setModalOpen(false);
     };
 
+    const navigate = useNavigate();
+
     const handleUpdatePeriod = async (periodIdx) => {
         if (!areAllCheckboxesFilled(periodIdx)) {
             Swal.fire({
@@ -193,7 +195,7 @@ const Pendientes = () => {
                     title: 'Reporte generado',
                     text: 'El reporte se generó exitosamente',
                 });
-                return;
+                navigate('/reporte');
             } catch (error) {
                 console.error('Error al actualizar el porcentaje total:', error);
                 alert('Error al actualizar el porcentaje total');
@@ -262,7 +264,7 @@ const Pendientes = () => {
             <div className="datos-container2">
                 <div className="form-group-datos">
                     {datos.length === 0 ? (
-                        <p>Sin auditorias pendientes</p>
+                        <p>Sin auditorías pendientes</p>
                     ) : (
                         datos.map((dato, periodIdx) => (
                             <div key={periodIdx}>

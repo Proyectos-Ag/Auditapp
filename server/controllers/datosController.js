@@ -7,6 +7,8 @@ const nuevoAuditoria = async (req, res) => {
 
     const {
       TipoAuditoria,
+      FechaInicio,
+      FechaFin,
       Duracion,
       Departamento,
       AreasAudi,
@@ -26,6 +28,8 @@ const nuevoAuditoria = async (req, res) => {
     // Crear una nueva auditoría
     const nuevaAuditoria = new Datos({
       TipoAuditoria,
+      FechaInicio,
+      FechaFin,
       Duracion,
       Departamento,
       AreasAudi,

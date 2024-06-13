@@ -211,7 +211,11 @@ const Datos = () => {
         icon: 'success',
         confirmButtonText: 'Aceptar',
         confirmButtonColor: '#3ccc37'
-      });
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.reload();
+        }
+      });      
       console.log(response.data);
   
       // Limpiar los campos del formulario después de agregar un usuario exitosamente

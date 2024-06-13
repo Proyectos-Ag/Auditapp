@@ -117,3 +117,73 @@
   justify-content: flex-end;
   margin-bottom: 15px;
 }
+
+.datos-container-prog-2 {
+  margin-bottom: 20px;
+  margin: 2rem auto 0;
+  width: 68%;
+  max-width: 100%;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.header-container-datos-prog {
+  text-align: center; 
+  margin-bottom: 10px; 
+}
+
+.header-container-datos-prog button {
+  padding: 10px 20px;
+  width: 100%;
+  font-size: 16px;
+  background-color: #00B096; 
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+@media (max-width: 400px) {
+  .datos-container-prog-2 {
+    width: 80%;
+  }
+}
+
+@media (max-width: 900px) {
+  .datos-container-prog-2 {
+    width: 80%;
+  }
+}
+
+.tabla-programa table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.tabla-programa table, th, td {
+  border: 1px solid #ddd;
+}
+
+.tabla-programa th, td {
+  padding: 8px;
+  text-align: left;
+}
+
+.tabla-programa th {
+  background-color: #BFFF99;
+}
+
+
+
+.header-container-datos-prog button:hover {
+  background-color: #35b32d; 
+}
+
+.list-programa{
+  text-align: center;
+}
+
+

@@ -74,8 +74,8 @@ function DrawerList({ handleLogout }) {
     { text: "Programa", href: "/programa" },
     {
       text: "Auditorias", subItems: [
-        { text: "Generar auditoria", href: "/datos" },
-        { text: "Revicion de auditoria", href: "/revicion" },
+        { text: "Generar auditoría", href: "/datos" },
+        { text: "Revisión de auditoría", href: "/revicion" },
         { text: "Auditorias terminadas", href: "/" }
       ]
     }

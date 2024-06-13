@@ -59,7 +59,7 @@ th.conformity-header-repo {
 }
 
 .duracion-bloque-repo {
-    width: 95vw;
+    width: 81rem;
     margin-bottom: 20px;
     background-color: #00B096;
     cursor: pointer;
@@ -139,4 +139,12 @@ th.conformity-header-repo {
 .table-header {
     width: 150px; /* Puedes ajustar el tamaño a lo que necesites */
     text-align: center;
+}
+
+.alingR2{
+    text-align: left;
+}
+
+.hidden {
+    display: none;
 }

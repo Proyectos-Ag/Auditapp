@@ -63,7 +63,7 @@ function DrawerList({ handleLogout }) {
         { text: "Finalizada", href: "/reporte" }
       ]
     },
-    { text: "Cerrar sesión", onClick: handleLogout } // Añadido el botón de cierre de sesión
+    { text: "Cerrar sesión", onClick: handleLogout }
   ];
 
   return (
