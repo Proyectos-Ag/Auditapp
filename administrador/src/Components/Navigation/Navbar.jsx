@@ -76,7 +76,7 @@ function DrawerList({ handleLogout }) {
       text: "Auditorias", subItems: [
         { text: "Generar auditoría", href: "/datos" },
         { text: "Revisión de auditoría", href: "/revicion" },
-        { text: "Auditorias terminadas", href: "/" }
+        { text: "Auditorias terminadas", href: "/terminada" }
       ]
     }
   ];

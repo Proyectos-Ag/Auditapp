@@ -55,28 +55,38 @@ const Pendientes = () => {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
                 if (userData && userData.Correo) {
                     const datosFiltrados = response.data.filter((dato) => 
-                        dato.AuditorLiderEmail === userData.Correo && dato.Estado === "pendiente"
+                        dato.AuditorLiderEmail === userData.Correo && (dato.Estado === "pendiente" || dato.Estado === "Devuelto")
                     );
-
-                // Ordena los datos por duración de manera ascendente
-                datosFiltrados.sort((a, b) => {
-                    const fechaInicioA = obtenerFechaInicio(a.Duracion);
-                    const fechaInicioB = obtenerFechaInicio(b.Duracion);
-
-                    // Primero, comparamos las fechas de inicio
-                    if (fechaInicioA < fechaInicioB) return -1;
-                    if (fechaInicioA > fechaInicioB) return 1;
-                    return 0; // Si ambas fechas de inicio y fin son iguales
-                });
-
-                setDatos(datosFiltrados);
-            } else {
-                console.log('userData o userData.Correo no definidos:', userData);
+        
+                    datosFiltrados.sort((a, b) => {
+                        const fechaInicioA = obtenerFechaInicio(a.Duracion);
+                        const fechaInicioB = obtenerFechaInicio(b.Duracion);
+                        if (fechaInicioA < fechaInicioB) return -1;
+                        if (fechaInicioA > fechaInicioB) return 1;
+                        return 0;
+                    });
+        
+                    setDatos(datosFiltrados);
+        
+                    // Set initial state for checkboxes
+                    const initialCheckboxes = {};
+                    datosFiltrados.forEach((dato, periodIdx) => {
+                        dato.Programa.forEach((programa, programIdx) => {
+                            programa.Descripcion.forEach((desc, descIdx) => {
+                                const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+                                initialCheckboxes[fieldKey] = desc.Criterio;
+                            });
+                        });
+                    });
+                    setSelectedCheckboxes(initialCheckboxes);
+        
+                } else {
+                    console.log('userData o userData.Correo no definidos:', userData);
+                }
+            } catch (error) {
+                console.error('Error al obtener los datos:', error);
             }
-        } catch (error) {
-            console.error('Error al obtener los datos:', error);
-        }
-    };
+        };        
 
         obtenerDatos();
     }, [userData]);
@@ -172,7 +182,7 @@ const Pendientes = () => {
                 totalPercentage += percentage;
     
                 try {
-                    await axios.put(`http://localhost:3002/datos/${datos[periodIdx]._id}`, {
+                    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
                         programIdx,
                         observaciones,
                         percentage
@@ -186,7 +196,7 @@ const Pendientes = () => {
     
             const totalPercentageAvg = (totalPercentage / numPrograms).toFixed(2);
             try {
-                await axios.put(`http://localhost:3002/datos/${datos[periodIdx]._id}`, {
+                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
                     PorcentajeTotal: totalPercentageAvg,
                     Estado: 'Realizada'
                 });
@@ -240,7 +250,7 @@ const Pendientes = () => {
             }
         }
         return '';
-    };
+    };    
     
     const getPercentageClass = (percentage) => {
         if (percentage >= 95) {
@@ -257,135 +267,106 @@ const Pendientes = () => {
     };
 
     return (
-        <div>
-            <div style={{ position: 'absolute', top: 0, left: 0 }}>
-                <Navigation />
-            </div>
-            <div className="datos-container2">
-                <div className="form-group-datos">
-                    {datos.length === 0 ? (
-                        <p>Sin auditorías pendientes</p>
-                    ) : (
-                        datos.map((dato, periodIdx) => (
-                            <div key={periodIdx}>
-                                <div className="duracion-bloque">
-                                    <h2 onClick={() => toggleDuration(dato.Duracion)}>
-                                        Período: {dato.Duracion}
-                                    </h2>
-                                </div>
-                                <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
-                                    <div className="header-container-datos">
-                                        <img src={logo} alt="Logo Empresa" className="logo-empresa" />
-                                        <button className="update-button" onClick={() => handleUpdatePeriod(periodIdx)}>
-                                            Generar Reporte
-                                        </button>
-                                    </div>
-                                    {hiddenDurations.includes(dato.Duracion) ? null :
-                                        dato.Programa.map((programa, programIdx) => (
-                                            <div key={programIdx}>
-                                                <table>
-                                                    <thead>
-                                                        <tr>
-                                                            <th colSpan="2">{programa.Nombre}</th>
-                                                            <th colSpan="5" className="conformity-header">Conformidad</th>
-                                                            <th colSpan="2" className={getPercentageClass(percentages[`${periodIdx}_${programIdx}`])}>
-                                                            Porcentaje: {percentages[`${periodIdx}_${programIdx}`] ? percentages[`${periodIdx}_${programIdx}`].toFixed(2) : 0}%
-                                                            </th>
-                                                        </tr>
-                                                        <tr>
-                                                            <th>ID</th>
-                                                            <th>Requisitos</th>
-                                                            <th><div className='conforme-fuente'>Con</div></th>
-                                                            <th>m</th>
-                                                            <th>M</th>
-                                                            <th>C</th>
-                                                            <th>NA</th>
-                                                            <th className='padingH'>Hallazgos</th>
-                                                            <th>Evidencia</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {programa.Descripcion.map((desc, descIdx) => {
-                                                            const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
-                                                            return (
-                                                                <tr key={descIdx}>
-                                                                    <td>{desc.ID}</td>
-                                                                    <td className='alingR'>{desc.Requisito}</td>
-                                                                    <td className={getTdClass(periodIdx, programIdx, descIdx, 'Conforme')}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            name={`Conforme_${periodIdx}_${programIdx}_${descIdx}`}
-                                                                            checked={selectedCheckboxes[`${periodIdx}_${programIdx}_${descIdx}`] === 'Conforme'}
-                                                                            onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, 'Conforme')}
-                                                                        />
-                                                                    </td>
-                                                                    <td className={getTdClass(periodIdx, programIdx, descIdx, 'm')}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            name={`m_${periodIdx}_${programIdx}_${descIdx}`}
-                                                                            checked={selectedCheckboxes[`${periodIdx}_${programIdx}_${descIdx}`] === 'm'}
-                                                                            onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, 'm')}
-                                                                        />
-                                                                    </td>
-                                                                    <td className={getTdClass(periodIdx, programIdx, descIdx, 'M')}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            name={`M_${periodIdx}_${programIdx}_${descIdx}`}
-                                                                            checked={selectedCheckboxes[`${periodIdx}_${programIdx}_${descIdx}`] === 'M'}
-                                                                            onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, 'M')}
-                                                                        />
-                                                                    </td>
-                                                                    <td className={getTdClass(periodIdx, programIdx, descIdx, 'C')}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            name={`C_${periodIdx}_${programIdx}_${descIdx}`}
-                                                                            checked={selectedCheckboxes[`${periodIdx}_${programIdx}_${descIdx}`] === 'C'}
-                                                                            onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, 'C')}
-                                                                        />
-                                                                    </td>
-                                                                    <td className={getTdClass(periodIdx, programIdx, descIdx, 'NA')}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            name={`NA_${periodIdx}_${programIdx}_${descIdx}`}
-                                                                            checked={selectedCheckboxes[`${periodIdx}_${programIdx}_${descIdx}`] === 'NA'}
-                                                                            onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, 'NA')}
-                                                                        />
-                                                                    </td>
-                                                                    <td className='espacio-test'>
-                                                                        <textarea
-                                                                            name={`Observaciones_${periodIdx}_${programIdx}_${descIdx}`}
-                                                                            defaultValue={desc.Observacion}
-                                                                            className="textarea-custom"
-                                                                        ></textarea>
-                                                                    </td>
-                                                                    <td>
-                                                                        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-                                                                        <Button color="green" onClick={() => handleOpenModal(fieldKey)}>
-                                                                            <span className="material-symbols-outlined">
-                                                                                add_a_photo
-                                                                            </span>
-                                                                        </Button>
-                                                                        {capturedPhotos[fieldKey] && (
-                                                                            <img src={capturedPhotos[fieldKey]} alt="Captura" style={{ width: '100px', height: 'auto' }} />
-                                                                        )}
-                                                                    </td>
-                                                                </tr>
-                                                            );
-                                                        })}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        ))
-                                    }
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
-            <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
+    <div>
+        <div style={{ position: 'absolute', top: 0, left: 0 }}>
+            <Navigation />
         </div>
-    );       
+        <div className="datos-container2">
+            <div className="form-group-datos">
+                {datos.length === 0 ? (
+                    <p>Sin auditorías pendientes</p>
+                ) : (
+                    datos.map((dato, periodIdx) => (
+                        <div key={periodIdx}>
+                            <div className="duracion-bloque">
+                                <h2 onClick={() => toggleDuration(dato.Duracion)}>
+                                    Período: {dato.Duracion}
+                                </h2>
+                            </div>
+                            <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
+                                <div className="header-container-datos">
+                                    <img src={logo} alt="Logo Empresa" className="logo-empresa" />
+                                    <button className="update-button" onClick={() => handleUpdatePeriod(periodIdx)}>
+                                        Generar Reporte
+                                    </button>
+                                </div>
+                                {hiddenDurations.includes(dato.Duracion) ? null :
+                                    dato.Programa.map((programa, programIdx) => (
+                                        <div key={programIdx}>
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th colSpan="2">{programa.Nombre}</th>
+                                                        <th colSpan="5" className="conformity-header">Conformidad</th>
+                                                        <th colSpan="2" className={getPercentageClass(percentages[`${periodIdx}_${programIdx}`])}>
+                                                            Porcentaje: {percentages[`${periodIdx}_${programIdx}`] ? percentages[`${periodIdx}_${programIdx}`].toFixed(2) : 0}%
+                                                        </th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>Requisitos</th>
+                                                        <th><div className='conforme-fuente'>Con</div></th>
+                                                        <th>m</th>
+                                                        <th>M</th>
+                                                        <th>C</th>
+                                                        <th>NA</th>
+                                                        <th className='padingH'>Hallazgos</th>
+                                                        <th>Evidencia</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {programa.Descripcion.map((desc, descIdx) => {
+                                                        const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+                                                        return (
+                                                            <tr key={descIdx}>
+                                                                <td>{desc.ID}</td>
+                                                                <td className='alingR'>{desc.Requisito}</td>
+                                                                {['Conforme', 'm', 'M', 'C', 'NA'].map((checkboxName) => (
+                                                                    <td key={checkboxName} className={getTdClass(periodIdx, programIdx, descIdx, checkboxName)}>
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            name={`${checkboxName}_${periodIdx}_${programIdx}_${descIdx}`}
+                                                                            checked={selectedCheckboxes[fieldKey] === checkboxName}
+                                                                            onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, checkboxName)}
+                                                                        />
+                                                                    </td>
+                                                                ))}
+                                                                <td className='espacio-test'>
+                                                                    <textarea
+                                                                        name={`Observaciones_${periodIdx}_${programIdx}_${descIdx}`}
+                                                                        defaultValue={desc.Observacion}
+                                                                        className="textarea-custom"
+                                                                    ></textarea>
+                                                                </td>
+                                                                <td>
+                                                                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+                                                                    <Button color="green" onClick={() => handleOpenModal(fieldKey)}>
+                                                                        <span className="material-symbols-outlined">
+                                                                            add_a_photo
+                                                                        </span>
+                                                                    </Button>
+                                                                    {capturedPhotos[fieldKey] && (
+                                                                        <img src={capturedPhotos[fieldKey]} alt="Captura" style={{ width: '100px', height: 'auto' }} />
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+        <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
+    </div>
+);
+   
 };
 
 export default Pendientes;

@@ -15,3 +15,11 @@
   transform: translate(-50%, -50%);
   z-index: 999;
 }
+
+.camera-switch-button{
+  position: fixed;
+  top: 60%;
+  left: 96%;
+  transform: translate(-50%, -50%);
+  z-index: 999;
+}

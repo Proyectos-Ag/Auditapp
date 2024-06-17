@@ -14,6 +14,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Dropdown from 'react-bootstrap/Dropdown';
 import logo from "../../assets/img/logoAguida.png";
+import Swal from 'sweetalert2';
 
 export default function Navigation() {
   const [open, setOpen] = useState(false);
@@ -24,13 +25,24 @@ export default function Navigation() {
     setOpen(newOpen);
   };
 
-  const handleLogout = () => {
-    if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+const handleLogout = () => {
+  Swal.fire({
+    title: '¿Estás seguro de que quieres cerrar sesión?',
+    text: '¡Tu sesión actual se cerrará!',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3ccc37',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Sí, cerrar sesión',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
       localStorage.removeItem('token');
       setUserData(null);
       navigate('/');
     }
-  };
+  });
+};
 
   return (
     <div className="navbar-container">
@@ -60,15 +72,15 @@ function DrawerList({ handleLogout }) {
     {
       text: "Auditorias", subItems: [
         { text: "Pendiente", href: "/pendiente" },
-        { text: "Finalizada", href: "/reporte" }
+        { text: "Finalizada", href: "/reporte" },
+        { text: "Ishikawa", href: "/" }
       ]
-    },
-    { text: "Cerrar sesión", onClick: handleLogout }
-  ];
+    }
+    ];
 
   return (
     <Box className="drawer-container">
-      <List>
+      <List className="drawer-list">
         <a href="/home">
           <img src={logo} alt="Logo Empresa" className="logo-img" />
         </a>
@@ -77,13 +89,13 @@ function DrawerList({ handleLogout }) {
             {item.subItems ? (
               <Dropdown>
                 <Dropdown.Toggle variant="transparent" className="dropdown-toggle">
-                  <ListItem disablePadding className="list-item" onClick={toggleSubmenu}> {}
+                  <ListItem disablePadding className="list-item" onClick={toggleSubmenu}>
                     <ListItemButton>
                       <ListItemText primary={item.text} className="list-item-text" />
                     </ListItemButton>
                   </ListItem>
                 </Dropdown.Toggle>
-                <Dropdown.Menu style={{ display: showSubmenu ? 'block' : 'none' }}> {}
+                <Dropdown.Menu style={{ display: showSubmenu ? 'block' : 'none' }}>
                   {item.subItems.map((subItem, subIndex) => (
                     <Dropdown.Item key={subIndex}>
                       <button className="link-button" onClick={() => window.location.href = subItem.href}>
@@ -111,6 +123,11 @@ function DrawerList({ handleLogout }) {
           </div>
         ))}
       </List>
+      <div className="logout-container">
+        <button className="link-button logout-button" onClick={handleLogout}>
+          Cerrar sesión
+        </button>
+      </div>
     </Box>
   );
 }

@@ -9,6 +9,7 @@ import Datos from './Components/DatosGenerales/Datos'
 import Programas from './Components/ProgramasIn/Programa';
 import AuthProvider from './authProvider';
 import Revicion from './Components/Reviciones/Revicion';
+import Terminada from './Components/Terminadas/Terminada';
 
 export const UserContext = createContext(null);
 
@@ -18,14 +19,15 @@ function App() {
     <div className="App">
       <Router>
         <Routes>
-          <Route path="/" element={<Login />} /> {/* Cambia la ruta raíz a la ruta de inicio de sesión */}
+          <Route path="/" element={<Login />} /> 
           <Route path="/datos" element={<Datos/>}/>
           <Route path="/programa" element={<Programas/>}/>
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/home" element={<Inicio/>}/>
-          <Route path="/usuariosRegistrados" element={<UsuariosRegis />} /> {}
-          <Route path="/revicion" element={<Revicion />} /> {}
-          {/* Agrega más rutas aquí si es necesario */}
+          <Route path="/usuariosRegistrados" element={<UsuariosRegis />} /> 
+          <Route path="/revicion" element={<Revicion />} /> 
+          <Route path="/revicion" element={<Revicion />} /> 
+          <Route path="/terminada" element={<Terminada />} />
         </Routes>
       </Router>
     </div>

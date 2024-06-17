@@ -7,11 +7,15 @@ function Fotos({ open, onClose, onCapture }) {
   const fotoDiv = useRef(null);
   const [hayFoto, setHayFoto] = useState(false);
   const [stream, setStream] = useState(null);
+  const [camera, setCamera] = useState('user'); // 'user' para cámara frontal, 'environment' para trasera
 
   const verCamara = async () => {
     try {
+      if (stream) {
+        detenerCamara();
+      }
       const currentStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 420, height: 210 }
+        video: { width: 1080, height: 720, facingMode: camera }
       });
       setStream(currentStream);
       if (videoDiv.current) {
@@ -31,7 +35,7 @@ function Fotos({ open, onClose, onCapture }) {
   };
 
   const tomarFoto = () => {
-    const w = 430;
+    const w = 720;
     const h = w / (16 / 9);
 
     const video = videoDiv.current;
@@ -59,6 +63,10 @@ function Fotos({ open, onClose, onCapture }) {
     }
   };
 
+  const cambiarCamara = () => {
+    setCamera(prevCamera => (prevCamera === 'user' ? 'environment' : 'user'));
+  };
+
   useEffect(() => {
     if (open) {
       verCamara();
@@ -69,7 +77,7 @@ function Fotos({ open, onClose, onCapture }) {
     return () => {
       detenerCamara();
     };
-  }, [open]);
+  }, [open, camera]);
 
   return (
     <Modal open={open} onClose={onClose} size="small" className="fixed-modal">
@@ -80,11 +88,11 @@ function Fotos({ open, onClose, onCapture }) {
               <video ref={videoDiv} style={{ width: '100%' }}></video>
               <Card.Content>
                 <Button className="camera-button" color="teal" onClick={tomarFoto} disabled={!open}>
-                <span class="material-symbols-outlined">
-                photo_camera
-                </span>
+                  <span className="material-symbols-outlined">photo_camera</span>
                 </Button>
-                <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+                <Button className="camera-switch-button" color="blue" onClick={cambiarCamara}>
+                  <span className="material-symbols-outlined">switch_camera</span>
+                </Button>
                 <Button color="red" onClick={onClose}>
                   <Icon name="close" /> Cerrar
                 </Button>

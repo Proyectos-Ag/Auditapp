@@ -102,6 +102,27 @@ const Reporte = () => {
         });
     };
 
+    const actualizarEstadoADevuelto = async (id) => {
+        try {
+            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
+                Estado: 'Devuelto'
+            });
+        } catch (error) {
+            console.error('Error al actualizar el estado:', error);
+        }
+    };
+
+    const actualizarEstadoTerminada = async (id) => {
+        try {
+            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
+                Estado: 'Terminada'
+            });
+        } catch (error) {
+            console.error('Error al actualizar el estado:', error);
+        }
+    };
+    
+
     return (
         <div className='espacio-repo'>
             <div style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -146,6 +167,8 @@ const Reporte = () => {
                                             <div className="dato"><span className="bold-text">Tipo de auditoría:</span> {dato.TipoAuditoria}</div>
                                             <div className="dato"><span className="bold-text">Fecha de elaboración de reporte:</span> {formatDate(dato.FechaElaboracion)}</div>
                                         </div>
+                                        <button onClick={() => actualizarEstadoADevuelto(dato._id)}>Marcar como Devuelto</button>
+                                        <button onClick={() => actualizarEstadoTerminada(dato._id)}>Marcar como Terminada</button>
                                         <div className='tabla-reporte'>
                                         <table>
                                             <thead>

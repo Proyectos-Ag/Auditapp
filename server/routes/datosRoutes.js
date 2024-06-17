@@ -19,7 +19,7 @@ router.put('/:id', async (req, res) => {
 
         if (PorcentajeTotal !== undefined) {
             datos.PorcentajeTotal = PorcentajeTotal;
-            datos.Estado = Estado;  // Actualiza el estado a "Realizada"
+            datos.Estado = Estado;  // Actualiza el estado a "Devuelto"
 
             // Actualizar Estatus basado en PorcentajeTotal
             if (PorcentajeTotal === 100) {
@@ -65,5 +65,26 @@ router.put('/:id', async (req, res) => {
         res.status(500).json({ error: 'Error interno del servidor', details: error.message });
     }
 });
+
+router.put('/estado/:id', async (req, res) => {
+    const { id } = req.params;
+    const { Estado } = req.body;
+    try {
+        const datos = await Datos.findById(id);
+        if (!datos) {
+            return res.status(404).json({ error: 'Datos no encontrados' });
+        }
+
+        // Actualizar solo el estado
+        datos.Estado = Estado;
+
+        await datos.save();
+        res.status(200).json({ message: 'Estado actualizado correctamente' });
+    } catch (error) {
+        console.error('Error al actualizar el estado:', error);
+        res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+    }
+});
+
 
 module.exports = router;

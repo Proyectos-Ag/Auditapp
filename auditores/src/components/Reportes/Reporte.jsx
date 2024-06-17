@@ -211,7 +211,6 @@ const Reporte = () => {
                                             </thead>
                                             <div>Objetivo de ejemplo</div>
                                         </table>
-
                                         <table>
                                             <thead>
                                                 <tr>

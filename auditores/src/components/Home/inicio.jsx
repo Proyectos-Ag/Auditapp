@@ -1,9 +1,10 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext,useState, useEffect } from "react";
 import './css/inicio.css';
-import nopal from './assets/img/nopal.jpg';
-import nopal2 from './assets/img/nopal2.jpg';
-import Navigation from "../Navigation/narbar";
+import nopal from '../../assets/img/nopal.jpg'
+import nopal2 from '../../assets/img/nopal2.jpg'
+import Navigation from "../Navigation/narbar"
 import { UserContext } from '../../App';
+
 
 const Inicio = () => {
   const images = [nopal, nopal2];
@@ -30,16 +31,16 @@ const Inicio = () => {
         <Navigation />
       </div>
       <div className="inicio-content">
-        <h1>Bienvenido</h1>
-        {userData && (
-          <div className="user-info">
-            <p className="user-name">Nombre: {userData.Nombre}</p>
-            <p className="user-email">Correo: {userData.Correo}</p>
-          </div>
-        )}
-      </div>
+          <h1>Bienvenido</h1>
+          {userData && (
+            <div className="user-info">
+              <p className="user-name">{userData.Nombre}</p>
+            </div>
+          )}
+        </div>
     </div>
   );
+  
 };
 
 export default Inicio;
