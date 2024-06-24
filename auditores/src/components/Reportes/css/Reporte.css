@@ -148,3 +148,9 @@ th.conformity-header-repo {
 .hidden {
     display: none;
 }
+
+.tablas-reporte table{
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}

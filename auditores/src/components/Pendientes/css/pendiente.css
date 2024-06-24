@@ -3,8 +3,8 @@
     flex-direction: column;
     align-items: center;
     margin: 2rem auto 0;
-    width: 67vw;
-    max-width: 70vw;
+    width: 59rem;
+    max-width: 70rem;
     padding: 20px;
     background-color: #ffffff;
     border-radius: 8px;
@@ -50,10 +50,15 @@
 }
 
 .duracion-bloque {
-    width: 68vw;
+    width: 59rem;
     margin-bottom: 20px;
     background-color: #00B096;
+    border-radius: 10px;
     cursor: pointer;
+}
+
+.duracion-bloque:hover {
+    background-color: #009657;
 }
 
 .duracion-bloque h2 {
@@ -66,9 +71,9 @@
 }
 
 table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+  width: 56.8rem;
+  border-collapse: collapse;
+  margin-bottom: 20px;
 }
 
 table, th, td {
@@ -94,6 +99,14 @@ th, td {
     background-color: #BFFF99;
 }
 
+.th-comentario{
+    background-color: #ffffff !important;
+    border-color: #ff0000;
+    border-style: dashed;
+    margin-bottom: 2%;
+    width: 100%;
+}
+
 .conforme-fuente{
     display: flex;
     margin-left: 0%;
@@ -108,7 +121,7 @@ th.conformity-header {
 .update-button {
     margin-top: 10px;
     margin-bottom: 10px;
-    background-color: #00ca3d;
+    background-color: #00cc3d;
     color: #ffffff;
     border: none;
     width: 14%;
@@ -116,6 +129,7 @@ th.conformity-header {
     font-size: 14px;
     font-weight: bold;
     border-radius: 11px;
+    cursor: pointer;
 }
 
 .update-button:hover {
@@ -124,9 +138,9 @@ th.conformity-header {
 
 .material-symbols-outlined {
   font-variation-settings:
-  'FILL' 0,
+  'FILL' 1,
   'wght' 400,
-  'GRAD' 0,
+  'GRAD' 1,
   'opsz' 24
 }
 
@@ -135,6 +149,13 @@ th.conformity-header {
     flex-direction: column;
     align-items: center;
 
+}
+
+.button-foto{
+    padding: 4px 6px 1px 7px;
+    background-color: #00b36e;
+    color: #ffffff;
+    border: none;
 }
 
 .update-button-container.hidden {

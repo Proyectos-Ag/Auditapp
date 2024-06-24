@@ -7,7 +7,7 @@ function Fotos({ open, onClose, onCapture }) {
   const fotoDiv = useRef(null);
   const [hayFoto, setHayFoto] = useState(false);
   const [stream, setStream] = useState(null);
-  const [camera, setCamera] = useState('user'); // 'user' para cámara frontal, 'environment' para trasera
+  const [camera, setCamera] = useState('user');
 
   const verCamara = async () => {
     try {
@@ -85,13 +85,13 @@ function Fotos({ open, onClose, onCapture }) {
         <Container className="miApp" fluid textAlign="center">
           <Card.Group centered>
             <Card>
-              <video ref={videoDiv} style={{ width: '100%' }}></video>
+              <video ref={videoDiv} style={{ width: '100%', height: 'auto'}}></video>
               <Card.Content>
-                <Button className="camera-button" color="teal" onClick={tomarFoto} disabled={!open}>
-                  <span className="material-symbols-outlined">photo_camera</span>
-                </Button>
+                <button className="camera-button" color="teal" onClick={tomarFoto} disabled={!open}>
+                  <span className="material-symbols-outlined" style={{fontSize: "40px",}}>photo_camera</span>
+                </button>
                 <Button className="camera-switch-button" color="blue" onClick={cambiarCamara}>
-                  <span className="material-symbols-outlined">switch_camera</span>
+                  <span className="material-symbols-outlined" >switch_camera</span>
                 </Button>
                 <Button color="red" onClick={onClose}>
                   <Icon name="close" /> Cerrar

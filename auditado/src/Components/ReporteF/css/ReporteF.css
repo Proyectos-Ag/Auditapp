@@ -18,13 +18,13 @@
 }
 
 .datos-container-repo th {
-    background-color: #BFFF99;
+    background-color: #bdfdbd;
 }
 
 th.conformity-header-repo {
     text-align: center;
     vertical-align: middle;
-    background-color: #1f9b1b;
+    background-color: #189c44;
     color: #ffffff;
 }
 
@@ -37,9 +37,7 @@ th.conformity-header-repo {
 }
 
 .header-container-datos-repo h1{
-    display: flex;
     align-items: center;
-    margin-left: 21%;
     width: 100%;
     margin-bottom: 20px;
 }
@@ -79,6 +77,7 @@ th.conformity-header-repo {
 }
 
 .logo-empresa-repo {
+    position: absolute;
     height: auto;
     width: 14%;
     max-width: 20%;
@@ -171,4 +170,13 @@ table, th, td {
 
 .alingR{
     text-align: justify;
+}
+
+.encabezado{
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    border-radius: 10px;
+    width: 100%;
+    background-color: #98ff9d;
 }

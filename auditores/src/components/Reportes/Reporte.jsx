@@ -146,6 +146,7 @@ const Reporte = () => {
                                             <div className="dato"><span className="bold-text">Tipo de auditoría:</span> {dato.TipoAuditoria}</div>
                                             <div className="dato"><span className="bold-text">Fecha de elaboración de reporte:</span> {formatDate(dato.FechaElaboracion)}</div>
                                         </div>
+                                        <div className='tablas-reporte'>
                                         <table>
                                             <thead>
                                                 <tr>
@@ -180,7 +181,7 @@ const Reporte = () => {
                                                         {Object.keys(contarCriteriosPorTipo(conteo, 'M')).map(criterio => (
                                                             <div key={criterio} className="horizontal-inline-item"> {conteo[criterio]}
                                                             </div>
-                                                        ))}
+                                                        ))} 
                                                     </div>
                                                 </div>
                                                 <div className="horizontal-item">
@@ -309,6 +310,7 @@ const Reporte = () => {
                                                     ))}
                                                 </tbody>
                                             </table>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

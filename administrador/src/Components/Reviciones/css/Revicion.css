@@ -62,7 +62,12 @@ th.conformity-header-repo {
     width: 81rem;
     margin-bottom: 20px;
     background-color: #00B096;
+    border-radius: 10px;
     cursor: pointer;
+}
+
+.duracion-bloque-repo:hover{
+    background-color: #009657;
 }
 
 .duracion-bloque-repo h2 {
@@ -124,11 +129,11 @@ th.conformity-header-repo {
 
 .horizontal-inline {
     display: flex;
-    align-items: center; /* Alinea verticalmente los elementos al centro */
+    align-items: center; 
 }
 
 .horizontal-inline-item {
-    margin-left: 5px; /* Ajusta el margen según sea necesario */
+    margin-left: 5px; 
 }
 
 .update-button-container.hidden {
@@ -161,4 +166,50 @@ th.conformity-header-repo {
 
 .alingR{
     text-align: justify;
+}
+
+.buttons-estado{
+    display: flex;
+    justify-content: end;
+    gap: 10px;
+}
+
+.buttons-estado button{
+    width: 10%;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    color: #ffffff;
+    font-weight: bold;
+    background-color: #00cc7e;
+}
+
+.boton-rechazar{
+    background-color: #cc0000 !important;
+}
+
+.boton-rechazar:hover{
+    background-color: #9c0000 !important;
+}
+
+.boton-nota{
+    background-color: #007acc !important;
+}
+
+.boton-nota:hover{
+    background-color: #005e9c  !important;
+}
+
+.buttons-estado button:hover{
+    color: #ffffff;
+    background-color: #009657;
+}
+
+.textarea-mod{
+    position: absolute;
+    margin-top: 2.5rem;
+    width: 25.5rem;
+    height: 30%;
+    margin-left: 44.5rem;
 }

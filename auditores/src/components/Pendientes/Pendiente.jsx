@@ -5,7 +5,6 @@ import logo from "../../assets/img/logoAguida.png";
 import './css/pendiente.css';
 import Navigation from '../Navigation/narbar';
 import Fotos from './Foto'; 
-import { Button } from 'semantic-ui-react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 
@@ -290,6 +289,11 @@ const Pendientes = () => {
                                         Generar Reporte
                                     </button>
                                 </div>
+                                {dato.Comentario && (
+                                    <th className='th-comentario'>
+                                        <div>{dato.Comentario}</div>
+                                    </th>
+                                )}
                                 {hiddenDurations.includes(dato.Duracion) ? null :
                                     dato.Programa.map((programa, programIdx) => (
                                         <div key={programIdx}>
@@ -317,6 +321,9 @@ const Pendientes = () => {
                                                 <tbody>
                                                     {programa.Descripcion.map((desc, descIdx) => {
                                                         const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+                                                        const base64String = desc.Hallazgo.startsWith('data:image/png;base64,')
+                                                                ? desc.Hallazgo
+                                                                : `data:image/png;base64,${desc.Hallazgo}`;
                                                         return (
                                                             <tr key={descIdx}>
                                                                 <td>{desc.ID}</td>
@@ -338,16 +345,25 @@ const Pendientes = () => {
                                                                         className="textarea-custom"
                                                                     ></textarea>
                                                                 </td>
+                                                                
                                                                 <td>
                                                                     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-                                                                    <Button color="green" onClick={() => handleOpenModal(fieldKey)}>
+                                                                    <button className='button-foto' onClick={() => handleOpenModal(fieldKey)}>
                                                                         <span className="material-symbols-outlined">
                                                                             add_a_photo
                                                                         </span>
-                                                                    </Button>
-                                                                    {capturedPhotos[fieldKey] && (
-                                                                        <img src={capturedPhotos[fieldKey]} alt="Captura" style={{ width: '100px', height: 'auto' }} />
+                                                                        {desc.Hallazgo ? (
+                                                                                <img
+                                                                                    src={base64String}
+                                                                                    alt="Evidencia"
+                                                                                    className="hallazgo-imagen"
+                                                                                />
+                                                                            ) : null}
+                                                                            {capturedPhotos[fieldKey] && (
+                                                                        <img src={capturedPhotos[fieldKey]} alt="Captura" style={{ width: '100%', height: 'auto' }} />
                                                                     )}
+                                                                    </button>
+                                                                    
                                                                 </td>
                                                             </tr>
                                                         );

@@ -23,6 +23,7 @@ const Datos = () => {
     Estado: '',
     PorcentajeTotal: '',
     FechaElaboracion:'',
+    Comentario:'',
     Estatus:''
   });
 
@@ -327,10 +328,11 @@ const Datos = () => {
           ID: desc.ID,
           Criterio: desc.Criterio || null,
           Requisito: desc.Requisito,
-          Observacion: desc.Observacion || "",
-          Hallazgo: desc.Hallazgo || " ",
-          FechaElaboracion: desc.Hallazgo || " ",
-          Estatus: desc.Hallazgo || " "
+          Observacion:"",
+          Hallazgo: "",
+          FechaElaboracion: "",
+          Comentario: "",
+          Estatus: ""
         }))
       };
       console.log(selectedProgram);

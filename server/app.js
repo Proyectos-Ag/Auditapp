@@ -12,7 +12,8 @@ const datosRoutes = require('./routes/datosRoutes');
 const areasRoutes = require('./routes/areasRoutes');
 const programasRoutes = require('./routes/programaRoutes')
 const authRoutes = require('./routes/authRoutes');
-const fotoRoutes = require('./routes/fotoRoutes')
+const fotoRoutes = require('./routes/fotoRoutes');
+const ishikawa = require('./routes/ishikawaRoutes');
 
 
 const app = express();
@@ -20,8 +21,8 @@ const app = express();
 const dotenv = require('dotenv');
 dotenv.config();
 
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ limit: '1mb', extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const mongo = require('./config/dbconfig');
 
@@ -47,6 +48,7 @@ app.use('/programas', programasRoutes);
 app.use('/areas', areasRoutes);
 app.use('/auth', authRoutes);
 app.use('/foto', fotoRoutes);
+app.use('/ishikawa', ishikawa);
 
 // Catch 404 and forward to error handler
 app.use(function(req, res, next) {

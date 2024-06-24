@@ -36,6 +36,7 @@ const DatosSchema = new mongoose.Schema({
   Estado: { type: String, required: false },
   PorcentajeTotal: { type: String, required: false },
   FechaElaboracion: { type: String, required: false },
+  Comentario:{ type: String, required: false },
   Estatus:{ type: String, required: false }
 });
 

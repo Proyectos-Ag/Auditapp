@@ -4,6 +4,7 @@ import { UserContext } from '../../App';
 import logo from "../../assets/img/logoAguida.png";
 import './css/Revicion.css'; 
 import Navigation from '../Navigation/Navbar';
+import Swal from 'sweetalert2';
 
 const Reporte = () => {
     const { userData } = useContext(UserContext);
@@ -11,56 +12,68 @@ const Reporte = () => {
     const [hiddenDurations, setHiddenDurations] = useState([]);
     const [, setCriteriosConteo] = useState({});
     const [, setTotalCriterios] = useState(0);
+    const [notas, setNotas] = useState({});
+    const [visibleTextAreas, setVisibleTextAreas] = useState({});
+
 
     useEffect(() => {
-        const obtenerDatos = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
-                if (userData && userData.Correo) {
-                    const datosFiltrados = response.data.filter((dato) => 
-                        dato.Estado === "Realizada"
-                    );
-        
-                    // Ordenar por FechaElaboracion del más reciente al más antiguo
-                    datosFiltrados.sort((a, b) => {
-                        const fechaElaboracionA = new Date(a.FechaElaboracion);
-                        const fechaElaboracionB = new Date(b.FechaElaboracion);
-                        return fechaElaboracionB - fechaElaboracionA;
-                    });
-        
-                    let conteo = {};
-                    let total = 0;
-                    datosFiltrados.forEach(dato => {
-                        dato.Programa.forEach(programa => {
-                            programa.Descripcion.forEach(desc => {
-                                if (desc.Criterio && desc.Criterio !== 'NA') {
-                                    if (!conteo[desc.Criterio]) {
-                                        conteo[desc.Criterio] = 0;
-                                    }
-                                    conteo[desc.Criterio]++;
-                                    total++;
+        obtenerDatos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    },[userData]);
+
+    useEffect(() => {
+        const notasIniciales = {};
+        datos.forEach(dato => {
+            notasIniciales[dato._id] = dato.Comentario || '';
+        });
+        setNotas(notasIniciales);
+    }, [datos]);    
+
+    const obtenerDatos = async () => {
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+            if (userData && userData.Correo) {
+                const datosFiltrados = response.data.filter((dato) => 
+                    dato.Estado === "Realizada"
+                );
+    
+                // Ordenar por FechaElaboracion del más reciente al más antiguo
+                datosFiltrados.sort((a, b) => {
+                    const fechaElaboracionA = new Date(a.FechaElaboracion);
+                    const fechaElaboracionB = new Date(b.FechaElaboracion);
+                    return fechaElaboracionB - fechaElaboracionA;
+                });
+    
+                let conteo = {};
+                let total = 0;
+                datosFiltrados.forEach(dato => {
+                    dato.Programa.forEach(programa => {
+                        programa.Descripcion.forEach(desc => {
+                            if (desc.Criterio && desc.Criterio !== 'NA') {
+                                if (!conteo[desc.Criterio]) {
+                                    conteo[desc.Criterio] = 0;
                                 }
-                            });
+                                conteo[desc.Criterio]++;
+                                total++;
+                            }
                         });
                     });
-        
-                    setDatos(datosFiltrados);
-                    setCriteriosConteo(conteo);
-                    setTotalCriterios(total);
-        
-                    // Ocultar todas las duraciones excepto la más reciente por defecto
-                    const duracionesOcultas = datosFiltrados.slice(1).map(dato => dato.Duracion);
-                    setHiddenDurations(duracionesOcultas);
-                } else {
-                    console.log('userData o userData.Correo no definidos:', userData);
-                }
-            } catch (error) {
-                console.error('Error al obtener los datos:', error);
+                });
+    
+                setDatos(datosFiltrados);
+                setCriteriosConteo(conteo);
+                setTotalCriterios(total);
+    
+                // Ocultar todas las duraciones excepto la más reciente por defecto
+                const duracionesOcultas = datosFiltrados.slice(1).map(dato => dato.Duracion);
+                setHiddenDurations(duracionesOcultas);
+            } else {
+                console.log('userData o userData.Correo no definidos:', userData);
             }
-        };        
-
-        obtenerDatos();
-    }, [userData]);
+        } catch (error) {
+            console.error('Error al obtener los datos:', error);
+        }
+    }; 
 
     const toggleDuration = (duration) => {
         setHiddenDurations(hiddenDurations.includes(duration) ?
@@ -105,8 +118,10 @@ const Reporte = () => {
     const actualizarEstadoADevuelto = async (id) => {
         try {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
-                Estado: 'Devuelto'
+                Estado: 'Devuelto',
+                Comentario: notas[id] || '' 
             });
+            obtenerDatos();
         } catch (error) {
             console.error('Error al actualizar el estado:', error);
         }
@@ -117,18 +132,69 @@ const Reporte = () => {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
                 Estado: 'Terminada'
             });
+            obtenerDatos();
+            window.location.reload();
         } catch (error) {
             console.error('Error al actualizar el estado:', error);
         }
     };
     
+    const notaCorreccion = (e, id) => {
+        const newNotas = { ...notas, [id]: e.target.value };
+        setNotas(newNotas);
+    };    
+    
+    const toggleTextAreaVisibility = (id) => {
+        setVisibleTextAreas(prevState => ({
+            ...prevState,
+            [id]: !prevState[id]
+        }));
+    };    
+
+    const Rechazar = async (id) => {
+        Swal.fire({
+          title: '¿Estás seguro de querer rechazar este reporte?',
+          text: '¡El reporte sera devuelto!',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3ccc37',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Sí, rechazar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            actualizarEstadoADevuelto(id);
+          }
+        });
+      };
+
+      const Aprobar = async (id) => {
+        Swal.fire({
+          title: '¿Estás seguro de querer aprobar este reporte?',
+          text: '¡Sera enviado al auditado!',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3ccc37',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Sí, aprobar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            actualizarEstadoTerminada(id);
+          }
+        });
+      };
 
     return (
         <div className='espacio-repo'>
             <div style={{ position: 'absolute', top: 0, left: 0 }}>
                 <Navigation />
             </div>
+            
             <div className="datos-container-repo">
+
+            <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Revisión de reporte</h1>
+       
                 <div className="form-group-datos">
                     {datos.map((dato, periodIdx) => {
                         let conteo = {};
@@ -158,6 +224,20 @@ const Reporte = () => {
 
                                 <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
                                     <div className='contenedor-repo'>
+                                    <div className='buttons-estado'>
+                                    <button onClick={() => toggleTextAreaVisibility(dato._id)}>
+                                            {visibleTextAreas[dato._id] ? 'Ocultar Nota' : 'Escribir Nota'}
+                                        </button>
+                                        <button className='boton-rechazar' onClick={() => Rechazar(dato._id)}>Rechazar</button>
+                                        <button onClick={() => Aprobar(dato._id)}>Aprobar</button>
+                                    </div>     
+                                    {visibleTextAreas[dato._id] && (
+                                        <textarea
+                                            className='textarea-mod'
+                                            value={notas[dato._id] || ''}
+                                            onChange={(e) => notaCorreccion(e, dato._id)}
+                                        ></textarea>
+                                    )}
                                         <div className="header-container-datos-repo">
                                             <img src={logo} alt="Logo Empresa" className="logo-empresa-repo" />
                                             <h1>REPORTE DE AUDITORÍA</h1>
@@ -167,8 +247,6 @@ const Reporte = () => {
                                             <div className="dato"><span className="bold-text">Tipo de auditoría:</span> {dato.TipoAuditoria}</div>
                                             <div className="dato"><span className="bold-text">Fecha de elaboración de reporte:</span> {formatDate(dato.FechaElaboracion)}</div>
                                         </div>
-                                        <button onClick={() => actualizarEstadoADevuelto(dato._id)}>Marcar como Devuelto</button>
-                                        <button onClick={() => actualizarEstadoTerminada(dato._id)}>Marcar como Terminada</button>
                                         <div className='tabla-reporte'>
                                         <table>
                                             <thead>

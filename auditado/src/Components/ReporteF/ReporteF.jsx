@@ -4,6 +4,7 @@ import { UserContext } from '../../App';
 import logo from "../../assets/img/logoAguida.png";
 import './css/ReporteF.css'; 
 import Navigation from '../Navigation/navbar';
+import { useNavigate } from 'react-router-dom';
 
 const Reporte = () => {
     const { userData } = useContext(UserContext);
@@ -11,6 +12,7 @@ const Reporte = () => {
     const [hiddenDurations, setHiddenDurations] = useState([]);
     const [, setCriteriosConteo] = useState({});
     const [, setTotalCriterios] = useState(0);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const obtenerDatos = async () => {
@@ -102,6 +104,10 @@ const Reporte = () => {
         });
     };
 
+    const navIshikawa = (_id, id) => {
+        navigate(`/ishikawa/${_id}/${id}`);
+    };    
+
     return (
         <div className='espacio-repo'>
             <div style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -139,7 +145,9 @@ const Reporte = () => {
                                     <div className='contenedor-repo'>
                                         <div className="header-container-datos-repo">
                                             <img src={logo} alt="Logo Empresa" className="logo-empresa-repo" />
+                                            <div className='encabezado'>
                                             <h1>REPORTE DE AUDITORÍA</h1>
+                                            </div>
                                         </div>
                                         <div className='mover'>
                                             <div className="dato"><span className="bold-text">Duración de la auditoría:</span> {dato.Duracion}</div>
@@ -298,8 +306,9 @@ const Reporte = () => {
                                                                                 />
                                                                             ) : null}
                                                                         </td>
-                                                                        <td>{}</td>
-                                                                        <td>{}</td>
+                                                                        <td>
+                                                                            <button onClick={() => navIshikawa(dato._id, desc.ID)}>Ishikawa</button>
+                                                                        </td>
                                                                         <td>{}</td>
                                                                         <td>{}</td>
                                                                     </tr>

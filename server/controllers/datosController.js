@@ -22,6 +22,7 @@ const nuevoAuditoria = async (req, res) => {
       Estado,
       PorcentajeTotal,
       FechaElaboracion,
+      Comentario,
       Estatus
     } = req.body;
 
@@ -43,6 +44,7 @@ const nuevoAuditoria = async (req, res) => {
       Estado,
       PorcentajeTotal,
       FechaElaboracion,
+      Comentario,
       Estatus
     });
 
