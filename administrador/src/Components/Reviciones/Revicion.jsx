@@ -6,6 +6,7 @@ import './css/Revicion.css';
 import Navigation from '../Navigation/Navbar';
 import Swal from 'sweetalert2';
 
+
 const Reporte = () => {
     const { userData } = useContext(UserContext);
     const [datos, setDatos] = useState([]);
@@ -14,7 +15,7 @@ const Reporte = () => {
     const [, setTotalCriterios] = useState(0);
     const [notas, setNotas] = useState({});
     const [visibleTextAreas, setVisibleTextAreas] = useState({});
-
+   
 
     useEffect(() => {
         obtenerDatos();
@@ -28,7 +29,7 @@ const Reporte = () => {
         });
         setNotas(notasIniciales);
     }, [datos]);    
-
+    
     const obtenerDatos = async () => {
         try {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
@@ -133,24 +134,33 @@ const Reporte = () => {
                 Estado: 'Terminada'
             });
             obtenerDatos();
-            window.location.reload();
         } catch (error) {
             console.error('Error al actualizar el estado:', error);
         }
     };
     
-    const notaCorreccion = (e, id) => {
-        const newNotas = { ...notas, [id]: e.target.value };
-        setNotas(newNotas);
-    };    
     
-    const toggleTextAreaVisibility = (id) => {
+    const debounce = (func, wait) => {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    };
+    
+    const toggleTextAreaVisibility = debounce((id) => {
         setVisibleTextAreas(prevState => ({
             ...prevState,
             [id]: !prevState[id]
         }));
-    };    
-
+    }, 100); 
+    
+    
+     const notaCorreccion = (e, id) => {
+        const newNotas = { ...notas, [id]: e.target.value };
+        setNotas(newNotas);
+    };
+       
     const Rechazar = async (id) => {
         Swal.fire({
           title: '¿Estás seguro de querer rechazar este reporte?',
@@ -183,7 +193,7 @@ const Reporte = () => {
             actualizarEstadoTerminada(id);
           }
         });
-      };
+      };  
 
     return (
         <div className='espacio-repo'>
@@ -399,7 +409,9 @@ const Reporte = () => {
                                                                                 />
                                                                             ) : null}
                                                                         </td>
-                                                                        <td>{}</td>
+                                                                        <td>
+                                                                       
+                                                                        </td>
                                                                         <td>{}</td>
                                                                         <td>{}</td>
                                                                         <td>{}</td>

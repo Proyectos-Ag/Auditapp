@@ -78,6 +78,12 @@ function DrawerList({ handleLogout }) {
         { text: "Revisión de auditoría", href: "/revicion" },
         { text: "Auditorias terminadas", href: "/terminada" }
       ]
+    },
+    {
+      text: "Ishikawa", subItems: [
+        { text: "Generar", href: "/datos" },
+        { text: "Revisión", href: "/ishikawa" }
+      ]
     }
   ];
 

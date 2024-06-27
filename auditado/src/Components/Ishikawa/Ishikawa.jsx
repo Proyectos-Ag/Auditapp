@@ -17,6 +17,7 @@ const Ishikawa = () => {
   const [requisito, setRequisito] = useState('');
   const [hallazgo, setHallazgo] = useState('');
   const [auditado, setAuditados] = useState('');
+  const [proceso,  setEnProceso] = useState([]);
 
   const [formData,setData] = useState({
     problema: '',
@@ -43,7 +44,7 @@ const Ishikawa = () => {
     text15: ''
    }]);
   const [actividades, setActividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: '' }]);
-  const [accionesCorrectivas, setAccionesCorrectivas] = useState([{ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' }]);
+  
 
   const { _id, id } = useParams();
   const {Observacion}= useParams();
@@ -82,6 +83,21 @@ const Ishikawa = () => {
     obtenerDatos();
   }, [userData, _id, id]);  
 
+  useEffect(() => {
+    const verificarRegistro = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+        const registroExistente = response.data.some(item => item.idRep === _id && item.idReq === id);
+        setEnProceso(registroExistente);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+  
+    verificarRegistro();
+  }, [_id, id]);
+  
+
   const handleDiagrama = (e) => {
     const { name, value } = e.target;
     setDiagrama((prevState) => [{
@@ -107,8 +123,10 @@ const Ishikawa = () => {
       !formData.afectacion ||
       !formData.correccion ||
       !formData.causa ||
-      actividades.some(act => !act.actividad || !act.responsable || !act.fechaCompromiso) ||
-      accionesCorrectivas.some(acc => !acc.actividad || !acc.responsable || !acc.fechaCompromiso)
+      diagrama.some(dia => !dia.problema || !dia.text1 || !dia.text2 || !dia.text3 
+      || !dia.text10 || !dia.text11) ||
+      actividades.some(act => !act.actividad || !act.responsable || !act.fechaCompromiso)
+    
     ) {
       Swal.fire({
         title: 'Campos incompletos',
@@ -121,6 +139,8 @@ const Ishikawa = () => {
   
     try {
       const data = {
+        idRep:_id,
+        idReq: id,
         fecha: fechaActual,
         auditado,
         problema: formData.problema,
@@ -131,7 +151,6 @@ const Ishikawa = () => {
         diagrama,
         afectacion: formData.afectacion,
         actividades,
-        accionesCorrectivas,
         estado: 'en revicion'
       };
   
@@ -161,28 +180,28 @@ const Ishikawa = () => {
     setActividades(nuevasActividades);
   };
   
-  const eliminarFilaAccionCorrectiva = (index) => {
-    const nuevasAccionesCorrectivas = accionesCorrectivas.filter((_, i) => i !== index);
-    setAccionesCorrectivas(nuevasAccionesCorrectivas);
-  };  
 
-  const handleAccionCorrectivaChange = (index, field, value) => {
-    const nuevasAccionesCorrectivas = [...accionesCorrectivas];
-    nuevasAccionesCorrectivas[index][field] = value;
-    setAccionesCorrectivas(nuevasAccionesCorrectivas);
-  };
 
   const agregarFilaActividad = () => {
     setActividades([...actividades, { actividad: '', responsable: '', fechaCompromiso: '' }]);
   };
 
-  const agregarFilaAccionCorrectiva = () => {
-    setAccionesCorrectivas([...accionesCorrectivas, { actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' }]);
-  };
+
 
   if (!datos || !programa || !descripcion) {
     return <div>Cargando...</div>;
   }
+
+  if (proceso) {
+    return <div>
+      <div style={{ position: 'absolute', top: 0, left: 0 }}>
+        <Navigation />
+      </div>
+      <div className='mss-proceso'>
+      <div>En proceso</div></div>
+      </div>;
+  }
+  
 
   return (
     <div>
@@ -191,6 +210,7 @@ const Ishikawa = () => {
       </div>
       <div className="image-container">
         <img src={Logo} alt="Logo Aguida" className='logo-empresa' />
+        <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
         <div className='posicion-en'>
           <h2>Problema:
             <input type="text" className="problema-input" name='problema' value={formData.problema} onChange={handleDatos}
@@ -321,76 +341,12 @@ const Ishikawa = () => {
             </table>
             <button onClick={agregarFilaActividad} className='button-agregar'>Agregar Fila</button>
 
-            <table style={{border:'none'}}>
-              <thead>
-                <tr>
-                  <th>Actividad</th>
-                  <th>Responsable</th>
-                  <th>Fecha Compromiso</th>
-                  <th colSpan="2" className="sub-div">
-                    <div>Acción Correctiva cerrada</div>
-                    <div style={{ display: 'flex' }}>
-                      <div className="left">Sí</div>
-                      <div className="right">No</div>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {accionesCorrectivas.map((accion, index) => (
-                  <tr key={index}>
-                    <td>
-                      <textarea
-                        className='table-input'
-                        type="text"
-                        value={accion.actividad}
-                        onChange={(e) => handleAccionCorrectivaChange(index, 'actividad', e.target.value)}
-                      />
-                    </td>
-                    <td>
-                      <textarea
-                        className='table-input'
-                        type="text"
-                        value={accion.responsable}
-                        onChange={(e) => handleAccionCorrectivaChange(index, 'responsable', e.target.value)}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="date"
-                        value={accion.fechaCompromiso}
-                        onChange={(e) => handleAccionCorrectivaChange(index, 'fechaCompromiso', e.target.value)}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={accion.cerrada === 'Sí'}
-                        onChange={(e) => handleAccionCorrectivaChange(index, 'cerrada', e.target.checked ? 'Sí' : 'No')}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={accion.cerrada === 'No'}
-                        onChange={(e) => handleAccionCorrectivaChange(index, 'cerrada', e.target.checked ? 'Sí' : 'No')}
-                      />
-                    </td>
-                    <td className='cancel-acc'>
-                    {index !== 0 && (
-                      <button onClick={() => eliminarFilaAccionCorrectiva(index)}>Eliminar</button>
-                    )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <button onClick={agregarFilaAccionCorrectiva} className='button-agregar'>Agregar Acción Correctiva</button>
+            
           </div>
           <button onClick={handleSave} className='button-guar-ish'>Guardar</button>
         </div>
       </div>
     );
   };
-  
-  export default Ishikawa;
+
+export default Ishikawa;

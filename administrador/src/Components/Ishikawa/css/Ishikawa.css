@@ -47,12 +47,11 @@
     margin-left: 56rem;
 }
 
-.logo-empresa {
+.logo-empresa-ishi {
     height: auto;
-    max-width: 13rem;
+    max-width: 15rem;
     border-radius: 10px;
-    margin: 0 60rem 0 0;
-    margin-bottom: 20px;
+    margin: 0 0 0 62rem;
 
 }
 
@@ -145,18 +144,5 @@
     border: none; 
     color: #ffffff; 
     cursor: pointer; 
-  }
-
-  .mss-proceso{
-    display: block;
-    margin-top: 15%;
-    margin-left: 25%;
-    padding: 30px;
-    width: 50%;
-    height: 60%;
-    border-radius: 20px;
-    justify-content: center;
-    font-size: 50px;
-    background-color: aliceblue;
   }
   

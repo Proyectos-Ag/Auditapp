@@ -4,6 +4,7 @@ import { UserContext } from '../../App';
 import logo from "../../assets/img/logoAguida.png";
 import './css/Terminada.css'; 
 import Navigation from '../Navigation/Navbar';
+import { useNavigate } from 'react-router-dom';
 
 const Terminada = () => {
     const { userData } = useContext(UserContext);
@@ -11,6 +12,7 @@ const Terminada = () => {
     const [hiddenDurations, setHiddenDurations] = useState([]);
     const [, setCriteriosConteo] = useState({});
     const [, setTotalCriterios] = useState(0);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const obtenerDatos = async () => {
@@ -101,6 +103,10 @@ const Terminada = () => {
             year: 'numeric'
         });
     };
+
+    const navIshikawa = (_id, id) => {
+        navigate(`/ishikawa/${_id}/${id}`);
+    }; 
 
     return (
         <div className='espacio-repo'>
@@ -298,7 +304,9 @@ const Terminada = () => {
                                                                                 />
                                                                             ) : null}
                                                                         </td>
-                                                                        <td>{}</td>
+                                                                        <td>
+                                                                        <button onClick={() => navIshikawa(dato._id, desc.ID)}>Ishikawa</button>
+                                                                        </td>
                                                                         <td>{}</td>
                                                                         <td>{}</td>
                                                                         <td>{}</td>

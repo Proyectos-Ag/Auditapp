@@ -34,6 +34,8 @@ const accionCorrectivaSchema = new mongoose.Schema({
 });
 
 const ishikawaSchema = new mongoose.Schema({
+    idRep: String,
+    idReq: String,
     problema: String,
     afectacion: String,
     fecha: String,
@@ -45,7 +47,8 @@ const ishikawaSchema = new mongoose.Schema({
     diagrama:[diagramaSchema],
     actividades: [actividadSchema],
     accionesCorrectivas: [accionCorrectivaSchema],
-    estado: String
+    estado: String,
+    notaRechazo: String
 });
 
 const Ishikawa = mongoose.model('Ishikawa', ishikawaSchema);

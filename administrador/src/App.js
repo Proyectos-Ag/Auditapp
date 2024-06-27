@@ -10,6 +10,8 @@ import Programas from './Components/ProgramasIn/Programa';
 import AuthProvider from './authProvider';
 import Revicion from './Components/Reviciones/Revicion';
 import Terminada from './Components/Terminadas/Terminada';
+import Ishikawa from './Components/Ishikawa/Ishikawa';
+import IshikawaRev from './Components/IshikawaRev/IshikawaRev';
 
 export const UserContext = createContext(null);
 
@@ -28,6 +30,8 @@ function App() {
           <Route path="/revicion" element={<Revicion />} /> 
           <Route path="/revicion" element={<Revicion />} /> 
           <Route path="/terminada" element={<Terminada />} />
+          <Route path="/ishikawa" element={<Ishikawa/>} />
+          <Route path="/ishikawa/:_id/:id" element={<IshikawaRev/>}/>
         </Routes>
       </Router>
     </div>

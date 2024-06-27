@@ -66,18 +66,44 @@ const Pendientes = () => {
                     });
         
                     setDatos(datosFiltrados);
-        
-                    // Set initial state for checkboxes
+                    
+                    // Set initial state for checkboxes and percentages
                     const initialCheckboxes = {};
-                    datosFiltrados.forEach((dato, periodIdx) => {
-                        dato.Programa.forEach((programa, programIdx) => {
-                            programa.Descripcion.forEach((desc, descIdx) => {
-                                const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
-                                initialCheckboxes[fieldKey] = desc.Criterio;
-                            });
-                        });
-                    });
-                    setSelectedCheckboxes(initialCheckboxes);
+const initialPercentages = {};
+const checkboxValues = {
+    'Conforme': 1,
+    'm': 0.7,
+    'M': 0.3,
+    'C': 0,
+    'NA': null
+};
+
+datosFiltrados.forEach((dato, periodIdx) => {
+    dato.Programa.forEach((programa, programIdx) => {
+        const programKey = `${periodIdx}_${programIdx}`;
+
+        let totalValue = 0;
+        let validPrograms = 0;
+
+        programa.Descripcion.forEach((desc, descIdx) => {
+            const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+            initialCheckboxes[fieldKey] = desc.Criterio;
+
+            const value = checkboxValues[desc.Criterio];
+            if (value !== null) {
+                totalValue += value;
+                validPrograms++;
+            }
+        });
+
+        // Calcula el porcentaje para el programa
+        const percentage = validPrograms > 0 ? (totalValue / validPrograms) * 100 : 0;
+        initialPercentages[programKey] = percentage;
+    });
+});
+
+setSelectedCheckboxes(initialCheckboxes);
+setPercentages(initialPercentages);
         
                 } else {
                     console.log('userData o userData.Correo no definidos:', userData);
@@ -108,7 +134,7 @@ const Pendientes = () => {
         setSelectedCheckboxes(prevState => {
             const updated = { ...prevState, [key]: checkboxName };
     
-            // Update percentage
+            // Actualizar el porcentaje
             const programKey = `${periodIdx}_${programIdx}`;
             const relevantCheckboxes = Object.keys(updated).filter(k => k.startsWith(`${periodIdx}_${programIdx}_`));
             let totalValue = 0;
@@ -131,7 +157,7 @@ const Pendientes = () => {
     
             return updated;
         });
-    };
+    };    
         
 
     const handleOpenModal = (fieldKey) => {
@@ -143,11 +169,11 @@ const Pendientes = () => {
         if (selectedField) {
             setCapturedPhotos(prev => ({
                 ...prev,
-                [selectedField]: dataUrl
+                [selectedField]: dataUrl.startsWith('data:image/png;base64,') ? dataUrl : `data:image/png;base64,${dataUrl}`
             }));
         }
         setModalOpen(false);
-    };
+    };    
 
     const navigate = useNavigate();
 
@@ -173,7 +199,7 @@ const Pendientes = () => {
                         ID: desc.ID,
                         Criterio: selectedCheckboxes[fieldKey] || '',
                         Observacion: document.querySelector(`textarea[name=Observaciones_${periodIdx}_${programIdx}_${descIdx}]`).value,
-                        Hallazgo: capturedPhotos[fieldKey] || ''
+                        Hallazgo: capturedPhotos[fieldKey] || desc.Hallazgo || ''
                     };
                 });
     
@@ -212,7 +238,7 @@ const Pendientes = () => {
         } catch (error) {
             console.error('Error en handleUpdatePeriod:', error);
         }
-    };    
+    };     
     
     const areAllCheckboxesFilled = (periodIdx) => {
         const numPrograms = datos[periodIdx].Programa.length;
@@ -266,123 +292,122 @@ const Pendientes = () => {
     };
 
     return (
-    <div>
-        <div style={{ position: 'absolute', top: 0, left: 0 }}>
-            <Navigation />
-        </div>
-        <div className="datos-container2">
-            <div className="form-group-datos">
-                {datos.length === 0 ? (
-                    <p>Sin auditorías pendientes</p>
-                ) : (
-                    datos.map((dato, periodIdx) => (
-                        <div key={periodIdx}>
-                            <div className="duracion-bloque">
-                                <h2 onClick={() => toggleDuration(dato.Duracion)}>
-                                    Período: {dato.Duracion}
-                                </h2>
-                            </div>
-                            <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
-                                <div className="header-container-datos">
-                                    <img src={logo} alt="Logo Empresa" className="logo-empresa" />
-                                    <button className="update-button" onClick={() => handleUpdatePeriod(periodIdx)}>
-                                        Generar Reporte
-                                    </button>
-                                </div>
-                                {dato.Comentario && (
-                                    <th className='th-comentario'>
-                                        <div>{dato.Comentario}</div>
-                                    </th>
-                                )}
-                                {hiddenDurations.includes(dato.Duracion) ? null :
-                                    dato.Programa.map((programa, programIdx) => (
-                                        <div key={programIdx}>
-                                            <table>
-                                                <thead>
-                                                    <tr>
-                                                        <th colSpan="2">{programa.Nombre}</th>
-                                                        <th colSpan="5" className="conformity-header">Conformidad</th>
-                                                        <th colSpan="2" className={getPercentageClass(percentages[`${periodIdx}_${programIdx}`])}>
-                                                            Porcentaje: {percentages[`${periodIdx}_${programIdx}`] ? percentages[`${periodIdx}_${programIdx}`].toFixed(2) : 0}%
-                                                        </th>
-                                                    </tr>
-                                                    <tr>
-                                                        <th>ID</th>
-                                                        <th>Requisitos</th>
-                                                        <th><div className='conforme-fuente'>Con</div></th>
-                                                        <th>m</th>
-                                                        <th>M</th>
-                                                        <th>C</th>
-                                                        <th>NA</th>
-                                                        <th className='padingH'>Hallazgos</th>
-                                                        <th>Evidencia</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {programa.Descripcion.map((desc, descIdx) => {
-                                                        const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
-                                                        const base64String = desc.Hallazgo.startsWith('data:image/png;base64,')
-                                                                ? desc.Hallazgo
-                                                                : `data:image/png;base64,${desc.Hallazgo}`;
-                                                        return (
-                                                            <tr key={descIdx}>
-                                                                <td>{desc.ID}</td>
-                                                                <td className='alingR'>{desc.Requisito}</td>
-                                                                {['Conforme', 'm', 'M', 'C', 'NA'].map((checkboxName) => (
-                                                                    <td key={checkboxName} className={getTdClass(periodIdx, programIdx, descIdx, checkboxName)}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            name={`${checkboxName}_${periodIdx}_${programIdx}_${descIdx}`}
-                                                                            checked={selectedCheckboxes[fieldKey] === checkboxName}
-                                                                            onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, checkboxName)}
-                                                                        />
-                                                                    </td>
-                                                                ))}
-                                                                <td className='espacio-test'>
-                                                                    <textarea
-                                                                        name={`Observaciones_${periodIdx}_${programIdx}_${descIdx}`}
-                                                                        defaultValue={desc.Observacion}
-                                                                        className="textarea-custom"
-                                                                    ></textarea>
-                                                                </td>
-                                                                
-                                                                <td>
-                                                                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-                                                                    <button className='button-foto' onClick={() => handleOpenModal(fieldKey)}>
-                                                                        <span className="material-symbols-outlined">
-                                                                            add_a_photo
-                                                                        </span>
-                                                                        {desc.Hallazgo ? (
-                                                                                <img
-                                                                                    src={base64String}
-                                                                                    alt="Evidencia"
-                                                                                    className="hallazgo-imagen"
-                                                                                />
-                                                                            ) : null}
-                                                                            {capturedPhotos[fieldKey] && (
-                                                                        <img src={capturedPhotos[fieldKey]} alt="Captura" style={{ width: '100%', height: 'auto' }} />
-                                                                    )}
-                                                                    </button>
-                                                                    
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    ))
-                                }
-                            </div>
-                        </div>
-                    ))
-                )}
+        <div>
+            <div style={{ position: 'absolute', top: 0, left: 0 }}>
+                <Navigation />
             </div>
+            <div className="datos-container2">
+                <div className="form-group-datos">
+                    {datos.length === 0 ? (
+                        <p>Sin auditorías pendientes</p>
+                    ) : (
+                        datos.map((dato, periodIdx) => (
+                            <div key={periodIdx}>
+                                <div className="duracion-bloque">
+                                    <h2 onClick={() => toggleDuration(dato.Duracion)}>
+                                        Período: {dato.Duracion}
+                                    </h2>
+                                </div>
+                                <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
+                                    <div className="header-container-datos">
+                                        <img src={logo} alt="Logo Empresa" className="logo-empresa" />
+                                        <button className="update-button" onClick={() => handleUpdatePeriod(periodIdx)}>
+                                            Generar Reporte
+                                        </button>
+                                    </div>
+                                    {dato.Comentario && (
+                                        <th className='th-comentario'>
+                                            <div>{dato.Comentario}</div>
+                                        </th>
+                                    )}
+                                    {hiddenDurations.includes(dato.Duracion) ? null :
+                                        dato.Programa.map((programa, programIdx) => (
+                                            <div key={programIdx}>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th colSpan="2">{programa.Nombre}</th>
+                                                            <th colSpan="5" className="conformity-header">Conformidad</th>
+                                                            <th colSpan="2" className={getPercentageClass(percentages[`${periodIdx}_${programIdx}`])}>
+                                                                Porcentaje: {percentages[`${periodIdx}_${programIdx}`] ? percentages[`${periodIdx}_${programIdx}`].toFixed(2) : 0}%
+                                                            </th>
+                                                        </tr>
+                                                        <tr>
+                                                            <th>ID</th>
+                                                            <th>Requisitos</th>
+                                                            <th><div className='conforme-fuente'>Con</div></th>
+                                                            <th>m</th>
+                                                            <th>M</th>
+                                                            <th>C</th>
+                                                            <th>NA</th>
+                                                            <th className='padingH'>Hallazgos</th>
+                                                            <th>Evidencia</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {programa.Descripcion.map((desc, descIdx) => {
+                                                            const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+                                                            const base64String = desc.Hallazgo.startsWith('data:image/png;base64,')
+                                                                    ? desc.Hallazgo
+                                                                    : `data:image/png;base64,${desc.Hallazgo}`;
+                                                            return (
+                                                                <tr key={descIdx}>
+                                                                    <td>{desc.ID}</td>
+                                                                    <td className='alingR'>{desc.Requisito}</td>
+                                                                    {['Conforme', 'm', 'M', 'C', 'NA'].map((checkboxName) => (
+                                                                        <td key={checkboxName} className={getTdClass(periodIdx, programIdx, descIdx, checkboxName)}>
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                name={`${checkboxName}_${periodIdx}_${programIdx}_${descIdx}`}
+                                                                                checked={selectedCheckboxes[fieldKey] === checkboxName}
+                                                                                onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, checkboxName)}
+                                                                            />
+                                                                        </td>
+                                                                    ))}
+                                                                    <td className='espacio-test'>
+                                                                        <textarea
+                                                                            name={`Observaciones_${periodIdx}_${programIdx}_${descIdx}`}
+                                                                            defaultValue={desc.Observacion}
+                                                                            className="textarea-custom"
+                                                                        ></textarea>
+                                                                    </td>
+                                                                    
+                                                                    <td>
+                                                                        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+                                                                        <button className='button-foto' onClick={() => handleOpenModal(fieldKey)}>
+                                                                            <span className="material-symbols-outlined">
+                                                                                add_a_photo
+                                                                            </span>
+                                                                            {desc.Hallazgo ? (
+                                                                                    <img
+                                                                                        src={base64String}
+                                                                                        alt="Evidencia"
+                                                                                        className="hallazgo-imagen"
+                                                                                    />
+                                                                                ) : null}
+                                                                                {capturedPhotos[fieldKey] && (
+                                                                            <img src={capturedPhotos[fieldKey]} alt="Captura" style={{ width: '100%', height: 'auto' }} />
+                                                                        )}
+                                                                        </button>
+                                                                        
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+            <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
         </div>
-        <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
-    </div>
-);
-   
+    );       
 };
 
 export default Pendientes;
