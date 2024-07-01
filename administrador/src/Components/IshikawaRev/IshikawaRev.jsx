@@ -19,7 +19,7 @@ const IshikawaRev = () => {
         const fetchData = async () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-                const dataFiltrada = response.data.filter(item => item.estado === 'en revicion');
+                const dataFiltrada = response.data.filter(item => item.estado === 'En revisión' ||  item.estado === 'revisado');
                 setIshikawas(dataFiltrada);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -58,23 +58,25 @@ const IshikawaRev = () => {
 
     const handleGuardarCambios = async () => {
         try {
-            // Revisa que `filteredIshikawas` no esté vacío
             if (filteredIshikawas.length === 0) {
                 alert('No hay datos para actualizar');
                 return;
             }
     
-            // Usa el `_id` del primer elemento de `filteredIshikawas`
             const { _id } = filteredIshikawas[0];
-    
             const updatedIshikawa = {
                 accionesCorrectivas
             };
     
-            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`,{ 
-                estado:'revisado',
-                updatedIshikawa
-            } );
+            console.log('Enviando datos a actualizar:', updatedIshikawa);
+    
+            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, {
+                estado: 'revisado',
+                ...updatedIshikawa
+            });
+    
+            console.log('Respuesta del servidor:', response.data);
+    
             alert('Información actualizada correctamente');
         } catch (error) {
             console.error('Error updating data:', error);
@@ -103,7 +105,8 @@ const IshikawaRev = () => {
             </div>
             <div>
             {mensaje && <div className="mensaje-error"><div className='mens-error'>
-                <div style={{display:'flex', justifyContent:'center'}}>{mensaje}</div> <div style={{display:'flex',fontSize:'100px', justifyContent:'center'}}>🏝️</div></div>
+                <div style={{display:'flex', justifyContent:'center'}}>{mensaje}</div> 
+                <div style={{display:'flex',fontSize:'100px', justifyContent:'center'}}>🏝️</div></div>
                 </div>}
                 {filteredIshikawas.map((ishikawa, index) => (
                 <div key={index} className="image-container">

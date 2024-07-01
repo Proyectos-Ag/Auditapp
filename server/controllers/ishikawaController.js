@@ -24,6 +24,7 @@ const obtenerIshikawas = async (req, res) => {
 const actualizarIshikawa = async (req, res) => {
     try {
         const { id } = req.params;
+        console.log('Datos recibidos en el cuerpo de la solicitud:', req.body); 
         const updatedIshikawa = await Ishikawa.findByIdAndUpdate(id, req.body, { new: true });
         if (!updatedIshikawa) {
             return res.status(404).json({ error: 'Ishikawa not found' });

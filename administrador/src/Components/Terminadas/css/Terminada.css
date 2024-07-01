@@ -1,0 +1,16 @@
+.btn-en-revision {
+    background-color: yellow;
+    color: black;
+}
+.btn-aprobado {
+    background-color: green;
+    color: white;
+}
+.btn-rechazado {
+    background-color: red;
+    color: white;
+}
+.btn-desconocido {
+    background-color: gray;
+    color: white;
+}

@@ -159,4 +159,44 @@
     font-size: 50px;
     background-color: aliceblue;
   }
-  
+
+  .th-comentario{
+    display: flex;
+    justify-content: center;
+    background-color: #ffffff !important;
+    border-color: #ff0000;
+    border-style: dashed;
+    width: 81.1rem;
+    margin-top: 4rem;
+    margin-bottom: -3.5rem;
+    margin-left: 1.3rem;
+   
+    
+}
+
+.text-div {
+    display: flex;
+    position: absolute;
+    justify-content: center;
+    align-items: center;
+    width: 200px; 
+    height: 100px;
+    box-sizing: border-box;
+    resize: vertical;
+    text-align: center; 
+    flex-direction: column;
+    outline: none;
+    resize: none;
+
+    background-color: transparent;
+    color: black;
+    position: absolute;
+    font-size: larger;
+    width: 12em;
+    height: 3.8em;
+    text-align: center;
+    resize: none;
+    border: none;
+    outline: none;
+    overflow: hidden; 
+}

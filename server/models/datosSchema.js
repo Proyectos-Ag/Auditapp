@@ -37,7 +37,8 @@ const DatosSchema = new mongoose.Schema({
   PorcentajeTotal: { type: String, required: false },
   FechaElaboracion: { type: String, required: false },
   Comentario:{ type: String, required: false },
-  Estatus:{ type: String, required: false }
+  Estatus:{ type: String, required: false },
+  PorcentajeCump: { type: String, required: false }
 });
 
 const Datos = mongoose.model("Datos", DatosSchema);
