@@ -23,12 +23,6 @@ const diagramaSchema = new mongoose.Schema({
 const actividadSchema = new mongoose.Schema({
     actividad: String,
     responsable: String,
-    fechaCompromiso: Date
-});
-
-const accionCorrectivaSchema = new mongoose.Schema({
-    actividad: String,
-    responsable: String,
     fechaCompromiso: Date,
     cerrada: String
 });
@@ -46,7 +40,6 @@ const ishikawaSchema = new mongoose.Schema({
     causa: String,
     diagrama:[diagramaSchema],
     actividades: [actividadSchema],
-    accionesCorrectivas: [accionCorrectivaSchema],
     estado: String,
     notaRechazo: String
 });

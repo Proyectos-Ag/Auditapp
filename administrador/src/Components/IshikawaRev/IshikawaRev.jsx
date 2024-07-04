@@ -5,6 +5,7 @@ import Logo from "../../assets/img/logoAguida.png";
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import IshikawaImg from '../../assets/img/Ishikawa-transformed.png';
+import Swal from 'sweetalert2';
 
 const IshikawaRev = () => {
     const [ishikawas, setIshikawas] = useState([]);
@@ -13,20 +14,33 @@ const IshikawaRev = () => {
     const [mensaje, setMensaje] = useState('');
     const [notaRechazo, setNotaRechazo] = useState('');
     const [showNotaRechazo, setShowNotaRechazo] = useState(false);
-    const [accionesCorrectivas, setAccionesCorrectivas] = useState([{ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' }]);
+    const [actividades, setActividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' }]);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-                const dataFiltrada = response.data.filter(item => item.estado === 'En revisión' ||  item.estado === 'revisado');
-                setIshikawas(dataFiltrada);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
+        
         fetchData();
     }, []);
+
+    const fetchData = async () => {
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+            const dataFiltrada = response.data.filter(item => item.estado === 'En revisión' ||  item.estado === 'revisado');
+            setIshikawas(dataFiltrada);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+
+    useEffect(() => {
+        if (filteredIshikawas.length > 0) {
+            const actividadesIniciales = filteredIshikawas[0].actividades.map(actividad => ({
+                ...actividad,
+                fechaCompromiso: new Date(actividad.fechaCompromiso).toISOString().split('T')[0]  // Formato YYYY-MM-DD
+            }));
+            setActividades(actividadesIniciales);
+        }
+    }, [filteredIshikawas]);
+    
     
 
     useEffect(() => {
@@ -39,22 +53,23 @@ const IshikawaRev = () => {
                 setMensaje('');
             }
         }
-    }, [ishikawas, _id, id]);
-
-    const eliminarFilaAccionCorrectiva = (index) => {
-        const nuevasAccionesCorrectivas = accionesCorrectivas.filter((_, i) => i !== index);
-        setAccionesCorrectivas(nuevasAccionesCorrectivas);
-    };  
+    }, [ishikawas, _id, id]);  
 
     const handleAccionCorrectivaChange = (index, field, value) => {
-        const nuevasAccionesCorrectivas = [...accionesCorrectivas];
-        nuevasAccionesCorrectivas[index][field] = value;
-        setAccionesCorrectivas(nuevasAccionesCorrectivas);
-    };
-
-    const agregarFilaAccionCorrectiva = () => {
-        setAccionesCorrectivas([...accionesCorrectivas, { actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' }]);
-    };
+        const nuevasAccionesCorrectivas = [...actividades];
+    
+        if (field === 'cerrada') {
+            nuevasAccionesCorrectivas[index][field] = value ? 'Sí' : 'No';
+        } else if (field === 'cerradaNo') {
+            nuevasAccionesCorrectivas[index]['cerrada'] = value ? 'No' : 'Sí';
+        } else if (field === 'fechaCompromiso') {
+            nuevasAccionesCorrectivas[index][field] = new Date(value).toISOString().split('T')[0];  // Formato YYYY-MM-DD
+        } else {
+            nuevasAccionesCorrectivas[index][field] = value;
+        }
+    
+        setActividades(nuevasAccionesCorrectivas);
+    };         
 
     const handleGuardarCambios = async () => {
         try {
@@ -65,7 +80,7 @@ const IshikawaRev = () => {
     
             const { _id } = filteredIshikawas[0];
             const updatedIshikawa = {
-                accionesCorrectivas
+                actividades
             };
     
             console.log('Enviando datos a actualizar:', updatedIshikawa);
@@ -84,18 +99,58 @@ const IshikawaRev = () => {
         }
     };
 
+    const Aprobar = async (id, porcentaje) => {
+        Swal.fire({
+          title: '¿Estás seguro de querer aprobar este diagrama?',
+          text: '¡Está acción no se puede revertir!',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3ccc37',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Sí, Aprobar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            handleGuardarCambios ();
+          }
+        });
+      };
+
     const handleGuardarRechazo = async () => {
     try {
         const { _id } = filteredIshikawas[0];
         await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, {
             estado: 'rechazado',
-            notaRechazo // Añade la nota de rechazo al objeto enviado
+            notaRechazo 
         });
-        alert('Información actualizada correctamente');
+        fetchData();
     } catch (error) {
         console.error('Error updating data:', error);
         alert('Hubo un error al actualizar la información');
     }
+    };
+
+    const Rechazar = async (id, porcentaje) => {
+        Swal.fire({
+          title: '¿Estás seguro de querer rechazar este diagrama?',
+          text: '¡El diagrama será devuelto!',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3ccc37',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Sí, rechazar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            handleGuardarRechazo ();
+          }
+        });
+      };
+
+    const ajustarFecha = (fechaString) => {
+        const fecha = new Date(fechaString);
+        fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset());
+        return fecha.toLocaleDateString('es-ES');
     };
 
     return (
@@ -110,25 +165,29 @@ const IshikawaRev = () => {
                 </div>}
                 {filteredIshikawas.map((ishikawa, index) => (
                 <div key={index} className="image-container">
-                    {showNotaRechazo && (
-                        <div className="nota-rechazo-container">
-                            <textarea
-                                value={notaRechazo}
-                                onChange={(e) => setNotaRechazo(e.target.value)}
-                                className='nota-rechazo'
-                                rows="4"
-                                cols="50"
-                                placeholder="Escribe aquí la razón del rechazo"
-                            />
-                        </div>
+                    {ishikawa.estado === 'En revisión' && (
+                        <>
+                            {showNotaRechazo && (
+                                <div className="nota-rechazo-container">
+                                    <textarea
+                                        value={notaRechazo}
+                                        onChange={(e) => setNotaRechazo(e.target.value)}
+                                        className='nota-rechazo'
+                                        rows="4"
+                                        cols="50"
+                                        placeholder="Escribe aquí la razón del rechazo"
+                                    />
+                                </div>
+                            )}
+                            <div className='buttons-g'>
+                                <button onClick={() => setShowNotaRechazo(!showNotaRechazo)}>
+                                    {showNotaRechazo ? 'Ocultar Nota' : 'Nota'}
+                                </button>
+                                <button onClick={Rechazar} className='boton-rechazar' >Rechazar</button>
+                                <button onClick={Aprobar} >Aprobar</button>
+                            </div>
+                        </>
                     )}
-                    <div className='buttons-g'>
-                    <button onClick={() => setShowNotaRechazo(!showNotaRechazo)}>
-                        {showNotaRechazo ? 'Ocultar Nota' : 'Nota'}
-                    </button>
-                    <button onClick={handleGuardarRechazo} className='button-guardar'>Rechazar</button>
-                    <button onClick={handleGuardarCambios} className='button-guardar'>Guardar Cambios</button>
-                    </div>
                     <img src={Logo} alt="Logo Aguida" className='logo-empresa-ishi' />
                     <div className='posicion-en'>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -208,7 +267,11 @@ const IshikawaRev = () => {
                             <tr key={i}>
                             <td>{actividad.actividad}</td>
                             <td>{actividad.responsable}</td>
-                            <td>{new Date(actividad.fechaCompromiso).toLocaleDateString()}</td>
+                            <td>
+                                {ishikawa ? (
+                                    ishikawa.actividades.length > 0 ? ajustarFecha(ishikawa.actividades[0].fechaCompromiso) : ''
+                                ) : ''}
+                            </td>
                             </tr>
                         ))}
                         </tbody>
@@ -219,8 +282,8 @@ const IshikawaRev = () => {
                         <th>Actividad</th>
                         <th>Responsable</th>
                         <th>Fecha Compromiso</th>
-                        <th colSpan="2" className="sub-div">
-                            <div>Acción Correctiva cerrada</div>
+                        <th colSpan="2" className="sub-div" >
+                            <div >Acción Correctiva cerrada</div>
                             <div style={{ display: 'flex' }}>
                             <div className="left">Sí</div>
                             <div className="right">No</div>
@@ -229,59 +292,57 @@ const IshikawaRev = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {accionesCorrectivas.map((accion, index) => (
-                        <tr key={index}>
-                            <td>
-                            <textarea
-                                className='table-input'
-                                type="text"
-                                value={accion.actividad}
-                                onChange={(e) => handleAccionCorrectivaChange(index, 'actividad', e.target.value)}
-                            />
-                            </td>
-                            <td>
-                            <textarea
-                                className='table-input'
-                                type="text"
-                                value={accion.responsable}
-                                onChange={(e) => handleAccionCorrectivaChange(index, 'responsable', e.target.value)}
-                            />
-                            </td>
-                            <td>
-                            <input
-                                type="date"
-                                value={accion.fechaCompromiso}
-                                onChange={(e) => handleAccionCorrectivaChange(index, 'fechaCompromiso', e.target.value)}
-                            />
-                            </td>
-                            <td>
-                            <input
-                                type="checkbox"
-                                checked={accion.cerrada === 'Sí'}
-                                onChange={(e) => handleAccionCorrectivaChange(index, 'cerrada', e.target.checked ? 'Sí' : 'No')}
-                            />
-                            </td>
-                            <td>
-                            <input
-                                type="checkbox"
-                                checked={accion.cerrada === 'No'}
-                                onChange={(e) => handleAccionCorrectivaChange(index, 'cerrada', e.target.checked ? 'Sí' : 'No')}
-                            />
-                            </td>
-                            <td className='cancel-acc'>
-                            {index !== 0 && (
-                                <button onClick={() => eliminarFilaAccionCorrectiva(index)}>Eliminar</button>
-                            )}
-                            </td>
-                        </tr>
-                        ))}
-                    </tbody>
+    {actividades.map((actividad, index) => (
+        <tr key={index}>
+            <td>
+                <input
+                    type="text"
+                    value={actividad.actividad}
+                    readOnly
+                    className="no-border"
+                />
+            </td>
+            <td>
+                <input
+                    type="text"
+                    value={actividad.responsable}
+                    readOnly
+                    className="no-border"
+                />
+            </td>
+            <td>
+                <input
+                    type="date"
+                    value={actividad.fechaCompromiso}
+                    readOnly
+                    className="no-border"
+                />
+            </td>
+            <td>
+                <input
+                    type="checkbox"
+                    checked={actividad.cerrada === 'Sí'}
+                    onChange={(e) => handleAccionCorrectivaChange(index, 'cerrada', e.target.checked)}
+                    className="no-border"
+                />
+            </td>
+            <td>
+                <input
+                    type="checkbox"
+                    checked={actividad.cerrada === 'No'}
+                    onChange={(e) => handleAccionCorrectivaChange(index, 'cerradaNo', e.target.checked)}
+                    className="no-border"
+                />
+            </td>
+        </tr>
+    ))}
+</tbody>
+
                     </table>
-                    <button onClick={agregarFilaAccionCorrectiva} className='button-agregar'>Agregar Acción Correctiva</button>
+                    
                     </div>
                 </div>
                 ))}
-                
             </div>
             
         </div>

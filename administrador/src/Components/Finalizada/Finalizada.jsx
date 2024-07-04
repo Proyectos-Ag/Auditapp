@@ -2,11 +2,10 @@ import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { UserContext } from '../../App';
 import logo from "../../assets/img/logoAguida.png";
-import './css/ReporteF.css'; 
-import Navigation from '../Navigation/navbar';
+import Navigation from '../Navigation/Navbar';
 import { useNavigate } from 'react-router-dom';
 
-const ReporteF = () => {
+const Finalizada = () => {
     const { userData } = useContext(UserContext);
     const [datos, setDatos] = useState([]);
     const [ishikawas, setIshikawas] = useState([]);
@@ -16,54 +15,55 @@ const ReporteF = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const obtenerDatos = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
-                if (userData && userData.Correo) {
-                    const datosFiltrados = response.data.filter((dato) => 
-                        dato.Auditados === userData.Nombre && dato.Estado === "Terminada"
-                    );
-        
-                    // Ordenar por FechaElaboracion del más reciente al más antiguo
-                    datosFiltrados.sort((a, b) => {
-                        const fechaElaboracionA = new Date(a.FechaElaboracion);
-                        const fechaElaboracionB = new Date(b.FechaElaboracion);
-                        return fechaElaboracionB - fechaElaboracionA;
-                    });
-        
-                    let conteo = {};
-                    let total = 0;
-                    datosFiltrados.forEach(dato => {
-                        dato.Programa.forEach(programa => {
-                            programa.Descripcion.forEach(desc => {
-                                if (desc.Criterio && desc.Criterio !== 'NA') {
-                                    if (!conteo[desc.Criterio]) {
-                                        conteo[desc.Criterio] = 0;
-                                    }
-                                    conteo[desc.Criterio]++;
-                                    total++;
+        obtenerDatos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    },[userData]);
+
+    const obtenerDatos = async () => {
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+            if (userData && userData.Correo) {
+                const datosFiltrados = response.data.filter((dato) => 
+                    dato.Estado === "Finalizado"
+                );
+    
+                // Ordenar por FechaElaboracion del más reciente al más antiguo
+                datosFiltrados.sort((a, b) => {
+                    const fechaElaboracionA = new Date(a.FechaElaboracion);
+                    const fechaElaboracionB = new Date(b.FechaElaboracion);
+                    return fechaElaboracionB - fechaElaboracionA;
+                });
+    
+                let conteo = {};
+                let total = 0;
+                datosFiltrados.forEach(dato => {
+                    dato.Programa.forEach(programa => {
+                        programa.Descripcion.forEach(desc => {
+                            if (desc.Criterio && desc.Criterio !== 'NA') {
+                                if (!conteo[desc.Criterio]) {
+                                    conteo[desc.Criterio] = 0;
                                 }
-                            });
+                                conteo[desc.Criterio]++;
+                                total++;
+                            }
                         });
                     });
-        
-                    setDatos(datosFiltrados);
-                    setCriteriosConteo(conteo);
-                    setTotalCriterios(total);
-        
-                    // Ocultar todas las duraciones excepto la más reciente por defecto
-                    const duracionesOcultas = datosFiltrados.slice(1).map(dato => dato.Duracion);
-                    setHiddenDurations(duracionesOcultas);
-                } else {
-                    console.log('userData o userData.Correo no definidos:', userData);
-                }
-            } catch (error) {
-                console.error('Error al obtener los datos:', error);
+                });
+    
+                setDatos(datosFiltrados);
+                setCriteriosConteo(conteo);
+                setTotalCriterios(total);
+    
+                // Ocultar todas las duraciones excepto la más reciente por defecto
+                const duracionesOcultas = datosFiltrados.slice(1).map(dato => dato.Duracion);
+                setHiddenDurations(duracionesOcultas);
+            } else {
+                console.log('userData o userData.Correo no definidos:', userData);
             }
-        };        
-
-        obtenerDatos();
-    }, [userData]);
+        } catch (error) {
+            console.error('Error al obtener los datos:', error);
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -121,7 +121,12 @@ const ReporteF = () => {
 
     const navIshikawa = (_id, id) => {
         navigate(`/ishikawa/${_id}/${id}`);
-    };    
+    };
+
+    const calcularResultado = (porcentajeTotal, porcentajeCump) => {
+        const resultado = (100 - porcentajeTotal) * porcentajeCump / 100;
+        return resultado.toFixed(2);
+    };        
 
     return (
         <div className='espacio-repo'>
@@ -130,11 +135,10 @@ const ReporteF = () => {
             </div>
             <div className="datos-container-repo">
                 <div className="form-group-datos">
-                    {datos.map((dato, periodIdx) => {
+                {datos.map((dato, periodIdx) => {
                         let conteo = {};
                         let total = 0;
-                        let totalNC = { menor: 0, mayor: 0, critica: 0 };
-    
+
                         dato.Programa.forEach(programa => {
                             programa.Descripcion.forEach(desc => {
                                 if (desc.Criterio && desc.Criterio !== 'NA') {
@@ -143,30 +147,12 @@ const ReporteF = () => {
                                     }
                                     conteo[desc.Criterio]++;
                                     total++;
-    
-                                    // Sumar cantidades de NC Menor, NC Mayor y NC Crítica
-                                    if (desc.Criterio === 'm') totalNC.menor++;
-                                    if (desc.Criterio === 'M') totalNC.mayor++;
-                                    if (desc.Criterio === 'C') totalNC.critica++;
                                 }
                             });
                         });
-    
-                        const sumaNC = totalNC.menor + totalNC.mayor + totalNC.critica;
+
                         const puntosObtenidos = calcularPuntosTotales(conteo);
-    
-                        // Calcular estadosRevisados independientemente para cada tabla
-                        let estadosRevisados = 0;
-                        const ishikawasFiltradas = ishikawas.filter(ishikawa =>
-                            ishikawa.idRep === dato._id && 
-                            (ishikawa.estado === 'En revisión' || ishikawa.estado === 'revisado' || ishikawa.estado === 'rechazado')
-                        );
-    
-                        ishikawasFiltradas.forEach(ishikawa => {
-                            if (ishikawa.estado === 'revisado') estadosRevisados++;
-                        });
-    
-                        const porcentaje = (estadosRevisados > 0 && sumaNC > 0) ? (estadosRevisados * 100) / sumaNC : 0;
+                        const resultado = calcularResultado(dato.PorcentajeTotal, dato.PorcentajeCump);
 
                         return (
                             <div key={periodIdx}>
@@ -242,69 +228,78 @@ const ReporteF = () => {
                                                 <div className="horizontal-item">Puntuación Obtenida: {puntosObtenidos}</div>
                                             </div>
                                             <div className="horizontal-group">
-                                                <div className="horizontal-item">Porcentaje: {dato.PorcentajeTotal}%</div>
+                                            <div className="horizontal-item">Porcentaje: {(parseFloat(dato.PorcentajeTotal) + parseFloat(resultado))}%</div>
+
                                                 <div className="horizontal-item">Estatus: {dato.Estatus}</div>
                                             </div>
+                                            
                                         </div>
                                         </table>
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th colSpan="1" className="conformity-header-repo">Objetivo</th>
-                                                </tr>
-                                            </thead>
-                                            <div>Objetivo de ejemplo</div>
-                                        </table>
-
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th colSpan="2" className="conformity-header-repo">Alcance</th>
-                                                </tr>
-                                                <tr>
-                                                    <th className="table-header">Programas</th>
-                                                    <th className="table-header">Áreas auditadas</th>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        {dato.Programa.map((programa, programIdx) => (
-                                                            <div key={programIdx}>
-                                                                {programa.Nombre}
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th colSpan="1" className="conformity-header-repo">Objetivo</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>Objetivo de ejemplo</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th colSpan="2" className="conformity-header-repo">Alcance</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>Programas</td>
+                                                        <td>Áreas auditadas</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            {dato.Programa.map((programa, programIdx) => (
+                                                                <div key={programIdx}>
+                                                                    {programa.Nombre}
+                                                                </div>
+                                                            ))}
+                                                        </td>
+                                                        <td>{dato.AreasAudi}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Equipo auditor</td>
+                                                        <td>Participantes en el área del recorrido</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div>Auditor líder: {dato.AuditorLider}</div>
+                                                            <div>
+                                                                {dato.EquipoAuditor.map((equipo, equipoIdx) => (
+                                                                    <div key={equipoIdx}>
+                                                                        Equipo auditor: {equipo.Nombre}
+                                                                    </div>
+                                                                ))}
                                                             </div>
-                                                        ))}
-                                                    </td>
-                                                    <td><div>{dato.AreasAudi}</div></td>
-                                                </tr>
-                                                <tr>
-                                                    <th className="table-header">Equipo auditor</th>
-                                                    <th className="table-header">Participantes en el área del recorrido</th>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        <div>Auditor líder: {dato.AuditorLider}</div>
-                                                        <div>
-                                                        {dato.EquipoAuditor.map((equipo, equipoIdx) => (
-                                                            <div key={equipoIdx}>
-                                                              Equipo auditor: {equipo.Nombre}
-                                                            </div>
-                                                        ))}</div>
-                                                        {dato.NombresObservadores && (
-                                                            <div>Observador(es): {dato.NombresObservadores}</div>
+                                                            {dato.NombresObservadores && (
+                                                                <div>Observador(es): {dato.NombresObservadores}</div>
                                                             )}
-                                                    </td>
-                                                    <td>
-                                                        <div>{dato.Auditados}</div>
-                                                    </td>
-                                                </tr>
-                                            </thead>
-                                        </table>
-
-                                        <div>
-                                        <table>
+                                                        </td>
+                                                        <td>
+                                                            <div>{dato.Auditados}</div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <div>
+                                                <table>
                                                     <thead>
                                                         <tr>
                                                             <th colSpan="6" className="conformity-header-repo">Resultados</th>
-                                                            <th colSpan="4" className="conformity-header-repo">Porcentaje de Cumplimiento: {porcentaje.toFixed(2)}%</th>
+                                                            <th colSpan="4" className="conformity-header-repo">Porcentaje de Cumplimiento: <span>
+                                                                    {dato.PorcentajeCump != null ? Number(dato.PorcentajeCump).toFixed(2) : '0.00'}
+                                                                </span>%</th>
                                                         </tr>
                                                         <tr>
                                                             <th>ID</th>
@@ -326,7 +321,7 @@ const ReporteF = () => {
                                                                 const base64String = desc.Hallazgo.startsWith('data:image/png;base64,')
                                                                     ? desc.Hallazgo
                                                                     : `data:image/png;base64,${desc.Hallazgo}`;
-    
+
                                                                 if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
                                                                     const ishikawa = ishikawas.find(ish => {
                                                                         return ish.idReq === desc.ID && ish.idRep === dato._id;
@@ -337,7 +332,7 @@ const ReporteF = () => {
                                                                         fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset());
                                                                         return fecha.toLocaleDateString('es-ES');
                                                                     };
-    
+
                                                                     return (
                                                                         <tr key={descIdx}>
                                                                             <td>{desc.ID}</td>
@@ -383,7 +378,7 @@ const ReporteF = () => {
                 </div>
             </div>
         </div>
-    );
+    );    
 };
 
-export default ReporteF;
+export default Finalizada;

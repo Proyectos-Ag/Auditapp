@@ -250,7 +250,9 @@ const Reporte = () => {
                                     )}
                                         <div className="header-container-datos-repo">
                                             <img src={logo} alt="Logo Empresa" className="logo-empresa-repo" />
+                                            <div className='encabezado'>
                                             <h1>REPORTE DE AUDITORÍA</h1>
+                                            </div>
                                         </div>
                                         <div className='mover'>
                                             <div className="dato"><span className="bold-text">Duración de la auditoría:</span> {dato.Duracion}</div>

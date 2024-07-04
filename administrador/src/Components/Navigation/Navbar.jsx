@@ -62,29 +62,43 @@ const handleLogout = () => {
 }
 
 function DrawerList({ handleLogout }) {
-  const [showSubmenu, setShowSubmenu] = useState(false); // Estado para controlar la visibilidad del submenú
+  const [showAuditoriasSubmenu, setShowAuditoriasSubmenu] = useState(false);
+  const [showCalendariosSubmenu, setShowCalendariosSubmenu] = useState(false);
 
-  const toggleSubmenu = () => {
-    setShowSubmenu(!showSubmenu); // Cambia el estado de visibilidad del submenú
+  const toggleAuditoriasSubmenu = () => {
+    setShowAuditoriasSubmenu(!showAuditoriasSubmenu);
+    setShowCalendariosSubmenu(false);
+  };
+
+  const toggleCalendariosSubmenu = () => {
+    setShowCalendariosSubmenu(!showCalendariosSubmenu);
+    setShowAuditoriasSubmenu(false);
   };
 
   const drawerItems = [
-    { text: "Inicio", href: "/home" },
     { text: "Usuarios", href: "/usuariosRegistrados" },
     { text: "Programa", href: "/programa" },
+    { text: "Departamentos", href: "/departamento" },
     {
       text: "Auditorias", subItems: [
         { text: "Generar auditoría", href: "/datos" },
         { text: "Revisión de auditoría", href: "/revicion" },
-        { text: "Auditorias terminadas", href: "/terminada" }
-      ]
+        { text: "Revisión de ishikawa", href: "/terminada" },
+        { text: "Auditorias finalizadas", href: "/finalizadas" }
+      ],
+      showSubmenu: showAuditoriasSubmenu,
+      toggleSubmenu: toggleAuditoriasSubmenu
     },
     {
-      text: "Ishikawa", subItems: [
-        { text: "Generar", href: "/datos" },
-        { text: "Revisión", href: "/ishikawa" }
-      ]
-    }
+      text: "Calendarios",
+      subItems: [
+        { text: "Calendario de Auditorias", href: "/calendario" },
+        { text: "Historial de Auditorias", href: "/auditcalendar" }
+      ],
+      showSubmenu: showCalendariosSubmenu,
+      toggleSubmenu: toggleCalendariosSubmenu
+    },
+    
   ];
 
   return (
@@ -98,13 +112,13 @@ function DrawerList({ handleLogout }) {
             {item.subItems ? (
               <Dropdown>
                 <Dropdown.Toggle variant="transparent" className="dropdown-toggle">
-                  <ListItem disablePadding className="list-item" onClick={toggleSubmenu}>
+                  <ListItem disablePadding className="list-item" onClick={item.toggleSubmenu}>
                     <ListItemButton>
                       <ListItemText primary={item.text} className="list-item-text" />
                     </ListItemButton>
                   </ListItem>
                 </Dropdown.Toggle>
-                <Dropdown.Menu style={{ display: showSubmenu ? 'block' : 'none' }}>
+                <Dropdown.Menu style={{ display: item.showSubmenu ? 'block' : 'none' }}>
                   {item.subItems.map((subItem, subIndex) => (
                     <Dropdown.Item key={subIndex}>
                       <button className="link-button" onClick={() => window.location.href = subItem.href}>

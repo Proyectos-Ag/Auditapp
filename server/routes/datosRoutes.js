@@ -68,17 +68,21 @@ router.put('/:id', async (req, res) => {
 
 router.put('/estado/:id', async (req, res) => {
     const { id } = req.params;
-    const { Estado, Comentario } = req.body;  // Añadir Comentario al destructuring
+    const { Estado, Comentario, PorcentajeCump } = req.body; 
+    console.log(req.body);
     try {
         const datos = await Datos.findById(id);
         if (!datos) {
             return res.status(404).json({ error: 'Datos no encontrados' });
         }
 
-        // Actualizar el estado y el comentario si está presente
+        // Actualizar el estado, el comentario y el porcentaje de cumplimiento si están presentes
         datos.Estado = Estado;
         if (Comentario) {
             datos.Comentario = Comentario;
+        }
+        if (PorcentajeCump) {
+            datos.PorcentajeCump = PorcentajeCump;
         }
 
         await datos.save();

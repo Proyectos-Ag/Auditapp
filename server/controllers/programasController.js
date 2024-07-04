@@ -1,6 +1,7 @@
 const Programas = require('../models/programaSchema');
 const XLSX = require('xlsx');
 
+// Obtener todos los programas
 const obtenerProgramas = async (req, res) => {
   try {
     const programas = await Programas.find();
@@ -10,6 +11,7 @@ const obtenerProgramas = async (req, res) => {
   }
 };
 
+// Crear un nuevo programa
 const crearPrograma = async (req, res) => {
   try {
     const { Nombre, Descripcion } = req.body;
@@ -21,6 +23,7 @@ const crearPrograma = async (req, res) => {
   }
 };
 
+// Carga masiva de programas desde un archivo Excel
 const cargaMasiva = async (req, res) => {
   try {
     const filePath = req.file.path;
@@ -99,9 +102,42 @@ const cargaMasiva = async (req, res) => {
   }
 };
 
+// Obtener un programa por su ID
+const obtenerProgramaPorId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const programa = await Programas.findById(id);
+    if (!programa) {
+      return res.status(404).json({ error: 'Programa no encontrado' });
+    }
+    res.status(200).json(programa);
+  } catch (error) {
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
 
+// Actualizar un programa por su ID
+const actualizarProgramaPorId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { Nombre, Descripcion } = req.body;
+    const programaActualizado = await Programas.findByIdAndUpdate(id, { Nombre, Descripcion }, { new: true });
+
+    if (!programaActualizado) {
+      return res.status(404).json({ error: 'Programa no encontrado' });
+    }
+
+    res.status(200).json(programaActualizado);
+  } catch (error) {
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+// Exportar todos los controladores
 module.exports = {
   obtenerProgramas,
   crearPrograma,
   cargaMasiva,
+  obtenerProgramaPorId,
+  actualizarProgramaPorId,
 };

@@ -12,6 +12,10 @@ import Revicion from './Components/Reviciones/Revicion';
 import Terminada from './Components/Terminadas/Terminada';
 import Ishikawa from './Components/Ishikawa/Ishikawa';
 import IshikawaRev from './Components/IshikawaRev/IshikawaRev';
+import Finalizada from './Components/Finalizada/Finalizada';
+import Calendarioss from './Components/Calendarios/AuditCalendar'
+import Calendarios from './Components/Calendarios/CalendarioGeneral'
+import Departaments from './Components/Departaments/Departaments';
 
 export const UserContext = createContext(null);
 
@@ -27,11 +31,14 @@ function App() {
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/home" element={<Inicio/>}/>
           <Route path="/usuariosRegistrados" element={<UsuariosRegis />} /> 
-          <Route path="/revicion" element={<Revicion />} /> 
-          <Route path="/revicion" element={<Revicion />} /> 
+          <Route path="/revicion" element={<Revicion />} />
           <Route path="/terminada" element={<Terminada />} />
           <Route path="/ishikawa" element={<Ishikawa/>} />
           <Route path="/ishikawa/:_id/:id" element={<IshikawaRev/>}/>
+          <Route path="/finalizadas" element={<Finalizada/>}/>
+          <Route path="/auditcalendar" element={<Calendarioss />} />
+          <Route path="/calendario" element={<Calendarios />} />
+          <Route path="/departamento" element={<Departaments />} />
         </Routes>
       </Router>
     </div>

@@ -1,22 +1,12 @@
-import React, { useContext,useState, useEffect } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import './css/inicio.css';
-import nopal from '../../assets/img/nopal.jpg'
-import nopal2 from '../../assets/img/nopal2.jpg'
-import Navigation from "../Navigation/Navbar"
+import videoFile from '../../assets/img/UpscaleVideo_1_20240628.mp4';
+import Navigation from "../Navigation/Navbar";
 import { UserContext } from '../../App';
 
-
 const Inicio = () => {
-  const images = [nopal, nopal2];
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { userData, setUserData } = useContext(UserContext);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
-    }, 5000); 
-    return () => clearInterval(interval);
-  }, [images.length]);
+  const videoRef = useRef(null);
 
   useEffect(() => {
     const storedUserData = localStorage.getItem('userData');
@@ -25,22 +15,39 @@ const Inicio = () => {
     }
   }, [setUserData]);
 
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play();
+    }
+  }, []);
+
   return (
-    <div className="inicio-container" style={{ backgroundImage: `url(${images[currentImageIndex]})`, position: 'relative' }}>
-      <div style={{ position: 'absolute', top: 0, left: 0 }}>
+    <div className="inicio-container" style={{ position: 'relative' }}>
+      <video 
+        ref={videoRef} 
+        src={videoFile} 
+        autoPlay 
+        loop 
+        muted 
+        style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0, zIndex: -1 }}
+      />
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '5%', backgroundColor:'#000000', borderRadius:'10px' }}>
         <Navigation />
       </div>
       <div className="inicio-content">
-          <h1>Bienvenido</h1>
-          {userData && (
-            <div className="user-info">
-              <p className="user-name">{userData.Nombre}</p>
-            </div>
-          )}
-        </div>
+        <h1>Bienvenido</h1>
+        {userData && (
+          <div className="user-info">
+            <br />
+            <br />
+            <br />
+            <br />
+            <p className="user-name">{userData.Nombre}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
-  
 };
 
 export default Inicio;

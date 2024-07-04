@@ -18,13 +18,13 @@
 }
 
 .datos-container-repo th {
-    background-color: #BFFF99;
+    background-color: #bdfdbd;
 }
 
 th.conformity-header-repo {
     text-align: center;
     vertical-align: middle;
-    background-color: #1f9b1b;
+    background-color: #189c44;
     color: #ffffff;
 }
 
@@ -37,9 +37,7 @@ th.conformity-header-repo {
 }
 
 .header-container-datos-repo h1{
-    display: flex;
     align-items: center;
-    margin-left: 21%;
     width: 100%;
     margin-bottom: 20px;
 }
@@ -62,12 +60,7 @@ th.conformity-header-repo {
     width: 81rem;
     margin-bottom: 20px;
     background-color: #00B096;
-    border-radius: 10px;
     cursor: pointer;
-}
-
-.duracion-bloque-repo:hover{
-    background-color: #009657;
 }
 
 .duracion-bloque-repo h2 {
@@ -84,6 +77,7 @@ th.conformity-header-repo {
 }
 
 .logo-empresa-repo {
+    position: absolute;
     height: auto;
     width: 14%;
     max-width: 20%;
@@ -129,11 +123,11 @@ th.conformity-header-repo {
 
 .horizontal-inline {
     display: flex;
-    align-items: center; 
+    align-items: center; /* Alinea verticalmente los elementos al centro */
 }
 
 .horizontal-inline-item {
-    margin-left: 5px; 
+    margin-left: 5px; /* Ajusta el margen según sea necesario */
 }
 
 .update-button-container.hidden {
@@ -143,6 +137,16 @@ th.conformity-header-repo {
 .table-header {
     width: 150px; 
     text-align: center;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
 }
 
 .alingR2{
@@ -168,10 +172,20 @@ th.conformity-header-repo {
     text-align: justify;
 }
 
+.encabezado{
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    border-radius: 5px;
+    width: 150rem;
+    background-color: #98ff9d;
+}
+
 .buttons-estado{
     display: flex;
     justify-content: end;
     gap: 10px;
+    margin-bottom: 1em;
 }
 
 .buttons-estado button{

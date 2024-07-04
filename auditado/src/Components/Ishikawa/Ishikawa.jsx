@@ -7,7 +7,6 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { UserContext } from '../../App';
 import Swal from 'sweetalert2';
-import { useNavigate } from 'react-router-dom';
 
 const Ishikawa = () => {
   const { userData } = useContext(UserContext);
@@ -18,6 +17,7 @@ const Ishikawa = () => {
   const [hallazgo, setHallazgo] = useState('');
   const [auditado, setAuditados] = useState('');
   const [proceso,  setEnProceso] = useState([]);
+  const [aprobado,  setAprobado] = useState([]);
   const [rechazo,  setRechazo] = useState([]);
   const [nota,  setNota] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -89,36 +89,39 @@ const Ishikawa = () => {
   }, [userData, _id, id]);  
 
   useEffect(() => {
-    const verificarRegistro = async () => {
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-        const dataFiltrada = response.data.filter(item => item.estado === 'rechazado');
-        const registroRechazado = dataFiltrada.find(item => item.idRep === _id && item.idReq === id);
-        const registroExistente = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'En revisión');
-        setEnProceso(registroExistente);
-        setRechazo(dataFiltrada);
-  
-        if (registroRechazado) {
-          setData({
-            problema: registroRechazado.problema,
-            afectacion: registroRechazado.afectacion,
-            correccion: registroRechazado.correccion,
-            causa: registroRechazado.causa,
-            notaRechazo: registroRechazado.notaRechazo
-            
-          });
-          setDiagrama(registroRechazado.diagrama);
-          setActividades(registroRechazado.actividades);
-          setIsEditing(true);  // Establecer en modo edición
-        }
-        setNota(registroRechazado.notaRechazo);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-  
     verificarRegistro();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [_id, id]);
+
+  const verificarRegistro = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+      const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && (item.estado === 'rechazado' || item.estado === 'revisado'));
+      const registroRechazado = dataFiltrada.find(item => item.idRep === _id && item.idReq === id);
+      const registroExistente = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'En revisión');
+      const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'revisado');
+      setAprobado(registroAprobado);
+      setEnProceso(registroExistente);
+      setRechazo(dataFiltrada);
+
+      if (registroRechazado) {
+        setData({
+          problema: registroRechazado.problema,
+          afectacion: registroRechazado.afectacion,
+          correccion: registroRechazado.correccion,
+          causa: registroRechazado.causa,
+          notaRechazo: registroRechazado.notaRechazo
+          
+        });
+        setDiagrama(registroRechazado.diagrama);
+        setActividades(registroRechazado.actividades);
+        setIsEditing(true);  // Establecer en modo edición
+      }
+      setNota(registroRechazado.notaRechazo);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
 
   const handleUpdate = async () => {
     try {
@@ -155,11 +158,28 @@ const Ishikawa = () => {
         icon: 'success',
         confirmButtonText: 'Aceptar'
       });
-      navigate('/diagrama');
+      verificarRegistro();
     } catch (error) {
       console.error('Error al actualizar los datos:', error);
     }
   };  
+
+  const Actualizar = async () => {
+    Swal.fire({
+      title: '¿Esta seguro de querer reenviar el diagrama?',
+      text: '¡El diagrama sera mandado a revisión!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3ccc37',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, reenviar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleUpdate();
+      }
+    });
+  };
 
   const handleDiagrama = (e) => {
     const { name, value } = e.target;
@@ -176,8 +196,6 @@ const Ishikawa = () => {
       [name]: value
     }));
   };
-
-  const navigate = useNavigate();
 
   const handleSave = async () => {
     // Verificar si todos los campos requeridos están rellenados
@@ -225,10 +243,27 @@ const Ishikawa = () => {
         icon: 'success',
         confirmButtonText: 'Aceptar'
       });
-      navigate('/diagrama');
+      verificarRegistro();
     } catch (error) {
       console.error('Error al guardar los datos:', error);
     }
+  };
+
+  const Guardar = async () => {
+    Swal.fire({
+      title: '¿Esta seguro de querer guardar?',
+      text: '¡El diagrama sera mandado a revisión!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3ccc37',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, guardar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleSave();
+      }
+    });
   };
   
 
@@ -242,8 +277,6 @@ const Ishikawa = () => {
     const nuevasActividades = actividades.filter((_, i) => i !== index);
     setActividades(nuevasActividades);
   };
-  
-
 
   const agregarFilaActividad = () => {
     setActividades([...actividades, { actividad: '', responsable: '', fechaCompromiso: '' }]);
@@ -266,20 +299,28 @@ const Ishikawa = () => {
         </div>
       </div>
     );
-  } else if (rechazo) {
+  } else if (rechazo || aprobado) {
     return (  
       <div>
         <div style={{ position: 'absolute', top: 0, left: 0 }}>
           <Navigation />
         </div>
+
+        {aprobado && (
+          <>
+            <div className='cont-aprob'>
+            <div className='rep-aprob' style={{display:'flex', justifyContent:'center'}}>¡El diagrama fue aprobado.!</div>
+            <div style={{display:'flex',fontSize:'70px', justifyContent:'center'}}>🎉</div>
+            </div>
+          </>
+        )}
         
-        {formData.notaRechazo && (
+        {(formData.notaRechazo && !aprobado) &&(
           <div className='th-comentario'>
                      <div style={{padding:'15px'}}>{nota}</div>
-                  </div>
+          </div>
          )}
           
-         
         <div className="image-container">
         
           <img src={Logo} alt="Logo Aguida" className='logo-empresa' />
@@ -415,8 +456,8 @@ const Ishikawa = () => {
               </table>
               <button onClick={agregarFilaActividad} className='button-agregar'>Agregar Fila</button>
             </div>
-            <button onClick={isEditing ? handleUpdate : handleSave} className='button-guar-ish'>
-              {isEditing ? 'Actualizar' : 'Guardar'}
+            <button onClick={isEditing ? Actualizar : Guardar} className='button-guar-ish'>
+              {isEditing ? 'Reenviar' : 'Guardar'}
             </button>
           </div>
         </div>

@@ -121,18 +121,20 @@ const Terminada = () => {
         });
     };
 
-    const actualizarEstadoFinalizado = async (id) => {
+    const actualizarEstadoFinalizado = async (id, porcentaje) => {
         try {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
-                Estado: 'Finalizado'
+                Estado: 'Finalizado',
+                PorcentajeCump: porcentaje
             });
+            console.log('porcentajeeeeee',porcentaje);
             obtenerDatos();
         } catch (error) {
             console.error('Error al actualizar el estado:', error);
         }
     };
 
-    const Finalizar = async (id) => {
+    const Finalizar = async (id, porcentaje) => {
         Swal.fire({
           title: '¿Estás seguro de querer finalizar este reporte?',
           text: '¡El reporte se dara por terminado!',
@@ -144,7 +146,7 @@ const Terminada = () => {
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
-            actualizarEstadoFinalizado(id);
+            actualizarEstadoFinalizado(id, porcentaje);
           }
         });
       };
@@ -211,11 +213,13 @@ const Terminada = () => {
                                 <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
                                     <div className='contenedor-repo'>
                                     <div className='buttons-estado'>
-                                    <button  onClick={() => Finalizar(dato._id)}>Finalizar</button>
+                                    <button onClick={() => Finalizar(dato._id, porcentaje)}>Finalizar</button>
                                     </div>
                                         <div className="header-container-datos-repo">
                                             <img src={logo} alt="Logo Empresa" className="logo-empresa-repo" />
+                                            <div className='encabezado'>
                                             <h1>REPORTE DE AUDITORÍA</h1>
+                                            </div>
                                         </div>
                                         <div className='mover'>
                                             <div className="dato"><span className="bold-text">Duración de la auditoría:</span> {dato.Duracion}</div>
@@ -369,6 +373,12 @@ const Terminada = () => {
                                                                     const ishikawa = ishikawas.find(ish => {
                                                                         return ish.idReq === desc.ID && ish.idRep === dato._id;
                                                                     });
+
+                                                                    const ajustarFecha = (fechaString) => {
+                                                                        const fecha = new Date(fechaString);
+                                                                        fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset());
+                                                                        return fecha.toLocaleDateString('es-ES');
+                                                                    };
     
                                                                     return (
                                                                         <tr key={descIdx}>
@@ -388,7 +398,11 @@ const Terminada = () => {
                                                                             </td>
                                                                             <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].actividad : '') : ''}</td>
                                                                             <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
-                                                                            <td>{ishikawa ? (ishikawa.actividades.length > 0 ? new Date(ishikawa.actividades[0].fechaCompromiso).toLocaleDateString('es-ES') : '') : ''}</td>
+                                                                            <td>
+                                                                                {ishikawa ? (
+                                                                                    ishikawa.actividades.length > 0 ? ajustarFecha(ishikawa.actividades[0].fechaCompromiso) : ''
+                                                                                ) : ''}
+                                                                            </td>
                                                                             <td>
                                                                                 <button onClick={() => navIshikawa(dato._id, desc.ID)}>{ishikawa ? ishikawa.estado : 'Pendiente'}</button>
                                                                             </td>
