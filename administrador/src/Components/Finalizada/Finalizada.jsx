@@ -121,12 +121,7 @@ const Finalizada = () => {
 
     const navIshikawa = (_id, id) => {
         navigate(`/ishikawa/${_id}/${id}`);
-    };
-
-    const calcularResultado = (porcentajeTotal, porcentajeCump) => {
-        const resultado = (100 - porcentajeTotal) * porcentajeCump / 100;
-        return resultado.toFixed(2);
-    };        
+    };      
 
     return (
         <div className='espacio-repo'>
@@ -152,7 +147,6 @@ const Finalizada = () => {
                         });
 
                         const puntosObtenidos = calcularPuntosTotales(conteo);
-                        const resultado = calcularResultado(dato.PorcentajeTotal, dato.PorcentajeCump);
 
                         return (
                             <div key={periodIdx}>
@@ -228,7 +222,7 @@ const Finalizada = () => {
                                                 <div className="horizontal-item">Puntuación Obtenida: {puntosObtenidos}</div>
                                             </div>
                                             <div className="horizontal-group">
-                                            <div className="horizontal-item">Porcentaje: {(parseFloat(dato.PorcentajeTotal) + parseFloat(resultado))}%</div>
+                                            <div className="horizontal-item">Porcentaje: {dato.PorcentajeTotal}%</div>
 
                                                 <div className="horizontal-item">Estatus: {dato.Estatus}</div>
                                             </div>

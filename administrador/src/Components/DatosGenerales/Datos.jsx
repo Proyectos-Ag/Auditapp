@@ -371,7 +371,6 @@ const Datos = () => {
       Departamento: selectedDept
     });
   };
-  
 
   const isFormComplete = (step) => {
     const formDataForStep = getFormDataForStep(step);

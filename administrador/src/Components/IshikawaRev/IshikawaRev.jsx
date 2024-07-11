@@ -13,18 +13,23 @@ const IshikawaRev = () => {
     const { _id, id } = useParams();
     const [mensaje, setMensaje] = useState('');
     const [notaRechazo, setNotaRechazo] = useState('');
+    const [rechazo,  setRechazo] = useState([]);
+    const [aprobado,  setAprobado] = useState([]);
+    const [showPart, setShowPart] = useState(false);
     const [showNotaRechazo, setShowNotaRechazo] = useState(false);
-    const [actividades, setActividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' }]);
+    const [tempFechaCompromiso, setTempFechaCompromiso] = useState('');
+    const [actividades, setActividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: [] }]);
+    const [correcciones, setCorrecciones] = useState([{ actividad: '', responsable: '', fechaCompromiso: [], cerrada: '' }]);
+    const [nuevaCorreccion, setNuevaCorreccion] = useState({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
 
     useEffect(() => {
-        
         fetchData();
     }, []);
 
     const fetchData = async () => {
         try {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-            const dataFiltrada = response.data.filter(item => item.estado === 'En revisión' ||  item.estado === 'revisado');
+            const dataFiltrada = response.data.filter(item => item.estado === 'En revisión' ||  item.estado === 'revisado' || item.estado === 'Aprobado');
             setIshikawas(dataFiltrada);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -32,17 +37,21 @@ const IshikawaRev = () => {
     };
 
     useEffect(() => {
-        if (filteredIshikawas.length > 0) {
-            const actividadesIniciales = filteredIshikawas[0].actividades.map(actividad => ({
-                ...actividad,
-                fechaCompromiso: new Date(actividad.fechaCompromiso).toISOString().split('T')[0]  // Formato YYYY-MM-DD
-            }));
-            setActividades(actividadesIniciales);
-        }
-    }, [filteredIshikawas]);
-    
-    
+        verificarRegistro();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [_id, id]);
 
+   useEffect(() => {
+    if (filteredIshikawas.length > 0) {
+        const correccionesIniciales = filteredIshikawas[0].correcciones.map(correccion => ({
+            ...correccion,
+            fechaCompromiso: new Date(correccion.fechaCompromiso).toISOString().split('T')[0]  // Formato YYYY-MM-DD
+        }));
+        setCorrecciones(correccionesIniciales);
+    }
+    }, [filteredIshikawas]);
+
+    
     useEffect(() => {
         if (ishikawas.length > 0) {
             const nuevosFiltrados = ishikawas.filter(({ idRep, idReq }) => idRep === _id && idReq === id);
@@ -53,24 +62,30 @@ const IshikawaRev = () => {
                 setMensaje('');
             }
         }
-    }, [ishikawas, _id, id]);  
+    }, [ishikawas, _id, id]); 
 
-    const handleAccionCorrectivaChange = (index, field, value) => {
-        const nuevasAccionesCorrectivas = [...actividades];
-    
+
+    const handleCorreccionChange = (index, field, value) => {
+        const nuevasCorrecciones = [...correcciones];
+        
         if (field === 'cerrada') {
-            nuevasAccionesCorrectivas[index][field] = value ? 'Sí' : 'No';
+            nuevasCorrecciones[index][field] = value ? 'Sí' : 'No';
         } else if (field === 'cerradaNo') {
-            nuevasAccionesCorrectivas[index]['cerrada'] = value ? 'No' : 'Sí';
+            nuevasCorrecciones[index]['cerrada'] = value ? 'No' : 'Sí';
         } else if (field === 'fechaCompromiso') {
-            nuevasAccionesCorrectivas[index][field] = new Date(value).toISOString().split('T')[0];  // Formato YYYY-MM-DD
+            nuevasCorrecciones[index][field] = new Date(value).toISOString().split('T')[0]; 
         } else {
-            nuevasAccionesCorrectivas[index][field] = value;
+            nuevasCorrecciones[index][field] = value;
         }
     
-        setActividades(nuevasAccionesCorrectivas);
-    };         
-
+        setCorrecciones(nuevasCorrecciones);
+    };   
+    
+    const handleAgregarFila = () => {
+        setCorrecciones([...correcciones, nuevaCorreccion]);
+        setNuevaCorreccion({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
+    };
+            
     const handleGuardarCambios = async () => {
         try {
             if (filteredIshikawas.length === 0) {
@@ -80,7 +95,7 @@ const IshikawaRev = () => {
     
             const { _id } = filteredIshikawas[0];
             const updatedIshikawa = {
-                actividades
+                correcciones
             };
     
             console.log('Enviando datos a actualizar:', updatedIshikawa);
@@ -97,11 +112,11 @@ const IshikawaRev = () => {
             console.error('Error updating data:', error);
             alert('Hubo un error al actualizar la información');
         }
-    };
+    };    
 
-    const Aprobar = async (id, porcentaje) => {
+    const Finalizar = async (id, porcentaje) => {
         Swal.fire({
-          title: '¿Estás seguro de querer aprobar este diagrama?',
+          title: '¿Estás seguro de querer finalizar este diagrama?',
           text: '¡Está acción no se puede revertir!',
           icon: 'warning',
           showCancelButton: true,
@@ -115,6 +130,36 @@ const IshikawaRev = () => {
           }
         });
       };
+
+      const handleGuardarAprobacion = async () => {
+        try {
+            const { _id } = filteredIshikawas[0];
+            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, {
+                estado: 'Aprobado'
+            });
+            fetchData();
+        } catch (error) {
+            console.error('Error updating data:', error);
+            alert('Hubo un error al actualizar la información');
+        }
+        };
+
+        const Aprobar = async (id, porcentaje) => {
+            Swal.fire({
+              title: '¿Estás seguro de querer aprobar este diagrama?',
+              text: '¡Está acción no se puede revertir!',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#3ccc37',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Sí, Aprobar',
+              cancelButtonText: 'Cancelar'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                handleGuardarAprobacion();
+              }
+            });
+          };
 
     const handleGuardarRechazo = async () => {
     try {
@@ -146,11 +191,73 @@ const IshikawaRev = () => {
           }
         });
       };
+      
 
-    const ajustarFecha = (fechaString) => {
-        const fecha = new Date(fechaString);
-        fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset());
-        return fecha.toLocaleDateString('es-ES');
+    const handleEliminarFila = (index) => {
+    const nuevasCorrecciones = [...correcciones];
+    nuevasCorrecciones.splice(index, 1);
+    setCorrecciones(nuevasCorrecciones);
+    };
+
+    const verificarRegistro = async () => {
+        try {
+          const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+          const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && (item.estado === 'rechazado' || item.estado === 'revisado' || item.estado === 'Aprobado'));
+          const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'Aprobado');
+          setAprobado(registroAprobado);
+          setRechazo(dataFiltrada);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      };
+
+    const handleTempFechaChange = (value) => {
+        setTempFechaCompromiso(value);
+    };
+
+    const handleActividadChange = (index, field, value) => {
+        const nuevasActividades = [...actividades];
+    
+        if (field === 'fechaCompromiso') {
+            nuevasActividades[index][field] = [...nuevasActividades[index][field], value];
+        } else {
+            nuevasActividades[index][field] = value;
+        }
+    
+        setActividades(nuevasActividades);
+    };
+
+    const handleUpdateFechaCompromiso = async (index) => {
+        try {
+            const nuevaFecha = tempFechaCompromiso;
+            const actividadActualizada = {
+                ...actividades[index],
+                fechaCompromiso: [...actividades[index].fechaCompromiso, nuevaFecha] // Asegúrate de agregar la nueva fecha al array existente
+            };
+    
+            const updatedActividades = [...actividades];
+            updatedActividades[index] = actividadActualizada;
+    
+            const updatedData = {
+                actividades: updatedActividades
+            };
+    
+            const { _id } = rechazo[0];
+    
+            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/fecha/${_id}`, updatedData);
+            console.log('Datos actualizados:', response.data);
+            fetchData();
+            Swal.fire('Fecha actualizada', `La nueva fecha de compromiso es: ${nuevaFecha}`, 'success');
+        } catch (error) {
+            console.error('Error al actualizar la fecha de compromiso:', error);
+            Swal.fire('Error', 'No se pudo actualizar la fecha de compromiso', 'error');
+        }
+    };
+    
+    const colores = ['black', 'blue', 'green', 'yellow','orange', 'red'];
+
+    const handleSelectChange = (event, index) => {
+        event.target.style.color = colores[index % colores.length];
     };
 
     return (
@@ -185,6 +292,7 @@ const IshikawaRev = () => {
                                 </button>
                                 <button onClick={Rechazar} className='boton-rechazar' >Rechazar</button>
                                 <button onClick={Aprobar} >Aprobar</button>
+                                <button onClick={Finalizar} >Finalizar</button>
                             </div>
                         </>
                     )}
@@ -196,7 +304,7 @@ const IshikawaRev = () => {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <h2 style={{ marginLeft: '30rem', marginRight: '10px' }}>Afectación: </h2>
-                        <div style={{ width: '30rem', fontSize: '20px' }}>{ishikawa.afectacion}</div>
+                        <h2>{id}</h2>
                     </div>
                     </div>
                     <div className='posicion-en-2'>
@@ -241,7 +349,22 @@ const IshikawaRev = () => {
                         </div>
                     ))}
                     </div>
+                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+                
                     <div className='posicion-bo'>
+                    <div className='cont-part'>
+                  <button className='button-part' onClick={(e) => {
+                      e.preventDefault();
+                      setShowPart(!showPart)
+                    }}>
+                    <span class="material-symbols-outlined" style={{color:'#ffffff', fontSize:'33px'}}>
+                      attribution
+                      </span>
+                  </button>
+                  {showPart && (
+                  <div className='part-div'>{ishikawa.participantes}</div>
+                    )}
+                  </div>
                     <h3>No conformidad:</h3>
                     <div style={{ fontSize: '20px', width: '55em', textAlign: 'justify' }}>{ishikawa.requisito}</div>
                     <h3>Hallazgo:</h3>
@@ -265,81 +388,133 @@ const IshikawaRev = () => {
                         <tbody>
                         {ishikawa.actividades.map((actividad, i) => (
                             <tr key={i}>
-                            <td>{actividad.actividad}</td>
-                            <td>{actividad.responsable}</td>
                             <td>
-                                {ishikawa ? (
-                                    ishikawa.actividades.length > 0 ? ajustarFecha(ishikawa.actividades[0].fechaCompromiso) : ''
-                                ) : ''}
+                            <textarea
+                            className='table-input'
+                            type="text"
+                            value={actividad.actividad}
+                            onChange={(e) => handleActividadChange(index, 'actividad', e.target.value)}
+                            required
+                            />
                             </td>
+                            <td><textarea
+                            className='table-input'
+                            type="text"
+                            value={actividad.responsable}
+                            onChange={(e) => handleActividadChange(index, 'responsable', e.target.value)}
+                            required
+                        /></td>
+                            <td>
+                                <select
+                                    className="custom-select"
+                                    onChange={(e) => handleSelectChange(e, actividad.fechaCompromiso.length - 1 - actividad.fechaCompromiso.slice().reverse().findIndex(fecha => fecha === e.target.value))}
+                                    style={{ color: colores[actividad.fechaCompromiso.length - 1]} } // Inicializa con el color del primer elemento invertido
+                                >
+                                    {actividad.fechaCompromiso.slice().reverse().map((fecha, index) => (
+                                        <option
+                                            key={index}
+                                            className={`option-${index}`}
+                                            style={{ color: colores[(actividad.fechaCompromiso.length - 1 - index) % colores.length] }}
+                                        >
+                                            {fecha}
+                                        </option>
+                                    ))}
+                                </select>
+                          {aprobado ? (
+                              <>
+                                  <input
+                                      type="date"
+                                      onChange={(e) => handleTempFechaChange(e.target.value)}
+                                      required
+                                  />
+                                  <button onClick={(e) => { e.preventDefault();handleUpdateFechaCompromiso(index)
+                                   }} className='button-new-date'>
+                                      Reprogramar Fecha
+                                  </button>
+                              </>
+                          ) : (
+                              <input
+                                  type="date"
+                                  onChange={(e) => handleActividadChange(index, 'fechaCompromiso', e.target.value)}
+                                  required
+                              />
+                          )}
+                      </td>
                             </tr>
                         ))}
                         </tbody>
                     </table>
-                    <table style={{border:'none'}}>
-                    <thead>
-                        <tr>
-                        <th>Actividad</th>
-                        <th>Responsable</th>
-                        <th>Fecha Compromiso</th>
-                        <th colSpan="2" className="sub-div" >
-                            <div >Acción Correctiva cerrada</div>
-                            <div style={{ display: 'flex' }}>
-                            <div className="left">Sí</div>
-                            <div className="right">No</div>
-                            </div>
-                        </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-    {actividades.map((actividad, index) => (
-        <tr key={index}>
-            <td>
-                <input
-                    type="text"
-                    value={actividad.actividad}
-                    readOnly
-                    className="no-border"
-                />
-            </td>
-            <td>
-                <input
-                    type="text"
-                    value={actividad.responsable}
-                    readOnly
-                    className="no-border"
-                />
-            </td>
-            <td>
-                <input
-                    type="date"
-                    value={actividad.fechaCompromiso}
-                    readOnly
-                    className="no-border"
-                />
-            </td>
-            <td>
-                <input
-                    type="checkbox"
-                    checked={actividad.cerrada === 'Sí'}
-                    onChange={(e) => handleAccionCorrectivaChange(index, 'cerrada', e.target.checked)}
-                    className="no-border"
-                />
-            </td>
-            <td>
-                <input
-                    type="checkbox"
-                    checked={actividad.cerrada === 'No'}
-                    onChange={(e) => handleAccionCorrectivaChange(index, 'cerradaNo', e.target.checked)}
-                    className="no-border"
-                />
-            </td>
-        </tr>
-    ))}
-</tbody>
-
+                    <table style={{ border: 'none' }}>
+                        <thead>
+                            <tr>
+                                <th>Actividad</th>
+                                <th>Responsable</th>
+                                <th>Fecha Compromiso</th>
+                                <th colSpan="2" className="sub-div">
+                                    <div>Acción Correctiva cerrada</div>
+                                    <div style={{ display: 'flex' }}>
+                                        <div className="left">Sí</div>
+                                        <div className="right">No</div>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {correcciones.map((correccion, index) => (
+                            <tr key={index}>
+                                <td>
+                                    <textarea
+                                        type="text"
+                                        value={correccion.actividad}
+                                        onChange={(e) => handleCorreccionChange(index, 'actividad', e.target.value)}
+                                        className="no-border"
+                                    />
+                                </td>
+                                <td>
+                                    <textarea
+                                        type="text"
+                                        value={correccion.responsable}
+                                        onChange={(e) => handleCorreccionChange(index, 'responsable', e.target.value)}
+                                        className="no-border"
+                                    />
+                                </td>
+                                <td>
+                                    <input
+                                        type="date"
+                                        value={correccion.fechaCompromiso}
+                                        onChange={(e) => handleCorreccionChange(index, 'fechaCompromiso', e.target.value)}
+                                        className="no-border"
+                                    />
+                                </td>
+                                <td>
+                                    <input
+                                        type="checkbox"
+                                        checked={correccion.cerrada === 'Sí'}
+                                        onChange={(e) => handleCorreccionChange(index, 'cerrada', e.target.checked)}
+                                        className="no-border"
+                                    />
+                                </td>
+                                <td>
+                                    <input
+                                        type="checkbox"
+                                        checked={correccion.cerrada === 'No'}
+                                        onChange={(e) => handleCorreccionChange(index, 'cerradaNo', e.target.checked)}
+                                        className="no-border"
+                                    />
+                                </td>
+                                <td className='cancel-acc'>
+                                    {index > 0 && (
+                                        <button onClick={() => handleEliminarFila(index)}>Eliminar</button>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
                     </table>
-                    
+                    <div>
+                        <button onClick={handleAgregarFila} className='button-agregar'>Agregar Fila</button>
+                    </div>
+
                     </div>
                 </div>
                 ))}

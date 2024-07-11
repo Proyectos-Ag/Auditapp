@@ -72,7 +72,7 @@ const Terminada = () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
                 const dataFiltrada = response.data.filter(item => 
-                item.estado === 'En revisión' ||  item.estado === 'revisado' ||  item.estado === 'rechazado' ) ;
+                item.estado === 'En revisión' ||  item.estado === 'revisado' ||  item.estado === 'rechazado' || item.estado === 'Aprobado' ) ;
                 setIshikawas(dataFiltrada);
             } catch (error) {
                 console.error('Error fetching data:', error);
