@@ -149,19 +149,6 @@
     margin-bottom: 20px;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*Otros estilos*/
 
 .image-container {
@@ -232,17 +219,7 @@
     color: #ffffff;
     border: none;
     background-color: rgb(0, 76, 216);
-}
-
-.button-guar-ish{
-    margin-top: 20px;
-    margin-bottom: 10px;
-    border-radius: 7px;
-    padding: 10px;
-    color: #ffffff;
-    border: none;
-    background-color: rgb(0, 216, 126);
-
+    cursor: pointer;
 }
 
 .table-ish table {

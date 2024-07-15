@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './css/Ishikawa.css'
 import Logo from "../../assets/img/logoAguida.png";
 import Navigation from "../Navigation/Navbar";
 import Ishikawa from '../../assets/img/Ishikawa-transformed.png';
 import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 
 const CreacionIshikawa = () => {
+  const [isEditing] = useState(false);
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     problema: '',
     afectacion: '',
+    requisito: '',
+    hallazgo: '',
     fecha: '',
     participantes: '',
     correccion: '',
@@ -58,20 +64,20 @@ const CreacionIshikawa = () => {
   const handleSave = async () => {
     try {
       const data = {
-        fecha: '',
-        auditado: '',
+        fecha: formData.fecha,
         problema: formData.problema,
-        requisito: '',
-        hallazgo: '',
+        requisito: formData.requisito,
+        hallazgo: formData.hallazgo,
         correccion: formData.correccion,
         causa: formData.causa,
         diagrama,
         participantes: formData.participantes,
         afectacion: formData.afectacion,
-        actividades: '',
-        estado: 'En revisión'
+        actividades,
+        correcciones,
+        estado: 'Hecho'
       };
-      // Mostrar SweetAlert con opción de confirmar o cancelar
+      console.log('Datos enviados:', data);
       const result = await Swal.fire({
         title: '¿Estás seguro de querer guardar?',
         text: 'El diagrama será enviado a revisión.',
@@ -82,20 +88,34 @@ const CreacionIshikawa = () => {
         confirmButtonText: 'Sí, guardar',
         cancelButtonText: 'Cancelar'
       });
-
-      // Si el usuario confirma (presiona el botón de confirmación)
       if (result.isConfirmed) {
-        // Realizar la llamada a la API para guardar los datos
         const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
         console.log('Datos guardados:', response.data);
-        // Llamar a verificarRegistro después de confirmar
+        navigate('/diagrama');
       } else {
-        // Mostrar un mensaje de cancelación si el usuario cancela
         Swal.fire('Cancelado', 'El diagrama no ha sido guardado.', 'info');
       }
     } catch (error) {
-      console.error('Error al guardar los datos:', error);
+      console.error('Error al guardar los datos:', error.response ? error.response.data : error.message);
     }
+  };
+
+  const Guardar = async () => {
+    if (
+      !formData.hallazgo ||
+      !formData.requisito||
+      !formData.afectacion ||
+      !formData.problema ||
+      !formData.correccion ||
+      !formData.fecha ||
+      !formData.causa ||
+      diagrama.some(dia => !dia.problema || !dia.text1 || !dia.text2 || !dia.text3 || !dia.text10 || !dia.text11) ||
+      actividades.some(act => !act.actividad || !act.responsable || !act.fechaCompromiso)
+    ) {
+      console.log('Por favor, complete todos los campos requeridos antes de guardar.');
+      return;
+    }
+    await handleSave();
   };
 
   const agregarFilaActividad = () => {
@@ -123,9 +143,17 @@ const CreacionIshikawa = () => {
       <div style={{ position: 'absolute', top: 0, left: 0 }}>
         <Navigation />
       </div>
+
+      <form onSubmit={(e) => {
+          e.preventDefault(); // Prevenir el envío automático del formulario
+          if (isEditing) {
+            Guardar();
+          }
+        }}>
       <div>
         <div className="image-container">
-          <img src={Logo} alt="Logo Aguida" className='logo-empresa' />
+        <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
+        <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
           <div className='posicion-en'>
             <h2>Problema:
               <input type="text" className="problema-input" name='problema'
@@ -190,8 +218,8 @@ const CreacionIshikawa = () => {
           <div>
             <div className='posicion-bo' style={{ marginRight: '5rem' }}>
               <h3>No conformidad:</h3>
-              <textarea type="text" className="textarea-acc" name='correccion'
-                style={{ width: '64rem', color: '#000000' }} placeholder="Agregar Acción. . ." value={formData.correccion} onChange={handleFormDataChange} />
+              <textarea type="text" className="textarea-acc" name='requisito'
+                style={{ width: '64rem', color: '#000000' }} placeholder="Agregar Acción. . ." value={formData.requisito} onChange={handleFormDataChange} />
               <h3>Hallazgo:</h3>
               <textarea type="text" className="textarea-acc" name='hallazgo'
                 style={{ width: '64rem', color: '#000000' }} placeholder="Agregar Hallazgo. . ." value={formData.hallazgo} onChange={handleFormDataChange} />
@@ -220,6 +248,7 @@ const CreacionIshikawa = () => {
                       <textarea
                         className='table-input'
                         type="text"
+                        placeholder='Agregar actividad. . .'
                         value={actividad.actividad}
                         onChange={(e) => {
                           const newActividades = [...actividades];
@@ -233,6 +262,7 @@ const CreacionIshikawa = () => {
                       <textarea
                         className='table-input'
                         type="text"
+                        placeholder='Agregar responsable. . .'
                         value={actividad.responsable}
                         onChange={(e) => {
                           const newActividades = [...actividades];
@@ -257,13 +287,13 @@ const CreacionIshikawa = () => {
                       </div>
                     </td>
                     <td className='cancel-acc'>
-                      <button onClick={() => eliminarFilaActividad(index)}>Eliminar</button>
+                      <button type='button' onClick={() => eliminarFilaActividad(index)}>Eliminar</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <button onClick={(e) => {
+            <button type='button' onClick={(e) => {
               e.preventDefault();
               agregarFilaActividad();
             }} className='button-agregar'>Agregar Fila</button>
@@ -289,6 +319,8 @@ const CreacionIshikawa = () => {
                     <td>
                       <textarea
                         type="text"
+                        style={{border:'none'}}
+                        placeholder='Agregar actividad. . .'
                         value={correccion.actividad}
                         onChange={(e) => {
                           const newCorrecciones = [...correcciones];
@@ -301,6 +333,8 @@ const CreacionIshikawa = () => {
                     <td>
                       <textarea
                         type="text"
+                        style={{border:'none'}}
+                        placeholder='Agregar responsable. . .'
                         value={correccion.responsable}
                         onChange={(e) => {
                           const newCorrecciones = [...correcciones];
@@ -347,19 +381,20 @@ const CreacionIshikawa = () => {
                       />
                     </td>
                     <td className='cancel-acc'>
-                      <button onClick={() => handleEliminarFila(index)}>Eliminar</button>
+                      <button type='button' onClick={() => handleEliminarFila(index)}>Eliminar</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <div>
-              <button onClick={handleAgregarFila} className='button-agregar'>Agregar Fila</button>
+              <button type='button' onClick={handleAgregarFila} className='button-agregar'>Agregar Fila</button>
             </div>
           </div>
+          <button type='submit'className='button-generar-ish'  onClick={Guardar}>Guardar</button>
         </div>
       </div>
-      <button onClick={handleSave}>Guardar</button>
+    </form>
     </div>
   );
 };

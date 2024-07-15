@@ -16,6 +16,7 @@ import Finalizada from './Components/Finalizada/Finalizada';
 import Calendarioss from './Components/Calendarios/AuditCalendar'
 import Calendarios from './Components/Calendarios/CalendarioGeneral'
 import Departaments from './Components/Departaments/Departaments';
+import Diagrama from './Components/DiagramaRe/Diagrama';
 
 export const UserContext = createContext(null);
 
@@ -39,6 +40,7 @@ function App() {
           <Route path="/auditcalendar" element={<Calendarioss />} />
           <Route path="/calendario" element={<Calendarios />} />
           <Route path="/departamento" element={<Departaments />} />
+          <Route path="/diagrama" element={<Diagrama />} />
         </Routes>
       </Router>
     </div>

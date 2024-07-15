@@ -63,10 +63,16 @@ const handleLogout = () => {
 
 function DrawerList({ handleLogout }) {
   const [showAuditoriasSubmenu, setShowAuditoriasSubmenu] = useState(false);
+  const [showIshikawaSubmenu, setShowIshikawaSubmenu] = useState(false);
   const [showCalendariosSubmenu, setShowCalendariosSubmenu] = useState(false);
 
   const toggleAuditoriasSubmenu = () => {
     setShowAuditoriasSubmenu(!showAuditoriasSubmenu);
+    setShowCalendariosSubmenu(false);
+  };
+
+  const toggleIshikawaSubmenu = () => {
+    setShowIshikawaSubmenu(!showIshikawaSubmenu);
     setShowCalendariosSubmenu(false);
   };
 
@@ -89,6 +95,14 @@ function DrawerList({ handleLogout }) {
       ],
       showSubmenu: showAuditoriasSubmenu,
       toggleSubmenu: toggleAuditoriasSubmenu
+    },
+    {
+      text: "Ishikawa", subItems: [
+        { text: "Generar Ishikawa", href: "/ishikawa" },
+        { text: "Ishikawas Generados", href: "/diagrama" },
+      ],
+      showSubmenu: showIshikawaSubmenu,
+      toggleSubmenu: toggleIshikawaSubmenu
     },
     {
       text: "Calendarios",
