@@ -156,6 +156,11 @@ th.conformity-header {
     background-color: #00b36e;
     color: #ffffff;
     border: none;
+    cursor: pointer;
+}
+
+.button-foto:hover{
+    background-color: #0098b3;
 }
 
 .update-button-container.hidden {
@@ -221,4 +226,27 @@ th.conformity-header {
 .percentage-red {
     background-color: red !important;
     color: white;
+}
+
+.update-button-camb {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    background-color: #186c9c;
+    color: #ffffff;
+    border: none;
+    width: 9rem;
+    height: 40px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 11px;
+    cursor: pointer;
+}
+
+.update-button-camb:hover {
+    background-color: #1fa387;
+}
+
+.posicion-button{
+    display: flex;
+    margin-right: -25rem;
 }

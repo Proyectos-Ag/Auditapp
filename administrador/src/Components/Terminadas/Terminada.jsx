@@ -72,7 +72,7 @@ const Terminada = () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
                 const dataFiltrada = response.data.filter(item => 
-                item.estado === 'En revisión' ||  item.estado === 'revisado' ||  item.estado === 'rechazado' || item.estado === 'Aprobado' ) ;
+                item.estado === 'En revisión' ||  item.estado === 'Revisado' ||  item.estado === 'Rechazado' || item.estado === 'Aprobado' ) ;
                 setIshikawas(dataFiltrada);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -151,11 +151,9 @@ const Terminada = () => {
         });
       };
 
-
     const navIshikawa = (_id, id) => {
         navigate(`/ishikawa/${_id}/${id}`);
     }; 
-    
 
     return (
         <div className='espacio-repo'>
@@ -163,6 +161,7 @@ const Terminada = () => {
                 <Navigation />
             </div>
             <div className="datos-container-repo">
+            <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Revisión de Ishikawa</h1>
                 <div className="form-group-datos">
                     {datos.map((dato, periodIdx) => {
                         let conteo = {};
@@ -193,7 +192,7 @@ const Terminada = () => {
                         let estadosRevisados = 0;
                         const ishikawasFiltradas = ishikawas.filter(ishikawa =>
                             ishikawa.idRep === dato._id && 
-                            (ishikawa.estado === 'En revisión' || ishikawa.estado === 'revisado' || ishikawa.estado === 'rechazado')
+                            (ishikawa.estado === 'En revisión' || ishikawa.estado === 'Revisado' || ishikawa.estado === 'Rechazado')
                         );
     
                         ishikawasFiltradas.forEach(ishikawa => {
@@ -397,14 +396,17 @@ const Terminada = () => {
                                                                                 ) : null}
                                                                             </td>
                                                                             <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].actividad : '') : ''}</td>
-                                                                            <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
                                                                             <td>
-                                                                                {ishikawa ? (
-                                                                                    ishikawa.actividades.length > 0 ? ajustarFecha(ishikawa.actividades[0].fechaCompromiso) : ''
+                                                                            {ishikawa ? (
+                                                                                    ishikawa.actividades.length > 0 && ishikawa.actividades[0].fechaCompromiso.length > 0 ? 
+                                                                                        ajustarFecha(ishikawa.actividades[0].fechaCompromiso.slice(-1)[0]) : 
+                                                                                        ''
                                                                                 ) : ''}
                                                                             </td>
+
+                                                                            <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
                                                                             <td>
-                                                                                <button onClick={() => navIshikawa(dato._id, desc.ID)}>{ishikawa ? ishikawa.estado : 'Pendiente'}</button>
+                                                                                <button className='button-estado' onClick={() => navIshikawa(dato._id, desc.ID)}>{ishikawa ? ishikawa.estado : 'Pendiente'}</button>
                                                                             </td>
                                                                         </tr>
                                                                     );

@@ -80,11 +80,12 @@ function DrawerList({ handleLogout }) {
     { text: "Programa", href: "/programa" },
     { text: "Departamentos", href: "/departamento" },
     {
-      text: "Auditorias", subItems: [
-        { text: "Generar auditoría", href: "/datos" },
-        { text: "Revisión de auditoría", href: "/revicion" },
-        { text: "Revisión de ishikawa", href: "/terminada" },
-        { text: "Auditorias finalizadas", href: "/finalizadas" }
+      text: "Auditorías", subItems: [
+        { text: "Generar Auditoría", href: "/datos" },
+        { text: "Revisión de Auditoría", href: "/revicion" },
+        { text: "Revisión de Ishikawa", href: "/terminada" },
+        { text: "Auditorías Finalizadas", href: "/finalizadas" },
+        { text: "Ishikawa", href: "/ishikawa" }
       ],
       showSubmenu: showAuditoriasSubmenu,
       toggleSubmenu: toggleAuditoriasSubmenu

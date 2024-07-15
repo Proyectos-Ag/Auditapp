@@ -16,6 +16,7 @@ const IshikawaRev = () => {
     const [rechazo,  setRechazo] = useState([]);
     const [aprobado,  setAprobado] = useState([]);
     const [showPart, setShowPart] = useState(false);
+    const [showReprogramar, setShowReprogramar] = useState(false);
     const [showNotaRechazo, setShowNotaRechazo] = useState(false);
     const [tempFechaCompromiso, setTempFechaCompromiso] = useState('');
     const [actividades, setActividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: [] }]);
@@ -29,7 +30,7 @@ const IshikawaRev = () => {
     const fetchData = async () => {
         try {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-            const dataFiltrada = response.data.filter(item => item.estado === 'En revisión' ||  item.estado === 'revisado' || item.estado === 'Aprobado');
+            const dataFiltrada = response.data.filter(item => item.estado === 'En revisión' ||  item.estado === 'Revisado' || item.estado === 'Aprobado');
             setIshikawas(dataFiltrada);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -101,7 +102,7 @@ const IshikawaRev = () => {
             console.log('Enviando datos a actualizar:', updatedIshikawa);
     
             const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, {
-                estado: 'revisado',
+                estado: 'Revisado',
                 ...updatedIshikawa
             });
     
@@ -165,7 +166,7 @@ const IshikawaRev = () => {
     try {
         const { _id } = filteredIshikawas[0];
         await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, {
-            estado: 'rechazado',
+            estado: 'Rechazado',
             notaRechazo 
         });
         fetchData();
@@ -202,7 +203,7 @@ const IshikawaRev = () => {
     const verificarRegistro = async () => {
         try {
           const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-          const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && (item.estado === 'rechazado' || item.estado === 'revisado' || item.estado === 'Aprobado'));
+          const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && (item.estado === 'Rechazado' || item.estado === 'Revisado' || item.estado === 'Aprobado'));
           const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'Aprobado');
           setAprobado(registroAprobado);
           setRechazo(dataFiltrada);
@@ -279,7 +280,7 @@ const IshikawaRev = () => {
                                     <textarea
                                         value={notaRechazo}
                                         onChange={(e) => setNotaRechazo(e.target.value)}
-                                        className='nota-rechazo'
+                                        className='textarea-ishi'
                                         rows="4"
                                         cols="50"
                                         placeholder="Escribe aquí la razón del rechazo"
@@ -292,11 +293,18 @@ const IshikawaRev = () => {
                                 </button>
                                 <button onClick={Rechazar} className='boton-rechazar' >Rechazar</button>
                                 <button onClick={Aprobar} >Aprobar</button>
-                                <button onClick={Finalizar} >Finalizar</button>
                             </div>
                         </>
                     )}
-                    <img src={Logo} alt="Logo Aguida" className='logo-empresa-ishi' />
+                    <div className='button-final'>
+                    {
+                    (!aprobado) ? null : (
+                    <button onClick={Finalizar} >Finalizar</button>
+                    )}
+                    </div>
+
+                    <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
+                    <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
                     <div className='posicion-en'>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <h2 style={{ marginLeft: '30rem', marginRight: '10px' }}>Problema: </h2>
@@ -404,14 +412,15 @@ const IshikawaRev = () => {
                             onChange={(e) => handleActividadChange(index, 'responsable', e.target.value)}
                             required
                         /></td>
-                            <td>
+                            <td >
+                                <div className='td-fechas'>
                                 <select
                                     className="custom-select"
                                     onChange={(e) => handleSelectChange(e, actividad.fechaCompromiso.length - 1 - actividad.fechaCompromiso.slice().reverse().findIndex(fecha => fecha === e.target.value))}
                                     style={{ color: colores[actividad.fechaCompromiso.length - 1]} } // Inicializa con el color del primer elemento invertido
                                 >
                                     {actividad.fechaCompromiso.slice().reverse().map((fecha, index) => (
-                                        <option
+                                        <option 
                                             key={index}
                                             className={`option-${index}`}
                                             style={{ color: colores[(actividad.fechaCompromiso.length - 1 - index) % colores.length] }}
@@ -420,7 +429,10 @@ const IshikawaRev = () => {
                                         </option>
                                     ))}
                                 </select>
-                          {aprobado ? (
+                                </div>
+
+                                <div className='button-cancel'>
+                          {aprobado && showReprogramar ? (
                               <>
                                   <input
                                       type="date"
@@ -433,12 +445,16 @@ const IshikawaRev = () => {
                                   </button>
                               </>
                           ) : (
-                              <input
-                                  type="date"
-                                  onChange={(e) => handleActividadChange(index, 'fechaCompromiso', e.target.value)}
-                                  required
-                              />
+                              <></>
                           )}
+                          {
+                        (!aprobado) ? null : (
+                          <button className='button-repro' onClick={() => setShowReprogramar(!showReprogramar)}>
+                                {showReprogramar ? 'Cancelar' : 'Reprogramar'}
+                          </button>
+                          )}
+                        </div>
+                                
                       </td>
                             </tr>
                         ))}

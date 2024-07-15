@@ -3,6 +3,7 @@ import axios from 'axios';
 import { UserContext } from '../../App';
 import logo from "../../assets/img/logoAguida.png";
 import './css/pendiente.css';
+import './css/Modal.css';
 import Navigation from '../Navigation/narbar';
 import Fotos from './Foto'; 
 import Swal from 'sweetalert2';
@@ -17,6 +18,9 @@ const Pendientes = () => {
     const [modalOpen, setModalOpen] = useState(false); 
     const [selectedField, setSelectedField] = useState(null); 
     const [capturedPhotos, setCapturedPhotos] = useState({}); 
+    const [imageModalOpen, setImageModalOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+
 
     const checkboxValues = {
         'Conforme': 1,
@@ -69,14 +73,14 @@ const Pendientes = () => {
                     
                     // Set initial state for checkboxes and percentages
                     const initialCheckboxes = {};
-const initialPercentages = {};
-const checkboxValues = {
-    'Conforme': 1,
-    'm': 0.7,
-    'M': 0.3,
-    'C': 0,
-    'NA': null
-};
+                const initialPercentages = {};
+                const checkboxValues = {
+                    'Conforme': 1,
+                    'm': 0.7,
+                    'M': 0.3,
+                    'C': 0,
+                    'NA': null
+                };
 
 datosFiltrados.forEach((dato, periodIdx) => {
     dato.Programa.forEach((programa, programIdx) => {
@@ -122,12 +126,23 @@ setPercentages(initialPercentages);
         return meses.indexOf(nombreMes.toLowerCase());
     };
 
+    const handleImageClick = (imageSrc) => {
+        setSelectedImage(imageSrc);
+        setImageModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setImageModalOpen(false);
+        setSelectedImage(null);
+    };
+
     const toggleDuration = (duration) => {
         setHiddenDurations(hiddenDurations.includes(duration) ?
             hiddenDurations.filter((dur) => dur !== duration) :
             [...hiddenDurations, duration]
         );
-    };
+    };   
+    
 
     const handleCheckboxChange = (periodIdx, programIdx, descIdx, checkboxName) => {
         const key = `${periodIdx}_${programIdx}_${descIdx}`;
@@ -238,7 +253,60 @@ setPercentages(initialPercentages);
         } catch (error) {
             console.error('Error en handleUpdatePeriod:', error);
         }
-    };     
+    };  
+    
+    const handleGuardarCamb = async (periodIdx) => {
+        try {
+            let totalPercentage = 0;
+            const numPrograms = datos[periodIdx].Programa.length;
+    
+            for (let programIdx = 0; programIdx < numPrograms; programIdx++) {
+                const programa = datos[periodIdx].Programa[programIdx];
+                const observaciones = programa.Descripcion.map((desc, descIdx) => {
+                    const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+                    return {
+                        ID: desc.ID,
+                        Criterio: selectedCheckboxes[fieldKey] || '',
+                        Observacion: document.querySelector(`textarea[name=Observaciones_${periodIdx}_${programIdx}_${descIdx}]`).value,
+                        Hallazgo: capturedPhotos[fieldKey] || desc.Hallazgo || ''
+                    };
+                });
+    
+                const percentage = percentages[`${periodIdx}_${programIdx}`] || 0;
+                totalPercentage += percentage;
+    
+                try {
+                    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
+                        programIdx,
+                        observaciones,
+                        percentage
+                    });
+                } catch (error) {
+                    console.error('Error al actualizar los datos:', error);
+                    alert('Error al actualizar los datos');
+                    return;
+                }
+            }
+    
+        const totalPercentageAvg = (totalPercentage / numPrograms).toFixed(2);
+            try {
+                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
+                    PorcentajeTotal: totalPercentageAvg,
+                    Estado: 'Devuelto'
+                });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Cambios Guardados',
+                    text: 'El checklist se a guardado',
+                });
+            } catch (error) {
+                console.error('Error al actualizar el porcentaje total:', error);
+                alert('Error al actualizar el porcentaje total');
+            }
+        } catch (error) {
+            console.error('Error en handleUpdatePeriod:', error);
+        }
+    };  
     
     const areAllCheckboxesFilled = (periodIdx) => {
         const numPrograms = datos[periodIdx].Programa.length;
@@ -278,13 +346,13 @@ setPercentages(initialPercentages);
     };    
     
     const getPercentageClass = (percentage) => {
-        if (percentage >= 95) {
+        if (percentage >= 90) {
             return 'percentage-green';
-        } else if (percentage >= 90) {
-            return 'percentage-yellow';
         } else if (percentage >= 80) {
             return 'percentage-orange';
-        } else if (percentage >= 0) {
+        } else if (percentage >= 60) {
+            return 'percentage-yellow';
+        } else if (percentage < 60) {
             return 'percentage-red';
         } else {
             return '';
@@ -300,7 +368,7 @@ setPercentages(initialPercentages);
                 <div className="form-group-datos">
                     {datos.length === 0 ? (
                         <p>Sin auditorías pendientes</p>
-                    ) : (
+                    ) : (   
                         datos.map((dato, periodIdx) => (
                             <div key={periodIdx}>
                                 <div className="duracion-bloque">
@@ -311,6 +379,11 @@ setPercentages(initialPercentages);
                                 <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
                                     <div className="header-container-datos">
                                         <img src={logo} alt="Logo Empresa" className="logo-empresa" />
+                                        <div className='posicion-button'>
+                                        <button className="update-button-camb" onClick={() => handleGuardarCamb(periodIdx)}>
+                                            Guardar Cambios
+                                        </button>
+                                        </div>
                                         <button className="update-button" onClick={() => handleUpdatePeriod(periodIdx)}>
                                             Generar Reporte
                                         </button>
@@ -373,24 +446,30 @@ setPercentages(initialPercentages);
                                                                     </td>
                                                                     
                                                                     <td>
-                                                                        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-                                                                        <button className='button-foto' onClick={() => handleOpenModal(fieldKey)}>
-                                                                            <span className="material-symbols-outlined">
-                                                                                add_a_photo
-                                                                            </span>
-                                                                            {desc.Hallazgo ? (
-                                                                                    <img
-                                                                                        src={base64String}
-                                                                                        alt="Evidencia"
-                                                                                        className="hallazgo-imagen"
-                                                                                    />
-                                                                                ) : null}
-                                                                                {capturedPhotos[fieldKey] && (
-                                                                            <img src={capturedPhotos[fieldKey]} alt="Captura" style={{ width: '100%', height: 'auto' }} />
-                                                                        )}
-                                                                        </button>
-                                                                        
-                                                                    </td>
+                                                                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+                                                                    <div className="button-foto" onClick={() => handleOpenModal(fieldKey)}>
+                                                                        <span className="material-symbols-outlined">
+                                                                            add_a_photo
+                                                                        </span>
+                                                                    </div>
+                                                                    {desc.Hallazgo ? (
+                                                                        <img
+                                                                            src={base64String}
+                                                                            alt="Evidencia"
+                                                                            className="hallazgo-imagen"
+                                                                            onClick={() => handleImageClick(base64String)}
+                                                                        />
+                                                                    ) : null}
+                                                                    {capturedPhotos[fieldKey] && (
+                                                                        <img
+                                                                            src={capturedPhotos[fieldKey]}
+                                                                            alt="Captura"
+                                                                            style={{ width: '100%', height: 'auto' }}
+                                                                            onClick={() => handleImageClick(capturedPhotos[fieldKey])}
+                                                                        />
+                                                                    )}
+                                                                </td>
+
                                                                 </tr>
                                                             );
                                                         })}
@@ -406,8 +485,17 @@ setPercentages(initialPercentages);
                 </div>
             </div>
             <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
+            {imageModalOpen && (
+                <div className="modal-overlay" onClick={closeModal}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <img src={selectedImage} alt="Ampliada" className="modal-image" />
+                    </div>
+                </div>
+            )}
         </div>
-    );       
+        
+    ); 
+
 };
 
 export default Pendientes;

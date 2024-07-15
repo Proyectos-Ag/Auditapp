@@ -1,182 +1,367 @@
-import React, { useState, useEffect } from 'react';
-import './css/Ishikawa.css'
+import React, { useState } from 'react';
 import axios from 'axios';
 import Logo from "../../assets/img/logoAguida.png";
 import Navigation from "../Navigation/Navbar";
-import IshikawaImg from '../../assets/img/Ishikawa-transformed.png';
+import Ishikawa from '../../assets/img/Ishikawa-transformed.png';
+import Swal from 'sweetalert2';
 
-const Diagrama = () => {
-    const [ishikawas, setIshikawas] = useState([]);
+const CreacionIshikawa = () => {
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-                setIshikawas(response.data);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
+  const [formData, setFormData] = useState({
+    problema: '',
+    afectacion: '',
+    fecha: '',
+    participantes: '',
+    correccion: '',
+    causa: ''
+  });
 
-        fetchData();
-    }, []);
+  const [diagrama, setDiagrama] = useState([{
+    problema: '',
+    text1: '',
+    text2: '',
+    text3: '',
+    text4: '',
+    text5: '',
+    text6: '',
+    text7: '',
+    text8: '',
+    text9: '',
+    text10: '',
+    text11: '',
+    text12: '',
+    text13: '',
+    text14: '',
+    text15: ''
+  }]);
 
-    return (
-        <div>
-        <div style={{ position: 'absolute', top: 0, left: 0 }}>
+  const [correcciones, setCorrecciones] = useState([{ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' }]);
+  const [actividades, setActividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: '' }]);
+  const [nuevaCorreccion, setNuevaCorreccion] = useState({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
+
+  const handleDiagrama = (e) => {
+    const { name, value } = e.target;
+    setDiagrama((prevState) => [{
+      ...prevState[0],
+      [name]: value
+    }]);
+  };
+
+  const handleFormDataChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      const data = {
+        fecha: '',
+        auditado: '',
+        problema: formData.problema,
+        requisito: '',
+        hallazgo: '',
+        correccion: formData.correccion,
+        causa: formData.causa,
+        diagrama,
+        participantes: formData.participantes,
+        afectacion: formData.afectacion,
+        actividades: '',
+        estado: 'En revisión'
+      };
+      // Mostrar SweetAlert con opción de confirmar o cancelar
+      const result = await Swal.fire({
+        title: '¿Estás seguro de querer guardar?',
+        text: 'El diagrama será enviado a revisión.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3ccc37',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      // Si el usuario confirma (presiona el botón de confirmación)
+      if (result.isConfirmed) {
+        // Realizar la llamada a la API para guardar los datos
+        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+        console.log('Datos guardados:', response.data);
+        // Llamar a verificarRegistro después de confirmar
+      } else {
+        // Mostrar un mensaje de cancelación si el usuario cancela
+        Swal.fire('Cancelado', 'El diagrama no ha sido guardado.', 'info');
+      }
+    } catch (error) {
+      console.error('Error al guardar los datos:', error);
+    }
+  };
+
+  const agregarFilaActividad = () => {
+    setActividades([...actividades, { actividad: '', responsable: '', fechaCompromiso: '' }]);
+  };
+
+  const eliminarFilaActividad = (index) => {
+    const nuevasActividades = actividades.filter((_, i) => i !== index);
+    setActividades(nuevasActividades);
+  };
+
+  const handleEliminarFila = (index) => {
+    const nuevasCorrecciones = [...correcciones];
+    nuevasCorrecciones.splice(index, 1);
+    setCorrecciones(nuevasCorrecciones);
+  };
+
+  const handleAgregarFila = () => {
+    setCorrecciones([...correcciones, nuevaCorreccion]);
+    setNuevaCorreccion({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
+  };
+
+  return (
+    <div>
+      <div style={{ position: 'absolute', top: 0, left: 0 }}>
         <Navigation />
-         </div>
-          <div>
-          {ishikawas.map((ishikawa, index) => (
-          <div className="image-container">
-            <img src={Logo} alt="Logo Aguida" className='logo-empresa-ishi' />
-            <div className='posicion-en'>
+      </div>
+      <div>
+        <div className="image-container">
+          <img src={Logo} alt="Logo Aguida" className='logo-empresa' />
+          <div className='posicion-en'>
+            <h2>Problema:
+              <input type="text" className="problema-input" name='problema'
+                style={{ marginTop: '0.4rem', color: '#000000' }} placeholder="Agregar problema. . ." required 
+                value={formData.problema} onChange={handleFormDataChange} />
+            </h2>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-             <h2 style={{ marginLeft: '30rem', marginRight:'10px'}}>Problema: </h2>
-            <div style={{width:'30rem', fontSize:'20px'}}>{ishikawa.problema}</div>
+              <h2>Afectación:
+                <input type="text" className="problema-input" name='afectacion'
+                  style={{ marginTop: '0.4rem', color: '#000000' }} placeholder="Agregar afectación. . ." required 
+                  value={formData.afectacion} onChange={handleFormDataChange} />
+              </h2>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-             <h2 style={{ marginLeft: '30rem', marginRight:'10px' }}>Afectación: </h2>
-              <div style={{width:'30rem', fontSize:'20px'}}>{ishikawa.afectacion}</div>
-            </div>
-            
-            </div>
-            <div className='posicion-en-2'>
-              <h3>Fecha: {ishikawa.fecha}</h3>
-            </div>
-          
-            <div >
-              <img src={IshikawaImg} alt="Diagrama de Ishikawa" className="responsive-image" />
-              {ishikawa.diagrama.map((item, i) => (
-              <div key={i}>
-              <textarea className="text-area"
-               style={{ top: '19.1rem', left: '8.7rem' }} disabled>{item.text1}</textarea>
-              <textarea className="text-area" 
-               style={{ top: '19.1rem', left: '25.4rem' }} disabled>{item.text2}</textarea>
-              <textarea className="text-area"
-               style={{ top: '19.1rem', left: '41.2rem' }} disabled>{item.text3}</textarea>
-    
-              <textarea className="text-area" 
-               style={{ top: '23.2rem', left: '12.2rem' }} disabled>{item.text4}</textarea>
-              <textarea className="text-area" 
-               style={{ top: '23.2rem', left: '28.8rem' }} disabled>{item.text5}</textarea>
-              <textarea className="text-area"
-               style={{ top: '23.2rem', left: '45rem' }} disabled>{item.text6}</textarea>
-      
-              <textarea className="text-area" 
-               style={{ top: '27.2rem', left: '15.5rem' }} disabled>{item.text7}</textarea>
-              <textarea className="text-area" 
-               style={{ top: '27.2rem', left: '32.3rem' }} disabled>{item.text8}</textarea>
-              <textarea className="text-area"
-               style={{ top: '27.2rem', left: '48.1rem' }}   disabled>{item.text9}</textarea>
-    
-              <textarea className="text-area" value={item.text10}
-               style={{ top: '31rem', left: '23rem' }} disabled></textarea>
-              <textarea className="text-area" name='text11' value={item.text11}
-               style={{ top: '31rem', left: '39.4rem' }} disabled></textarea>
-    
-              <textarea className="text-area" value={item.text12}
-               style={{ top: '35rem', left: '19.7rem' }} disabled></textarea>
-              <textarea className="text-area" name='text13' value={item.text13}
-               style={{ top: '35rem', left: '36rem' }} disabled></textarea>
-    
-              <textarea className="text-area" name='text14' value={item.text14}
-               style={{ top: '39rem', left: '16.6rem' }} disabled></textarea>
-              <textarea className="text-area" name='text15' value={item.text15} 
-               style={{ top: '39rem', left: '32.8rem' }} disabled></textarea>
-    
-              <textarea className="text-area" 
-               style={{ top: '27rem', left: '67.5rem',width:'8.5rem', height:'8rem' }} value={item.problema}></textarea>
-              </div>
-                ))}
-            </div>
-    
-                  <div key={index}>
-                    <div className='posicion-bo'>
-                      <h3>No conformidad:</h3>
-                         <div style={{fontSize:'20px',width:'55em', textAlign:'justify'}}> {ishikawa.requisito}
-                    
-                    </div>
-                      <h3>Hallazgo:</h3>
-                      <div className='hallazgo-container'>
-                        <div  >{ishikawa.hallazgo}</div>
-                      </div>
-                      <h3>Acción inmediata o corrección: </h3>
-                      {ishikawa.correccion}
-                      <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
-                      <div style={{marginBottom:'20px'}}>{ishikawa.causa}</div>
-                    </div>
-                  </div>
-                
-            <div className='table-ish'>
-              <table style={{border:'none'}}>
-                <thead>
-                  <tr>
-                    <th className="conformity-header">Actividad</th>
-                    <th className="conformity-header">Responsable</th>
-                    <th className="conformity-header">Fecha Compromiso</th>
-                  </tr>
-                </thead>
-                <tbody>
-                {ishikawa.actividades.map((actividad, i) => (
-                    <tr key={i}>
-                      <td>
-                      {actividad.actividad}
-                      </td>
-                      <td>
-                        {actividad.responsable}
-                      </td>
-                      <td>
-                      {new Date(actividad.fechaCompromiso).toLocaleDateString()}
-                      </td>
-                     
-                    </tr>
-                  ))}
-
-                </tbody>
-                </table>
-    
-                <table style={{border:'none'}}>
-                  <thead>
-                    <tr>
-                      <th>Actividad</th>
-                      <th>Responsable</th>
-                      <th>Fecha Compromiso</th>
-                      <th colSpan="2" className="sub-div">
-                        <div>Acción Correctiva cerrada</div>
-                        <div style={{ display: 'flex' }}>
-                          <div className="left">Sí</div>
-                          <div className="right">No</div>
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  {ishikawa.accionesCorrectivas.map((accion, i) => (
-                      <tr key={i}>
-                        <td>
-                          {accion.actividad}
-                        </td>
-                        <td>
-                          {accion.responsable}
-                        </td>
-                        <td>
-                        {new Date(accion.fechaCompromiso).toLocaleDateString()}
-                        </td>
-                        <td>
-                        {accion.cerrada}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            ))}
-            </div>
-
           </div>
-        );
+          <div className='posicion-en-2'>
+            <h3>Fecha: 
+            <input type="date" name='fecha'
+                  style={{ marginTop: '0.4rem', color: '#000000' }} placeholder="Agregar afectación. . ." required 
+                   onChange={handleFormDataChange} />
+            </h3>
+          </div>
+          <div>
+            <img src={Ishikawa} alt="Diagrama de Ishikawa" className="responsive-image" />
+            {diagrama.map((dia, index) => (
+              <div key={index}>
+                <textarea maxLength="63" className="text-area" name='text1' value={dia.text1} onChange={handleDiagrama}
+                  style={{ top: '19.1rem', left: '8.7rem' }} placeholder="Texto..." required />
+                <textarea className="text-area" name='text2' value={dia.text2} onChange={handleDiagrama}
+                  style={{ top: '19.1rem', left: '25.4rem' }} placeholder="Texto..." required />
+                <textarea className="text-area" name='text3' value={dia.text3} onChange={handleDiagrama}
+                  style={{ top: '19.1rem', left: '41.2rem' }} placeholder="Texto..." required />
+                <textarea className="text-area" name='text4' value={dia.text4} onChange={handleDiagrama}
+                  style={{ top: '23.2rem', left: '12.2rem' }} placeholder="Texto..." />
+                <textarea className="text-area" name='text5' value={dia.text5} onChange={handleDiagrama}
+                  style={{ top: '23.2rem', left: '28.8rem' }} placeholder="Texto..." />
+                <textarea className="text-area" name='text6' value={dia.text6} onChange={handleDiagrama}
+                  style={{ top: '23.2rem', left: '45rem' }} placeholder="Texto..." />
+                <textarea className="text-area" name='text7' value={dia.text7} onChange={handleDiagrama}
+                  style={{ top: '27.2rem', left: '15.5rem' }} placeholder="Texto..." />
+                <textarea className="text-area" name='text8' value={dia.text8} onChange={handleDiagrama}
+                  style={{ top: '27.2rem', left: '32.3rem' }} placeholder="Texto..." />
+                <textarea className="text-area" name='text9' value={dia.text9} onChange={handleDiagrama}
+                  style={{ top: '27.2rem', left: '48.1rem' }} placeholder="Texto..." />
+                <textarea className="text-area" name='text10' value={dia.text10} onChange={handleDiagrama}
+                  style={{ top: '31rem', left: '23rem' }} placeholder="Texto..." required />
+                <textarea className="text-area" name='text11' value={dia.text11} onChange={handleDiagrama}
+                  style={{ top: '31rem', left: '39.4rem' }} placeholder="Texto..." required />
+                <textarea className="text-area" name='text12' value={dia.text12} onChange={handleDiagrama}
+                  style={{ top: '35rem', left: '19.7rem' }} placeholder="Texto..." />
+                <textarea className="text-area" name='text13' value={dia.text13} onChange={handleDiagrama}
+                  style={{ top: '35rem', left: '36rem' }} placeholder="Texto..." />
+                <textarea className="text-area" name='text14' value={dia.text14} onChange={handleDiagrama}
+                  style={{ top: '39rem', left: '16.6rem' }} placeholder="Texto..." />
+                <textarea className="text-area" name='text15' value={dia.text15} onChange={handleDiagrama}
+                  style={{ top: '39rem', left: '32.8rem' }} placeholder="Texto..." />
+                <textarea maxLength="105" className="text-area" name='problema' value={dia.problema} onChange={handleDiagrama}
+                  style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} placeholder="Problema..." required />
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <div className='posicion-bo' style={{ marginRight: '5rem' }}>
+              <h3>No conformidad:</h3>
+              <textarea type="text" className="textarea-acc" name='correccion'
+                style={{ width: '64rem', color: '#000000' }} placeholder="Agregar Acción. . ." value={formData.correccion} onChange={handleFormDataChange} />
+              <h3>Hallazgo:</h3>
+              <textarea type="text" className="textarea-acc" name='hallazgo'
+                style={{ width: '64rem', color: '#000000' }} placeholder="Agregar Hallazgo. . ." value={formData.hallazgo} onChange={handleFormDataChange} />
+              <h3>Acción inmediata o corrección:</h3>
+              <textarea type="text" className="textarea-acc" name='correccion'
+                style={{ width: '64rem', color: '#000000' }} placeholder="Agregar Acción. . ." value={formData.correccion} onChange={handleFormDataChange} />
+              <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
+              <textarea type="text" className="textarea-acc" name='causa'
+                style={{ width: '64rem', marginBottom: '20px', color: '#000000' }} placeholder="Agregar Causa. . ." value={formData.causa} onChange={handleFormDataChange} />
+            </div>
+          </div>
+
+          <div className='table-ish'>
+            <table style={{ border: 'none' }}>
+              <thead>
+                <tr>
+                  <th className="conformity-header">Actividad</th>
+                  <th className="conformity-header">Responsable</th>
+                  <th className="conformity-header">Fecha Compromiso</th>
+                </tr>
+              </thead>
+              <tbody>
+                {actividades.map((actividad, index) => (
+                  <tr key={index}>
+                    <td>
+                      <textarea
+                        className='table-input'
+                        type="text"
+                        value={actividad.actividad}
+                        onChange={(e) => {
+                          const newActividades = [...actividades];
+                          newActividades[index].actividad = e.target.value;
+                          setActividades(newActividades);
+                        }}
+                        required
+                      />
+                    </td>
+                    <td>
+                      <textarea
+                        className='table-input'
+                        type="text"
+                        value={actividad.responsable}
+                        onChange={(e) => {
+                          const newActividades = [...actividades];
+                          newActividades[index].responsable = e.target.value;
+                          setActividades(newActividades);
+                        }}
+                        required
+                      />
+                    </td>
+                    <td>
+                      <div>
+                        <input
+                          type="date"
+                          value={actividad.fechaCompromiso}
+                          onChange={(e) => {
+                            const newActividades = [...actividades];
+                            newActividades[index].fechaCompromiso = e.target.value;
+                            setActividades(newActividades);
+                          }}
+                          required
+                        />
+                      </div>
+                    </td>
+                    <td className='cancel-acc'>
+                      <button onClick={() => eliminarFilaActividad(index)}>Eliminar</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button onClick={(e) => {
+              e.preventDefault();
+              agregarFilaActividad();
+            }} className='button-agregar'>Agregar Fila</button>
+
+            <table style={{ border: 'none' }}>
+              <thead>
+                <tr>
+                  <th>Actividad</th>
+                  <th>Responsable</th>
+                  <th>Fecha Compromiso</th>
+                  <th colSpan="2" className="sub-div">
+                    <div>Acción Correctiva cerrada</div>
+                    <div style={{ display: 'flex' }}>
+                      <div className="left">Sí</div>
+                      <div className="right">No</div>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {correcciones.map((correccion, index) => (
+                  <tr key={index}>
+                    <td>
+                      <textarea
+                        type="text"
+                        value={correccion.actividad}
+                        onChange={(e) => {
+                          const newCorrecciones = [...correcciones];
+                          newCorrecciones[index].actividad = e.target.value;
+                          setCorrecciones(newCorrecciones);
+                        }}
+                        className="no-border"
+                      />
+                    </td>
+                    <td>
+                      <textarea
+                        type="text"
+                        value={correccion.responsable}
+                        onChange={(e) => {
+                          const newCorrecciones = [...correcciones];
+                          newCorrecciones[index].responsable = e.target.value;
+                          setCorrecciones(newCorrecciones);
+                        }}
+                        className="no-border"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="date"
+                        value={correccion.fechaCompromiso}
+                        onChange={(e) => {
+                          const newCorrecciones = [...correcciones];
+                          newCorrecciones[index].fechaCompromiso = e.target.value;
+                          setCorrecciones(newCorrecciones);
+                        }}
+                        className="no-border"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={correccion.cerrada === 'Sí'}
+                        onChange={(e) => {
+                          const newCorrecciones = [...correcciones];
+                          newCorrecciones[index].cerrada = e.target.checked ? 'Sí' : 'No';
+                          setCorrecciones(newCorrecciones);
+                        }}
+                        className="no-border"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={correccion.cerrada === 'No'}
+                        onChange={(e) => {
+                          const newCorrecciones = [...correcciones];
+                          newCorrecciones[index].cerrada = e.target.checked ? 'No' : 'Sí';
+                          setCorrecciones(newCorrecciones);
+                        }}
+                        className="no-border"
+                      />
+                    </td>
+                    <td className='cancel-acc'>
+                      <button onClick={() => handleEliminarFila(index)}>Eliminar</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div>
+              <button onClick={handleAgregarFila} className='button-agregar'>Agregar Fila</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button onClick={handleSave}>Guardar</button>
+    </div>
+  );
 };
 
-export default Diagrama;
+export default CreacionIshikawa;

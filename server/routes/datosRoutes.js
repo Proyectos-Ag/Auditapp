@@ -23,13 +23,15 @@ router.put('/:id', async (req, res) => {
 
             // Actualizar Estatus basado en PorcentajeTotal
             if (PorcentajeTotal === 100) {
-                datos.Estatus = 'Excelente';
+                datos.Estatus = 'Bueno';
             } else if (PorcentajeTotal >= 90) {
-                datos.Estatus = 'Aceptable';
+                datos.Estatus = 'Bueno';
             } else if (PorcentajeTotal >= 80) {
-                datos.Estatus = 'Poco aceptable';
-            } else if (PorcentajeTotal < 80) {
-                datos.Estatus = 'No aceptable';
+                datos.Estatus = 'Aceptable';
+            } else if (PorcentajeTotal >= 60) {
+                datos.Estatus = 'No Aceptable';
+            } else if (PorcentajeTotal < 60) {
+                datos.Estatus = 'Crítico';
             }
 
             // Actualizar FechaElaboracion con la fecha actual

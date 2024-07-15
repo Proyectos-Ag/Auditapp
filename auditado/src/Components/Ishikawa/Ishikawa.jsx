@@ -17,7 +17,9 @@ const Ishikawa = () => {
   const [hallazgo, setHallazgo] = useState('');
   const [auditado, setAuditados] = useState('');
   const [proceso,  setEnProceso] = useState([]);
+  const [revisado,  setRevisado] = useState([]);
   const [aprobado,  setAprobado] = useState([]);
+  const [estRech,  setEstRech] = useState([]);
   const [showPart, setShowPart] = useState(true);
   const [rechazo,  setRechazo] = useState([]);
   const [nota,  setNota] = useState([]);
@@ -106,11 +108,16 @@ const Ishikawa = () => {
   const verificarRegistro = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-      const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && (item.estado === 'rechazado' || item.estado === 'revisado' || item.estado === 'Aprobado'));
+      const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && 
+       (item.estado === 'Rechazado' || item.estado === 'Revisado' || item.estado === 'Aprobado' || item.estado === 'Pendiente'));
       const registroRechazado = dataFiltrada.find(item => item.idRep === _id && item.idReq === id);
       const registroExistente = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'En revisión');
-      const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'Aprobado');
+      const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && (item.estado === 'Aprobado' || item.estado === 'revisado' ));
+      const registroRevisado = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'Revisado' );
+      const registroEstadoRe = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'Rechazado' );
+      setEstRech(registroEstadoRe);
       setAprobado(registroAprobado);
+      setRevisado(registroRevisado);
       setEnProceso(registroExistente);
       setRechazo(dataFiltrada);
 
@@ -122,11 +129,10 @@ const Ishikawa = () => {
           causa: registroRechazado.causa,
           participantes: registroRechazado.participantes,
           notaRechazo: registroRechazado.notaRechazo
-          
         });
         setDiagrama(registroRechazado.diagrama);
         setActividades(registroRechazado.actividades);
-        setIsEditing(true);  // Establecer en modo edición
+        setIsEditing(true);
       }
       setNota(registroRechazado.notaRechazo);
     } catch (error) {
@@ -137,7 +143,6 @@ const Ishikawa = () => {
   const handleTempFechaChange = (value) => {
     setTempFechaCompromiso(value);
 };
-
 
   const handleUpdate = async () => {
     try {
@@ -198,6 +203,48 @@ const Ishikawa = () => {
     });
   };
 
+  const handleUpdateAdvance = async () => {
+    try {
+      // Verificar que `rechazo` no esté vacío
+      if (rechazo.length === 0) {
+        alert('No hay datos para actualizar');
+        return;
+      }
+  
+      // Obtener el `_id` del primer elemento de `rechazo`
+      const { _id } = rechazo[0];
+  
+      const data = {
+        idRep: idRep.idRepo,
+        idReq: id,
+        fecha: fechaElaboracion,
+        auditado,
+        problema: formData.problema,
+        requisito,
+        hallazgo,
+        correccion: formData.correccion,
+        causa: formData.causa,
+        diagrama,
+        participantes: formData.participantes,
+        afectacion: formData.afectacion,
+        actividades,
+        estado: 'Pendiente'
+      };
+  
+      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, data);
+      console.log('Datos actualizados:', response.data);
+      Swal.fire({
+        title: 'Actualizado',
+        text: 'El diagrama se ha actualizado correctamente.',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+      });
+      verificarRegistro();
+    } catch (error) {
+      console.error('Error al actualizar los datos:', error);
+    }
+  };
+
   const handleDiagrama = (e) => {
     const { name, value } = e.target;
     setDiagrama((prevState) => [{
@@ -212,6 +259,41 @@ const Ishikawa = () => {
       ...prevState,
       [name]: value
     }));
+  };
+
+  const handleSaveAdvance = async () => {
+    try {
+      const data = {
+        idRep:_id,
+        idReq: id,
+        fecha: fechaElaboracion,
+        auditado,
+        problema: formData.problema,
+        requisito,
+        hallazgo,
+        correccion: formData.correccion,
+        causa: formData.causa,
+        diagrama,
+        participantes: formData.participantes,
+        afectacion: formData.afectacion,
+        actividades,
+        estado: 'Pendiente'
+      };
+      // Realizar la llamada a la API para guardar los datos
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+      console.log('Datos guardados:', response.data);
+      // Llamar a verificarRegistro después de confirmar
+      verificarRegistro();
+
+      Swal.fire({
+        title: 'Cambios guardados',
+        text: 'Los cambios se guardaron exitosamente.',
+        icon: 'success',
+      });
+    
+    } catch (error) {
+      console.error('Error al guardar los datos:', error);
+    }
   };
 
   const handleSave = async () => {
@@ -276,6 +358,22 @@ const Ishikawa = () => {
     await handleSave();
   };
 
+
+const handleSaveOrUpdate = async () => {
+  try {
+    const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+    const existeRegistro = response.data.some(item => item.idRep === _id && item.idReq === id);
+
+    if (existeRegistro) {
+      handleUpdateAdvance();
+    } else {
+      handleSaveAdvance();
+    }
+  } catch (error) {
+    console.error('Error al verificar el registro:', error);
+  }
+};
+
   const handleActividadChange = (index, field, value) => {
     const nuevasActividades = [...actividades];
   
@@ -298,6 +396,12 @@ const Ishikawa = () => {
   const agregarFilaActividad = () => {
     setActividades([...actividades, { actividad: '', responsable: '', fechaCompromiso: [] }]);
   };
+
+  const ajustarFecha = (fechaString) => {
+    const fecha = new Date(fechaString);
+    fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset());
+    return fecha.toLocaleDateString('es-ES');
+};
 
   const handleUpdateFechaCompromiso = async (index) => {
     try {
@@ -378,13 +482,24 @@ const Ishikawa = () => {
           }
         }}>
         <div className="image-container">
-        
+          <div className='button-cam'>
+          {
+          (aprobado || estRech) ? null : (         
+          <button onClick={(e) => {
+            e.preventDefault();
+              handleSaveOrUpdate();
+               }}>
+              Guardar Cambios
+            </button>
+            )}  
+          </div>
+
           <img src={Logo} alt="Logo Aguida" className='logo-empresa' />
           <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
           <div className='posicion-en'>
             <h2>Problema:
               <input type="text" className="problema-input" name='problema' value={formData.problema} onChange={handleDatos}
-              style={{marginTop:'0.4rem'}} placeholder="Agregar problema. . ." required></input>
+              style={{marginTop:'0.4rem', color:'#000000'}} placeholder="Agregar problema. . ." required disabled={revisado}></input>
             </h2>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <h2 >Afectación: {id}</h2>
@@ -398,43 +513,43 @@ const Ishikawa = () => {
             {diagrama.map((dia, index) => (
             <div key={index}>
             <textarea maxlength="63" className="text-area" name='text1' value={dia.text1} onChange={handleDiagrama}
-             style={{ top: '19.1rem', left: '8.7rem' }} placeholder="Texto..." required></textarea>
+             style={{ top: '19.1rem', left: '8.7rem' }} placeholder="Texto..." required disabled={revisado}></textarea>
             <textarea className="text-area" name='text2' value={dia.text2} onChange={handleDiagrama}
-             style={{ top: '19.1rem', left: '25.4rem' }}placeholder="Texto..." required></textarea>
+             style={{ top: '19.1rem', left: '25.4rem' }}placeholder="Texto..." required disabled={revisado}></textarea>
             <textarea className="text-area" name='text3' value={dia.text3} onChange={handleDiagrama}
-             style={{ top: '19.1rem', left: '41.2rem' }}placeholder="Texto..." required></textarea>
+             style={{ top: '19.1rem', left: '41.2rem' }}placeholder="Texto..." required disabled={revisado}></textarea>
   
             <textarea className="text-area" name='text4' value={dia.text4} onChange={handleDiagrama}
-             style={{ top: '23.2rem', left: '12.2rem' }}placeholder="Texto..."></textarea>
+             style={{ top: '23.2rem', left: '12.2rem' }}placeholder="Texto..." disabled={revisado}></textarea>
             <textarea className="text-area" name='text5' value={dia.text5} onChange={handleDiagrama}
-             style={{ top: '23.2rem', left: '28.8rem' }}placeholder="Texto..."></textarea>
+             style={{ top: '23.2rem', left: '28.8rem' }}placeholder="Texto..." disabled={revisado}></textarea>
             <textarea className="text-area" name='text6' value={dia.text6} onChange={handleDiagrama}
-             style={{ top: '23.2rem', left: '45rem' }}placeholder="Texto..."></textarea>
+             style={{ top: '23.2rem', left: '45rem' }}placeholder="Texto..." disabled={revisado}></textarea>
     
             <textarea className="text-area" name='text7' value={dia.text7} onChange={handleDiagrama}
-             style={{ top: '27.2rem', left: '15.5rem' }}placeholder="Texto..."></textarea>
+             style={{ top: '27.2rem', left: '15.5rem' }}placeholder="Texto..." disabled={revisado}></textarea>
             <textarea className="text-area" name='text8' value={dia.text8} onChange={handleDiagrama}
-             style={{ top: '27.2rem', left: '32.3rem' }}placeholder="Texto..."></textarea>
+             style={{ top: '27.2rem', left: '32.3rem' }}placeholder="Texto..." disabled={revisado}></textarea>
             <textarea className="text-area" name='text9' value={dia.text9} onChange={handleDiagrama}
-             style={{ top: '27.2rem', left: '48.1rem' }}placeholder="Texto..."></textarea>
+             style={{ top: '27.2rem', left: '48.1rem' }}placeholder="Texto..." disabled={revisado}></textarea>
   
             <textarea className="text-area" name='text10' value={dia.text10} onChange={handleDiagrama}
-             style={{ top: '31rem', left: '23rem' }}placeholder="Texto..." required></textarea>
+             style={{ top: '31rem', left: '23rem' }}placeholder="Texto..." required disabled={revisado}></textarea>
             <textarea className="text-area" name='text11' value={dia.text11} onChange={handleDiagrama}
-             style={{ top: '31rem', left: '39.4rem' }}placeholder="Texto..." required></textarea>
+             style={{ top: '31rem', left: '39.4rem' }}placeholder="Texto..." required disabled={revisado}></textarea>
   
             <textarea className="text-area" name='text12' value={dia.text12} onChange={handleDiagrama}
-             style={{ top: '35rem', left: '19.7rem' }}placeholder="Texto..."></textarea>
+             style={{ top: '35rem', left: '19.7rem' }}placeholder="Texto..." disabled={revisado}></textarea>
             <textarea className="text-area" name='text13' value={dia.text13} onChange={handleDiagrama}
-             style={{ top: '35rem', left: '36rem' }}placeholder="Texto..."></textarea>
+             style={{ top: '35rem', left: '36rem' }}placeholder="Texto..." disabled={revisado}></textarea>
   
             <textarea className="text-area" name='text14' value={dia.text14} onChange={handleDiagrama}
-             style={{ top: '39rem', left: '16.6rem' }}placeholder="Texto..."></textarea>
+             style={{ top: '39rem', left: '16.6rem' }}placeholder="Texto..." disabled={revisado}></textarea>
             <textarea className="text-area" name='text15' value={dia.text15} onChange={handleDiagrama}
-             style={{ top: '39rem', left: '32.8rem' }}placeholder="Texto..."></textarea>
+             style={{ top: '39rem', left: '32.8rem' }}placeholder="Texto..." disabled={revisado}></textarea>
   
             <textarea maxlength="105" className="text-area" name='problema' value={dia.problema} onChange={handleDiagrama}
-             style={{ top: '27rem', left: '67.5rem',width:'8.5rem', height:'8rem' }}placeholder="Problema..." required></textarea>
+             style={{ top: '27rem', left: '67.5rem',width:'8.5rem', height:'8rem' }}placeholder="Problema..." required disabled={revisado}></textarea>
             </div>
           ))}
           </div>
@@ -457,11 +572,10 @@ const Ishikawa = () => {
                   </button>
                   {showPart && (
                   <textarea type="text" name='participantes' value={formData.participantes} onChange={handleDatos}
-                      style={{ width:'64rem'}} placeholder="Agregar Participantes. . ." required></textarea>
+                      style={{ width:'64rem', color:'#000000'}} placeholder="Agregar Participantes. . ." required disabled={revisado}></textarea>
                     )}
                   </div>
                   <div className='posicion-bo'>
-                  
                     <h3>No conformidad:</h3>
                        <div style={{fontSize:'20px',width:'55em', textAlign:'justify'}}>{desc.Requisito}</div>
                     <h3>Hallazgo:</h3>
@@ -470,10 +584,10 @@ const Ishikawa = () => {
                     </div>
                     <h3>Acción inmediata o corrección: </h3>
                     <textarea type="text" className="textarea-acc" name='correccion' value={formData.correccion} onChange={handleDatos}
-                      style={{ width:'64rem'}} placeholder="Agregar Acción. . ." required></textarea>
+                      style={{ width:'64rem', color:'#000000'}} placeholder="Agregar Acción. . ." required disabled={revisado} ></textarea>
                     <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
                     <textarea type="text" className="textarea-acc" name='causa' value={formData.causa} onChange={handleDatos}
-                      style={{ width:'64rem', marginBottom:'20px'}} placeholder="Agregar Causa. . ." required></textarea>
+                      style={{ width:'64rem', marginBottom:'20px', color:'#000000'}} placeholder="Agregar Causa. . ." required disabled={revisado}></textarea>
                   </div>
                   
                 </div>
@@ -510,7 +624,10 @@ const Ishikawa = () => {
                         />
                       </td>
                       <td>
-                      <select
+                      {
+                      (revisado) ? null : (
+                      <div>
+                       <select
                                     className="custom-select"
                                     onChange={(e) => handleSelectChange(e, actividad.fechaCompromiso.length - 1 - actividad.fechaCompromiso.slice().reverse().findIndex(fecha => fecha === e.target.value))}
                                     style={{ color: colores[actividad.fechaCompromiso.length - 1]} } // Inicializa con el color del primer elemento invertido
@@ -544,6 +661,15 @@ const Ishikawa = () => {
                                   required
                               />
                           )}
+                      </div>
+                      )}
+
+                      {
+                      (!revisado) ? null : (
+                        <div >
+                           {ajustarFecha(actividad.fechaCompromiso.slice(-1)[0])}
+                        </div>
+                        )}
                       </td>
                       <td className='cancel-acc'>
                         {index !== 0 && (
@@ -554,12 +680,18 @@ const Ishikawa = () => {
                   ))}
                 </tbody>
               </table>
-              <button onClick={agregarFilaActividad} className='button-agregar'>Agregar Fila</button>
+              {
+              (aprobado) ? null : ( 
+              <button  onClick={(e) => {
+                e.preventDefault();
+                agregarFilaActividad();
+              }} className='button-agregar'>Agregar Fila</button>
+            )}
             </div>
             {
               (proceso || aprobado) ? null : (
                 <button type="submit" className='button-guar-ish'>
-                  {isEditing ? 'Reenviar' : 'Guardar'}
+                  {isEditing ? 'Enviar' : 'Enviar'}
                 </button>
               )
             }

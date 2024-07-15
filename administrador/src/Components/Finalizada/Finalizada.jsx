@@ -129,6 +129,7 @@ const Finalizada = () => {
                 <Navigation />
             </div>
             <div className="datos-container-repo">
+            <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Reportes Finalizados</h1>
                 <div className="form-group-datos">
                 {datos.map((dato, periodIdx) => {
                         let conteo = {};

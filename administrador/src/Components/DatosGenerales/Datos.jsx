@@ -142,13 +142,6 @@ const Datos = () => {
       }
     }
   
-    if (name === 'AreasAudi' && value === 'Otro') {
-      setShowOtherAreaInput(true);
-      newFormData.AreasAudi = '';
-    } else if (name === 'AreasAudi' && showOtherAreaInput) {
-      setShowOtherAreaInput(false);
-    }
-  
     setFormData(newFormData);
   };
   
@@ -186,22 +179,6 @@ const Datos = () => {
       if (formData.Programa.length === 0) {
         alert("Por favor, seleccione al menos un programa.");
         return; // Detener el envío del formulario si no se ha seleccionado ningún programa
-      }
-  
-      if (showOtherAreaInput) {
-        const newArea = { NombreArea: formData.AreasAudi };
-        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/areas`, newArea);
-        alert("Nueva área agregada con éxito");
-        const addedArea = response.data;
-  
-        setAreas(prevAreas => [...prevAreas, addedArea]); // Update the areas list with the new area
-  
-        setFormData({
-          ...formData,
-          AreasAudi: addedArea._id // Update AreasAudi with the new area's ID
-        });
-  
-        setShowOtherAreaInput(false);
       }
   
       console.log('Datos a enviar:', formDataWithDefaults);
@@ -535,7 +512,6 @@ const Datos = () => {
                   {filteredAreas.map((area, index) => (
                     <option key={index} value={area}>{area}</option>
                   ))}
-                  <option value="Otro">Otra...</option>
                 </select>
               )}
             </div>

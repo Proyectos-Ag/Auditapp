@@ -203,7 +203,7 @@ const Reporte = () => {
             
             <div className="datos-container-repo">
 
-            <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Revisión de reporte</h1>
+            <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Revisión de Reporte</h1>
        
                 <div className="form-group-datos">
                     {datos.map((dato, periodIdx) => {
@@ -246,7 +246,7 @@ const Reporte = () => {
                                             className='textarea-mod'
                                             value={notas[dato._id] || ''}
                                             onChange={(e) => notaCorreccion(e, dato._id)}
-                                        ></textarea>
+                                         placeholder='Razón del rechazo. . .'></textarea>
                                     )}
                                         <div className="header-container-datos-repo">
                                             <img src={logo} alt="Logo Empresa" className="logo-empresa-repo" />
