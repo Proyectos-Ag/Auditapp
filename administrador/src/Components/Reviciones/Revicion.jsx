@@ -6,7 +6,6 @@ import './css/Revicion.css';
 import Navigation from '../Navigation/Navbar';
 import Swal from 'sweetalert2';
 
-
 const Reporte = () => {
     const { userData } = useContext(UserContext);
     const [datos, setDatos] = useState([]);
@@ -15,7 +14,10 @@ const Reporte = () => {
     const [, setTotalCriterios] = useState(0);
     const [notas, setNotas] = useState({});
     const [visibleTextAreas, setVisibleTextAreas] = useState({});
-    const [hiddenRows, setHiddenRows] = useState({});   
+    const [hiddenRows, setHiddenRows] = useState({}); 
+    const [conteoCriteriosOcultos, setConteoCriteriosOcultos] = useState({ m: 0, M: 0, C: 0 });
+
+    console.log('Aquiiiiiiiii',conteoCriteriosOcultos);
 
     useEffect(() => {
         obtenerDatos();
@@ -83,18 +85,56 @@ const Reporte = () => {
         );
     };
 
+    const toggleRowVisibility = (rowId, criterios) => {
+        setHiddenRows((prevHiddenRows) => {
+            const isHidden = !prevHiddenRows[rowId];
+            const newHiddenRows = {
+                ...prevHiddenRows,
+                [rowId]: isHidden
+            };
+    
+            const criteriosOcultos = Object.keys(newHiddenRows)
+                .filter(id => newHiddenRows[id])
+                .map(id => criterios[id])
+                .flat()
+                .filter(Boolean);
+    
+            actualizarConteoCriteriosOcultos(criteriosOcultos);
+            return newHiddenRows;
+        });
+    };
+    
+    
+    const actualizarConteoCriteriosOcultos = (criterios) => {
+        let conteo = { m: 0, M: 0, C: 0 };
+        for (const criterio of criterios) {
+            if (criterio === 'm' || criterio === 'M' || criterio === 'C') {
+                conteo[criterio]++;
+            }
+        }
+        setConteoCriteriosOcultos(conteo);
+    };
+    
+    const handleToggleRowVisibility = (programIdx, descIdx) => {
+        const criterios = datos.reduce((acc, dato, periodIdx) => {
+            dato.Programa.forEach((programa, pIdx) => {
+                programa.Descripcion.forEach((desc, dIdx) => {
+                    const rowId = `${pIdx}-${dIdx}`;
+                    acc[rowId] = desc.Criterio;
+                });
+            });
+            return acc;
+        }, {});
+        toggleRowVisibility(`${programIdx}-${descIdx}`, criterios);
+    };
+    
+    
+    
     const contarCriteriosPorTipo = (criterios, tipo) => {
         return Object.keys(criterios).filter(criterio => criterio === tipo).reduce((acc, criterio) => {
             acc[criterio] = criterios[criterio];
             return acc;
         }, {});
-    };
-
-    const toggleRowVisibility = (rowId) => {
-        setHiddenRows((prevHiddenRows) => ({
-            ...prevHiddenRows,
-            [rowId]: !prevHiddenRows[rowId]
-        }));
     };
     
 
@@ -281,18 +321,21 @@ const Reporte = () => {
                                                     <div className="horizontal-inline">
                                                         <div>Conforme:</div>
                                                         {Object.keys(contarCriteriosPorTipo(conteo, 'Conforme')).map(criterio => (
-                                                            <div key={criterio} className="horizontal-inline-item">  {conteo[criterio]}
+                                                            <div key={criterio} className="horizontal-inline-item">  
+                                                            {conteo[criterio] + (conteoCriteriosOcultos.M + conteoCriteriosOcultos.m + conteoCriteriosOcultos.C)}
                                                             </div>
                                                         ))}
                                                     </div>
                                                 </div>
                                                 <div className="horizontal-item">
-                                                    <div className="horizontal-inline">
-                                                        <div>NC Menor:</div>
-                                                        {Object.keys(contarCriteriosPorTipo(conteo, 'm')).map(criterio => (
-                                                            <div key={criterio} className="horizontal-inline-item"> {conteo[criterio]}</div>
-                                                        ))}
-                                                    </div>
+                                                <div className="horizontal-inline">
+                                                    <div>NC Menor:</div>
+                                                    {Object.keys(contarCriteriosPorTipo(conteo, 'm')).map(criterio => (
+                                                        <div key={criterio} className="horizontal-inline-item">
+                                                            {conteo[criterio] - conteoCriteriosOcultos.m}
+                                                        </div>
+                                                    ))}
+                                                </div>
                                                 </div>
                                             </div>
                                             <div className="horizontal-group">
@@ -300,7 +343,8 @@ const Reporte = () => {
                                                     <div className="horizontal-inline"> 
                                                         <div>NC Mayor:</div>
                                                         {Object.keys(contarCriteriosPorTipo(conteo, 'M')).map(criterio => (
-                                                            <div key={criterio} className="horizontal-inline-item"> {conteo[criterio]}
+                                                            <div key={criterio} className="horizontal-inline-item"> 
+                                                            {conteo[criterio] - conteoCriteriosOcultos.M}
                                                             </div>
                                                         ))}
                                                     </div>
@@ -309,7 +353,8 @@ const Reporte = () => {
                                                     <div className="horizontal-inline"> 
                                                         <div>NC Crítica:</div>
                                                         {Object.keys(contarCriteriosPorTipo(conteo, 'C')).map(criterio => (
-                                                            <div key={criterio} className="horizontal-inline-item"> {conteo[criterio]}
+                                                            <div key={criterio} className="horizontal-inline-item"> 
+                                                            {conteo[criterio] - conteoCriteriosOcultos.C}
                                                             </div>
                                                         ))}
                                                     </div>
@@ -399,9 +444,8 @@ const Reporte = () => {
                                                 <tbody>
                                                 {dato.Programa.map((programa, programIdx) => (
                                                     programa.Descripcion.map((desc, descIdx) => {
-                                                        const base64String = desc.Hallazgo.startsWith('data:image/png;base64,')
-                                                            ? desc.Hallazgo
-                                                            : `data:image/png;base64,${desc.Hallazgo}`;
+                                                        const base64Prefix = 'data:image/png;base64,';
+                                                        const isBase64Image = desc.Hallazgo.includes(base64Prefix);
                                                         
                                                         const rowId = `${programIdx}-${descIdx}`;
                                                         const isHidden = hiddenRows[rowId];
@@ -415,19 +459,25 @@ const Reporte = () => {
                                                                         <td className='alingR'>{desc.Requisito}</td>
                                                                         <td>{desc.Criterio}</td>
                                                                         <td>{desc.Observacion}</td>
-                                                                        <td>
+                                                                        <td key={descIdx}>
                                                                             {desc.Hallazgo ? (
-                                                                                <img
-                                                                                    src={base64String}
-                                                                                    alt="Evidencia"
-                                                                                    className="hallazgo-imagen"
-                                                                                />
+                                                                                isBase64Image ? (
+                                                                                    <img
+                                                                                        src={desc.Hallazgo}
+                                                                                        alt="Evidencia"
+                                                                                        className="hallazgo-imagen"
+                                                                                    />
+                                                                                ) : (
+                                                                                    <span>{desc.Hallazgo}</span>
+                                                                                )
                                                                             ) : null}
                                                                         </td>
                                                                         <td>
-                                                                            <button onClick={() => toggleRowVisibility(rowId)}>
-                                                                                {isHidden ? 'Mostrar' : 'Ocultar'}
-                                                                            </button>
+                                                                        <button onClick={() => handleToggleRowVisibility(programIdx, descIdx)}>
+                                                                            {isHidden ? 'Mostrar' : 'Ocultar'}
+                                                                        </button>
+
+
                                                                         </td>
                                                                         <td>{}</td>
                                                                         <td>{}</td>
