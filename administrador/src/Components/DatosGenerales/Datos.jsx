@@ -12,7 +12,7 @@ const Datos = () => {
     FechaInicio: '',
     FechaFin: '',
     Departamento:'',
-    AreasAudi: '',
+    AreasAudi: [],
     Auditados: '',
     AuditorLider: '',
     AuditorLiderEmail: '', 
@@ -27,6 +27,9 @@ const Datos = () => {
     Estatus:''
   });
 
+  const [areasSeleccionadas, setAreasSeleccionadas] = useState([]);
+
+
   const [buttonText, setButtonText] = useState({
     button1: 'Datos generales',
     button2: 'Datos del Auditor',
@@ -39,7 +42,7 @@ const Datos = () => {
   const [areas, setAreas] = useState([]);
   const [programas, setProgramas] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
-  const [showOtherAreaInput, setShowOtherAreaInput] = useState(false);
+  const [showOtherAreaInput] = useState(false);
   const [auditorLiderSeleccionado, setAuditorLiderSeleccionado] = useState('');
   const [equipoAuditorDisabled, setEquipoAuditorDisabled] = useState(false);
   const filteredUsuarios = selectedDepartamento
@@ -146,13 +149,42 @@ const Datos = () => {
   };
   
   const handleAreaChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
+    const { value } = e.target;
+    if (value === 'No aplica') {
+      setAreasSeleccionadas([]);
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        AreasAudi: []
+      }));
+    } else {
+      setAreasSeleccionadas(prevAreas => {
+        const newAreas = prevAreas.includes(value)
+          ? prevAreas.filter(area => area !== value)
+          : [...prevAreas, value];
+  
+        setFormData(prevFormData => ({
+          ...prevFormData,
+          AreasAudi: newAreas
+        }));
+  
+        return newAreas;
+      });
+    }
+  }; 
+
+  const handleAreaRemove = (area) => {
+    setAreasSeleccionadas(prevAreas => {
+      const newAreas = prevAreas.filter(a => a !== area);
+      
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        AreasAudi: newAreas
+      }));
+  
+      return newAreas;
     });
   };
-
+  
   const handlePrevious = () => {
     setFormStep(prevStep => prevStep - 1);
   };
@@ -166,9 +198,17 @@ const Datos = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     try {
       const defaultEstado = "pendiente";
       const defaultPorcentaje = "0";
+
+      const formDataWithAreas = {
+        ...formData,
+        AreasAudi: areasSeleccionadas,
+        Estado: defaultEstado,
+        PorcentajeTotal: defaultPorcentaje
+      };
   
       const formDataWithDefaults = {
         ...formData,
@@ -183,7 +223,7 @@ const Datos = () => {
   
       console.log('Datos a enviar:', formDataWithDefaults);
   
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/datos`, formDataWithDefaults);
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/datos`, formDataWithDefaults, formDataWithAreas);
       Swal.fire({
         title: 'Auditoria generada con éxito',
         icon: 'success',
@@ -203,7 +243,7 @@ const Datos = () => {
         FechaInicio: '',
         FechaFin: '',
         Departamento:'',
-        AreasAudi: '',
+        AreasAudi: [],
         Auditados: '',
         AuditorLider: '',
         AuditorLiderEmail: '', 
@@ -494,26 +534,20 @@ const Datos = () => {
             </div>
             <div className="form-group-datos">
               <label>Área:</label>
-              {showOtherAreaInput ? (
-                <div>
-                  <input
-                    type="text"
-                    name="AreasAudi"
-                    value={formData.AreasAudi}
-                    onChange={handleAreaChange}
-                    placeholder="Escribe el nombre del área"
-                    required
-                  />
-                  <button type="button" onClick={() => setShowOtherAreaInput(false)}>Cancelar</button>
+              <select name="AreasAudi" value="" onChange={handleAreaChange}>
+                <option value="">Seleccione...</option>
+                {filteredAreas.map((area, index) => (
+                  <option key={index} value={area}>{area}</option>
+                ))}
+              </select>
+            </div>
+            <div className="selected-areas">
+              {areasSeleccionadas.map((area, index) => (
+                <div key={index} className="selected-area">
+                  {area}
+                  <button type="button" onClick={() => handleAreaRemove(area)} className="remove-button">X</button>
                 </div>
-              ) : (
-                <select name="AreasAudi" value={formData.AreasAudi} onChange={handleChange} required>
-                  <option value="">Seleccione...</option>
-                  {filteredAreas.map((area, index) => (
-                    <option key={index} value={area}>{area}</option>
-                  ))}
-                </select>
-              )}
+              ))}
             </div>
             </div>
             <div className="form-group-datos">

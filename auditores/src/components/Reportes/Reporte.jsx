@@ -229,7 +229,14 @@ const Reporte = () => {
                                                             </div>
                                                         ))}
                                                     </td>
-                                                    <td><div>{dato.AreasAudi}</div></td>
+                                                    <td>
+                                                        {console.log(dato.AreasAudi)} {/* Esto te ayudará a ver la estructura del array en la consola */}
+                                                        {dato.AreasAudi.map((area, i) => (
+                                                            <div key={i}>
+                                                            {area}
+                                                            </div>
+                                                        ))}
+                                                    </td>
                                                 </tr>
                                                 <tr>
                                                     <th className="table-header">Equipo auditor</th>

@@ -15,7 +15,7 @@ const Reporte = () => {
     const [, setTotalCriterios] = useState(0);
     const [notas, setNotas] = useState({});
     const [visibleTextAreas, setVisibleTextAreas] = useState({});
-   
+    const [hiddenRows, setHiddenRows] = useState({});   
 
     useEffect(() => {
         obtenerDatos();
@@ -89,6 +89,14 @@ const Reporte = () => {
             return acc;
         }, {});
     };
+
+    const toggleRowVisibility = (rowId) => {
+        setHiddenRows((prevHiddenRows) => ({
+            ...prevHiddenRows,
+            [rowId]: !prevHiddenRows[rowId]
+        }));
+    };
+    
 
     const checkboxValues = {
         'Conforme': 1,
@@ -389,14 +397,19 @@ const Reporte = () => {
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {dato.Programa.map((programa, programIdx) => (
-                                                        programa.Descripcion.map((desc, descIdx) => {
-                                                            const base64String = desc.Hallazgo.startsWith('data:image/png;base64,')
-                                                                ? desc.Hallazgo
-                                                                : `data:image/png;base64,${desc.Hallazgo}`;
-                                                            if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
-                                                                return (
-                                                                    <tr key={descIdx}>
+                                                {dato.Programa.map((programa, programIdx) => (
+                                                    programa.Descripcion.map((desc, descIdx) => {
+                                                        const base64String = desc.Hallazgo.startsWith('data:image/png;base64,')
+                                                            ? desc.Hallazgo
+                                                            : `data:image/png;base64,${desc.Hallazgo}`;
+                                                        
+                                                        const rowId = `${programIdx}-${descIdx}`;
+                                                        const isHidden = hiddenRows[rowId];
+                                                        
+                                                        if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
+                                                            return (
+                                                                <React.Fragment key={descIdx}>
+                                                                    <tr style={{ display: isHidden ? 'none' : 'table-row' }}>
                                                                         <td>{desc.ID}</td>
                                                                         <td className='alingR2'>{programa.Nombre}</td>
                                                                         <td className='alingR'>{desc.Requisito}</td>
@@ -412,19 +425,23 @@ const Reporte = () => {
                                                                             ) : null}
                                                                         </td>
                                                                         <td>
-                                                                       
+                                                                            <button onClick={() => toggleRowVisibility(rowId)}>
+                                                                                {isHidden ? 'Mostrar' : 'Ocultar'}
+                                                                            </button>
                                                                         </td>
                                                                         <td>{}</td>
                                                                         <td>{}</td>
                                                                         <td>{}</td>
                                                                     </tr>
-                                                                );
-                                                            } else {
-                                                                return null;
-                                                            }
-                                                        })
-                                                    ))}
-                                                </tbody>
+                                                                </React.Fragment>
+                                                            );
+                                                        } else {
+                                                            return null;
+                                                        }
+                                                    })
+                                                ))}
+                                            </tbody>
+
                                             </table>
                                             </div>
                                         </div>

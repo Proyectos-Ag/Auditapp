@@ -53,13 +53,15 @@ const Pendientes = () => {
             return new Date(anoInicio, mesInicio, diaInicio);
         };
 
-        const obtenerDatos = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
-                if (userData && userData.Correo) {
-                    const datosFiltrados = response.data.filter((dato) => 
-                        dato.AuditorLiderEmail === userData.Correo && (dato.Estado === "pendiente" || dato.Estado === "Devuelto")
-                    );
+    const obtenerDatos = async () => {
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+            if (userData && userData.Correo) {
+                const datosFiltrados = response.data.filter((dato) => 
+                    (dato.AuditorLiderEmail === userData.Correo || 
+                    (dato.EquipoAuditor.length > 0 && dato.EquipoAuditor.some(auditor => auditor.Correo === userData.Correo))) &&
+                    (dato.Estado === "pendiente" || dato.Estado === "Devuelto")
+                );
         
                     datosFiltrados.sort((a, b) => {
                         const fechaInicioA = obtenerFechaInicio(a.Duracion);
@@ -82,12 +84,12 @@ const Pendientes = () => {
                     'NA': null
                 };
 
-datosFiltrados.forEach((dato, periodIdx) => {
-    dato.Programa.forEach((programa, programIdx) => {
-        const programKey = `${periodIdx}_${programIdx}`;
+        datosFiltrados.forEach((dato, periodIdx) => {
+            dato.Programa.forEach((programa, programIdx) => {
+                const programKey = `${periodIdx}_${programIdx}`;
 
-        let totalValue = 0;
-        let validPrograms = 0;
+                let totalValue = 0;
+                let validPrograms = 0;
 
         programa.Descripcion.forEach((desc, descIdx) => {
             const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;

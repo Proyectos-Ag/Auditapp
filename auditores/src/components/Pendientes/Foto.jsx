@@ -8,6 +8,7 @@ function Fotos({ open, onClose, onCapture }) {
   const [hayFoto, setHayFoto] = useState(false);
   const [stream, setStream] = useState(null);
   const [camera, setCamera] = useState('user');
+  const [zoom, setZoom] = useState(1);
 
   const verCamara = async () => {
     try {
@@ -67,6 +68,20 @@ function Fotos({ open, onClose, onCapture }) {
     setCamera(prevCamera => (prevCamera === 'user' ? 'environment' : 'user'));
   };
 
+  const handleZoomChange = (event) => {
+    const newZoom = event.target.value;
+    setZoom(newZoom);
+
+    const track = stream.getVideoTracks()[0];
+    const capabilities = track.getCapabilities();
+    if (capabilities.zoom) {
+      const settings = track.getSettings();
+      track.applyConstraints({
+        advanced: [{ zoom: newZoom }]
+      });
+    }
+  };
+
   useEffect(() => {
     if (open) {
       verCamara();
@@ -87,6 +102,14 @@ function Fotos({ open, onClose, onCapture }) {
             <Card>
               <video ref={videoDiv} style={{ width: '100%', height: 'auto'}}></video>
               <Card.Content>
+                <input
+                  type="range"
+                  min="1"
+                  max="3"
+                  step="0.1"
+                  value={zoom}
+                  onChange={handleZoomChange}
+                />
                 <button className="camera-button" color="teal" onClick={tomarFoto} disabled={!open}>
                   <span className="material-symbols-outlined" style={{fontSize: "40px",}}>photo_camera</span>
                 </button>

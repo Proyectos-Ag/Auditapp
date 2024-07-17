@@ -25,7 +25,7 @@ const DatosSchema = new mongoose.Schema({
   FechaFin: { type: String, required: true },
   Duracion: { type: String, required: true },
   Departamento: { type: String, required: true },
-  AreasAudi: { type: String, required: true },
+  AreasAudi: { type: [String], required: true },
   Auditados: { type: String, required: true },
   AuditorLider: { type: String, required: true },
   AuditorLiderEmail: { type: String, required: true },

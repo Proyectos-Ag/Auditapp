@@ -31,8 +31,8 @@ const Inicio = () => {
         muted 
         style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0, zIndex: -1 }}
       />
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '5%',
-         borderRadius:'10px' }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '4rem',
+         borderRadius:'10px', backgroundColor:'#000000' }}>
         <Navigation />
       </div>
       <div className="inicio-content">

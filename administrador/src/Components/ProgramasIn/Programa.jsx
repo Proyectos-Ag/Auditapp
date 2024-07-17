@@ -6,7 +6,6 @@ import Swal from "sweetalert2";
 
 const Programas = () => {
   const [nombre, setNombre] = useState("");
-  const [requisitos, setRequisitos] = useState([""]);
   const [file, setFile] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [programas, setProgramas] = useState([]);
@@ -14,54 +13,42 @@ const Programas = () => {
   const [editingRequisito, setEditingRequisito] = useState(null);
   const [editingValue, setEditingValue] = useState("");
   const fileInputRef = useRef(null);
+  const [requisitos, setRequisitos] = useState([{ ID: "", Requisito: "" }]);
+  const [, setInitialID] = useState("");
+  const [editingPrograma, setEditingPrograma] = useState(null);
+
+
 
   const handleNombreChange = (e) => {
     setNombre(e.target.value);
   };
 
-  const handleRequisitoChange = (index, value) => {
-    const newRequisitos = [...requisitos];
-    newRequisitos[index] = value;
-    setRequisitos(newRequisitos);
-  };
+  const getNextID = (previousID) => {
+    const parts = previousID.split('.').map(Number);
+    parts[1] += 1;
+    return parts.join('.');
+  };  
 
+  const handleRequisitoChange = (index, key, value) => {
+    const newRequisitos = [...requisitos];
+    newRequisitos[index][key] = value;
+    setRequisitos(newRequisitos);
+    if (index === 0 && key === "ID") {
+      setInitialID(value);
+    }
+  };  
+  
   const handleAddRequisito = () => {
-    setRequisitos([...requisitos, ""]);
-  };
+    const lastRequisito = requisitos[requisitos.length - 1];
+    const nextID = getNextID(lastRequisito.ID);
+    setRequisitos([...requisitos, { ID: nextID, Requisito: "" }]);
+  };  
 
   const handleRemoveRequisito = (index) => {
     const newRequisitos = requisitos.filter((_, i) => i !== index);
     setRequisitos(newRequisitos);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/programas`, {
-        Nombre: nombre,
-        Descripcion: requisitos
-      });
-      Swal.fire({
-        title: 'Programa registrado con éxito',
-        icon: 'success',
-        confirmButtonText: 'Aceptar',
-        confirmButtonColor: '#3ccc37'
-      });
-      console.log('Programa creado:', response.data);
-      setNombre('');
-      setRequisitos([""]);
-      fetchProgramas(); // Actualizar la lista de programas después de crear uno nuevo
-    } catch (error) {
-      console.error('Error al crear el programa:', error);
-      Swal.fire({
-        title: 'Error',
-        text: error.response?.data?.error || 'Hubo un error al guardar el programa. Por favor, inténtalo de nuevo más tarde.',
-        icon: 'error',
-        confirmButtonText: 'Aceptar'
-      });
-    }
-  };
-
+  }; 
+    
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
@@ -163,6 +150,70 @@ const Programas = () => {
   const handleEditChange = (e) => {
     setEditingValue(e.target.value);
   };
+
+  const handleEditProgram = (programa) => {
+    setNombre(programa.Nombre);
+    setRequisitos(programa.Descripcion);
+    setEditingPrograma(programa._id);
+    setShowForm(true);
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (editingPrograma) {
+      try {
+        const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/programas/${editingPrograma}`, {
+          Nombre: nombre,
+          Descripcion: requisitos
+        });
+        Swal.fire({
+          title: 'Programa actualizado con éxito',
+          icon: 'success',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#3ccc37'
+        });
+        console.log('Programa actualizado:', response.data);
+        setNombre('');
+        setRequisitos([{ ID: "", Requisito: "" }]);
+        setEditingPrograma(null);
+        fetchProgramas();
+      } catch (error) {
+        console.error('Error al actualizar el programa:', error);
+        Swal.fire({
+          title: 'Error',
+          text: error.response?.data?.error || 'Hubo un error al actualizar el programa. Por favor, inténtalo de nuevo más tarde.',
+          icon: 'error',
+          confirmButtonText: 'Aceptar'
+        });
+      }
+    } else {
+      try {
+        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/programas`, {
+          Nombre: nombre,
+          Descripcion: requisitos
+        });
+        Swal.fire({
+          title: 'Programa registrado con éxito',
+          icon: 'success',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#3ccc37'
+        });
+        console.log('Programa creado:', response.data);
+        setNombre('');
+        setRequisitos([{ ID: "", Requisito: "" }]);
+        fetchProgramas();
+      } catch (error) {
+        console.error('Error al crear el programa:', error);
+        Swal.fire({
+          title: 'Error',
+          text: error.response?.data?.error || 'Hubo un error al guardar el programa. Por favor, inténtalo de nuevo más tarde.',
+          icon: 'error',
+          confirmButtonText: 'Aceptar'
+        });
+      }
+    }
+  };
+  
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
@@ -273,20 +324,28 @@ const Programas = () => {
                   />
                 </div>
                 {requisitos.map((requisito, index) => (
-                  <div key={index}>
-                    <label>Requisito {index + 1}:</label>
-                    <textarea
-                      value={requisito}
-                      onChange={(e) => handleRequisitoChange(index, e.target.value)}
-                      required
-                    />
-                    {index !== 0 && (
-                      <button type="button" onClick={() => handleRemoveRequisito(index)}>Cancelar</button>
-                    )}
-                  </div>
-                ))}
-                <button type="button" onClick={handleAddRequisito}>Agregar Requisito</button>
-                <button type="submit">Crear Programa</button>
+  <div key={index}>
+    <label>ID {index + 1}:</label>
+    <input
+      type="text"
+      value={requisito.ID}
+      onChange={(e) => handleRequisitoChange(index, "ID", e.target.value)}
+      required
+    />
+    <label>Requisito {index + 1}:</label>
+    <textarea
+      value={requisito.Requisito}
+      onChange={(e) => handleRequisitoChange(index, "Requisito", e.target.value)}
+      required
+    />
+    {index !== 0 && (
+      <button type="button" onClick={() => handleRemoveRequisito(index)}>Cancelar</button>
+    )}
+  </div>
+))}
+<button type="button" onClick={handleAddRequisito}>Agregar Requisito</button>
+<button type="submit">Crear Programa</button>
+
               </form>
             )}
             <h2>Cargar archivo</h2>
@@ -310,46 +369,53 @@ const Programas = () => {
         <div className="datos-container-prog-2">
           <h2 className="list-programa">Lista de Programas</h2>
           {programas.length > 0 ? (
-            programas.sort((a, b) => a.Nombre.localeCompare(b.Nombre)).map((programa) => (
-              <div key={programa._id}>
-                <div className="header-container-datos-prog">
-                  <button onClick={() => toggleVisibility(programa._id)}>
-                    {visibleProgramas[programa._id] ? '' : ''} {programa.Nombre}
-                  </button>
-                </div>
-                <div className="tabla-programa">
-                  {visibleProgramas[programa._id] && (
-                    <table>
-                      <thead>
-                        <tr>
-                          <th colSpan="3">{programa.Nombre}</th>
-                        </tr>
-                        <tr>
-                          <th>ID</th>
-                          <th>Requisitos</th>
-                          <th>Acciones</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {programa.Descripcion.map((desc, idx) => (
-                          <tr key={idx}>
-                            <td>{desc.ID}</td>
-                            <td>{desc.Requisito}</td>
-                            <td>
-                              <button onClick={() => handleEditClick(desc, programa._id)}>Editar</button>
-                              <button onClick={() => handleDeleteClick(desc, programa._id)}>Eliminar</button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              </div>
-            ))
-          ) : (
-            <p>No hay programas disponibles.</p>
-          )}
+  programas.sort((a, b) => a.Nombre.localeCompare(b.Nombre)).map((programa) => (
+    <div key={programa._id}>
+      <div className="header-container-datos-prog">
+        <button onClick={() => toggleVisibility(programa._id)}>
+          {visibleProgramas[programa._id] ? '' : ''} {programa.Nombre}
+        </button>
+        
+      </div>
+      <div className="tabla-programa">
+        {visibleProgramas[programa._id] && (
+          <div>
+            <div className="button-ed-pro">
+              <button onClick={() => handleEditProgram(programa)}>Agregar</button>
+            </div>
+          <table>
+            <thead>
+              <tr>
+                <th colSpan="3">{programa.Nombre}</th>
+              </tr>
+              <tr>
+                <th>ID</th>
+                <th>Requisitos</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {programa.Descripcion.map((desc, idx) => (
+                <tr key={idx}>
+                  <td>{desc.ID}</td>
+                  <td>{desc.Requisito}</td>
+                  <td>
+                    <button onClick={() => handleEditClick(desc, programa._id)}>Editar</button>
+                    <button onClick={() => handleDeleteClick(desc, programa._id)}>Eliminar</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          </div>
+        )}
+      </div>
+    </div>
+  ))
+) : (
+  <p>No hay programas disponibles.</p>
+)}
+
         </div>
       </div>
 

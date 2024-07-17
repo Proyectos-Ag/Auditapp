@@ -293,3 +293,18 @@
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 999;
 }
+
+.button-ed-pro button{
+  width: 7em;
+  height: 2em;
+  margin-left: 51.2rem;
+  border: none;
+  background-color: #3f62ff;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.button-ed-pro button:hover{
+  background-color: #00da2f;
+  color: #ffffff;
+}
