@@ -26,8 +26,9 @@ const DatosSchema = new mongoose.Schema({
   Duracion: { type: String, required: true },
   Departamento: { type: String, required: true },
   AreasAudi: { type: [String], required: true },
-  Auditados: { type: String, required: true },
+  Auditados: { type: [String], required: true },
   AuditorLider: { type: String, required: true },
+  Objetivo: {type: String},
   AuditorLiderEmail: { type: String, required: true },
   EquipoAuditor: [EquipoSchema],
   Observador: { type: Boolean, required: true },
@@ -38,7 +39,10 @@ const DatosSchema = new mongoose.Schema({
   FechaElaboracion: { type: String, required: false },
   Comentario:{ type: String, required: false },
   Estatus:{ type: String, required: false },
-  PorcentajeCump: { type: String, required: false }
+  PorcentajeCump: { type: String, required: false },
+  PuntuacionMaxima: { type: Number, required: false },  
+  PuntuacionObten: { type: Number, required: false },
+  PuntuacionConf: { type: Number, required: false }
 });
 
 const Datos = mongoose.model("Datos", DatosSchema);

@@ -21,7 +21,7 @@ const ReporteF = () => {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
                 if (userData && userData.Correo) {
                     const datosFiltrados = response.data.filter((dato) => 
-                        dato.Auditados === userData.Nombre && dato.Estado === "Terminada"
+                        dato.Auditados.some(auditado => auditado === userData.Nombre) && dato.Estado === "Terminada"
                     );
         
                     // Ordenar por FechaElaboracion del más reciente al más antiguo
@@ -70,7 +70,8 @@ const ReporteF = () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
                 const dataFiltrada = response.data.filter(item => 
-                item.estado === 'En revisión' || item.estado === 'Aprobado' ||  item.estado === 'Revisado' ||  item.estado === 'Rechazado' ) ;
+                item.estado === 'En revisión' || item.estado === 'Aprobado' ||  item.estado === 'Revisado' ||  
+                item.estado === 'Rechazado' || item.estado === 'Asignado' || item.estado === 'Pendiente' ) ;
                 setIshikawas(dataFiltrada);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -157,6 +158,7 @@ const ReporteF = () => {
     
                         // Calcular estadosRevisados independientemente para cada tabla
                         let estadosRevisados = 0;
+
                         const ishikawasFiltradas = ishikawas.filter(ishikawa =>
                             ishikawa.idRep === dato._id && 
                             (ishikawa.estado === 'En revisión' || ishikawa.estado === 'Aprobado'|| 
@@ -203,6 +205,7 @@ const ReporteF = () => {
                                                 <div className="horizontal-item">
                                                     <div className="horizontal-inline">
                                                         <div>Conforme:</div>
+                                                        <div style={{marginLeft:'3px'}}>{dato.PuntuacionConf ?  dato.PuntuacionConf : ''}</div>
                                                         {Object.keys(contarCriteriosPorTipo(conteo, 'Conforme')).map(criterio => (
                                                             <div key={criterio} className="horizontal-inline-item">  {conteo[criterio]}
                                                             </div>
@@ -239,8 +242,8 @@ const ReporteF = () => {
                                                 </div>
                                             </div>
                                             <div className="horizontal-group">
-                                                <div className="horizontal-item">Puntuación máxima: {total}</div>
-                                                <div className="horizontal-item">Puntuación Obtenida: {puntosObtenidos}</div>
+                                                <div className="horizontal-item">Puntuación máxima: { dato.PuntuacionMaxima ? dato.PuntuacionMaxima : total}</div>
+                                                <div className="horizontal-item">Puntuación Obtenida: {dato.PuntuacionObten ? dato.PuntuacionObten: puntosObtenidos}</div>
                                             </div>
                                             <div className="horizontal-group">
                                                 <div className="horizontal-item">Porcentaje: {dato.PorcentajeTotal}%</div>
@@ -249,14 +252,17 @@ const ReporteF = () => {
                                         </div>
                                         </table>
                                         <table>
-                                            <thead>
-                                                <tr>
-                                                    <th colSpan="1" className="conformity-header-repo">Objetivo</th>
-                                                </tr>
-                                            </thead>
-                                            <div>Objetivo de ejemplo</div>
-                                        </table>
-
+                                                <thead>
+                                                    <tr>
+                                                        <th colSpan="1" className="conformity-header-repo">Objetivo</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>{dato.Objetivo ? dato.Objetivo : 'Garantizar que el Sistema cumpla continuamente con los requisitos internacionales, lo que da como resultado una certificación que asegura el suministro de productos seguros a los consumidores en todo el mundo.'}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         <table>
                                             <thead>
                                                 <tr>
@@ -345,7 +351,7 @@ const ReporteF = () => {
                                                                             <td className='alingR'>{desc.Requisito}</td>
                                                                             <td>{desc.Criterio}</td>
                                                                             <td>{desc.Observacion}</td>
-                                                                            <td key={descIdx}>
+                                                                            <td key={descIdx} className='alingR'>
                                                                             {desc.Hallazgo ? (
                                                                                 isBase64Image ? (
                                                                                     <img
@@ -362,12 +368,18 @@ const ReporteF = () => {
                                                                             <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
                                                                             <td>
                                                                                 {ishikawa ? (
-                                                                                    ishikawa.actividades.length > 0 ? ajustarFecha(ishikawa.actividades[0].fechaCompromiso) : ''
+                                                                                    ishikawa.actividades.length > 0 && ishikawa.actividades[0].fechaCompromiso.length > 0 ? 
+                                                                                        ajustarFecha(ishikawa.actividades[0].fechaCompromiso.slice(-1)[0]) : 
+                                                                                        ''
                                                                                 ) : ''}
                                                                             </td>
                                                                             <td>
-                                                                                <button onClick={() => navIshikawa(dato._id, desc.ID)}>{ishikawa ? ishikawa.estado : 'Pendiente'}</button>
-                                                                            </td>
+                                                                                {ishikawa && userData.Nombre === ishikawa.auditado ? (
+                                                                                    <button className="button-estado" onClick={() => navIshikawa(dato._id, desc.ID)}>
+                                                                                    {ishikawa.estado || 'Pendiente'}
+                                                                                    </button>
+                                                                                ) : null}
+                                                                                </td>
                                                                         </tr>
                                                                     );
                                                                 } else {

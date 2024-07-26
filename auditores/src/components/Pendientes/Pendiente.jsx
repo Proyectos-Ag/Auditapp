@@ -104,6 +104,8 @@ const Pendientes = () => {
 
         // Calcula el porcentaje para el programa
         const percentage = validPrograms > 0 ? (totalValue / validPrograms) * 100 : 0;
+        console.log('Esto de qui',validPrograms);
+        console.log('Esto otro de aqui',totalValue);
         initialPercentages[programKey] = percentage;
     });
 });
@@ -205,7 +207,8 @@ setPercentages(initialPercentages);
         }
     
         try {
-            let totalPercentage = 0;
+            let totalValueSum = 0;
+            let validProgramsSum = 0;
             const numPrograms = datos[periodIdx].Programa.length;
     
             for (let programIdx = 0; programIdx < numPrograms; programIdx++) {
@@ -221,7 +224,17 @@ setPercentages(initialPercentages);
                 });
     
                 const percentage = percentages[`${periodIdx}_${programIdx}`] || 0;
-                totalPercentage += percentage;
+                const validPrograms = programa.Descripcion.reduce((acc, desc, descIdx) => {
+                    const value = checkboxValues[selectedCheckboxes[`${periodIdx}_${programIdx}_${descIdx}`]];
+                    return value !== null ? acc + 1 : acc;
+                }, 0);
+                const totalValue = programa.Descripcion.reduce((acc, desc, descIdx) => {
+                    const value = checkboxValues[selectedCheckboxes[`${periodIdx}_${programIdx}_${descIdx}`]];
+                    return value !== null ? acc + value : acc;
+                }, 0);
+    
+                validProgramsSum += validPrograms;
+                totalValueSum += totalValue;
     
                 try {
                     await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
@@ -236,10 +249,10 @@ setPercentages(initialPercentages);
                 }
             }
     
-            const totalPercentageAvg = (totalPercentage / numPrograms).toFixed(2);
+            const totalPorcentage = (totalValueSum / validProgramsSum) * 100;
             try {
                 await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
-                    PorcentajeTotal: totalPercentageAvg,
+                    PorcentajeTotal: totalPorcentage.toFixed(2),
                     Estado: 'Realizada'
                 });
                 Swal.fire({
@@ -255,11 +268,11 @@ setPercentages(initialPercentages);
         } catch (error) {
             console.error('Error en handleUpdatePeriod:', error);
         }
-    };  
+    };      
     
     const handleGuardarCamb = async (periodIdx) => {
         try {
-            let totalPercentage = 0;
+            let totalPorcentage = 0;
             const numPrograms = datos[periodIdx].Programa.length;
     
             for (let programIdx = 0; programIdx < numPrograms; programIdx++) {
@@ -275,7 +288,7 @@ setPercentages(initialPercentages);
                 });
     
                 const percentage = percentages[`${periodIdx}_${programIdx}`] || 0;
-                totalPercentage += percentage;
+                totalPorcentage += percentage;
     
                 try {
                     await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
@@ -290,10 +303,10 @@ setPercentages(initialPercentages);
                 }
             }
     
-        const totalPercentageAvg = (totalPercentage / numPrograms).toFixed(2);
+        const totalPorcentageAvg = (totalPorcentage / numPrograms).toFixed(2);
             try {
                 await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
-                    PorcentajeTotal: totalPercentageAvg,
+                    PorcentajeTotal: totalPorcentageAvg,
                     Estado: 'Devuelto'
                 });
                 Swal.fire({
@@ -410,7 +423,7 @@ setPercentages(initialPercentages);
                                                         <tr>
                                                             <th>ID</th>
                                                             <th>Requisitos</th>
-                                                            <th><div className='conforme-fuente'>Con</div></th>
+                                                            <th><div className='conforme-fuente'>Cf</div></th>
                                                             <th>m</th>
                                                             <th>M</th>
                                                             <th>C</th>

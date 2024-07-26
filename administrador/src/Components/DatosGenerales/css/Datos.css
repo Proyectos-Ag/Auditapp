@@ -16,12 +16,6 @@
   }
 }
 
-@media (max-width: 400px) {
-  .datos-container {
-    height: 650px;
-  }
-}
-
 .datos-container2 {
   display: flex;
   margin: 2rem auto 0;
@@ -255,6 +249,23 @@ th.conformity-header {
     margin: 4rem auto 0;
   }
 } 
+
+/*Areas*/
+.selected-areas {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 10px; 
+}
+
+.selected-area {
+  display: flex;
+  align-items: center; 
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
 
 /*Programas*/
 

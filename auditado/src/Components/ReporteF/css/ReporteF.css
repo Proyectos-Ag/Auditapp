@@ -180,3 +180,17 @@ table, th, td {
     width: 150rem;
     background-color: #98ff9d;
 }
+
+.button-estado{
+    background-color: #055e99;
+    color:#ffffff;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    width: 80px;
+    height: 40px;
+}
+
+.button-estado:hover{
+    background-color: #02375a;
+}

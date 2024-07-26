@@ -15,7 +15,8 @@ const Reporte = () => {
     const [notas, setNotas] = useState({});
     const [visibleTextAreas, setVisibleTextAreas] = useState({});
     const [hiddenRows, setHiddenRows] = useState({}); 
-    const [conteoCriteriosOcultos, setConteoCriteriosOcultos] = useState({ m: 0, M: 0, C: 0 });
+    const [conteoCriteriosOcultos, setConteoCriteriosOcultos] = useState({});
+
 
     console.log('Aquiiiiiiiii',conteoCriteriosOcultos);
 
@@ -85,7 +86,7 @@ const Reporte = () => {
         );
     };
 
-    const toggleRowVisibility = (rowId, criterios) => {
+    const toggleRowVisibility = (periodIdx, rowId, criterios) => {
         setHiddenRows((prevHiddenRows) => {
             const isHidden = !prevHiddenRows[rowId];
             const newHiddenRows = {
@@ -99,36 +100,37 @@ const Reporte = () => {
                 .flat()
                 .filter(Boolean);
     
-            actualizarConteoCriteriosOcultos(criteriosOcultos);
+            actualizarConteoCriteriosOcultos(periodIdx, criteriosOcultos);
             return newHiddenRows;
         });
     };
     
-    
-    const actualizarConteoCriteriosOcultos = (criterios) => {
+    const actualizarConteoCriteriosOcultos = (periodIdx, criterios) => {
         let conteo = { m: 0, M: 0, C: 0 };
         for (const criterio of criterios) {
             if (criterio === 'm' || criterio === 'M' || criterio === 'C') {
                 conteo[criterio]++;
             }
         }
-        setConteoCriteriosOcultos(conteo);
+        setConteoCriteriosOcultos((prevConteo) => ({
+            ...prevConteo,
+            [periodIdx]: conteo
+        }));
     };
     
-    const handleToggleRowVisibility = (programIdx, descIdx) => {
-        const criterios = datos.reduce((acc, dato, periodIdx) => {
-            dato.Programa.forEach((programa, pIdx) => {
-                programa.Descripcion.forEach((desc, dIdx) => {
-                    const rowId = `${pIdx}-${dIdx}`;
+    
+    const handleToggleRowVisibility = (periodIdx, programIdx, descIdx) => {
+        const criterios = datos.reduce((acc, dato, pIdx) => {
+            dato.Programa.forEach((programa, prgIdx) => {
+                programa.Descripcion.forEach((desc, dscIdx) => {
+                    const rowId = `${pIdx}-${prgIdx}-${dscIdx}`;
                     acc[rowId] = desc.Criterio;
                 });
             });
             return acc;
         }, {});
-        toggleRowVisibility(`${programIdx}-${descIdx}`, criterios);
-    };
-    
-    
+        toggleRowVisibility(periodIdx, `${periodIdx}-${programIdx}-${descIdx}`, criterios);
+    };    
     
     const contarCriteriosPorTipo = (criterios, tipo) => {
         return Object.keys(criterios).filter(criterio => criterio === tipo).reduce((acc, criterio) => {
@@ -136,7 +138,6 @@ const Reporte = () => {
             return acc;
         }, {});
     };
-    
 
     const checkboxValues = {
         'Conforme': 1,
@@ -176,17 +177,20 @@ const Reporte = () => {
         }
     };
 
-    const actualizarEstadoTerminada = async (id) => {
+    const actualizarEstadoTerminada = async (id, puntuacionObtenida, confExternas, estatus, porcentajeTotal) => {
         try {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
-                Estado: 'Terminada'
+                Estado: 'Terminada',
+                PuntuacionObten: puntuacionObtenida,
+                PuntuacionConf: confExternas,
+                Estatus: estatus,
+                PorcentajeTotal: porcentajeTotal
             });
             obtenerDatos();
         } catch (error) {
             console.error('Error al actualizar el estado:', error);
         }
     };
-    
     
     const debounce = (func, wait) => {
         let timeout;
@@ -203,7 +207,6 @@ const Reporte = () => {
         }));
     }, 100); 
     
-    
      const notaCorreccion = (e, id) => {
         const newNotas = { ...notas, [id]: e.target.value };
         setNotas(newNotas);
@@ -212,7 +215,7 @@ const Reporte = () => {
     const Rechazar = async (id) => {
         Swal.fire({
           title: '¿Estás seguro de querer rechazar este reporte?',
-          text: '¡El reporte sera devuelto!',
+          text: '¡El reporte será devuelto!',
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#3ccc37',
@@ -226,10 +229,10 @@ const Reporte = () => {
         });
       };
 
-      const Aprobar = async (id) => {
+      const Aprobar = async (id, puntuacionObtenida, confExternas, estatus, porcentajeTotal) => {
         Swal.fire({
           title: '¿Estás seguro de querer aprobar este reporte?',
-          text: '¡Sera enviado al auditado!',
+          text: '¡Será enviado al auditado!',
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#3ccc37',
@@ -238,7 +241,7 @@ const Reporte = () => {
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
-            actualizarEstadoTerminada(id);
+            actualizarEstadoTerminada(id, puntuacionObtenida,confExternas, estatus, porcentajeTotal);
           }
         });
       };  
@@ -254,23 +257,37 @@ const Reporte = () => {
             <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Revisión de Reporte</h1>
        
                 <div className="form-group-datos">
-                    {datos.map((dato, periodIdx) => {
-                        let conteo = {};
-                        let total = 0;
+                {datos.map((dato, periodIdx) => {
+                    let conteo = {};
+                    let total = 0;
 
-                        dato.Programa.forEach(programa => {
-                            programa.Descripcion.forEach(desc => {
-                                if (desc.Criterio && desc.Criterio !== 'NA') {
-                                    if (!conteo[desc.Criterio]) {
-                                        conteo[desc.Criterio] = 0;
-                                    }
-                                    conteo[desc.Criterio]++;
-                                    total++;
+                    dato.Programa.forEach(programa => {
+                        programa.Descripcion.forEach(desc => {
+                            if (desc.Criterio && desc.Criterio !== 'NA') {
+                                if (!conteo[desc.Criterio]) {
+                                    conteo[desc.Criterio] = 0;
                                 }
-                            });
+                                conteo[desc.Criterio]++;
+                                total++;
+                            }
                         });
+                    });
 
-                        const puntosObtenidos = calcularPuntosTotales(conteo);
+                    const puntosObtenidos = calcularPuntosTotales(conteo);
+                    const conteoCriteriosTabla = conteoCriteriosOcultos[periodIdx] || { m: 0, M: 0, C: 0 };
+                    const confExternas = dato.PuntuacionMaxima - total;
+                    const PuntuacionObtenida = dato.PuntuacionMaxima ? (confExternas + ((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100)) : 
+                        ((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100).toFixed(2);
+
+                    const resultado = dato.PuntuacionMaxima ? (((confExternas + ((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100)) * 100)/ dato.PuntuacionMaxima) : 
+                    (((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100).toFixed(2)) * 100 / total;
+
+                    const porcentajeTotal = dato.PuntuacionMaxima ? (((confExternas + ((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100)) * 100)/ dato.PuntuacionMaxima).toFixed(2) :
+                    (((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100) * 100 / total).toFixed(2)
+
+                    const estatus = resultado >= 90 ? "Bueno" :
+                                    resultado >= 80 ? "Aceptable" :
+                                    resultado >= 60 ? "No Aceptable" : "Crítico";
 
                         return (
                             <div key={periodIdx}>
@@ -287,7 +304,7 @@ const Reporte = () => {
                                             {visibleTextAreas[dato._id] ? 'Ocultar Nota' : 'Escribir Nota'}
                                         </button>
                                         <button className='boton-rechazar' onClick={() => Rechazar(dato._id)}>Rechazar</button>
-                                        <button onClick={() => Aprobar(dato._id)}>Aprobar</button>
+                                        <button onClick={() => Aprobar(dato._id, PuntuacionObtenida, confExternas,estatus, porcentajeTotal)}>Aprobar</button>
                                     </div>     
                                     {visibleTextAreas[dato._id] && (
                                         <textarea
@@ -305,7 +322,7 @@ const Reporte = () => {
                                         <div className='mover'>
                                             <div className="dato"><span className="bold-text">Duración de la auditoría:</span> {dato.Duracion}</div>
                                             <div className="dato"><span className="bold-text">Tipo de auditoría:</span> {dato.TipoAuditoria}</div>
-                                            <div className="dato"><span className="bold-text">Fecha de elaboración de reporte:</span> {formatDate(dato.FechaElaboracion)}</div>
+                                            <div className="dato"><span className="bold-text">Fecha de Elaboración de Reporte:</span> {formatDate(dato.FechaElaboracion)}</div>
                                         </div>
                                         <div className='tabla-reporte'>
                                         <table>
@@ -319,10 +336,11 @@ const Reporte = () => {
                                             <div className="horizontal-group">
                                                 <div className="horizontal-item">
                                                     <div className="horizontal-inline">
-                                                        <div>Conforme:</div>
+                                                        <div>Conforme: </div>
+                                                        <div style={{marginLeft:'3px'}}>{dato.PuntuacionMaxima ? confExternas : ''}</div>
                                                         {Object.keys(contarCriteriosPorTipo(conteo, 'Conforme')).map(criterio => (
-                                                            <div key={criterio} className="horizontal-inline-item">  
-                                                            {conteo[criterio] + (conteoCriteriosOcultos.M + conteoCriteriosOcultos.m + conteoCriteriosOcultos.C)}
+                                                            <div key={criterio} className="horizontal-inline-item">
+                                                            {conteo[criterio] + (conteoCriteriosTabla.M + conteoCriteriosTabla.m + conteoCriteriosTabla.C)}
                                                             </div>
                                                         ))}
                                                     </div>
@@ -332,7 +350,7 @@ const Reporte = () => {
                                                     <div>NC Menor:</div>
                                                     {Object.keys(contarCriteriosPorTipo(conteo, 'm')).map(criterio => (
                                                         <div key={criterio} className="horizontal-inline-item">
-                                                            {conteo[criterio] - conteoCriteriosOcultos.m}
+                                                            {conteo[criterio] - conteoCriteriosTabla.m}
                                                         </div>
                                                     ))}
                                                 </div>
@@ -344,7 +362,7 @@ const Reporte = () => {
                                                         <div>NC Mayor:</div>
                                                         {Object.keys(contarCriteriosPorTipo(conteo, 'M')).map(criterio => (
                                                             <div key={criterio} className="horizontal-inline-item"> 
-                                                            {conteo[criterio] - conteoCriteriosOcultos.M}
+                                                            {conteo[criterio] - conteoCriteriosTabla.M}
                                                             </div>
                                                         ))}
                                                     </div>
@@ -354,19 +372,21 @@ const Reporte = () => {
                                                         <div>NC Crítica:</div>
                                                         {Object.keys(contarCriteriosPorTipo(conteo, 'C')).map(criterio => (
                                                             <div key={criterio} className="horizontal-inline-item"> 
-                                                            {conteo[criterio] - conteoCriteriosOcultos.C}
+                                                            {conteo[criterio] - conteoCriteriosTabla.C}
                                                             </div>
                                                         ))}
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="horizontal-group">
-                                                <div className="horizontal-item">Puntuación máxima: {total}</div>
-                                                <div className="horizontal-item">Puntuación Obtenida: {puntosObtenidos}</div>
+                                                <div className="horizontal-item">Puntuación Máxima: {dato.PuntuacionMaxima ? dato.PuntuacionMaxima : total}</div>
+                                                <div className="horizontal-item">
+                                                    Puntuación Obtenida: {PuntuacionObtenida}
+                                                </div>
                                             </div>
                                             <div className="horizontal-group">
-                                                <div className="horizontal-item">Porcentaje: {dato.PorcentajeTotal}%</div>
-                                                <div className="horizontal-item">Estatus: {dato.Estatus}</div>
+                                                <div className="horizontal-item">Porcentaje: {porcentajeTotal}%</div>
+                                                <div className="horizontal-item">Estatus: {estatus}</div>
                                             </div>
                                         </div>
                                         </table>
@@ -376,7 +396,7 @@ const Reporte = () => {
                                                     <th colSpan="1" className="conformity-header-repo">Objetivo</th>
                                                 </tr>
                                             </thead>
-                                            <div>Objetivo de ejemplo</div>
+                                            <div>{dato.Objetivo ? dato.Objetivo : 'Garantizar que el Sistema cumpla continuamente con los requisitos internacionales, lo que da como resultado una certificación que asegura el suministro de productos seguros a los consumidores en todo el mundo.'}</div>
                                         </table>
 
                                         <table>
@@ -386,7 +406,7 @@ const Reporte = () => {
                                                 </tr>
                                                 <tr>
                                                     <th className="table-header">Programas</th>
-                                                    <th className="table-header">Áreas auditadas</th>
+                                                    <th className="table-header">Áreas Auditadas</th>
                                                 </tr>
                                                 <tr>
                                                     <td>
@@ -399,16 +419,16 @@ const Reporte = () => {
                                                     <td><div>{dato.AreasAudi}</div></td>
                                                 </tr>
                                                 <tr>
-                                                    <th className="table-header">Equipo auditor</th>
-                                                    <th className="table-header">Participantes en el área del recorrido</th>
+                                                    <th className="table-header">Equipo Auditor</th>
+                                                    <th className="table-header">Participantes en el Área del Recorrido</th>
                                                 </tr>
                                                 <tr>
                                                     <td>
-                                                        <div>Auditor líder: {dato.AuditorLider}</div>
+                                                        <div>Auditor Líder: {dato.AuditorLider}</div>
                                                         <div>
                                                         {dato.EquipoAuditor.map((equipo, equipoIdx) => (
                                                             <div key={equipoIdx}>
-                                                              Equipo auditor: {equipo.Nombre}
+                                                              Equipo Auditor: {equipo.Nombre}
                                                             </div>
                                                         ))}</div>
                                                         {dato.NombresObservadores && (
@@ -446,10 +466,10 @@ const Reporte = () => {
                                                     programa.Descripcion.map((desc, descIdx) => {
                                                         const base64Prefix = 'data:image/png;base64,';
                                                         const isBase64Image = desc.Hallazgo.includes(base64Prefix);
-                                                        
-                                                        const rowId = `${programIdx}-${descIdx}`;
+
+                                                        const rowId = `${periodIdx}-${programIdx}-${descIdx}`;
                                                         const isHidden = hiddenRows[rowId];
-                                                        
+
                                                         if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
                                                             return (
                                                                 <React.Fragment key={descIdx}>
@@ -458,8 +478,8 @@ const Reporte = () => {
                                                                         <td className='alingR2'>{programa.Nombre}</td>
                                                                         <td className='alingR'>{desc.Requisito}</td>
                                                                         <td>{desc.Criterio}</td>
-                                                                        <td>{desc.Observacion}</td>
-                                                                        <td key={descIdx}>
+                                                                        <td style={{textAlign:'initial'}}>{desc.Observacion}</td>
+                                                                        <td className='alingR' key={descIdx}>
                                                                             {desc.Hallazgo ? (
                                                                                 isBase64Image ? (
                                                                                     <img
@@ -473,11 +493,9 @@ const Reporte = () => {
                                                                             ) : null}
                                                                         </td>
                                                                         <td>
-                                                                        <button onClick={() => handleToggleRowVisibility(programIdx, descIdx)}>
-                                                                            {isHidden ? 'Mostrar' : 'Ocultar'}
-                                                                        </button>
-
-
+                                                                            <button className='button-oculto' onClick={() => handleToggleRowVisibility(periodIdx, programIdx, descIdx)}>
+                                                                               Ocultar
+                                                                            </button>
                                                                         </td>
                                                                         <td>{}</td>
                                                                         <td>{}</td>
@@ -490,7 +508,7 @@ const Reporte = () => {
                                                         }
                                                     })
                                                 ))}
-                                            </tbody>
+                                                </tbody>
 
                                             </table>
                                             </div>

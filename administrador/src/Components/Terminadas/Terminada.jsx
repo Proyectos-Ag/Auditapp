@@ -136,7 +136,7 @@ const Terminada = () => {
 
     const Finalizar = async (id, porcentaje) => {
         Swal.fire({
-          title: '¿Estás seguro de querer finalizar este reporte?',
+          title: '¿Está seguro de querer finalizar este reporte?',
           text: '¡El reporte se dara por terminado!',
           icon: 'warning',
           showCancelButton: true,
@@ -192,11 +192,12 @@ const Terminada = () => {
                         let estadosRevisados = 0;
                         const ishikawasFiltradas = ishikawas.filter(ishikawa =>
                             ishikawa.idRep === dato._id && 
-                            (ishikawa.estado === 'En revisión' || ishikawa.estado === 'Revisado' || ishikawa.estado === 'Rechazado')
+                            (ishikawa.estado === 'En revisión' || ishikawa.estado === 'Aprobado'|| 
+                            ishikawa.estado === 'Revisado' || ishikawa.estado === 'Rechazado')
                         );
     
                         ishikawasFiltradas.forEach(ishikawa => {
-                            if (ishikawa.estado === 'revisado') estadosRevisados++;
+                            if (ishikawa.estado === 'Revisado') estadosRevisados++;
                         });
     
                         const porcentaje = (estadosRevisados > 0 && sumaNC > 0) ? (estadosRevisados * 100) / sumaNC : 0;
@@ -238,6 +239,7 @@ const Terminada = () => {
                                                 <div className="horizontal-item">
                                                     <div className="horizontal-inline">
                                                         <div>Conforme:</div>
+                                                        <div style={{marginLeft:'3px'}}>{dato.PuntuacionConf ?  dato.PuntuacionConf : ''}</div>
                                                         {Object.keys(contarCriteriosPorTipo(conteo, 'Conforme')).map(criterio => (
                                                             <div key={criterio} className="horizontal-inline-item">  {conteo[criterio]}
                                                             </div>
@@ -274,8 +276,8 @@ const Terminada = () => {
                                                 </div>
                                             </div>
                                             <div className="horizontal-group">
-                                                <div className="horizontal-item">Puntuación máxima: {total}</div>
-                                                <div className="horizontal-item">Puntuación Obtenida: {puntosObtenidos}</div>
+                                                <div className="horizontal-item">Puntuación máxima: { dato.PuntuacionMaxima ? dato.PuntuacionMaxima : total}</div>
+                                                <div className="horizontal-item">Puntuación Obtenida: {dato.PuntuacionObten ? dato.PuntuacionObten: puntosObtenidos}</div>
                                             </div>
                                             <div className="horizontal-group">
                                                 <div className="horizontal-item">Porcentaje: {dato.PorcentajeTotal}%</div>
@@ -291,7 +293,7 @@ const Terminada = () => {
                                                 </thead>
                                                 <tbody>
                                                     <tr>
-                                                        <td>Objetivo de ejemplo</td>
+                                                        <td>{dato.Objetivo ? dato.Objetivo : 'Objetivo de ejemplo'}</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -303,8 +305,8 @@ const Terminada = () => {
                                                 </thead>
                                                 <tbody>
                                                     <tr>
-                                                        <td>Programas</td>
-                                                        <td>Áreas auditadas</td>
+                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold', width:'50%'}}>Programas</td>
+                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold'}}>Áreas auditadas</td>
                                                     </tr>
                                                     <tr>
                                                         <td>
@@ -317,8 +319,8 @@ const Terminada = () => {
                                                         <td>{dato.AreasAudi}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td>Equipo auditor</td>
-                                                        <td>Participantes en el área del recorrido</td>
+                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold'}}>Equipo auditor</td>
+                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold'}}>Participantes en el área del recorrido</td>
                                                     </tr>
                                                     <tr>
                                                         <td>
@@ -365,7 +367,7 @@ const Terminada = () => {
                                                         {dato.Programa.map((programa, programIdx) =>
                                                             programa.Descripcion.map((desc, descIdx) => {
                                                                 const base64Prefix = 'data:image/png;base64,';
-    const isBase64Image = desc.Hallazgo.includes(base64Prefix);
+                                                                const isBase64Image = desc.Hallazgo.includes(base64Prefix);
     
                                                                 if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
                                                                     const ishikawa = ishikawas.find(ish => {
@@ -385,7 +387,7 @@ const Terminada = () => {
                                                                             <td className='alingR'>{desc.Requisito}</td>
                                                                             <td>{desc.Criterio}</td>
                                                                             <td>{desc.Observacion}</td>
-                                                                            <td key={descIdx}>
+                                                                            <td key={descIdx} className='alingR'>
                                                                             {desc.Hallazgo ? (
                                                                                 isBase64Image ? (
                                                                                     <img

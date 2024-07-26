@@ -17,6 +17,8 @@ import Calendarioss from './Components/Calendarios/AuditCalendar'
 import Calendarios from './Components/Calendarios/CalendarioGeneral'
 import Departaments from './Components/Departaments/Departaments';
 import Diagrama from './Components/DiagramaRe/Diagrama';
+import CargaMasiva from './Components/DatosGenerales/CargaMasiva';
+import Estadisticas from './Components/Estadisticas/Estadisticas';
 
 export const UserContext = createContext(null);
 
@@ -41,6 +43,8 @@ function App() {
           <Route path="/calendario" element={<Calendarios />} />
           <Route path="/departamento" element={<Departaments />} />
           <Route path="/diagrama" element={<Diagrama />} />
+          <Route path="/carga" element={<CargaMasiva />} />
+          <Route path="/estadisticas" element={<Estadisticas />} />
         </Routes>
       </Router>
     </div>

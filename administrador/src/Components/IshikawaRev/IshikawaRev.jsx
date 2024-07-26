@@ -1,20 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import './css/IshikawaRev.css';
 import Navigation from "../Navigation/Navbar";
 import Logo from "../../assets/img/logoAguida.png";
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import IshikawaImg from '../../assets/img/Ishikawa-transformed.png';
+import { UserContext } from '../../App';
 import Swal from 'sweetalert2';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const IshikawaRev = () => {
+    const { userData } = useContext(UserContext);
     const [ishikawas, setIshikawas] = useState([]);
+    const [programa, setPrograma] = useState(null);
     const [filteredIshikawas, setFilteredIshikawas] = useState([]);
     const { _id, id } = useParams();
+    const [valorSeleccionado, setValorSeleccionado] = useState('');
+    const [datos, setDatos] = useState(null);
     const [mensaje, setMensaje] = useState('');
     const [notaRechazo, setNotaRechazo] = useState('');
     const [rechazo,  setRechazo] = useState([]);
+    const [revisado, setRevisado] = useState([]);
     const [aprobado,  setAprobado] = useState([]);
+    const [,setAuditados] = useState([]);
     const [showPart, setShowPart] = useState(false);
     const [showReprogramar, setShowReprogramar] = useState(false);
     const [showNotaRechazo, setShowNotaRechazo] = useState(false);
@@ -23,6 +32,35 @@ const IshikawaRev = () => {
     const [correcciones, setCorrecciones] = useState([{ actividad: '', responsable: '', fechaCompromiso: [], cerrada: '' }]);
     const [nuevaCorreccion, setNuevaCorreccion] = useState({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
 
+    useEffect(() => {
+        const obtenerDatos = async () => {
+          try {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+            if (userData && userData.Correo) {
+              const datosFiltrados = response.data.find(dato => dato._id === _id);
+              if (datosFiltrados) {
+                const programaEncontrado = datosFiltrados.Programa.find(prog => 
+                  prog.Descripcion.some(desc => desc.ID === id)
+                );
+                  setDatos(datosFiltrados);
+                  setPrograma(programaEncontrado);
+            }
+          }
+          } catch (error) {
+            console.error('Error al obtener los datos:', error);
+          }
+        };
+      
+        obtenerDatos();
+      }, [userData, _id, id]); 
+      
+      useEffect(() => {
+        if (datos && datos.Auditados) {
+          const Auditados = new Date(datos.Auditados).toLocaleDateString();
+          setAuditados(Auditados);
+        }
+      }, [datos]);   
+    
     useEffect(() => {
         fetchData();
     }, []);
@@ -37,21 +75,18 @@ const IshikawaRev = () => {
         }
     };
 
-    useEffect(() => {
-        verificarRegistro();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [_id, id]);
-
-   useEffect(() => {
-    if (filteredIshikawas.length > 0) {
-        const correccionesIniciales = filteredIshikawas[0].correcciones.map(correccion => ({
-            ...correccion,
-            fechaCompromiso: new Date(correccion.fechaCompromiso).toISOString().split('T')[0]  // Formato YYYY-MM-DD
-        }));
-        setCorrecciones(correccionesIniciales);
-    }
-    }, [filteredIshikawas]);
-
+      useEffect(() => {
+        if (filteredIshikawas.length > 0) {
+            const correccionesIniciales = filteredIshikawas[0].correcciones.map(correccion => ({
+                ...correccion,
+                fechaCompromiso: new Date(correccion.fechaCompromiso).toISOString().split('T')[0]  // Formato YYYY-MM-DD
+            }));
+            if (correccionesIniciales.length === 0) {
+                correccionesIniciales.push({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
+            }
+            setCorrecciones(correccionesIniciales);
+        }
+    }, [filteredIshikawas]);    
     
     useEffect(() => {
         if (ishikawas.length > 0) {
@@ -65,6 +100,50 @@ const IshikawaRev = () => {
         }
     }, [ishikawas, _id, id]); 
 
+    useEffect(() => {
+        const simulateInputChange = () => {
+          const textareas = document.querySelectorAll('textarea');
+          textareas.forEach((textarea) => {
+            const event = {
+              target: textarea,
+              name: textarea.name,
+              value: textarea.value
+            };
+            handleInputChange(event);
+          });
+        };
+    
+        simulateInputChange(); // Ejecutar la función al cargar el componente
+    
+      }, [ishikawas]);   
+
+      const handlePrintPDF = () => {
+        const input = document.getElementById('pdf-content');
+        html2canvas(input)
+            .then((canvas) => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('landscape', 'cm', 'letter'); // Modo horizontal, tamaño carta
+                const imgWidth = pdf.internal.pageSize.getWidth();
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+    
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pdf.internal.pageSize.getHeight();
+    
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pdf.internal.pageSize.getHeight();
+                }
+    
+                pdf.save("diagrama_ishikawa.pdf");
+            })
+            .catch((error) => {
+                console.error('Error generating PDF:', error);
+            });
+    };
 
     const handleCorreccionChange = (index, field, value) => {
         const nuevasCorrecciones = [...correcciones];
@@ -115,19 +194,20 @@ const IshikawaRev = () => {
         }
     };    
 
-    const Finalizar = async (id, porcentaje) => {
+    const Finalizar = async (event) => {
+        event.preventDefault();
         Swal.fire({
-          title: '¿Estás seguro de querer finalizar este diagrama?',
-          text: '¡Está acción no se puede revertir!',
+          title: '¿Está seguro de querer finalizar este diagrama?',
+          text: '¡Esta acción no se puede revertir!',
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#3ccc37',
           cancelButtonColor: '#d33',
-          confirmButtonText: 'Sí, Aprobar',
+          confirmButtonText: 'Sí, finalizar',
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
-            handleGuardarCambios ();
+            handleGuardarCambios();
           }
         });
       };
@@ -147,8 +227,8 @@ const IshikawaRev = () => {
 
         const Aprobar = async (id, porcentaje) => {
             Swal.fire({
-              title: '¿Estás seguro de querer aprobar este diagrama?',
-              text: '¡Está acción no se puede revertir!',
+              title: '¿Está seguro de querer aprobar este diagrama?',
+              text: '¡Esta acción no se puede revertir!',
               icon: 'warning',
               showCancelButton: true,
               confirmButtonColor: '#3ccc37',
@@ -178,7 +258,7 @@ const IshikawaRev = () => {
 
     const Rechazar = async (id, porcentaje) => {
         Swal.fire({
-          title: '¿Estás seguro de querer rechazar este diagrama?',
+          title: '¿Está seguro de querer rechazar este diagrama?',
           text: '¡El diagrama será devuelto!',
           icon: 'warning',
           showCancelButton: true,
@@ -193,20 +273,28 @@ const IshikawaRev = () => {
         });
       };
       
-
     const handleEliminarFila = (index) => {
-    const nuevasCorrecciones = [...correcciones];
-    nuevasCorrecciones.splice(index, 1);
-    setCorrecciones(nuevasCorrecciones);
+        const nuevasCorrecciones = [...correcciones];
+        nuevasCorrecciones.splice(index, 1);
+        setCorrecciones(nuevasCorrecciones);
+        console.log('Correcciones después de eliminar:', nuevasCorrecciones);
     };
 
+    useEffect(() => {
+        verificarRegistro();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [_id, id]);
+      
     const verificarRegistro = async () => {
         try {
           const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-          const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && (item.estado === 'Rechazado' || item.estado === 'Revisado' || item.estado === 'Aprobado'));
+          const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && 
+            (item.estado === 'Rechazado' || item.estado === 'Revisado' || item.estado === 'Aprobado'|| item.estado === 'Asignado'));
           const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'Aprobado');
+          const registroRevisado= response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'Revisado');
           setAprobado(registroAprobado);
           setRechazo(dataFiltrada);
+          setRevisado(registroRevisado);
         } catch (error) {
           console.error('Error fetching data:', error);
         }
@@ -227,6 +315,63 @@ const IshikawaRev = () => {
     
         setActividades(nuevasActividades);
     };
+
+    const handleSave = async () => {
+
+        try {
+            const data = {
+                idRep: _id,
+                idReq: id,
+                fecha: '',
+                auditado: valorSeleccionado,
+                problema: '',
+                requisito:'',
+                hallazgo:'',
+                correccion: '',
+                causa: '',
+                diagrama: [],
+                participantes: '',
+                afectacion: '',
+                actividades: [],
+                estado: 'Asignado'
+            };
+    
+            if (rechazo.length > 0) {
+                // Actualizar registro existente
+                const { _id: registroId } = rechazo[0];
+                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${registroId}`, data);
+                Swal.fire('Reasignado', 'El diagrama ha sido reasignado.', 'success');
+                verificarRegistro();
+            } else {
+                // Crear nuevo registro
+                await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+                Swal.fire('Asignado', 'La asignación se realizó exitosamente.', 'success');
+                verificarRegistro();
+            }
+    
+            fetchData(); // Para refrescar la lista de registros
+        } catch (error) {
+            console.error('Error al guardar los datos:', error);
+            Swal.fire('Error', 'Hubo un problema al guardar los datos.', 'error');
+        }
+    };  
+    
+    const Asignar = async () => {
+        Swal.fire({
+          title: '¿Está seguro de querer asignar este diagrama?',
+          text: '¡Se le notificará al auditado!',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3ccc37',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Sí, asignar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            handleSave();
+          }
+        });
+      };
 
     const handleUpdateFechaCompromiso = async (index) => {
         try {
@@ -254,6 +399,28 @@ const IshikawaRev = () => {
             Swal.fire('Error', 'No se pudo actualizar la fecha de compromiso', 'error');
         }
     };
+
+    const handleInputChange = (e) => {
+        const { value } = e.target;
+      
+        // Define el tamaño de fuente según el rango de caracteres
+        let fontSize;
+        if (value.length > 125) {
+          fontSize = '10.3px'; // Menos de 78 caracteres
+        } else if (value.length > 100) {
+          fontSize = '11px'; // Menos de 62 caracteres
+        } else if (value.length > 88) {
+          fontSize = '12px'; // Menos de 62 caracteres
+        } else if (value.length > 78) {
+          fontSize = '13px'; // Menos de 62 caracteres
+        } else if (value.length > 65) {
+          fontSize = '14px'; // Menos de 62 caracteres
+        } else {
+          fontSize = '15px'; // Por defecto
+        }
+
+        e.target.style.fontSize = fontSize;
+      };
     
     const colores = ['black', 'blue', 'green', 'yellow','orange', 'red'];
 
@@ -261,13 +428,40 @@ const IshikawaRev = () => {
         event.target.style.color = colores[index % colores.length];
     };
 
+    const handleSelectChangeAud = (event) => {
+        setValorSeleccionado(event.target.value);
+      };
+
     return (
+        <div id="pdf-content">
         <div>
             <div style={{ position: 'absolute', top: 0, left: 0 }}>
                 <Navigation />
             </div>
             <div>
-            {mensaje && <div className="mensaje-error"><div className='mens-error'>
+            
+            {(ishikawas.length === 0 || mensaje) && <div className="mensaje-error">
+                <div className='select-ish'>
+                {rechazo.map((ishikawa, asig) => (
+                    <div key={asig}>
+                         <div className='asignado-ishi'>Asignado: {ishikawa.auditado}</div>
+                    </div>
+                ))}
+                <select onChange={handleSelectChangeAud} value={valorSeleccionado}>
+                <option value="">Seleccione...</option>
+                    {datos?.Auditados?.length > 0 ? (
+                    datos.Auditados.map((auditado, index) => (
+                        <option key={index} value={auditado}>
+                        {auditado}
+                        </option>
+                    ))
+                    ) : (
+                    <option>Consultando. . .</option>
+                    )}
+                </select>
+                <button onClick={Asignar}>Asignar</button>
+            </div>
+                <div className='mens-error'>
                 <div style={{display:'flex', justifyContent:'center'}}>{mensaje}</div> 
                 <div style={{display:'flex',fontSize:'100px', justifyContent:'center'}}>🏝️</div></div>
                 </div>}
@@ -296,24 +490,21 @@ const IshikawaRev = () => {
                             </div>
                         </>
                     )}
-                    <div className='button-final'>
-                    {
-                    (!aprobado) ? null : (
-                    <button onClick={Finalizar} >Finalizar</button>
-                    )}
-                    </div>
-
+                    <button onClick={handlePrintPDF}>Guardar en PDF</button>
                     <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
                     <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
                     <div className='posicion-en'>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <h2 style={{ marginLeft: '30rem', marginRight: '10px' }}>Problema: </h2>
-                        <div style={{ width: '30rem', fontSize: '20px' }}>{ishikawa.problema}</div>
+                        <h2 style={{ marginLeft: '56rem', marginRight: '10px' }}>Problema: </h2>
+                        <div style={{ width: '900px', fontSize: '20px' }}>{ishikawa.problema}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <h2 style={{ marginLeft: '30rem', marginRight: '10px' }}>Afectación: </h2>
-                        <h2>{id}</h2>
+                        <h2 style={{ marginLeft: '56rem', marginRight: '10px' }}>Afectación: </h2>
+                        <h3>{id} {programa?.Nombre}</h3>
                     </div>
+                    </div>
+                    <div className='posicion-en-3'>
+                    GCF015
                     </div>
                     <div className='posicion-en-2'>
                     <h3>Fecha: {ishikawa.fecha}</h3>
@@ -322,7 +513,7 @@ const IshikawaRev = () => {
                     <img src={IshikawaImg} alt="Diagrama de Ishikawa" className="responsive-image" />
                     {ishikawa.diagrama.map((item, i) => (
                         <div key={i}>
-                        <textarea className="text-area"
+                        <textarea className="text-area" 
                             style={{ top: '19.1rem', left: '8.7rem' }} disabled>{item.text1}</textarea>
                         <textarea className="text-area"
                             style={{ top: '19.1rem', left: '25.4rem' }} disabled>{item.text2}</textarea>
@@ -382,7 +573,7 @@ const IshikawaRev = () => {
                     <h3>Acción inmediata o corrección: </h3>
                     {ishikawa.correccion}
                     <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
-                    <div style={{ marginBottom: '20px' }}>{ishikawa.causa}</div>
+                    <div style={{ marginBottom: '20px', width:'72em' }}>{ishikawa.causa}</div>
                     </div>
                     <div className='table-ish'>
                     <table style={{ border: 'none' }}>
@@ -460,14 +651,16 @@ const IshikawaRev = () => {
                         ))}
                         </tbody>
                     </table>
+
+                    <form onSubmit={Finalizar}>
                     <table style={{ border: 'none' }}>
                         <thead>
                             <tr>
-                                <th>Actividad</th>
-                                <th>Responsable</th>
-                                <th>Fecha Compromiso</th>
-                                <th colSpan="2" className="sub-div">
-                                    <div>Acción Correctiva cerrada</div>
+                                <th className="conformity-header">Actividad</th>
+                                <th className="conformity-header">Responsable</th>
+                                <th className="conformity-header">Fecha Compromiso</th>
+                                <th colSpan="2" className="conformity-header">
+                                     Acción Correctiva Cerrada
                                     <div style={{ display: 'flex' }}>
                                         <div className="left">Sí</div>
                                         <div className="right">No</div>
@@ -483,7 +676,7 @@ const IshikawaRev = () => {
                                         type="text"
                                         value={correccion.actividad}
                                         onChange={(e) => handleCorreccionChange(index, 'actividad', e.target.value)}
-                                        className="no-border"
+                                        className="no-border" required
                                     />
                                 </td>
                                 <td>
@@ -491,7 +684,7 @@ const IshikawaRev = () => {
                                         type="text"
                                         value={correccion.responsable}
                                         onChange={(e) => handleCorreccionChange(index, 'responsable', e.target.value)}
-                                        className="no-border"
+                                        className="no-border" required
                                     />
                                 </td>
                                 <td>
@@ -499,7 +692,7 @@ const IshikawaRev = () => {
                                         type="date"
                                         value={correccion.fechaCompromiso}
                                         onChange={(e) => handleCorreccionChange(index, 'fechaCompromiso', e.target.value)}
-                                        className="no-border"
+                                        className="no-border" required
                                     />
                                 </td>
                                 <td>
@@ -520,22 +713,36 @@ const IshikawaRev = () => {
                                 </td>
                                 <td className='cancel-acc'>
                                     {index > 0 && (
-                                        <button onClick={() => handleEliminarFila(index)}>Eliminar</button>
+                                        <button 
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleEliminarFila(index);}}>Eliminar</button>
                                     )}
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                     </table>
+                    {
+                    (revisado) ? null : (
                     <div>
-                        <button onClick={handleAgregarFila} className='button-agregar'>Agregar Fila</button>
+                        <button onClick={(e) => {
+                         e.preventDefault();
+                         handleAgregarFila();}} className='button-agregar'>Agregar Fila</button>
                     </div>
-
+                    )}
+                    <div className='button-final'>
+                    {
+                    (!aprobado) ? null : (
+                    <button type='submit' >Finalizar</button>
+                    )}
+                    </div>
+                    </form>
                     </div>
                 </div>
                 ))}
             </div>
-            
+            </div>
         </div>
     );
 };

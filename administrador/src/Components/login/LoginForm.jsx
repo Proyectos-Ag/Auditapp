@@ -54,6 +54,7 @@ const LoginForm = () => {
       <div className="form-group">
         <div className='espacio'>
        <img src={logo} alt="Logo Empresa" className="logo-empresa-login" />
+       <div className='tipo-usuario'>Administradores</div>
        </div>
        </div>
       {error && <p className="error-message">{error}</p>}

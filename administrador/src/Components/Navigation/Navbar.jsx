@@ -15,6 +15,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Dropdown from 'react-bootstrap/Dropdown';
 import logo from "../../assets/img/logoAguida.png";
 import Swal from 'sweetalert2';
+import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
 export default function Navigation() {
   const [open, setOpen] = useState(false);
@@ -68,18 +69,22 @@ function DrawerList({ handleLogout }) {
 
   const toggleAuditoriasSubmenu = () => {
     setShowAuditoriasSubmenu(!showAuditoriasSubmenu);
+    setShowIshikawaSubmenu(false);
     setShowCalendariosSubmenu(false);
   };
-
+  
   const toggleIshikawaSubmenu = () => {
     setShowIshikawaSubmenu(!showIshikawaSubmenu);
+    setShowAuditoriasSubmenu(false);
     setShowCalendariosSubmenu(false);
   };
-
+  
   const toggleCalendariosSubmenu = () => {
     setShowCalendariosSubmenu(!showCalendariosSubmenu);
     setShowAuditoriasSubmenu(false);
+    setShowIshikawaSubmenu(false);
   };
+  
 
   const drawerItems = [
     { text: "Usuarios", href: "/usuariosRegistrados" },
@@ -90,8 +95,7 @@ function DrawerList({ handleLogout }) {
         { text: "Generar Auditoría", href: "/datos" },
         { text: "Revisión de Auditoría", href: "/revicion" },
         { text: "Revisión de Ishikawa", href: "/terminada" },
-        { text: "Auditorías Finalizadas", href: "/finalizadas" },
-        { text: "Ishikawa", href: "/ishikawa" }
+        { text: "Auditorías Finalizadas", href: "/finalizadas" }
       ],
       showSubmenu: showAuditoriasSubmenu,
       toggleSubmenu: toggleAuditoriasSubmenu
@@ -113,6 +117,8 @@ function DrawerList({ handleLogout }) {
       showSubmenu: showCalendariosSubmenu,
       toggleSubmenu: toggleCalendariosSubmenu
     },
+    { text: "Carga Masiva", href: "/carga" },
+    { text: "Estadisticas", href: "/estadisticas" }
     
   ];
 
@@ -129,7 +135,8 @@ function DrawerList({ handleLogout }) {
                 <Dropdown.Toggle variant="transparent" className="dropdown-toggle">
                   <ListItem disablePadding className="list-item" onClick={item.toggleSubmenu}>
                     <ListItemButton>
-                      <ListItemText primary={item.text} className="list-item-text" />
+                    <ListItemText primary={item.text} className="list-item-text" />
+                    {item.showSubmenu ? <MdExpandLess /> : <MdExpandMore />}
                     </ListItemButton>
                   </ListItem>
                 </Dropdown.Toggle>

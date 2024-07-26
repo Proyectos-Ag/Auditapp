@@ -49,7 +49,8 @@ const ishikawaSchema = new mongoose.Schema({
     actividades: [actividadSchema],
     correcciones: [correccionSchema],
     estado: String,
-    notaRechazo: String
+    notaRechazo: String,
+    fechaElaboracion: String
 });
 
 const Ishikawa = mongoose.model('Ishikawa', ishikawaSchema);

@@ -57,7 +57,7 @@
 }
 
 .menu-icon {
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .dropdown-menu {
@@ -66,10 +66,6 @@
   border-radius: 10px;
   background-color: #D9D9D9;
   z-index: 1;
-}
-
-.link-button:hover {
-  border-radius: 10px;
 }
 
 .dropdown-menu button:hover {
@@ -106,6 +102,10 @@
   text-decoration: none;
   border-radius: 5px;
   font-size: 1rem;
+}
+
+.logout-button:hover {
+  background-color: #1ec51b;
 }
 
 .swal2-container {

@@ -4,6 +4,8 @@ import { UserContext } from '../../App';
 import logo from "../../assets/img/logoAguida.png";
 import Navigation from '../Navigation/Navbar';
 import { useNavigate } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const Finalizada = () => {
     const { userData } = useContext(UserContext);
@@ -70,7 +72,7 @@ const Finalizada = () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
                 const dataFiltrada = response.data.filter(item => 
-                item.estado === 'En revisión' ||  item.estado === 'revisado' ||  item.estado === 'rechazado' ) ;
+                item.estado === 'En revisión' ||  item.estado === 'Revisado' ||  item.estado === 'Rechazado' || item.estado === 'Aprobado' ) ;
                 setIshikawas(dataFiltrada);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -121,7 +123,40 @@ const Finalizada = () => {
 
     const navIshikawa = (_id, id) => {
         navigate(`/ishikawa/${_id}/${id}`);
-    };      
+    }; 
+    
+    const generatePDF = async (id) => {
+        const input = document.getElementById(id);
+        const canvas = await html2canvas(input);
+        const imgData = canvas.toDataURL('image/png');
+        
+        const pdf = new jsPDF('l', 'cm', 'letter');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        
+        const imgProps = pdf.getImageProperties(imgData);
+        const imageHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    
+        // Define the threshold height for splitting the page
+        const thresholdHeight = pdfHeight * 0.75; // Adjust this value as needed
+    
+        if (imageHeight <= thresholdHeight) {
+            // If the image height is within the threshold, add it to the PDF as a single page
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imageHeight);
+        } else {
+            // Split the content into multiple pages
+            let yOffset = 0;
+            while (yOffset < imageHeight) {
+                pdf.addImage(imgData, 'PNG', 0, -yOffset, pdfWidth, imageHeight);
+                yOffset += pdfHeight;
+                if (yOffset < imageHeight) {
+                    pdf.addPage();
+                }
+            }
+        }
+        
+        pdf.save(`reporte_${id}.pdf`);
+    };
 
     return (
         <div className='espacio-repo'>
@@ -155,6 +190,7 @@ const Finalizada = () => {
                                     <h2 onClick={() => toggleDuration(dato.Duracion)}>
                                         Fecha de Elaboración: {formatDate(dato.FechaElaboracion)}
                                     </h2>
+                                    <button onClick={() => generatePDF(`reporte-${periodIdx}`)}>Guardar como PDF</button>
                                 </div>
 
                                 <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
@@ -183,6 +219,7 @@ const Finalizada = () => {
                                                 <div className="horizontal-item">
                                                     <div className="horizontal-inline">
                                                         <div>Conforme:</div>
+                                                        <div style={{marginLeft:'3px'}}>{dato.PuntuacionConf ?  dato.PuntuacionConf : ''}</div>
                                                         {Object.keys(contarCriteriosPorTipo(conteo, 'Conforme')).map(criterio => (
                                                             <div key={criterio} className="horizontal-inline-item">  {conteo[criterio]}
                                                             </div>
@@ -219,8 +256,8 @@ const Finalizada = () => {
                                                 </div>
                                             </div>
                                             <div className="horizontal-group">
-                                                <div className="horizontal-item">Puntuación máxima: {total}</div>
-                                                <div className="horizontal-item">Puntuación Obtenida: {puntosObtenidos}</div>
+                                                <div className="horizontal-item">Puntuación máxima: { dato.PuntuacionMaxima ? dato.PuntuacionMaxima : total}</div>
+                                                <div className="horizontal-item">Puntuación Obtenida: {dato.PuntuacionObten ? dato.PuntuacionObten: puntosObtenidos}</div>
                                             </div>
                                             <div className="horizontal-group">
                                             <div className="horizontal-item">Porcentaje: {dato.PorcentajeTotal}%</div>
@@ -238,7 +275,7 @@ const Finalizada = () => {
                                                 </thead>
                                                 <tbody>
                                                     <tr>
-                                                        <td>Objetivo de ejemplo</td>
+                                                        <td>{dato.Objetivo ? dato.Objetivo : 'Objetivo de ejemplo'}</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -250,8 +287,8 @@ const Finalizada = () => {
                                                 </thead>
                                                 <tbody>
                                                     <tr>
-                                                        <td>Programas</td>
-                                                        <td>Áreas auditadas</td>
+                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold', width:'50%'}}>Programas</td>
+                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold'}}>Áreas auditadas</td>
                                                     </tr>
                                                     <tr>
                                                         <td>
@@ -264,8 +301,8 @@ const Finalizada = () => {
                                                         <td>{dato.AreasAudi}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td>Equipo auditor</td>
-                                                        <td>Participantes en el área del recorrido</td>
+                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold'}}>Equipo auditor</td>
+                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold'}}>Participantes en el área del recorrido</td>
                                                     </tr>
                                                     <tr>
                                                         <td>
@@ -355,7 +392,7 @@ const Finalizada = () => {
                                                                                 ) : ''}
                                                                             </td>
                                                                             <td>
-                                                                                <button onClick={() => navIshikawa(dato._id, desc.ID)}>{ishikawa ? ishikawa.estado : 'Pendiente'}</button>
+                                                                                <button className='button-estado' onClick={() => navIshikawa(dato._id, desc.ID)}>{ishikawa ? ishikawa.estado : 'Pendiente'}</button>
                                                                             </td>
                                                                         </tr>
                                                                     );

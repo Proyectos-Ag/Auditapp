@@ -23,15 +23,6 @@ const LoginForm = () => {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, formData);
       const { token, usuario } = response.data;
 
-      if (usuario.TipoUsuario !== 'Auditado') {
-        Swal.fire({
-          icon: 'error',
-          title: 'Acceso denegado',
-          text: 'Solo los auditados pueden iniciar sesión.',
-        });
-        return;
-      }
-
       // Guardar el token y los datos del usuario en el almacenamiento local
       localStorage.setItem('token', token);
       setUserData(usuario);
@@ -54,6 +45,7 @@ const LoginForm = () => {
       <div className="form-group">
         <div className='espacio'>
        <img src={logo} alt="Logo Empresa" className="logo-empresa-login" />
+       <div className='tipo-usuario'>Auditados</div>
        </div>
        </div>
       {error && <p className="error-message">{error}</p>}

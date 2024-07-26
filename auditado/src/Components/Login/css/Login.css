@@ -142,3 +142,10 @@ body {
         margin-bottom: 40px;
     }
 }
+
+.tipo-usuario{
+    margin-top: -10px;
+    margin-bottom: -40px;
+    font-weight: bold;
+    font-display: flex;
+}

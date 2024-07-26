@@ -13,7 +13,7 @@ const Datos = () => {
     FechaFin: '',
     Departamento:'',
     AreasAudi: [],
-    Auditados: '',
+    Auditados: [],
     AuditorLider: '',
     AuditorLiderEmail: '', 
     EquipoAuditor: [],
@@ -44,6 +44,7 @@ const Datos = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [showOtherAreaInput] = useState(false);
   const [auditorLiderSeleccionado, setAuditorLiderSeleccionado] = useState('');
+  const [auditadosSeleccionados, setAuditadosSeleccionados] = useState([]);
   const [equipoAuditorDisabled, setEquipoAuditorDisabled] = useState(false);
   const filteredUsuarios = selectedDepartamento
   ? usuarios.filter(usuario => usuario.Departamento === selectedDepartamento)
@@ -206,6 +207,7 @@ const Datos = () => {
       const formDataWithAreas = {
         ...formData,
         AreasAudi: areasSeleccionadas,
+        Auditados: auditadosSeleccionados,
         Estado: defaultEstado,
         PorcentajeTotal: defaultPorcentaje
       };
@@ -244,7 +246,7 @@ const Datos = () => {
         FechaFin: '',
         Departamento:'',
         AreasAudi: [],
-        Auditados: '',
+        Auditados: [],
         AuditorLider: '',
         AuditorLiderEmail: '', 
         EquipoAuditor: [],
@@ -367,6 +369,36 @@ const Datos = () => {
   const handleStepChange = (step) => {
     setFormStep(step);
   };
+
+  const handleAuditadosChange = (event) => {
+    const { value } = event.target;
+    setAuditadosSeleccionados((prevSeleccionados) => {
+      const newSeleccionados = prevSeleccionados.includes(value) 
+        ? prevSeleccionados 
+        : [...prevSeleccionados, value];
+  
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        Auditados: newSeleccionados,
+      }));
+  
+      return newSeleccionados;
+    });
+  };
+  
+  const handleAuditadoRemove = (auditado) => {
+    setAuditadosSeleccionados((prevSeleccionados) => {
+      const newSeleccionados = prevSeleccionados.filter((item) => item !== auditado);
+  
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        Auditados: newSeleccionados,
+      }));
+  
+      return newSeleccionados;
+    });
+  };
+   
   
   
   const handleProgramRemove = (program) => {
@@ -498,14 +530,14 @@ const Datos = () => {
           <h3 className="h3-small-margin">Datos generales</h3>
             <div className="registro-form-datos">
             <div className="form-group-datos" >
-              <label>Tipo de auditoria:</label>
+              <label>Tipo de auditoría:</label>
               <select name="TipoAuditoria" value={formData.TipoAuditoria} onChange={handleChange} required>
                 <option value="">Seleccione...</option>
                 <option value="Interna">Interna</option>
                 <option value="Externa">Externa</option>
                 <option value="FSSC 22000">FSSC 22000</option>
-                <option value="Responsabilidad social">Responsabilidad social</option>
-                <option value="Inspección de autoridades">Inspección de autoridades</option>
+                <option value="Responsabilidad social">Responsabilidad Social</option>
+                <option value="Inspección de autoridades">Inspección de Autoridades</option>
               </select>
             </div>
             <div className="form-dates-datos">
@@ -519,7 +551,7 @@ const Datos = () => {
                 </div>
               </div>
               <div className="form-group-datos">
-                <label>Duración de la auditoria:</label>
+                <label>Duración de la auditoría:</label>
                 <input type="text" name="Duracion" value={formData.Duracion} onChange={handleChange} required/>
               </div>
             <div className="form-group-datos-container">
@@ -541,6 +573,7 @@ const Datos = () => {
                 ))}
               </select>
             </div>
+            </div>
             <div className="selected-areas">
               {areasSeleccionadas.map((area, index) => (
                 <div key={index} className="selected-area">
@@ -549,21 +582,27 @@ const Datos = () => {
                 </div>
               ))}
             </div>
-            </div>
             <div className="form-group-datos">
               <label>Auditados:</label>
               <select
                 id="Auditados"
                 name="Auditados"
-                value={formData.Auditados}
-                onChange={handleChange}
-                required
+                value=""
+                onChange={handleAuditadosChange}
               >
                 <option value="">Seleccione...</option>
                 {filteredUsuarios.map((usuario) => (
                   <option key={usuario._id} value={usuario.Nombre}>{usuario.Nombre}</option>
                 ))}
               </select>
+            </div>
+            <div className="selected-auditados">
+              {auditadosSeleccionados.map((auditado, index) => (
+                <div key={index} className="selected-auditado">
+                  {auditado}
+                  <button type="button" onClick={() => handleAuditadoRemove(auditado)} className="remove-button">X</button>
+                </div>
+              ))}
             </div>
             </div>
             <div className="header-container-datos2">

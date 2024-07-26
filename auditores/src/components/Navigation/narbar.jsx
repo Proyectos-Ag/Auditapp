@@ -15,6 +15,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Dropdown from 'react-bootstrap/Dropdown';
 import logo from "../../assets/img/logoAguida.png";
 import Swal from 'sweetalert2';
+import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
 export default function Navigation() {
   const [open, setOpen] = useState(false);
@@ -61,19 +62,18 @@ const handleLogout = () => {
 }
 
 function DrawerList({ handleLogout }) {
-  const [showSubmenu, setShowSubmenu] = useState(false); // Estado para controlar la visibilidad del submenú
+  const [showSubmenu, setShowSubmenu] = useState(false);
 
   const toggleSubmenu = () => {
-    setShowSubmenu(!showSubmenu); // Cambia el estado de visibilidad del submenú
+    setShowSubmenu(!showSubmenu);
   };
 
   const drawerItems = [
     { text: "Inicio", href: "/home" },
     {
-      text: "Auditorias", subItems: [
-        { text: "Pendiente", href: "/pendiente" },
-        { text: "Finalizada", href: "/reporte" },
-        { text: "Ishikawa", href: "/" }
+      text: "Auditorias" , subItems: [
+        { text: "Llenado de Checklist", href: "/pendiente" },
+        { text: "Reportes Generados", href: "/reporte" }
       ]
     }
     ];
@@ -91,7 +91,8 @@ function DrawerList({ handleLogout }) {
                 <Dropdown.Toggle variant="transparent" className="dropdown-toggle">
                   <ListItem disablePadding className="list-item" onClick={toggleSubmenu}>
                     <ListItemButton>
-                      <ListItemText primary={item.text} className="list-item-text" />
+                    <ListItemText primary={item.text} className="list-item-text" />
+                    {toggleSubmenu[item.text] ? <MdExpandLess /> : <MdExpandMore />}
                     </ListItemButton>
                   </ListItem>
                 </Dropdown.Toggle>

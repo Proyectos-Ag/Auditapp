@@ -324,27 +324,27 @@ const Programas = () => {
                   />
                 </div>
                 {requisitos.map((requisito, index) => (
-  <div key={index}>
-    <label>ID {index + 1}:</label>
-    <input
-      type="text"
-      value={requisito.ID}
-      onChange={(e) => handleRequisitoChange(index, "ID", e.target.value)}
-      required
-    />
-    <label>Requisito {index + 1}:</label>
-    <textarea
-      value={requisito.Requisito}
-      onChange={(e) => handleRequisitoChange(index, "Requisito", e.target.value)}
-      required
-    />
-    {index !== 0 && (
-      <button type="button" onClick={() => handleRemoveRequisito(index)}>Cancelar</button>
-    )}
-  </div>
-))}
-<button type="button" onClick={handleAddRequisito}>Agregar Requisito</button>
-<button type="submit">Crear Programa</button>
+                <div key={index}>
+                  <label>ID {index + 1}:</label>
+                  <input
+                    type="text"
+                    value={requisito.ID}
+                    onChange={(e) => handleRequisitoChange(index, "ID", e.target.value)}
+                    required
+                  />
+                  <label>Requisito {index + 1}:</label>
+                  <textarea
+                    value={requisito.Requisito}
+                    onChange={(e) => handleRequisitoChange(index, "Requisito", e.target.value)}
+                    required
+                  />
+                  {index !== 0 && (
+                    <button type="button" onClick={() => handleRemoveRequisito(index)}>Cancelar</button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={handleAddRequisito}>Agregar Requisito</button>
+              <button type="submit">Crear Programa</button>
 
               </form>
             )}

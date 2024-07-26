@@ -1,34 +1,100 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './css/Diagrama.css'
 import Logo from "../../assets/img/logoAguida.png";
 import Navigation from "../Navigation/Navbar";
 import Ishikawa from '../../assets/img/Ishikawa-transformed.png';
 
 const Diagrama = () => {
     const [ishikawas, setIshikawas] = useState([]);
+    const [visibleIndex, setVisibleIndex] = useState(0);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
                 const dataFiltrada = response.data.filter(item => item.estado === 'Hecho');
-                setIshikawas(dataFiltrada);
+                
+                // Ordenar por fechaElaboracion
+                const dataOrdenada = dataFiltrada.sort((a, b) => new Date(a.fechaElaboracion) - new Date(b.fechaElaboracion));
+                
+                setIshikawas(dataOrdenada);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
         };
-
+    
         fetchData();
     }, []);
+    
+
+    useEffect(() => {
+        const simulateInputChange = () => {
+          const textareas = document.querySelectorAll('textarea');
+          textareas.forEach((textarea) => {
+            const event = {
+              target: textarea,
+              name: textarea.name,
+              value: textarea.value
+            };
+            handleInputChange(event);
+          });
+        };
+    
+        simulateInputChange(); // Ejecutar la función al cargar el componente
+    
+      }, [ishikawas]);
+
+      const toggleVisibility = (index) => {
+        setVisibleIndex(visibleIndex === index ? null : index);
+    };    
+
+    const handleInputChange = (e) => {
+        const { value } = e.target;
+      
+        // Define el tamaño de fuente según el rango de caracteres
+        let fontSize;
+        if (value.length > 125) {
+          fontSize = '10.3px'; // Menos de 78 caracteres
+        } else if (value.length > 100) {
+          fontSize = '11px'; // Menos de 62 caracteres
+        } else if (value.length > 88) {
+          fontSize = '12px'; // Menos de 62 caracteres
+        } else if (value.length > 78) {
+          fontSize = '13px'; // Menos de 62 caracteres
+        } else if (value.length > 65) {
+          fontSize = '14px'; // Menos de 62 caracteres
+        } else {
+          fontSize = '15px'; // Por defecto
+        }
+
+        e.target.style.fontSize = fontSize;
+      };
+
+      const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    };
 
     return (
         <div>
             <div style={{ position: 'absolute', top: 0, left: 0 }}>
                 <Navigation />
             </div>
-            <div>
+            <div className='content-diagrama'>
                 {ishikawas.map((ishikawa, index) => (
-                    <div className="image-container" key={index}>
+                    <div key={index}>
+                    <div className="duracion-bloque-repo">
+                    <h2 onClick={() => toggleVisibility(index)}>
+                           {formatDate(ishikawa.fechaElaboracion)}
+                    </h2>
+                    </div>
+                    {visibleIndex === index && (
+                    <div className="image-container" style={{marginLeft:'-0.7rem'}} >
                         <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
                         <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
                         <div className='posicion-en'>
@@ -40,6 +106,9 @@ const Diagrama = () => {
                                 <h2 style={{ marginLeft: '30rem', marginRight: '10px' }}>Afectación: </h2>
                                 <div style={{ width: '30rem', fontSize: '20px' }}>{ishikawa.afectacion}</div>
                             </div>
+                        </div>
+                        <div className='posicion-en-3'>
+                            GCF015
                         </div>
                         <div className='posicion-en-2'>
                             <h3>Fecha: {ishikawa.fecha}</h3>
@@ -68,66 +137,64 @@ const Diagrama = () => {
                             ))}
                         </div>
                         <div key={index}>
-                            <div className='posicion-bo'>
+                            <div className='posicion-bo' style={{ marginRight:'2rem'}}>
                                 <h3>No conformidad:</h3>
-                                <div style={{ fontSize: '20px', width: '55em', textAlign: 'justify' }}> {ishikawa.requisito}</div>
+                                <div style={{width: '70rem', textAlign: 'justify', overflowWrap: 'break-word' }}> {ishikawa.requisito}</div>
                                 <h3>Hallazgo:</h3>
                                 <div className='hallazgo-container'>
-                                    <div>{ishikawa.hallazgo}</div>
+                                    <div style={{width:'70rem', overflowWrap: 'break-word'}}>{ishikawa.hallazgo}</div>
                                 </div>
                                 <h3>Acción inmediata o corrección: </h3>
-                                {ishikawa.correccion}
+                                <div style={{width:'70rem', overflowWrap: 'break-word'}}>
+                                {ishikawa.correccion}</div>
                                 <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
-                                <div style={{ marginBottom: '20px' }}>{ishikawa.causa}</div>
+                                <div style={{ marginBottom: '20px', width:'70rem', overflowWrap: 'break-word' }}>{ishikawa.causa}</div>
                             </div>
                         </div>
                         <div className='table-ish'>
                         <table style={{ border: 'none' }}>
-    <thead>
-        <tr>
-            <th className="conformity-header">Actividad</th>
-            <th className="conformity-header">Responsable</th>
-            <th className="conformity-header">Fecha Compromiso</th>
-        </tr>
-    </thead>
-    <tbody>
-        {ishikawa.actividades && ishikawa.actividades.map((actividad, i) => (
-            <tr key={i}>
-                <td>{actividad.actividad}</td>
-                <td>{actividad.responsable}</td>
-                <td>{new Date(actividad.fechaCompromiso + 'T00:00:00').toLocaleDateString()}</td>
-            </tr>
-        ))}
-    </tbody>
-</table>
-<table style={{ border: 'none' }}>
-    <thead>
-        <tr>
-            <th>Actividad</th>
-            <th>Responsable</th>
-            <th>Fecha Compromiso</th>
-            <th colSpan="2" className="sub-div">
-                <div>Acción Correctiva cerrada</div>
-                <div style={{ display: 'flex' }}>
-                    <div className="left">Sí</div>
-                    <div className="right">No</div>
-                </div>
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        {ishikawa.correcciones && ishikawa.correcciones.map((accion, i) => (
-            <tr key={i}>
-                <td>{accion.actividad}</td>
-                <td>{accion.responsable}</td>
-                <td>{new Date(accion.fechaCompromiso + 'T00:00:00').toLocaleDateString()}</td>
-                <td>{accion.cerrada}</td>
-            </tr>
-        ))}
-    </tbody>
-</table>
-
+                            <thead>
+                                <tr>
+                                    <th className="conformity-header">Actividad</th>
+                                    <th className="conformity-header">Responsable</th>
+                                    <th className="conformity-header">Fecha Compromiso</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {ishikawa.actividades && ishikawa.actividades.map((actividad, i) => (
+                                    <tr key={i}>
+                                        <td>{actividad.actividad}</td>
+                                        <td>{actividad.responsable}</td>
+                                        <td>{new Date(actividad.fechaCompromiso + 'T00:00:00').toLocaleDateString()}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <table style={{ border: 'none' }}>
+                            <thead>
+                                <tr>
+                                    <th className="conformity-header">Actividad</th>
+                                    <th className="conformity-header">Responsable</th>
+                                    <th className="conformity-header">Fecha Compromiso</th>
+                                    <th colSpan="2" className="conformity-header">
+                                        Acción Correctiva Cerrada
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {ishikawa.correcciones && ishikawa.correcciones.map((accion, i) => (
+                                    <tr key={i}>
+                                        <td>{accion.actividad}</td>
+                                        <td>{accion.responsable}</td>
+                                        <td>{new Date(accion.fechaCompromiso + 'T00:00:00').toLocaleDateString()}</td>
+                                        <td>{accion.cerrada}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                         </div>
+                    </div>
+                      )}
                     </div>
                 ))}
             </div>

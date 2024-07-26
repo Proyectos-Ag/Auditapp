@@ -18,7 +18,8 @@ const Reporte = () => {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
                 if (userData && userData.Correo) {
                     const datosFiltrados = response.data.filter((dato) => 
-                        dato.AuditorLiderEmail === userData.Correo && dato.Estado === "Realizada"
+                        (dato.AuditorLiderEmail === userData.Correo || 
+                            (dato.EquipoAuditor.length > 0 && dato.EquipoAuditor.some(auditor => auditor.Correo === userData.Correo))) && (dato.Estado !== "pendiente" && dato.Estado !== "Devuelto")
                     );
         
                     // Ordenar por FechaElaboracion del más reciente al más antiguo
@@ -108,6 +109,7 @@ const Reporte = () => {
                 <Navigation />
             </div>
             <div className="datos-container-repo">
+            <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Reportes Generados</h1>
                 <div className="form-group-datos">
                     {datos.map((dato, periodIdx) => {
                         let conteo = {};
@@ -210,7 +212,7 @@ const Reporte = () => {
                                                     <th colSpan="1" className="conformity-header-repo">Objetivo</th>
                                                 </tr>
                                             </thead>
-                                            <div>Objetivo de ejemplo</div>
+                                            <div>Garantizar que el Sistema cumpla continuamente con los requisitos internacionales, lo que da como resultado una certificación que asegura el suministro de productos seguros a los consumidores en todo el mundo.</div>
                                         </table>
                                         <table>
                                             <thead>
@@ -285,7 +287,7 @@ const Reporte = () => {
                                                     {dato.Programa.map((programa, programIdx) => (
                                                         programa.Descripcion.map((desc, descIdx) => {
                                                             const base64Prefix = 'data:image/png;base64,';
-                                                            const isBase64Image = desc.Hallazgo.includes(base64Prefix);
+                                                             const isBase64Image = desc.Hallazgo.includes(base64Prefix);
                                                             if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
                                                                 return (
                                                                     <tr key={descIdx}>

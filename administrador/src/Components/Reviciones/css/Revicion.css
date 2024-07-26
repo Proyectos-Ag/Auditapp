@@ -227,3 +227,17 @@ table, th, td {
     height: 30%;
     margin-left: 44.5rem;
 }
+
+.button-oculto{
+    border: none;
+    background-color: transparent;
+    color: transparent;
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.button-oculto:hover{
+    background-color: #007acc;
+    color: #ffffff;
+}

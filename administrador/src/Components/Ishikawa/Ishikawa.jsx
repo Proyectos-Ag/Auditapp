@@ -45,6 +45,8 @@ const CreacionIshikawa = () => {
   const [actividades, setActividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: '' }]);
   const [nuevaCorreccion, setNuevaCorreccion] = useState({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
 
+  const fechaElaboracion = new Date().toISOString();
+
   const handleDiagrama = (e) => {
     const { name, value } = e.target;
     setDiagrama((prevState) => [{
@@ -75,7 +77,8 @@ const CreacionIshikawa = () => {
         afectacion: formData.afectacion,
         actividades,
         correcciones,
-        estado: 'Hecho'
+        estado: 'Hecho',
+        fechaElaboracion
       };
       console.log('Datos enviados:', data);
       const result = await Swal.fire({
@@ -138,6 +141,34 @@ const CreacionIshikawa = () => {
     setNuevaCorreccion({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    // Define el tamaño de fuente según el rango de caracteres
+    let fontSize;
+    if (value.length > 125) {
+      fontSize = '10.3px'; // Menos de 78 caracteres
+    } else if (value.length > 100) {
+      fontSize = '11px'; // Menos de 62 caracteres
+    } else if (value.length > 88) {
+      fontSize = '12px'; // Menos de 62 caracteres
+    } else if (value.length > 78) {
+      fontSize = '13px'; // Menos de 62 caracteres
+    } else if (value.length > 65) {
+      fontSize = '14px'; // Menos de 62 caracteres
+    } else {
+      fontSize = '15px'; // Por defecto
+    }
+  
+    // Actualiza el estado del diagrama
+    setDiagrama(prevState => [{
+      ...prevState[0],
+      [name]: value
+    }]);
+  
+    // Aplica el nuevo tamaño de fuente al textarea
+    e.target.style.fontSize = fontSize;
+  };
+
   return (
     <div>
       <div style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -168,6 +199,9 @@ const CreacionIshikawa = () => {
               </h2>
             </div>
           </div>
+          <div className='posicion-en-3'>
+          GCF015
+          </div>
           <div className='posicion-en-2'>
             <h3>Fecha: 
             <input type="date" name='fecha'
@@ -179,35 +213,35 @@ const CreacionIshikawa = () => {
             <img src={Ishikawa} alt="Diagrama de Ishikawa" className="responsive-image" />
             {diagrama.map((dia, index) => (
               <div key={index}>
-                <textarea maxLength="63" className="text-area" name='text1' value={dia.text1} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text1' value={dia.text1} onChange={handleInputChange}
                   style={{ top: '19.1rem', left: '8.7rem' }} placeholder="Texto..." required />
-                <textarea className="text-area" name='text2' value={dia.text2} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text2' value={dia.text2} onChange={handleInputChange}
                   style={{ top: '19.1rem', left: '25.4rem' }} placeholder="Texto..." required />
-                <textarea className="text-area" name='text3' value={dia.text3} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text3' value={dia.text3} onChange={handleInputChange}
                   style={{ top: '19.1rem', left: '41.2rem' }} placeholder="Texto..." required />
-                <textarea className="text-area" name='text4' value={dia.text4} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text4' value={dia.text4} onChange={handleInputChange}
                   style={{ top: '23.2rem', left: '12.2rem' }} placeholder="Texto..." />
-                <textarea className="text-area" name='text5' value={dia.text5} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text5' value={dia.text5} onChange={handleInputChange}
                   style={{ top: '23.2rem', left: '28.8rem' }} placeholder="Texto..." />
-                <textarea className="text-area" name='text6' value={dia.text6} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text6' value={dia.text6} onChange={handleInputChange}
                   style={{ top: '23.2rem', left: '45rem' }} placeholder="Texto..." />
-                <textarea className="text-area" name='text7' value={dia.text7} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text7' value={dia.text7} onChange={handleInputChange}
                   style={{ top: '27.2rem', left: '15.5rem' }} placeholder="Texto..." />
-                <textarea className="text-area" name='text8' value={dia.text8} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text8' value={dia.text8} onChange={handleInputChange}
                   style={{ top: '27.2rem', left: '32.3rem' }} placeholder="Texto..." />
-                <textarea className="text-area" name='text9' value={dia.text9} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text9' value={dia.text9} onChange={handleInputChange}
                   style={{ top: '27.2rem', left: '48.1rem' }} placeholder="Texto..." />
-                <textarea className="text-area" name='text10' value={dia.text10} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text10' value={dia.text10} onChange={handleInputChange}
                   style={{ top: '31rem', left: '23rem' }} placeholder="Texto..." required />
-                <textarea className="text-area" name='text11' value={dia.text11} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text11' value={dia.text11} onChange={handleInputChange}
                   style={{ top: '31rem', left: '39.4rem' }} placeholder="Texto..." required />
-                <textarea className="text-area" name='text12' value={dia.text12} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text12' value={dia.text12} onChange={handleInputChange}
                   style={{ top: '35rem', left: '19.7rem' }} placeholder="Texto..." />
-                <textarea className="text-area" name='text13' value={dia.text13} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text13' value={dia.text13} onChange={handleInputChange}
                   style={{ top: '35rem', left: '36rem' }} placeholder="Texto..." />
-                <textarea className="text-area" name='text14' value={dia.text14} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text14' value={dia.text14} onChange={handleInputChange}
                   style={{ top: '39rem', left: '16.6rem' }} placeholder="Texto..." />
-                <textarea className="text-area" name='text15' value={dia.text15} onChange={handleDiagrama}
+                <textarea maxLength={145} className="text-area" name='text15' value={dia.text15} onChange={handleInputChange}
                   style={{ top: '39rem', left: '32.8rem' }} placeholder="Texto..." />
                 <textarea maxLength="105" className="text-area" name='problema' value={dia.problema} onChange={handleDiagrama}
                   style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} placeholder="Problema..." required />
@@ -301,11 +335,11 @@ const CreacionIshikawa = () => {
             <table style={{ border: 'none' }}>
               <thead>
                 <tr>
-                  <th>Actividad</th>
-                  <th>Responsable</th>
-                  <th>Fecha Compromiso</th>
-                  <th colSpan="2" className="sub-div">
-                    <div>Acción Correctiva cerrada</div>
+                  <th className="conformity-header">Actividad</th>
+                  <th className="conformity-header">Responsable</th>
+                  <th className="conformity-header">Fecha Compromiso</th>
+                  <th colSpan="2" className="conformity-header">
+                    Acción Correctiva Cerrada
                     <div style={{ display: 'flex' }}>
                       <div className="left">Sí</div>
                       <div className="right">No</div>

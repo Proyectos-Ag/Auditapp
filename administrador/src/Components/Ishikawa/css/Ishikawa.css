@@ -14,3 +14,9 @@
 .button-generar-ish:hover{
     background-color: rgb(34, 110, 79);
 }
+
+.posicion-en-3{
+    position: absolute;
+    top: 6rem;
+    margin-left: 56rem;
+}

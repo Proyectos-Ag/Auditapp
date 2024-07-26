@@ -111,7 +111,46 @@ const obtenerTodosDatos = async (req, res) => {
   }
 };
 
+// Carga masiva de auditorías desde un archivo Excel
+const cargaMasiva = async (req, res) => {
+  try {
+    const filePath = req.file.path;
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    const auditorias = data.map(row => ({
+      TipoAuditoria: row['TipoAuditoria'],
+      FechaInicio: row['FechaInicio'],
+      FechaFin: row['FechaFin'],
+      Duracion: row['Duracion'],
+      Departamento: row['Departamento'],
+      AreasAudi: row['AreasAudi'],
+      Auditados: row['Auditados'],
+      AuditorLider: row['AuditorLider'],
+      AuditorLiderEmail: row['AuditorLiderEmail'],
+      EquipoAuditor: row['EquipoAuditor'] ? JSON.parse(row['EquipoAuditor']) : [],
+      Observador: row['Observador'],
+      NombresObservadores: row['NombresObservadores'],
+      Programa: row['Programa'] ? JSON.parse(row['Programa']) : [],
+      Estado: row['Estado'],
+      PorcentajeTotal: row['PorcentajeTotal'],
+      FechaElaboracion: row['FechaElaboracion'],
+      Comentario: row['Comentario'],
+      Estatus: row['Estatus']
+    }));
+
+    await Datos.insertMany(auditorias);
+
+    res.status(201).json({ message: 'Datos cargados exitosamente' });
+  } catch (error) {
+    console.error('Error al cargar datos:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
 module.exports = {
   nuevoAuditoria,
-  obtenerTodosDatos
+  obtenerTodosDatos,
+  cargaMasiva
 };
