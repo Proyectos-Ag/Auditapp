@@ -523,6 +523,11 @@ const handleInputChange = (e) => {
 
 // Función para verificar coincidencias
 function verificarCoincidencia(textAreaValue, causa) {
+  // Verificar que los valores no sean undefined o null
+  if (typeof textAreaValue !== 'string' || typeof causa !== 'string') {
+      return false;
+  }
+
   const trimmedTextAreaValue = textAreaValue.trim();
   const trimmedCausaParts = causa.trim().split(';').map(part => part.trim());
 
