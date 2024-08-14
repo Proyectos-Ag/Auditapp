@@ -345,7 +345,6 @@ const IshikawaRev = () => {
         verificarRegistro();
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [_id, id]);
-      
     const verificarRegistro = async () => {
         try {
           const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
