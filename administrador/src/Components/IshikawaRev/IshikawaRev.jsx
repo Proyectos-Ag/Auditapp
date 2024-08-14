@@ -349,7 +349,11 @@ const IshikawaRev = () => {
     const verificarRegistro = async () => {
         try {
           const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+<<<<<<< HEAD
           const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && item.proName === nombre && 
+=======
+          const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&
+>>>>>>> a3ad729296dfc4041bbe2801efce5fd7c8c18a76
             (item.estado === 'Rechazado' || item.estado === 'Revisado' || item.estado === 'Aprobado'|| item.estado === 'Asignado'));
           const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre && item.estado === 'Aprobado');
           const registroRevisado= response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre && item.estado === 'Revisado');
