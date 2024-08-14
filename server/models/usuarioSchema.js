@@ -46,7 +46,7 @@ const UsuariosSchema = new mongoose.Schema({
       calificacion: { type: Number, required: true }
     }
   ],
-  Departamento: { type: String} // Añadido
+  Departamento: { type: String, required: false} // Añadido
 });
 
 // Hash de la contraseña antes de guardar
