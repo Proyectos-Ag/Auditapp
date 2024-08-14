@@ -19,4 +19,6 @@ router.delete('/:id', usuariosController.eliminarUsuario);
 
 router.get('/nombre/:nombre', usuariosController.obtenerUsuarioPorNombre);
 
+router.put('/cambiarPassword/:id', usuariosController.cambiarPassword);
+
 module.exports = router;

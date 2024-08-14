@@ -8,6 +8,7 @@ import Ishikawa from '../../assets/img/Ishikawa-transformed.png';
 const Diagrama = () => {
     const [ishikawas, setIshikawas] = useState([]);
     const [visibleIndex, setVisibleIndex] = useState(0);
+    const [showPart, setShowPart] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -88,13 +89,14 @@ const Diagrama = () => {
             <div className='content-diagrama'>
                 {ishikawas.map((ishikawa, index) => (
                     <div key={index}>
-                    <div className="duracion-bloque-repo">
+                    <div className="duracion-bloque-repo-dia">
                     <h2 onClick={() => toggleVisibility(index)}>
-                           {formatDate(ishikawa.fechaElaboracion)}
+                           {formatDate(ishikawa.fechaElaboracion)} : {ishikawa.auditado}
                     </h2>
                     </div>
                     {visibleIndex === index && (
-                    <div className="image-container" style={{marginLeft:'-0.7rem'}} >
+                    <div >
+                        <div className="image-container-dia" >
                         <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
                         <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
                         <div className='posicion-en'>
@@ -136,8 +138,24 @@ const Diagrama = () => {
                                 </div>
                             ))}
                         </div>
-                        <div key={index}>
-                            <div className='posicion-bo' style={{ marginRight:'2rem'}}>
+                        <div className='button-pasti'>
+                            <div className='cont-part'>
+                        <button className='button-part' onClick={(e) => {
+                            e.preventDefault();
+                            setShowPart(!showPart)
+                            }}>
+                            ⚇
+                        </button>
+                        {showPart && (
+                        <div className='part-div'>{ishikawa.participantes}</div>
+                            )}
+                        </div>
+                        </div>
+                        </div>
+                         
+                        <div className="image-container2-dia">
+                        <div key={index} >
+                            <div className='posicion-bo'>
                                 <h3>No conformidad:</h3>
                                 <div style={{width: '70rem', textAlign: 'justify', overflowWrap: 'break-word' }}> {ishikawa.requisito}</div>
                                 <h3>Hallazgo:</h3>
@@ -193,6 +211,7 @@ const Diagrama = () => {
                             </tbody>
                         </table>
                         </div>
+                    </div>
                     </div>
                       )}
                     </div>

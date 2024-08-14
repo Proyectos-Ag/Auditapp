@@ -7,7 +7,7 @@ import AuthProvider from './authProvider';
 import Pendiente from './components/Pendientes/Pendiente';
 import Fotos from './components/Pendientes/Foto';
 import Reporte from './components/Reportes/Reporte';
-
+import Informacion from './components/Informacion/Informacion';
 
 export const UserContext = createContext(null);
 
@@ -17,11 +17,12 @@ function App() {
     <div className="App">
       <Router>
         <Routes>
-          <Route path="/" element={<Login />} /> {}
-          <Route path="/home" element={<Inicio/>}/> {}
-          <Route path="/pendiente" element={<Pendiente/>}/> {}
-          <Route path="/foto" element={<Fotos/>}/> {}
-          <Route path="/reporte" element={<Reporte/>}/> {}
+          <Route path="/" element={<Login />} /> 
+          <Route path="/home" element={<Inicio/>}/> 
+          <Route path="/pendiente" element={<Pendiente/>}/> 
+          <Route path="/foto" element={<Fotos/>}/> 
+          <Route path="/reporte" element={<Reporte/>}/> 
+          <Route path="/informacion" element={<Informacion/>}/> 
         </Routes>
       </Router>
     </div>

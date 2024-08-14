@@ -75,7 +75,8 @@ function DrawerList({ handleLogout }) {
         { text: "Llenado de Checklist", href: "/pendiente" },
         { text: "Reportes Generados", href: "/reporte" }
       ]
-    }
+    },
+    { text: "Usuario", href: "/informacion" }
     ];
 
   return (

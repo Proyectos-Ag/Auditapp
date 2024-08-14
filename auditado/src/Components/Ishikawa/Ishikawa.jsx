@@ -6,7 +6,7 @@ import Logo from "../../assets/img/logoAguida.png";
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { UserContext } from '../../App';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2'; 
 
 const Ishikawa = () => {
   const { userData } = useContext(UserContext);
@@ -27,6 +27,7 @@ const Ishikawa = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [fechaElaboracion, setFechaElaboracion] = useState('');
   const [tempFechaCompromiso, setTempFechaCompromiso] = useState('');
+  const [, setSelectedTextareas] = useState(new Set());
  
   const [formData,setData] = useState({
     problema: '',
@@ -56,9 +57,9 @@ const Ishikawa = () => {
     text15: ''
    }]);
    
-   const [actividades, setActividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: [] }]);
+   const [actividades, setActividades] = useState({ actividad: '', responsable: '', fechaCompromiso: [] });
   
-  const { _id, id } = useParams();
+  const { _id, id, nombre} = useParams();
   const idRep = _id;
   const {Observacion}= useParams();
 
@@ -74,7 +75,7 @@ const Ishikawa = () => {
           const datosFiltrados = response.data.find(dato => dato._id === _id);
           if (datosFiltrados) {
             const programaEncontrado = datosFiltrados.Programa.find(prog => 
-              prog.Descripcion.some(desc => desc.ID === id)
+              prog.Descripcion.some(desc => desc.ID === id && prog.Nombre === nombre)
             );
             if (programaEncontrado) {
               const descripcionEncontrada = programaEncontrado.Descripcion.find(desc => desc.ID === id);
@@ -82,7 +83,7 @@ const Ishikawa = () => {
               setPrograma(programaEncontrado);
               setDescripcion(descripcionEncontrada);
               setRequisito(descripcionEncontrada.Requisito);
-              setHallazgo(descripcionEncontrada.Observacion);
+              setHallazgo(descripcionEncontrada.Hallazgo);
               setAuditados(descripcionEncontrada.Auditados);
             }
           }
@@ -93,7 +94,7 @@ const Ishikawa = () => {
     };
   
     obtenerDatos();
-  }, [userData, _id, id]);  
+  }, [userData, _id, id, nombre]);  
 
   useEffect(() => {
     verificarRegistro();
@@ -125,18 +126,17 @@ const Ishikawa = () => {
 
   }, [datos]);
 
-
   const verificarRegistro = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-      const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && 
+      const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && item.proName === nombre && 
        (item.estado === 'Rechazado' || item.estado === 'Revisado' || item.estado === 'Aprobado' || item.estado === 'Pendiente' || item.estado === 'Asignado' ));
-      const registroRechazado = dataFiltrada.find(item => item.idRep === _id && item.idReq === id);
-      const registroExistente = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'En revisión');
-      const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && (item.estado === 'Aprobado'));
-      const registroRevisado = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'Revisado' );
-      const registroEstadoRe = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'Rechazado' );
-      const registroAsignado = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'Asignado' );
+      const registroRechazado = dataFiltrada.find(item => item.idRep === _id && item.idReq === id && item.proName === nombre);
+      const registroExistente = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&  item.estado === 'En revisión');
+      const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&  (item.estado === 'Aprobado'));
+      const registroRevisado = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&  item.estado === 'Revisado' );
+      const registroEstadoRe = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&  item.estado === 'Rechazado' );
+      const registroAsignado = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&  item.estado === 'Asignado' );
       setAsignado(registroAsignado);
       setEstRech(registroEstadoRe);
       setAprobado(registroAprobado);
@@ -167,25 +167,35 @@ const Ishikawa = () => {
     setTempFechaCompromiso(value);
 };
 
+
 const handleDoubleClick = (e) => {
-  // Restablece el color de fondo de todos los textareas
-  document.querySelectorAll('textarea').forEach((textarea) => {
-    textarea.style.backgroundColor = '';
+  const textarea = e.target;
+
+  setSelectedTextareas((prevSelected) => {
+    const newSelected = new Set(prevSelected);
+
+    if (newSelected.has(textarea)) {
+      // Si el textarea ya está seleccionado, deseleccionarlo
+      newSelected.delete(textarea);
+      textarea.style.backgroundColor = '';
+    } else {
+      // Si el textarea no está seleccionado, seleccionarlo
+      newSelected.add(textarea);
+      textarea.style.backgroundColor = '#f1fc5e9f';
+      textarea.style.borderRadius = '10px';
+    }
+
+    // Actualizar los textos seleccionados en el campo 'causa'
+    setData((prevState) => ({
+      ...prevState,
+      causa: Array.from(newSelected).map(t => t.value).join('; ')
+    }));
+
+    return newSelected;
   });
 
-  // Cambia el color de fondo del textarea actual al hacer doble clic
-  e.target.style.backgroundColor = '#f1fc5e9f';
-  e.target.style.borderRadius = '10px';
-
-  const { value } = e.target;
-  setData((prevState) => ({
-    ...prevState,
-    causa: value
-  }));
-
-  e.target.select(); // Selecciona el texto dentro del textarea
+  textarea.select(); // Selecciona el texto dentro del textarea
 };
-
 
   const handleUpdate = async () => {
     try {
@@ -231,8 +241,8 @@ const handleDoubleClick = (e) => {
 
   const Actualizar = async () => {
     Swal.fire({
-      title: '¿Esta seguro de querer reenviar el diagrama?',
-      text: '¡El diagrama sera mandado a revisión!',
+      title: '¿Está seguro de querer reenviar el diagrama?',
+      text: '¡El diagrama sera mandado ha revisión!',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3ccc37',
@@ -360,8 +370,8 @@ const handleDoubleClick = (e) => {
       };
     // Mostrar SweetAlert con opción de confirmar o cancelar
     const result = await Swal.fire({
-      title: '¿Estás seguro de querer guardar?',
-      text: 'El diagrama será enviado a revisión.',
+      title: '¿Está seguro de querer guardar?',
+      text: 'El diagrama será enviado ha revisión.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3ccc37',
@@ -406,7 +416,7 @@ const handleDoubleClick = (e) => {
 const handleSaveOrUpdate = async () => {
   try {
     const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-    const existeRegistro = response.data.some(item => item.idRep === _id && item.idReq === id);
+    const existeRegistro = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre);
 
     if (existeRegistro) {
       handleUpdateAdvance();
@@ -448,19 +458,18 @@ const handleSaveOrUpdate = async () => {
 
 const handleInputChange = (e) => {
   const { name, value } = e.target;
-
-  // Define el tamaño de fuente según el rango de caracteres
+  // Definicion del tamaño de fuente según el rango de caracteres
   let fontSize;
   if (value.length > 125) {
-    fontSize = '10.3px'; // Menos de 78 caracteres
-  } else if (value.length > 100) {
-    fontSize = '11px'; // Menos de 62 caracteres
+    fontSize = '10.5px'; 
+  } else if (value.length > 120) {
+    fontSize = '11px';
+  } else if (value.length > 110) {
+    fontSize = '12px';
   } else if (value.length > 88) {
-    fontSize = '12px'; // Menos de 62 caracteres
-  } else if (value.length > 78) {
-    fontSize = '13px'; // Menos de 62 caracteres
+    fontSize = '13px';
   } else if (value.length > 65) {
-    fontSize = '14px'; // Menos de 62 caracteres
+    fontSize = '14px';
   } else {
     fontSize = '15px'; // Por defecto
   }
@@ -471,8 +480,11 @@ const handleInputChange = (e) => {
     [name]: value
   }]);
 
-  // Aplica el nuevo tamaño de fuente al textarea
-  e.target.style.fontSize = fontSize;
+  // Aplica el nuevo tamaño de fuente al textarea específico
+  if (['text1', 'text2', 'text3', 'text4', 'text5', 'text6', 'text7', 'text8', 'text9', 
+    'text10', 'text11', 'text12', 'text13', 'text14', 'text15'].includes(name)) {
+    e.target.style.fontSize = fontSize;
+  }
 };
 
 
@@ -571,8 +583,9 @@ const handleInputChange = (e) => {
           <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
           <div className='posicion-en'>
             <h2>Problema:
-              <input type="text" className="problema-input" name='problema' value={formData.problema} onChange={handleDatos}
-              style={{marginTop:'0.4rem', color:'#000000'}} placeholder="Agregar problema. . ." required disabled={revisado}></input>
+              <textarea type="text" className="problema-input" name='problema' value={descripcion.Observacion} onChange={handleDatos}
+              style={{fontSize:'20px'}} placeholder="Agregar problema. . ." required disabled={revisado}>
+              </textarea>
             </h2>
             <div style={{ display: 'flex', position:'absolute' }}>
               <h2>Afectación: </h2> 
@@ -636,7 +649,7 @@ const handleInputChange = (e) => {
             <textarea className="text-area" name='text14' value={dia.text14} onChange={handleInputChange}
              style={{ top: '39rem', left: '16.6rem' }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={132}></textarea>
-            <textarea className="text-area" name='text15' value={dia.text15} onChange={handleDiagrama}
+            <textarea className="text-area" name='text15' value={dia.text15} onChange={handleInputChange}
              style={{ top: '39rem', left: '32.8rem' }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={132}></textarea>
   
@@ -648,7 +661,7 @@ const handleInputChange = (e) => {
           <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
   
           {programa.Descripcion
-            .filter(desc => desc.ID === id)
+            .filter(desc => desc.ID === id && programa.Nombre === nombre)
             .map((desc, index) => {
   
               return (
@@ -669,10 +682,10 @@ const handleInputChange = (e) => {
                   </div>
                   <div className='posicion-bo'>
                     <h3>No conformidad:</h3>
-                       <div style={{fontSize:'20px',width:'55em', textAlign:'justify'}}>{desc.Requisito}</div>
+                       <div style={{width:'70em', textAlign:'justify'}}>{desc.Requisito}</div>
                     <h3>Hallazgo:</h3>
                     <div className='hallazgo-container'> {/*aqui va la observacion*/}
-                      <div  >{desc.Observacion}</div>
+                      <div style={{width:'70em', textAlign:'justify'}}>{desc.Hallazgo}</div>
                     </div>
                     <h3>Acción inmediata o corrección: </h3>
                     <textarea type="text" className="textarea-acc" name='correccion' value={formData.correccion} onChange={handleDatos}
@@ -724,10 +737,10 @@ const handleInputChange = (e) => {
                       (revisado) ? null : (
                       <div>
                        <select
-                                    className="custom-select"
-                                    onChange={(e) => handleSelectChange(e, actividad.fechaCompromiso.length - 1 - actividad.fechaCompromiso.slice().reverse().findIndex(fecha => fecha === e.target.value))}
-                                    style={{ color: colores[actividad.fechaCompromiso.length - 1]} } // Inicializa con el color del primer elemento invertido
-                                >
+                          className="custom-select"
+                          onChange={(e) => handleSelectChange(e, actividad.fechaCompromiso.length - 1 - actividad.fechaCompromiso.slice().reverse().findIndex(fecha => fecha === e.target.value))}
+                          style={{ color: colores[actividad.fechaCompromiso.length - 1]} } // Inicializa con el color del primer elemento invertido
+                        >
                                     {actividad.fechaCompromiso.slice().reverse().map((fecha, index) => (
                                         <option
                                             key={index}

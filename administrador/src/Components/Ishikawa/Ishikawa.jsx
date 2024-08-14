@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 const CreacionIshikawa = () => {
   const [isEditing] = useState(false);
   const navigate = useNavigate();
+  const [showPart, setShowPart] = useState(true);
 
   const [formData, setFormData] = useState({
     problema: '',
@@ -146,15 +147,15 @@ const CreacionIshikawa = () => {
     // Define el tamaño de fuente según el rango de caracteres
     let fontSize;
     if (value.length > 125) {
-      fontSize = '10.3px'; // Menos de 78 caracteres
+      fontSize = '10.3px'; 
     } else if (value.length > 100) {
-      fontSize = '11px'; // Menos de 62 caracteres
+      fontSize = '11px'; 
     } else if (value.length > 88) {
-      fontSize = '12px'; // Menos de 62 caracteres
+      fontSize = '12px'; 
     } else if (value.length > 78) {
-      fontSize = '13px'; // Menos de 62 caracteres
+      fontSize = '13px';
     } else if (value.length > 65) {
-      fontSize = '14px'; // Menos de 62 caracteres
+      fontSize = '14px';
     } else {
       fontSize = '15px'; // Por defecto
     }
@@ -248,23 +249,40 @@ const CreacionIshikawa = () => {
               </div>
             ))}
           </div>
+          <div className='button-pasti'>
+                    <div className='cont-part'>
+                  <button className='button-part' onClick={(e) => {
+                      e.preventDefault();
+                      setShowPart(!showPart)
+                    }}>
+                    ⚇
+                  </button>
+                  {showPart && (
+                  <textarea type="text" name='participantes' value={formData.participantes} onChange={handleFormDataChange}
+                      style={{ width:'64rem', color:'#000000', border:'none', backgroundColor:'#ffffff'}} placeholder="Agregar Participantes. . ." required></textarea>
+                    )}
+                  </div>
+                  </div>
+          </div> 
+          <div className='image-container2'>
 
           <div>
             <div className='posicion-bo' style={{ marginRight: '5rem' }}>
               <h3>No conformidad:</h3>
               <textarea type="text" className="textarea-acc" name='requisito'
-                style={{ width: '64rem', color: '#000000' }} placeholder="Agregar Acción. . ." value={formData.requisito} onChange={handleFormDataChange} />
+                 style={{ width: '72em', textAlign: 'justify' }} placeholder="Agregar Acción. . ." value={formData.requisito} onChange={handleFormDataChange} />
               <h3>Hallazgo:</h3>
               <textarea type="text" className="textarea-acc" name='hallazgo'
-                style={{ width: '64rem', color: '#000000' }} placeholder="Agregar Hallazgo. . ." value={formData.hallazgo} onChange={handleFormDataChange} />
+                 style={{ width: '72em', textAlign: 'justify' }} placeholder="Agregar Hallazgo. . ." value={formData.hallazgo} onChange={handleFormDataChange} />
               <h3>Acción inmediata o corrección:</h3>
               <textarea type="text" className="textarea-acc" name='correccion'
-                style={{ width: '64rem', color: '#000000' }} placeholder="Agregar Acción. . ." value={formData.correccion} onChange={handleFormDataChange} />
+                style={{ width: '72em', color: '#000000' }} placeholder="Agregar Acción. . ." value={formData.correccion} onChange={handleFormDataChange} />
               <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
               <textarea type="text" className="textarea-acc" name='causa'
-                style={{ width: '64rem', marginBottom: '20px', color: '#000000' }} placeholder="Agregar Causa. . ." value={formData.causa} onChange={handleFormDataChange} />
+                style={{ marginBottom: '20px', width:'72em' }} placeholder="Agregar Causa. . ." value={formData.causa} onChange={handleFormDataChange} />
             </div>
           </div>
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
           <div className='table-ish'>
             <table style={{ border: 'none' }}>

@@ -1,5 +1,6 @@
 const Usuarios = require('../models/usuarioSchema');
 const transporter = require('../emailConfig');
+const bcrypt = require('bcryptjs');
 
 
 // Controlador para registrar un nuevo usuario
@@ -117,11 +118,29 @@ const eliminarUsuario = async (req, res) => {
   }
 };
 
+const cambiarPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+    console.log('Aquiii', req.body)
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const usuario = await Usuarios.findByIdAndUpdate(req.params.id, { Contraseña: hashedPassword }, { new: true });
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    res.json({ message: 'Contraseña actualizada exitosamente' });
+  } catch (error) {
+    console.error('Error al actualizar la contraseña:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
 module.exports = {
   registroUsuario,
   obtenerUsuarios,
   obtenerUsuarioPorId,
   actualizarUsuario,
   eliminarUsuario,
-  obtenerUsuarioPorNombre
+  obtenerUsuarioPorNombre,
+  cambiarPassword
 };

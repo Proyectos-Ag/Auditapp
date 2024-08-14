@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './css/modal.css';
 
@@ -33,6 +33,20 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
 
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [areas, setAreas] = useState([]);
+
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/areas`);
+        setAreas(response.data);
+      } catch (error) {
+        console.error("Error al obtener las áreas", error);
+      }
+    };
+
+    fetchAreas();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -198,15 +212,9 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
           <label>Departamento:</label>
           <select name="Departamento" value={formData.Departamento} onChange={handleChange} required>
             <option value="">Seleccione una opción</option>
-            <option value="Administración">Administración</option>
-            <option value="Aseguramiento de calidad">Aseguramiento de calidad</option>
-            <option value="Gestión para la calidad">Gestión para la calidad</option>
-            <option value="Gestión para la productividad">Gestión para la productividad</option>
-            <option value="Ingeniería">Ingeniería</option>
-            <option value="Mantenimiento">Mantenimiento</option>
-            <option value="Planeación y Logística">Planeación y Logística</option>
-            <option value="Producción">Producción</option>
-            <option value="otro">Otro</option>
+            {areas.map(area => (
+                  <option key={area.departamento} value={area.departamento}>{area.departamento}</option>
+            ))}
           </select>
         </div>
         {renderCustomDepartamento()}

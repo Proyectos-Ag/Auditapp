@@ -44,11 +44,8 @@ const Datos = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [showOtherAreaInput] = useState(false);
   const [auditorLiderSeleccionado, setAuditorLiderSeleccionado] = useState('');
-  const [auditadosSeleccionados, setAuditadosSeleccionados] = useState([]);
+  const [auditadosSeleccionados, setAuditadosSeleccionados] = useState(false);
   const [equipoAuditorDisabled, setEquipoAuditorDisabled] = useState(false);
-  const filteredUsuarios = selectedDepartamento
-  ? usuarios.filter(usuario => usuario.Departamento === selectedDepartamento)
-  : usuarios;
 
   useEffect(() => {
     const fetchAreas = async () => {
@@ -266,7 +263,6 @@ const Datos = () => {
   const handleAuditorLiderChange = async (e) => {
     const { value } = e.target;
     setAuditorLiderSeleccionado(value);
-    
     // Obtener el correo del auditor líder
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombre/${encodeURIComponent(value)}`);
@@ -286,6 +282,29 @@ const Datos = () => {
       }));
     }
   };  
+
+  const handleAuditados = async (e) => {
+    const { value } = e.target;
+    setAuditadosSeleccionados(false);
+      if (!auditadosSeleccionados) {
+        // Obtener el correo del miembro del equipo auditor seleccionado
+        try {
+          const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombre/${encodeURIComponent(value)}`);
+          const email = response.data.Correo;
+          
+          // Actualizar el estado formData con el nuevo miembro y su correo
+          setFormData(prevFormData => ({
+            ...prevFormData,
+            Auditados: [
+              ...prevFormData.Auditados,
+              { Nombre: value, Correo: email }
+            ]
+          }));
+        } catch (error) {
+          console.error("Error al obtener el correo electrónico del miembro del equipo auditor", error);
+        }
+      }
+  };
   
   const handleEquipChange = async (e) => {
     const { value } = e.target;
@@ -334,6 +353,13 @@ const Datos = () => {
     });
   };
 
+  const handleAuditadosRemove = (auditado) => {
+    setFormData({
+      ...formData,
+      Auditados: formData.Auditados.filter(e => e !== auditado)
+    });
+  };
+
   const handleProgramChange = async (e) => {
     const { value } = e.target;
     const selectedProgram = programas.find(programa => programa.Nombre === value);
@@ -370,37 +396,6 @@ const Datos = () => {
     setFormStep(step);
   };
 
-  const handleAuditadosChange = (event) => {
-    const { value } = event.target;
-    setAuditadosSeleccionados((prevSeleccionados) => {
-      const newSeleccionados = prevSeleccionados.includes(value) 
-        ? prevSeleccionados 
-        : [...prevSeleccionados, value];
-  
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        Auditados: newSeleccionados,
-      }));
-  
-      return newSeleccionados;
-    });
-  };
-  
-  const handleAuditadoRemove = (auditado) => {
-    setAuditadosSeleccionados((prevSeleccionados) => {
-      const newSeleccionados = prevSeleccionados.filter((item) => item !== auditado);
-  
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        Auditados: newSeleccionados,
-      }));
-  
-      return newSeleccionados;
-    });
-  };
-   
-  
-  
   const handleProgramRemove = (program) => {
     setFormData({
       ...formData,
@@ -588,22 +583,23 @@ const Datos = () => {
                 id="Auditados"
                 name="Auditados"
                 value=""
-                onChange={handleAuditadosChange}
+                onChange={handleAuditados}
               >
                 <option value="">Seleccione...</option>
-                {filteredUsuarios.map((usuario) => (
-                  <option key={usuario._id} value={usuario.Nombre}>{usuario.Nombre}</option>
-                ))}
+                {usuarios && usuarios.filter(usuario => usuario.Departamento === selectedDepartamento).map(usuario => (
+            <option key={usuario._id} value={usuario.Nombre}>{usuario.Nombre}</option>
+          ))}
               </select>
             </div>
             <div className="selected-auditados">
-              {auditadosSeleccionados.map((auditado, index) => (
+              {formData.Auditados.map((auditado, index) => (
                 <div key={index} className="selected-auditado">
-                  {auditado}
-                  <button type="button" onClick={() => handleAuditadoRemove(auditado)} className="remove-button">X</button>
+                  {auditado.Nombre}
+                  <button type="button" onClick={() => handleAuditadosRemove(auditado)} className="remove-button">X</button>
                 </div>
               ))}
             </div>
+            
             </div>
             <div className="header-container-datos2">
             <div className="button-group-datos">

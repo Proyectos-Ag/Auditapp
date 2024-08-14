@@ -12,11 +12,49 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.duracion-bloque-repo h2 {
+.image-container-dia {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1rem auto 0 -0.8rem;
+    width: 79em;
+    height: 100%;
+    max-width: 80rem;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px 8px 0px 0px;
+    position: relative; 
+    z-index: 1;
+}
+
+.image-container2-dia {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: -4rem auto 1rem -0.8rem;
+    width: 79em;
+    height: 100%;
+    max-width: 80rem;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 0px 0px 8px 8px;
+    position: relative; 
+    z-index: 1;
+}
+
+.duracion-bloque-repo-dia h2 {
     margin: 0;
     padding: 10px 0;
     color: #ffffff;
     font-size: 18px;
     font-weight: bold;
     text-align: center;
+}
+
+.duracion-bloque-repo-dia {
+    margin-left: -0.5rem;
+    margin-bottom: 0.5em;
+    width: 81rem;
+    background-color: #00B096;
+    cursor: pointer;
 }

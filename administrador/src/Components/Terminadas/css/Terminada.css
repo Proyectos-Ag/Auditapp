@@ -1,30 +1,9 @@
-.btn-en-revision {
-    background-color: yellow;
-    color: black;
-}
-.btn-aprobado {
-    background-color: green;
-    color: white;
-}
-.btn-rechazado {
-    background-color: red;
-    color: white;
-}
-.btn-desconocido {
-    background-color: gray;
-    color: white;
-}
-
 .button-estado{
-    background-color: #055e99;
+    background-color: #02215a;
     color:#ffffff;
     border: none;
     cursor: pointer;
     border-radius: 10px;
     width: 80px;
     height: 40px;
-}
-
-.button-estado:hover{
-    background-color: #02375a;
 }

@@ -38,7 +38,7 @@ const CargaMasiva = () => {
       // Validación de campos requeridos
       const requiredFields = [
         'TipoAuditoria', 'FechaInicio', 'FechaFin', 'Duracion', 'Departamento',
-        'AreasAudi', 'Auditados', 'AuditorLider', 'AuditorLiderEmail', 'EquipoAuditor_Nombre', 'EquipoAuditor_Correo', 'Observador'
+        'AreasAudi', 'Auditados_Nombre', 'Auditados_Correo', 'AuditorLider', 'AuditorLiderEmail', 'EquipoAuditor_Nombre', 'EquipoAuditor_Correo', 'Observador'
       ];
 
       const mainData = jsonData[0];
@@ -75,7 +75,7 @@ const CargaMasiva = () => {
         Duracion: mainData.Duracion,
         Departamento: mainData.Departamento,
         AreasAudi: mainData.AreasAudi,
-        Auditados: mainData.Auditados,
+        Auditados: [],
         AuditorLider: mainData.AuditorLider,
         AuditorLiderEmail: mainData.AuditorLiderEmail,
         EquipoAuditor: [],
@@ -133,6 +133,14 @@ const CargaMasiva = () => {
           currentAudit.EquipoAuditor.push({
             Nombre: row.EquipoAuditor_Nombre,
             Correo: row.EquipoAuditor_Correo
+          });
+        }
+
+        // Procesar Auditados si está presente
+        if (row.Auditados_Nombre) {
+          currentAudit.Auditados.push({
+            Nombre: row.Auditados_Nombre,
+            Correo: row.Auditados_Correo
           });
         }
       });

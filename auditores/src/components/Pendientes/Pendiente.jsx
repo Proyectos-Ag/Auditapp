@@ -240,7 +240,8 @@ setPercentages(initialPercentages);
                     await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
                         programIdx,
                         observaciones,
-                        percentage
+                        percentage,
+                        usuario: userData.Nombre,
                     });
                 } catch (error) {
                     console.error('Error al actualizar los datos:', error);

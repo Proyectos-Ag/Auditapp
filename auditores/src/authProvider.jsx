@@ -11,6 +11,7 @@ const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('token');
         if (token) {
           const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/verifyToken`, { token });
+          console.log(response.data);
           const data = { ...response.data, token };
           setUserData(data);
           localStorage.setItem('userData', JSON.stringify(data));

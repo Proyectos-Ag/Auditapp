@@ -165,11 +165,12 @@ const Reporte = () => {
         });
     };
 
-    const actualizarEstadoADevuelto = async (id) => {
+    const actualizarEstadoADevuelto = async (id, AuditorLiderEmail) => {
         try {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
                 Estado: 'Devuelto',
-                Comentario: notas[id] || '' 
+                Comentario: notas[id] || '' ,
+                AuditorLiderEmail
             });
             obtenerDatos();
         } catch (error) {
@@ -177,14 +178,15 @@ const Reporte = () => {
         }
     };
 
-    const actualizarEstadoTerminada = async (id, puntuacionObtenida, confExternas, estatus, porcentajeTotal) => {
+    const actualizarEstadoTerminada = async (id, puntuacionObtenida, confExternas, estatus, porcentajeTotal, AuditorLiderEmail) => {
         try {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
                 Estado: 'Terminada',
                 PuntuacionObten: puntuacionObtenida,
                 PuntuacionConf: confExternas,
                 Estatus: estatus,
-                PorcentajeTotal: porcentajeTotal
+                PorcentajeTotal: porcentajeTotal,
+                AuditorLiderEmail
             });
             obtenerDatos();
         } catch (error) {
@@ -212,7 +214,7 @@ const Reporte = () => {
         setNotas(newNotas);
     };
        
-    const Rechazar = async (id) => {
+    const Rechazar = async (id, AuditorLiderEmail) => {
         Swal.fire({
           title: '¿Estás seguro de querer rechazar este reporte?',
           text: '¡El reporte será devuelto!',
@@ -224,12 +226,12 @@ const Reporte = () => {
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
-            actualizarEstadoADevuelto(id);
+            actualizarEstadoADevuelto(id, AuditorLiderEmail);
           }
         });
       };
 
-      const Aprobar = async (id, puntuacionObtenida, confExternas, estatus, porcentajeTotal) => {
+      const Aprobar = async (id, puntuacionObtenida, confExternas, estatus, porcentajeTotal, AuditorLiderEmail) => {
         Swal.fire({
           title: '¿Estás seguro de querer aprobar este reporte?',
           text: '¡Será enviado al auditado!',
@@ -241,10 +243,11 @@ const Reporte = () => {
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
-            actualizarEstadoTerminada(id, puntuacionObtenida,confExternas, estatus, porcentajeTotal);
+            actualizarEstadoTerminada(id, puntuacionObtenida,confExternas, estatus, porcentajeTotal, AuditorLiderEmail);
           }
         });
-      };  
+      };
+
 
     return (
         <div className='espacio-repo'>
@@ -252,11 +255,15 @@ const Reporte = () => {
                 <Navigation />
             </div>
             
+            
             <div className="datos-container-repo">
-
             <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Revisión de Reporte</h1>
-       
-                <div className="form-group-datos">
+
+              {datos.length === 0?(
+                <div className='aviso'>No hay reportes por revisar... 🏜️</div>
+              ):('')}
+
+                <div className="form-group-datos"> 
                 {datos.map((dato, periodIdx) => {
                     let conteo = {};
                     let total = 0;
@@ -303,8 +310,8 @@ const Reporte = () => {
                                     <button onClick={() => toggleTextAreaVisibility(dato._id)}>
                                             {visibleTextAreas[dato._id] ? 'Ocultar Nota' : 'Escribir Nota'}
                                         </button>
-                                        <button className='boton-rechazar' onClick={() => Rechazar(dato._id)}>Rechazar</button>
-                                        <button onClick={() => Aprobar(dato._id, PuntuacionObtenida, confExternas,estatus, porcentajeTotal)}>Aprobar</button>
+                                        <button className='boton-rechazar' onClick={() => Rechazar(dato._id, dato.AuditorLiderEmail)}>Rechazar</button>
+                                        <button onClick={() => Aprobar(dato._id, PuntuacionObtenida, confExternas,estatus, porcentajeTotal, dato.AuditorLiderEmail)}>Aprobar</button>
                                     </div>     
                                     {visibleTextAreas[dato._id] && (
                                         <textarea
@@ -436,7 +443,12 @@ const Reporte = () => {
                                                             )}
                                                     </td>
                                                     <td>
-                                                        <div>{dato.Auditados}</div>
+                                                    <div>
+                                                        {dato.Auditados.map((audita, audIdx) => (
+                                                            <div key={audIdx}>
+                                                            {audita.Nombre}
+                                                            </div>
+                                                        ))}</div>
                                                     </td>
                                                 </tr>
                                             </thead>
@@ -521,7 +533,9 @@ const Reporte = () => {
                 </div>
             </div>
         </div>
+        
     );
+    
 };
 
 export default Reporte;

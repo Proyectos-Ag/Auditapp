@@ -72,7 +72,8 @@ const Terminada = () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
                 const dataFiltrada = response.data.filter(item => 
-                item.estado === 'En revisión' ||  item.estado === 'Revisado' ||  item.estado === 'Rechazado' || item.estado === 'Aprobado' ) ;
+                item.estado === 'En revisión' ||  item.estado === 'Revisado' ||  item.estado === 'Rechazado' ||
+                 item.estado === 'Aprobado' || item.estado === 'Asignado' ) ;
                 setIshikawas(dataFiltrada);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -151,9 +152,28 @@ const Terminada = () => {
         });
       };
 
-    const navIshikawa = (_id, id) => {
-        navigate(`/ishikawa/${_id}/${id}`);
-    }; 
+      const getButtonBackgroundColor = (estado) => {
+        let backgroundColor;
+        if (estado === 'Asignado') {
+            backgroundColor = '#055e99'; 
+        } else if (estado === 'En revisión') {
+            backgroundColor = '#ffe817'; 
+        } else if (estado === 'Rechazado') {
+            backgroundColor = '#ff1515'; 
+        } else if (estado === 'Aprobado') {
+            backgroundColor = '#25d1dd'; 
+        } else if (estado === 'Revisado') {
+            backgroundColor = '#25f71e'; 
+        } else {
+            backgroundColor = '#585858'; // Por defecto
+        }
+        return backgroundColor;
+    };
+    
+
+    const navIshikawa = (_id, id, nombre) => {
+        navigate(`/ishikawa/${_id}/${id}/${nombre}`);
+    };
 
     return (
         <div className='espacio-repo'>
@@ -162,6 +182,10 @@ const Terminada = () => {
             </div>
             <div className="datos-container-repo">
             <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Revisión de Ishikawa</h1>
+            {datos.length === 0?(
+                <div className='aviso'>No hay ishikawas por revisar... 🏜️</div>
+              ):('')}
+
                 <div className="form-group-datos">
                     {datos.map((dato, periodIdx) => {
                         let conteo = {};
@@ -337,7 +361,13 @@ const Terminada = () => {
                                                             )}
                                                         </td>
                                                         <td>
-                                                            <div>{dato.Auditados}</div>
+                                                        <div>
+                                                        {dato.Auditados.map((audita, audIdx) => (
+                                                            <div key={audIdx}>
+                                                            {audita.Nombre}
+                                                            </div>
+                                                        ))}
+                                                        </div>
                                                         </td>
                                                     </tr>
                                                 </tbody>
@@ -371,7 +401,7 @@ const Terminada = () => {
     
                                                                 if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
                                                                     const ishikawa = ishikawas.find(ish => {
-                                                                        return ish.idReq === desc.ID && ish.idRep === dato._id;
+                                                                        return ish.idReq === desc.ID && ish.idRep === dato._id && ish.proName === programa.Nombre;
                                                                     });
 
                                                                     const ajustarFecha = (fechaString) => {
@@ -411,7 +441,14 @@ const Terminada = () => {
 
                                                                             <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
                                                                             <td>
-                                                                                <button className='button-estado' onClick={() => navIshikawa(dato._id, desc.ID)}>{ishikawa ? ishikawa.estado : 'Pendiente'}</button>
+                                                                                <button 
+                                                                                    className='button-estado'
+                                                                                    style={{ backgroundColor: ishikawa ? getButtonBackgroundColor(ishikawa.estado) : '#6e6e6e' }}
+                                                                                    onClick={() => navIshikawa(dato._id, desc.ID, programa.Nombre)}
+                                                                                >
+                                                                                    {ishikawa ? ishikawa.estado : 'Pendiente'}
+                                                                                </button>
+                                                                                <div>{ishikawa ? ishikawa.auditado : ''}</div>
                                                                             </td>
                                                                         </tr>
                                                                     );

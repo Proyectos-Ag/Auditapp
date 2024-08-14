@@ -18,19 +18,32 @@ const ReporteF = () => {
     useEffect(() => {
         const obtenerDatos = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+                // Obtener datos de Ishikawa
+                const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+                const ishikawasFiltradas = responseIshikawa.data.filter(item =>
+                    item.estado === 'En revisión' || item.estado === 'Aprobado' ||
+                    item.estado === 'Revisado' || item.estado === 'Rechazado' ||
+                    item.estado === 'Asignado' || item.estado === 'Pendiente'
+                );
+                setIshikawas(ishikawasFiltradas);
+    
+                // Obtener datos principales
+                const responseDatos = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
                 if (userData && userData.Correo) {
-                    const datosFiltrados = response.data.filter((dato) => 
-                        dato.Auditados.some(auditado => auditado === userData.Nombre) && dato.Estado === "Terminada"
-                    );
-        
+                    const datosFiltrados = responseDatos.data.filter((dato) => {
+                        const cumpleConAuditado = ishikawasFiltradas.some(ishikawa => ishikawa.auditado === userData.Nombre
+                        );
+                        return dato.Auditados.some(auditado => (auditado.Nombre === userData.Nombre || cumpleConAuditado)) && 
+                               dato.Estado === "Terminada";
+                    });
+    
                     // Ordenar por FechaElaboracion del más reciente al más antiguo
                     datosFiltrados.sort((a, b) => {
                         const fechaElaboracionA = new Date(a.FechaElaboracion);
                         const fechaElaboracionB = new Date(b.FechaElaboracion);
                         return fechaElaboracionB - fechaElaboracionA;
                     });
-        
+    
                     let conteo = {};
                     let total = 0;
                     datosFiltrados.forEach(dato => {
@@ -46,11 +59,11 @@ const ReporteF = () => {
                             });
                         });
                     });
-        
+    
                     setDatos(datosFiltrados);
                     setCriteriosConteo(conteo);
                     setTotalCriterios(total);
-        
+    
                     // Ocultar todas las duraciones excepto la más reciente por defecto
                     const duracionesOcultas = datosFiltrados.slice(1).map(dato => dato.Duracion);
                     setHiddenDurations(duracionesOcultas);
@@ -60,25 +73,11 @@ const ReporteF = () => {
             } catch (error) {
                 console.error('Error al obtener los datos:', error);
             }
-        };        
-
-        obtenerDatos();
-    }, [userData]);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-                const dataFiltrada = response.data.filter(item => 
-                item.estado === 'En revisión' || item.estado === 'Aprobado' ||  item.estado === 'Revisado' ||  
-                item.estado === 'Rechazado' || item.estado === 'Asignado' || item.estado === 'Pendiente' ) ;
-                setIshikawas(dataFiltrada);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
         };
-        fetchData();
-    }, []);
+    
+        obtenerDatos();
+    }, [userData]);  // Ejecutar cada vez que `userData` cambie
+    
 
     const toggleDuration = (duration) => {
         setHiddenDurations(hiddenDurations.includes(duration) ?
@@ -120,8 +119,8 @@ const ReporteF = () => {
         });
     };
 
-    const navIshikawa = (_id, id) => {
-        navigate(`/ishikawa/${_id}/${id}`);
+    const navIshikawa = (_id, id, nombre) => {
+        navigate(`/ishikawa/${_id}/${id}/${nombre}`);
     };    
 
     return (
@@ -300,7 +299,13 @@ const ReporteF = () => {
                                                             )}
                                                     </td>
                                                     <td>
-                                                        <div>{dato.Auditados}</div>
+                                                    <div>
+                                                        {dato.Auditados.map((audita, audIdx) => (
+                                                            <div key={audIdx}>
+                                                            {audita.Nombre}
+                                                            </div>
+                                                        ))}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             </thead>
@@ -328,65 +333,72 @@ const ReporteF = () => {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {dato.Programa.map((programa, programIdx) =>
-                                                            programa.Descripcion.map((desc, descIdx) => {
-                                                                const base64Prefix = 'data:image/png;base64,';
-                                                                const isBase64Image = desc.Hallazgo.includes(base64Prefix);
-    
-                                                                if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
-                                                                    const ishikawa = ishikawas.find(ish => {
-                                                                        return ish.idReq === desc.ID && ish.idRep === dato._id;
-                                                                    });
+                                                    {dato.Programa.map((programa, programIdx) =>
+                                                        programa.Descripcion.filter(desc => {
 
-                                                                    const ajustarFecha = (fechaString) => {
-                                                                        const fecha = new Date(fechaString);
-                                                                        fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset());
-                                                                        return fecha.toLocaleDateString('es-ES');
-                                                                    };
-    
-                                                                    return (
-                                                                        <tr key={descIdx}>
-                                                                            <td>{desc.ID}</td>
-                                                                            <td className='alingR2'>{programa.Nombre}</td>
-                                                                            <td className='alingR'>{desc.Requisito}</td>
-                                                                            <td>{desc.Criterio}</td>
-                                                                            <td>{desc.Observacion}</td>
-                                                                            <td key={descIdx} className='alingR'>
-                                                                            {desc.Hallazgo ? (
-                                                                                isBase64Image ? (
-                                                                                    <img
-                                                                                        src={desc.Hallazgo}
-                                                                                        alt="Evidencia"
-                                                                                        className="hallazgo-imagen"
-                                                                                    />
-                                                                                ) : (
-                                                                                    <span>{desc.Hallazgo}</span>
-                                                                                )
-                                                                            ) : null}
-                                                                            </td>
-                                                                            <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].actividad : '') : ''}</td>
-                                                                            <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
-                                                                            <td>
-                                                                                {ishikawa ? (
-                                                                                    ishikawa.actividades.length > 0 && ishikawa.actividades[0].fechaCompromiso.length > 0 ? 
-                                                                                        ajustarFecha(ishikawa.actividades[0].fechaCompromiso.slice(-1)[0]) : 
-                                                                                        ''
-                                                                                ) : ''}
-                                                                            </td>
-                                                                            <td>
-                                                                                {ishikawa && userData.Nombre === ishikawa.auditado ? (
-                                                                                    <button className="button-estado" onClick={() => navIshikawa(dato._id, desc.ID)}>
-                                                                                    {ishikawa.estado || 'Pendiente'}
-                                                                                    </button>
-                                                                                ) : null}
-                                                                                </td>
-                                                                        </tr>
-                                                                    );
-                                                                } else {
-                                                                    return null;
-                                                                }
-                                                            })
-                                                        )}
+                                                        if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
+                                                            const ishikawa = ishikawas.find(ish => {
+                                                            return ish.idReq === desc.ID && ish.idRep === dato._id && ish.proName === programa.Nombre;
+                                                            });
+
+                                                            // Si ishikawa existe y el nombre de usuario coincide con ishikawa.auditado, la fila será incluida
+                                                            return ishikawa && userData.Nombre === ishikawa.auditado;
+                                                        }
+                                                        return false;
+                                                        }).map((desc, descIdx) => {
+                                                        const base64Prefix = 'data:image/png;base64,';
+                                                        const isBase64Image = desc.Hallazgo.includes(base64Prefix);
+
+                                                        const ishikawa = ishikawas.find(ish => {
+                                                            return ish.idReq === desc.ID && ish.idRep === dato._id && ish.proName === programa.Nombre;
+                                                        });
+
+                                                        const ajustarFecha = (fechaString) => {
+                                                            const fecha = new Date(fechaString);
+                                                            fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset());
+                                                            return fecha.toLocaleDateString('es-ES');
+                                                        };
+
+                                                        return (
+                                                            <tr key={descIdx}>
+                                                            <td>{desc.ID}</td>
+                                                            <td className='alingR2'>{programa.Nombre}</td>
+                                                            <td className='alingR'>{desc.Requisito}</td>
+                                                            <td>{desc.Criterio}</td>
+                                                            <td>{desc.Observacion}</td>
+                                                            <td key={descIdx} className='alingR'>
+                                                                {desc.Hallazgo ? (
+                                                                isBase64Image ? (
+                                                                    <img
+                                                                    src={desc.Hallazgo}
+                                                                    alt="Evidencia"
+                                                                    className="hallazgo-imagen"
+                                                                    />
+                                                                ) : (
+                                                                    <span>{desc.Hallazgo}</span>
+                                                                )
+                                                                ) : null}
+                                                            </td>
+                                                            <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].actividad : '') : ''}</td>
+                                                            <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
+                                                            <td>
+                                                                {ishikawa ? (
+                                                                ishikawa.actividades.length > 0 && ishikawa.actividades[0].fechaCompromiso.length > 0 ? 
+                                                                    ajustarFecha(ishikawa.actividades[0].fechaCompromiso.slice(-1)[0]) : 
+                                                                    ''
+                                                                ) : ''}
+                                                            </td>
+                                                            <td>
+                                                                {ishikawa && userData.Nombre === ishikawa.auditado ? (
+                                                                <button className="button-estado" onClick={() => navIshikawa(dato._id, desc.ID, programa.Nombre)}>
+                                                                    {ishikawa.estado || 'Pendiente'}
+                                                                </button>
+                                                                ) : null}
+                                                            </td>
+                                                            </tr>
+                                                        );
+                                                        })
+                                                    )}
                                                     </tbody>
                                                 </table>
                                             </div>

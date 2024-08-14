@@ -19,6 +19,7 @@ import Departaments from './Components/Departaments/Departaments';
 import Diagrama from './Components/DiagramaRe/Diagrama';
 import CargaMasiva from './Components/DatosGenerales/CargaMasiva';
 import Estadisticas from './Components/Estadisticas/Estadisticas';
+import ProtectedRoute from './ProtectedRoute';
 
 export const UserContext = createContext(null);
 
@@ -29,22 +30,22 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Login />} /> 
-          <Route path="/datos" element={<Datos/>}/>
-          <Route path="/programa" element={<Programas/>}/>
-          <Route path="/usuarios" element={<Usuarios />} />
-          <Route path="/home" element={<Inicio/>}/>
-          <Route path="/usuariosRegistrados" element={<UsuariosRegis />} /> 
-          <Route path="/revicion" element={<Revicion />} />
-          <Route path="/terminada" element={<Terminada />} />
-          <Route path="/ishikawa" element={<Ishikawa/>} />
-          <Route path="/ishikawa/:_id/:id" element={<IshikawaRev/>}/>
-          <Route path="/finalizadas" element={<Finalizada/>}/>
-          <Route path="/auditcalendar" element={<Calendarioss />} />
-          <Route path="/calendario" element={<Calendarios />} />
-          <Route path="/departamento" element={<Departaments />} />
-          <Route path="/diagrama" element={<Diagrama />} />
-          <Route path="/carga" element={<CargaMasiva />} />
-          <Route path="/estadisticas" element={<Estadisticas />} />
+          <Route path="/datos" element={<ProtectedRoute><Datos/></ProtectedRoute>}/>
+          <Route path="/programa" element={<ProtectedRoute><Programas/></ProtectedRoute>}/>
+          <Route path="/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
+          <Route path="/home" element={<ProtectedRoute><Inicio/></ProtectedRoute>}/>
+          <Route path="/usuariosRegistrados" element={<ProtectedRoute><UsuariosRegis /></ProtectedRoute>} /> 
+          <Route path="/revicion" element={<ProtectedRoute><Revicion /></ProtectedRoute>} />
+          <Route path="/terminada" element={<ProtectedRoute><Terminada /></ProtectedRoute>} />
+          <Route path="/ishikawa" element={<ProtectedRoute><Ishikawa/></ProtectedRoute>} />
+          <Route path="/ishikawa/:_id/:id/:nombre" element={<ProtectedRoute><IshikawaRev/></ProtectedRoute>}/>
+          <Route path="/finalizadas" element={<ProtectedRoute><Finalizada/></ProtectedRoute>}/>
+          <Route path="/auditcalendar" element={<ProtectedRoute><Calendarioss/></ProtectedRoute>} />
+          <Route path="/calendario" element={<ProtectedRoute><Calendarios /></ProtectedRoute>} />
+          <Route path="/departamento" element={<ProtectedRoute><Departaments /></ProtectedRoute>} />
+          <Route path="/diagrama" element={<ProtectedRoute><Diagrama /></ProtectedRoute>} />
+          <Route path="/carga" element={<ProtectedRoute><CargaMasiva /></ProtectedRoute>} />
+          <Route path="/estadisticas" element={<ProtectedRoute><Estadisticas /></ProtectedRoute>} />
         </Routes>
       </Router>
     </div>

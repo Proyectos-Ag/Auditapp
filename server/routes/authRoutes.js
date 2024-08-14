@@ -25,7 +25,10 @@ router.post('/verifyToken', async (req, res) => {
     return res.status(200).json({
       Correo: usuario.Correo,
       Nombre: usuario.Nombre,
-      TipoUsuario: usuario.TipoUsuario
+      TipoUsuario: usuario.TipoUsuario,
+      Puesto: usuario.Puesto,
+      Departamento: usuario.Departamento,
+      ID:usuario.id
     });
   } catch (err) {
     // El token no es válido o hubo otro error

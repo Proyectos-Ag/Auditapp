@@ -15,22 +15,23 @@ const IshikawaRev = () => {
     const [ishikawas, setIshikawas] = useState([]);
     const [programa, setPrograma] = useState(null);
     const [filteredIshikawas, setFilteredIshikawas] = useState([]);
-    const { _id, id } = useParams();
+    const { _id, id, nombre} = useParams();
     const [valorSeleccionado, setValorSeleccionado] = useState('');
     const [datos, setDatos] = useState(null);
     const [mensaje, setMensaje] = useState('');
     const [notaRechazo, setNotaRechazo] = useState('');
     const [rechazo,  setRechazo] = useState([]);
     const [revisado, setRevisado] = useState([]);
+    const [usuarios, setUsuarios] = useState([]);
     const [aprobado,  setAprobado] = useState([]);
     const [,setAuditados] = useState([]);
-    const [showPart, setShowPart] = useState(false);
+    const [showPart, setShowPart] = useState(true);
     const [showReprogramar, setShowReprogramar] = useState(false);
     const [showNotaRechazo, setShowNotaRechazo] = useState(false);
     const [tempFechaCompromiso, setTempFechaCompromiso] = useState('');
-    const [actividades, setActividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: [] }]);
+    const [actividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: [] }]);
     const [correcciones, setCorrecciones] = useState([{ actividad: '', responsable: '', fechaCompromiso: [], cerrada: '' }]);
-    const [nuevaCorreccion, setNuevaCorreccion] = useState({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
+    const [nuevaCorreccion, setNuevaCorreccion] = useState({actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
 
     useEffect(() => {
         const obtenerDatos = async () => {
@@ -40,7 +41,7 @@ const IshikawaRev = () => {
               const datosFiltrados = response.data.find(dato => dato._id === _id);
               if (datosFiltrados) {
                 const programaEncontrado = datosFiltrados.Programa.find(prog => 
-                  prog.Descripcion.some(desc => desc.ID === id)
+                  prog.Descripcion.some(desc => desc.ID === id && prog.Nombre === nombre)
                 );
                   setDatos(datosFiltrados);
                   setPrograma(programaEncontrado);
@@ -52,7 +53,7 @@ const IshikawaRev = () => {
         };
       
         obtenerDatos();
-      }, [userData, _id, id]); 
+      }, [userData, _id, id, nombre]); 
       
       useEffect(() => {
         if (datos && datos.Auditados) {
@@ -90,7 +91,7 @@ const IshikawaRev = () => {
     
     useEffect(() => {
         if (ishikawas.length > 0) {
-            const nuevosFiltrados = ishikawas.filter(({ idRep, idReq }) => idRep === _id && idReq === id);
+            const nuevosFiltrados = ishikawas.filter(({ idRep, idReq, proName }) => idRep === _id && idReq === id && proName === nombre);
             setFilteredIshikawas(nuevosFiltrados);
             if (nuevosFiltrados.length === 0) {
                 setMensaje('No hay nada por aquí.');
@@ -98,7 +99,7 @@ const IshikawaRev = () => {
                 setMensaje('');
             }
         }
-    }, [ishikawas, _id, id]); 
+    }, [ishikawas, _id, id, nombre]); 
 
     useEffect(() => {
         const simulateInputChange = () => {
@@ -115,35 +116,95 @@ const IshikawaRev = () => {
     
         simulateInputChange(); // Ejecutar la función al cargar el componente
     
-      }, [ishikawas]);   
+      }, [ishikawas]);  
+      
+      useEffect(() => {
+        const fetchUsuarios = async () => {
+          try {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
+            setUsuarios(response.data);
+          } catch (error) {
+            console.error("Error al obtener los usuarios", error);
+          }
+        };
+      
+        fetchUsuarios();
+      }, []);
 
       const handlePrintPDF = () => {
-        const input = document.getElementById('pdf-content');
-        html2canvas(input)
-            .then((canvas) => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('landscape', 'cm', 'letter'); // Modo horizontal, tamaño carta
-                const imgWidth = pdf.internal.pageSize.getWidth();
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                let heightLeft = imgHeight;
-                let position = 0;
-    
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pdf.internal.pageSize.getHeight();
-    
-                while (heightLeft > 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pdf.internal.pageSize.getHeight();
-                }
-    
-                pdf.save("diagrama_ishikawa.pdf");
-            })
-            .catch((error) => {
-                console.error('Error generating PDF:', error);
-            });
-    };
+        const showLoading = () => {
+          document.getElementById('loading-overlay').style.display = 'flex';
+        };
+      
+        const hideLoading = () => {
+          document.getElementById('loading-overlay').style.display = 'none';
+        };
+      
+        // Mostrar el mensaje de carga
+        showLoading();
+      
+        // Obtener los elementos individuales que se desean imprimir en páginas separadas
+        const part1 = document.getElementById('pdf-content-part1');
+        const part2 = document.getElementById('pdf-content-part2');
+      
+        const convertTextAreasToDivs = (element) => {
+          const textareas = element.querySelectorAll('textarea');
+      
+          textareas.forEach((textarea) => {
+            // Crear un nuevo elemento div
+            const div = document.createElement('div');
+            div.textContent = textarea.value;
+      
+            // Copiar clases
+            div.className = textarea.className;
+      
+            // Copiar estilos en línea
+            div.style.cssText = textarea.style.cssText;
+      
+            // Reemplazar el textarea con el div
+            textarea.parentNode.replaceChild(div, textarea);
+          });
+        };
+      
+        // Función para convertir un elemento en una imagen y añadirla al PDF
+        const addPartToPDF = (element, pdf, isLastPage) => {
+          convertTextAreasToDivs(element); // Convertir textareas a divs antes de capturar
+      
+          return html2canvas(element, {
+            scale: 2.5, // Ajusta la escala para mejorar la resolución
+            useCORS: true, // Permitir CORS si se necesitan recursos externos
+          }).then((canvas) => {
+            const imgData = canvas.toDataURL('image/jpeg', 0.8); // Usar JPEG con calidad del 80%
+            const imgWidth = pdf.internal.pageSize.getWidth();
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+            const marginX = (pdf.internal.pageSize.getWidth() - imgWidth) / 2;
+            const marginY = (pdf.internal.pageSize.getHeight() - imgHeight) / 6;
+      
+            pdf.addImage(imgData, 'JPEG', marginX, marginY, imgWidth, imgHeight, undefined, 'FAST'); // Usa compresión rápida
+      
+            if (!isLastPage) {
+              pdf.addPage(); // Añadir nueva página si no es la última parte
+            }
+          });
+        };
+      
+        // Crear un nuevo documento PDF
+        const pdf = new jsPDF('landscape', 'cm', 'letter');
+      
+        // Añadir las partes al PDF
+        addPartToPDF(part1, pdf, false) // Añadir primera parte
+          .then(() => addPartToPDF(part2, pdf, true)) // Añadir segunda parte y guardar
+          .then(() => {
+            pdf.save("diagrama_ishikawa.pdf");
+            hideLoading(); // Ocultar el mensaje de carga después de guardar
+          })
+          .catch((error) => {
+            console.error('Error generating PDF:', error);
+            hideLoading(); // Asegurar que el mensaje de carga se oculta incluso si hay un error
+          });
+      };
+      
 
     const handleCorreccionChange = (index, field, value) => {
         const nuevasCorrecciones = [...correcciones];
@@ -304,24 +365,12 @@ const IshikawaRev = () => {
         setTempFechaCompromiso(value);
     };
 
-    const handleActividadChange = (index, field, value) => {
-        const nuevasActividades = [...actividades];
-    
-        if (field === 'fechaCompromiso') {
-            nuevasActividades[index][field] = [...nuevasActividades[index][field], value];
-        } else {
-            nuevasActividades[index][field] = value;
-        }
-    
-        setActividades(nuevasActividades);
-    };
-
     const handleSave = async () => {
-
         try {
             const data = {
                 idRep: _id,
                 idReq: id,
+                proName: nombre,
                 fecha: '',
                 auditado: valorSeleccionado,
                 problema: '',
@@ -406,15 +455,15 @@ const IshikawaRev = () => {
         // Define el tamaño de fuente según el rango de caracteres
         let fontSize;
         if (value.length > 125) {
-          fontSize = '10.3px'; // Menos de 78 caracteres
+          fontSize = '10.3px';
         } else if (value.length > 100) {
-          fontSize = '11px'; // Menos de 62 caracteres
+          fontSize = '11px'; 
         } else if (value.length > 88) {
-          fontSize = '12px'; // Menos de 62 caracteres
+          fontSize = '12px'; 
         } else if (value.length > 78) {
-          fontSize = '13px'; // Menos de 62 caracteres
+          fontSize = '13px'; 
         } else if (value.length > 65) {
-          fontSize = '14px'; // Menos de 62 caracteres
+          fontSize = '14px';
         } else {
           fontSize = '15px'; // Por defecto
         }
@@ -432,14 +481,21 @@ const IshikawaRev = () => {
         setValorSeleccionado(event.target.value);
       };
 
+
     return (
-        <div id="pdf-content">
         <div>
             <div style={{ position: 'absolute', top: 0, left: 0 }}>
                 <Navigation />
             </div>
             <div>
-            
+
+            {/*Mensaje de generacion*/}
+            <div id="loading-overlay" style={{display:'none'}}>
+            <div class="loading-content">
+                Generando archivo PDF...
+            </div>
+            </div>
+
             {(ishikawas.length === 0 || mensaje) && <div className="mensaje-error">
                 <div className='select-ish'>
                 {rechazo.map((ishikawa, asig) => (
@@ -449,15 +505,9 @@ const IshikawaRev = () => {
                 ))}
                 <select onChange={handleSelectChangeAud} value={valorSeleccionado}>
                 <option value="">Seleccione...</option>
-                    {datos?.Auditados?.length > 0 ? (
-                    datos.Auditados.map((auditado, index) => (
-                        <option key={index} value={auditado}>
-                        {auditado}
-                        </option>
-                    ))
-                    ) : (
-                    <option>Consultando. . .</option>
-                    )}
+                {usuarios && usuarios.map(usuario => (
+            <option key={usuario._id} value={usuario.Nombre}>{usuario.Nombre}</option>
+                ))}
                 </select>
                 <button onClick={Asignar}>Asignar</button>
             </div>
@@ -466,7 +516,7 @@ const IshikawaRev = () => {
                 <div style={{display:'flex',fontSize:'100px', justifyContent:'center'}}>🏝️</div></div>
                 </div>}
                 {filteredIshikawas.map((ishikawa, index) => (
-                <div key={index} className="image-container">
+                <div key={index}>
                     {ishikawa.estado === 'En revisión' && (
                         <>
                             {showNotaRechazo && (
@@ -488,18 +538,19 @@ const IshikawaRev = () => {
                                 <button onClick={Rechazar} className='boton-rechazar' >Rechazar</button>
                                 <button onClick={Aprobar} >Aprobar</button>
                             </div>
-                        </>
+                        </> 
                     )}
-                    <button onClick={handlePrintPDF}>Guardar en PDF</button>
+                    <button className='button-pdf-imp' onClick={handlePrintPDF}>Guardar en PDF</button>
+                    <div id='pdf-content-part1' className="image-container">
                     <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
                     <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
                     <div className='posicion-en'>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <h2 style={{ marginLeft: '56rem', marginRight: '10px' }}>Problema: </h2>
-                        <div style={{ width: '900px', fontSize: '20px' }}>{ishikawa.problema}</div>
+                        <h2 style={{ marginLeft: '45rem', marginRight: '10px' }}>Problema: </h2>
+                        <div style={{ width: '700px', fontSize: '20px' }}>{ishikawa.problema}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <h2 style={{ marginLeft: '56rem', marginRight: '10px' }}>Afectación: </h2>
+                        <h2 style={{ marginLeft: '45rem', marginRight: '10px' }}>Afectación: </h2>
                         <h3>{id} {programa?.Nombre}</h3>
                     </div>
                     </div>
@@ -544,30 +595,31 @@ const IshikawaRev = () => {
                         <textarea className="text-area" name='text15' value={item.text15}
                             style={{ top: '39rem', left: '32.8rem' }} disabled></textarea>
                         <textarea className="text-area"
-                            style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} value={item.problema}></textarea>
+                            style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} value={ishikawa.problema? ishikawa.problema : item.problema}></textarea>
                         </div>
                     ))}
                     </div>
-                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
                 
-                    <div className='posicion-bo'>
+                    <div className='button-pasti'>
                     <div className='cont-part'>
                   <button className='button-part' onClick={(e) => {
                       e.preventDefault();
                       setShowPart(!showPart)
                     }}>
-                    <span class="material-symbols-outlined" style={{color:'#ffffff', fontSize:'33px'}}>
-                      attribution
-                      </span>
+                    ⚇
                   </button>
                   {showPart && (
                   <div className='part-div'>{ishikawa.participantes}</div>
                     )}
                   </div>
+                  </div>
+                  </div>
+                  <div id='pdf-content-part2' className="image-container2">
+                  <div className='posicion-bo'>
                     <h3>No conformidad:</h3>
-                    <div style={{ fontSize: '20px', width: '55em', textAlign: 'justify' }}>{ishikawa.requisito}</div>
+                    <div style={{ width: '70em', textAlign: 'justify' }}>{ishikawa.requisito}</div>
                     <h3>Hallazgo:</h3>
-                    <div className='hallazgo-container'>
+                    <div style={{ width: '70em', textAlign: 'justify' }}>
                         <div>{ishikawa.hallazgo}</div>
                     </div>
                     <h3>Acción inmediata o corrección: </h3>
@@ -587,22 +639,12 @@ const IshikawaRev = () => {
                         <tbody>
                         {ishikawa.actividades.map((actividad, i) => (
                             <tr key={i}>
-                            <td>
-                            <textarea
-                            className='table-input'
-                            type="text"
-                            value={actividad.actividad}
-                            onChange={(e) => handleActividadChange(index, 'actividad', e.target.value)}
-                            required
-                            />
+                            <td style={{fontSize:'12px',width: '34em', height: 'auto', textAlign:'justify'}}>
+                            {actividad.actividad}
                             </td>
-                            <td><textarea
-                            className='table-input'
-                            type="text"
-                            value={actividad.responsable}
-                            onChange={(e) => handleActividadChange(index, 'responsable', e.target.value)}
-                            required
-                        /></td>
+                            <td style={{fontSize:'12px',width: '34em', height: 'auto', textAlign:'justify'}}>
+                            {actividad.responsable}
+                            </td>
                             <td >
                                 <div className='td-fechas'>
                                 <select
@@ -740,11 +782,12 @@ const IshikawaRev = () => {
                     </form>
                     </div>
                 </div>
+                </div>
                 ))}
             </div>
             </div>
-        </div>
     );
+
 };
 
 export default IshikawaRev;

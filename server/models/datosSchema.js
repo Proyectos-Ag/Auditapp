@@ -19,6 +19,11 @@ const EquipoSchema = new mongoose.Schema({
   Correo: { type: String, required: true }
 });
 
+const AuditadosSchema = new mongoose.Schema({
+  Nombre: { type: String, required: true },
+  Correo: { type: String, required: true }
+});
+
 const DatosSchema = new mongoose.Schema({
   TipoAuditoria: { type: String, required: true },
   FechaInicio: { type: String, required: true },
@@ -26,7 +31,7 @@ const DatosSchema = new mongoose.Schema({
   Duracion: { type: String, required: true },
   Departamento: { type: String, required: true },
   AreasAudi: { type: [String], required: true },
-  Auditados: { type: [String], required: true },
+  Auditados: [AuditadosSchema],
   AuditorLider: { type: String, required: true },
   Objetivo: {type: String},
   AuditorLiderEmail: { type: String, required: true },

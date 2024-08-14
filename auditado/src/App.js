@@ -5,8 +5,10 @@ import Login from './Components/Login/LoginForm';
 import Inicio from './Components/Home/Inicio';
 import Reporte from './Components/ReporteF/ReporteF';
 import AuthProvider from './AuthProvider';
+import ProtectedRoute from './ProtectedRoute';
 import Ishikawa from './Components/Ishikawa/Ishikawa';
 import Diagrama from './Components/DiagramaRe/Diagrama';
+import Informacion from './Components/Informacion/Informacion';
 
 export const UserContext = createContext(null);
 
@@ -17,10 +19,11 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Login />} /> 
-          <Route path="/reporte" element={<Reporte/>}/>
-          <Route path="/home" element={<Inicio/>}/>
-          <Route path="/ishikawa/:_id/:id" element={<Ishikawa/>}/>
-          <Route path="/diagrama" element={<Diagrama/>}/>
+          <Route path="/reporte" element={<ProtectedRoute><Reporte/></ProtectedRoute>}/>
+          <Route path="/home" element={<ProtectedRoute><Inicio/></ProtectedRoute>}/>
+          <Route path="/ishikawa/:_id/:id/:nombre" element={<ProtectedRoute><Ishikawa/></ProtectedRoute>}/>
+          <Route path="/diagrama" element={<ProtectedRoute><Diagrama/></ProtectedRoute>}/>
+          <Route path="/informacion" element={<ProtectedRoute><Informacion/></ProtectedRoute>}/>
         </Routes>
       </Router>
     </div>

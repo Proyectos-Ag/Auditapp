@@ -36,6 +36,7 @@ const correccionSchema = new mongoose.Schema({
 const ishikawaSchema = new mongoose.Schema({
     idRep: String,
     idReq: String,
+    proName: String,
     problema: String,
     afectacion: String,
     fecha: String,

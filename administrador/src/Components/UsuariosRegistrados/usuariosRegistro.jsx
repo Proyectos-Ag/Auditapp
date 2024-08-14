@@ -436,7 +436,7 @@ const UserCard = ({ user, formatDate, calculateYearsInCompany, onEditClick, onDe
   return (
     <div className="card">
       <h3>{user.Nombre}</h3>
-      <p><strong>Correo:</strong> {user.Correo}</p>
+      <p style={{overflowWrap: 'break-word'}}><strong>Correo:</strong> {user.Correo}</p>
       <p><strong>Tipo de usuario:</strong> {user.TipoUsuario}</p>
       <p><strong>Puesto:</strong> {user.Puesto}</p>
       <p><strong>Departamento:</strong> {user.Departamento}</p> {}

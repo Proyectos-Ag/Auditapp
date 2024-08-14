@@ -75,7 +75,8 @@ function DrawerList({ handleLogout }) {
         { text: "Reportes", href: "/reporte" },
         { text: "Auditorias terminadas", href: "/" }
       ]
-    }
+    },
+    { text: "Usuario", href: "/informacion" },
   ];
 
   return (
