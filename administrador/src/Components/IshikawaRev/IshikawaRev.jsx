@@ -481,15 +481,20 @@ const IshikawaRev = () => {
       };
 
       function verificarCoincidencia(textAreaValue, causa) {
-        const trimmedTextAreaValue = textAreaValue.trim();
-        const trimmedCausaParts = causa.trim().split(';').map(part => part.trim());
-    
-        if (trimmedTextAreaValue === '') {
-            return false;
-        }
-    
-        return trimmedCausaParts.some(part => part === trimmedTextAreaValue);
-    }
+  // Verificar que los valores no sean undefined o null
+  if (typeof textAreaValue !== 'string' || typeof causa !== 'string') {
+      return false;
+  }
+
+  const trimmedTextAreaValue = textAreaValue.trim();
+  const trimmedCausaParts = causa.trim().split(';').map(part => part.trim());
+
+  if (trimmedTextAreaValue === '') {
+      return false;
+  }
+
+  return trimmedCausaParts.some(part => part === trimmedTextAreaValue);
+}
     
 
     const obtenerEstiloTextarea = (texto, causa) => {
