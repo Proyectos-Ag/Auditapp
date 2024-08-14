@@ -349,10 +349,10 @@ const IshikawaRev = () => {
     const verificarRegistro = async () => {
         try {
           const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-          const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && 
+          const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && item.proName === nombre && 
             (item.estado === 'Rechazado' || item.estado === 'Revisado' || item.estado === 'Aprobado'|| item.estado === 'Asignado'));
-          const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'Aprobado');
-          const registroRevisado= response.data.some(item => item.idRep === _id && item.idReq === id && item.estado === 'Revisado');
+          const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre && item.estado === 'Aprobado');
+          const registroRevisado= response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre && item.estado === 'Revisado');
           setAprobado(registroAprobado);
           setRechazo(dataFiltrada);
           setRevisado(registroRevisado);
@@ -481,6 +481,23 @@ const IshikawaRev = () => {
         setValorSeleccionado(event.target.value);
       };
 
+      function verificarCoincidencia(textAreaValue, causa) {
+        const trimmedTextAreaValue = textAreaValue.trim();
+        const trimmedCausaParts = causa.trim().split(';').map(part => part.trim());
+    
+        if (trimmedTextAreaValue === '') {
+            return false;
+        }
+    
+        return trimmedCausaParts.some(part => part === trimmedTextAreaValue);
+    }
+    
+
+    const obtenerEstiloTextarea = (texto, causa) => {
+      return verificarCoincidencia(texto, causa) 
+          ? { backgroundColor: '#f1fc5e9f', borderRadius: '10px' } 
+          : {};
+    };
 
     return (
         <div>
@@ -565,35 +582,35 @@ const IshikawaRev = () => {
                     {ishikawa.diagrama.map((item, i) => (
                         <div key={i}>
                         <textarea className="text-area" 
-                            style={{ top: '19.1rem', left: '8.7rem' }} disabled>{item.text1}</textarea>
+                            style={{ top: '19.1rem', left: '8.7rem', ...obtenerEstiloTextarea(item.text1, ishikawa.causa) }} disabled>{item.text1}</textarea>
                         <textarea className="text-area"
-                            style={{ top: '19.1rem', left: '25.4rem' }} disabled>{item.text2}</textarea>
+                            style={{ top: '19.1rem', left: '25.4rem', ...obtenerEstiloTextarea(item.text2, ishikawa.causa)  }} disabled>{item.text2}</textarea>
                         <textarea className="text-area"
-                            style={{ top: '19.1rem', left: '41.2rem' }} disabled>{item.text3}</textarea>
+                            style={{ top: '19.1rem', left: '41.2rem', ...obtenerEstiloTextarea(item.text3, ishikawa.causa)  }} disabled>{item.text3}</textarea>
                         <textarea className="text-area"
-                            style={{ top: '23.2rem', left: '12.2rem' }} disabled>{item.text4}</textarea>
+                            style={{ top: '23.2rem', left: '12.2rem', ...obtenerEstiloTextarea(item.text4, ishikawa.causa)  }} disabled>{item.text4}</textarea>
                         <textarea className="text-area"
-                            style={{ top: '23.2rem', left: '28.8rem' }} disabled>{item.text5}</textarea>
+                            style={{ top: '23.2rem', left: '28.8rem', ...obtenerEstiloTextarea(item.text5, ishikawa.causa) }} disabled>{item.text5}</textarea>
                         <textarea className="text-area"
-                            style={{ top: '23.2rem', left: '45rem' }} disabled>{item.text6}</textarea>
+                            style={{ top: '23.2rem', left: '45rem', ...obtenerEstiloTextarea(item.text6, ishikawa.causa)  }} disabled>{item.text6}</textarea>
                         <textarea className="text-area"
-                            style={{ top: '27.2rem', left: '15.5rem' }} disabled>{item.text7}</textarea>
+                            style={{ top: '27.2rem', left: '15.5rem', ...obtenerEstiloTextarea(item.text7, ishikawa.causa)  }} disabled>{item.text7}</textarea>
                         <textarea className="text-area"
-                            style={{ top: '27.2rem', left: '32.3rem' }} disabled>{item.text8}</textarea>
+                            style={{ top: '27.2rem', left: '32.3rem', ...obtenerEstiloTextarea(item.text8, ishikawa.causa)  }} disabled>{item.text8}</textarea>
                         <textarea className="text-area"
-                            style={{ top: '27.2rem', left: '48.1rem' }} disabled>{item.text9}</textarea>
+                            style={{ top: '27.2rem', left: '48.1rem', ...obtenerEstiloTextarea(item.text9, ishikawa.causa)  }} disabled>{item.text9}</textarea>
                         <textarea className="text-area" value={item.text10}
-                            style={{ top: '31rem', left: '23rem' }} disabled></textarea>
+                            style={{ top: '31rem', left: '23rem', ...obtenerEstiloTextarea(item.text10, ishikawa.causa)  }} disabled></textarea>
                         <textarea className="text-area" name='text11' value={item.text11}
-                            style={{ top: '31rem', left: '39.4rem' }} disabled></textarea>
+                            style={{ top: '31rem', left: '39.4rem', ...obtenerEstiloTextarea(item.text11, ishikawa.causa)  }} disabled></textarea>
                         <textarea className="text-area" value={item.text12}
-                            style={{ top: '35rem', left: '19.7rem' }} disabled></textarea>
+                            style={{ top: '35rem', left: '19.7rem', ...obtenerEstiloTextarea(item.text12, ishikawa.causa)  }} disabled></textarea>
                         <textarea className="text-area" name='text13' value={item.text13}
-                            style={{ top: '35rem', left: '36rem' }} disabled></textarea>
+                            style={{ top: '35rem', left: '36rem', ...obtenerEstiloTextarea(item.text13, ishikawa.causa)  }} disabled></textarea>
                         <textarea className="text-area" name='text14' value={item.text14}
-                            style={{ top: '39rem', left: '16.6rem' }} disabled></textarea>
+                            style={{ top: '39rem', left: '16.6rem', ...obtenerEstiloTextarea(item.text14, ishikawa.causa)  }} disabled></textarea>
                         <textarea className="text-area" name='text15' value={item.text15}
-                            style={{ top: '39rem', left: '32.8rem' }} disabled></textarea>
+                            style={{ top: '39rem', left: '32.8rem', ...obtenerEstiloTextarea(item.text15, ishikawa.causa)  }} disabled></textarea>
                         <textarea className="text-area"
                             style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} value={ishikawa.problema? ishikawa.problema : item.problema}></textarea>
                         </div>
