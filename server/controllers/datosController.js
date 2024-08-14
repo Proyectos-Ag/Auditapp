@@ -1,5 +1,5 @@
 const Datos = require('../models/datosSchema');
-const transporter = require('../emailConfig');
+const transporter = require('../emailconfig');
 
 const nuevoAuditoria = async (req, res) => {
   try {
