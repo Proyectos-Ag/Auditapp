@@ -56,6 +56,23 @@ const IshikawaRev = () => {
       }, [userData, _id, id, nombre]); 
       
       useEffect(() => {
+        const simulateInputChange = () => {
+          const textareas = document.querySelectorAll('textarea');
+          textareas.forEach((textarea) => {
+            const event = {
+              target: textarea,
+              name: textarea.name,
+              value: textarea.value
+            };
+            handleInputChange(event);
+          });
+        };
+    
+        simulateInputChange(); // Ejecutar la función al cargar el componente
+    
+      }, [ishikawas]);
+      
+      useEffect(() => {
         if (datos && datos.Auditados) {
           const Auditados = new Date(datos.Auditados).toLocaleDateString();
           setAuditados(Auditados);
@@ -99,24 +116,7 @@ const IshikawaRev = () => {
                 setMensaje('');
             }
         }
-    }, [ishikawas, _id, id, nombre]); 
-
-    useEffect(() => {
-        const simulateInputChange = () => {
-          const textareas = document.querySelectorAll('textarea');
-          textareas.forEach((textarea) => {
-            const event = {
-              target: textarea,
-              name: textarea.name,
-              value: textarea.value
-            };
-            handleInputChange(event);
-          });
-        };
-    
-        simulateInputChange(); // Ejecutar la función al cargar el componente
-    
-      }, [ishikawas]);  
+    }, [ishikawas, _id, id, nombre]);   
       
       useEffect(() => {
         const fetchUsuarios = async () => {
@@ -130,6 +130,7 @@ const IshikawaRev = () => {
       
         fetchUsuarios();
       }, []);
+
 
       const handlePrintPDF = () => {
         const showLoading = () => {
@@ -801,9 +802,8 @@ const IshikawaRev = () => {
                 </div>
                 ))}
             </div>
-            </div>
+         </div>
     );
-
 };
 
 export default IshikawaRev;
