@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState,useCallback,useContext } from 'react';
 import './css/IshikawaRev.css';
 import Navigation from "../Navigation/Navbar";
 import Logo from "../../assets/img/logoAguida.png";
@@ -17,14 +17,13 @@ const IshikawaRev = () => {
     const [filteredIshikawas, setFilteredIshikawas] = useState([]);
     const { _id, id, nombre} = useParams();
     const [valorSeleccionado, setValorSeleccionado] = useState('');
-    const [datos, setDatos] = useState(null);
+    const [, setDatos] = useState(null);
     const [mensaje, setMensaje] = useState('');
     const [notaRechazo, setNotaRechazo] = useState('');
     const [rechazo,  setRechazo] = useState([]);
     const [revisado, setRevisado] = useState([]);
     const [usuarios, setUsuarios] = useState([]);
     const [aprobado,  setAprobado] = useState([]);
-    const [,setAuditados] = useState([]);
     const [showPart, setShowPart] = useState(true);
     const [showReprogramar, setShowReprogramar] = useState(false);
     const [showNotaRechazo, setShowNotaRechazo] = useState(false);
@@ -33,28 +32,43 @@ const IshikawaRev = () => {
     const [correcciones, setCorrecciones] = useState([{ actividad: '', responsable: '', fechaCompromiso: [], cerrada: '' }]);
     const [nuevaCorreccion, setNuevaCorreccion] = useState({actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
 
-    useEffect(() => {
-        const obtenerDatos = async () => {
+    const fetchData = useCallback(async () => {
+      try {
+          const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+          const dataFiltrada = response.data.filter(item =>
+              ['En revisión', 'Revisado', 'Aprobado'].includes(item.estado)
+          );
+          setIshikawas(dataFiltrada);
+      } catch (error) {
+          console.error('Error fetching data:', error);
+      }
+  }, []);
+
+  useEffect(() => {
+      fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+      const obtenerDatos = async () => {
           try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
-            if (userData && userData.Correo) {
-              const datosFiltrados = response.data.find(dato => dato._id === _id);
-              if (datosFiltrados) {
-                const programaEncontrado = datosFiltrados.Programa.find(prog => 
-                  prog.Descripcion.some(desc => desc.ID === id && prog.Nombre === nombre)
-                );
-                  setDatos(datosFiltrados);
-                  setPrograma(programaEncontrado);
-            }
-          }
+              const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+              if (userData?.Correo) {
+                  const datosFiltrados = response.data.find(dato => dato._id === _id);
+                  if (datosFiltrados) {
+                      const programaEncontrado = datosFiltrados.Programa.find(prog =>
+                          prog.Descripcion.some(desc => desc.ID === id && prog.Nombre === nombre)
+                      );
+                      setDatos(datosFiltrados);
+                      setPrograma(programaEncontrado);
+                  }
+              }
           } catch (error) {
-            console.error('Error al obtener los datos:', error);
+              console.error('Error al obtener los datos:', error);
           }
-        };
-      
-        obtenerDatos();
-      }, [userData, _id, id, nombre]); 
-      
+      };
+      obtenerDatos();
+  }, [userData, _id, id, nombre]);
+
       useEffect(() => {
         const simulateInputChange = () => {
           const textareas = document.querySelectorAll('textarea');
@@ -73,25 +87,8 @@ const IshikawaRev = () => {
       }, [ishikawas]);
       
       useEffect(() => {
-        if (datos && datos.Auditados) {
-          const Auditados = new Date(datos.Auditados).toLocaleDateString();
-          setAuditados(Auditados);
-        }
-      }, [datos]);   
-    
-    useEffect(() => {
         fetchData();
-    }, []);
-
-    const fetchData = async () => {
-        try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-            const dataFiltrada = response.data.filter(item => item.estado === 'En revisión' ||  item.estado === 'Revisado' || item.estado === 'Aprobado');
-            setIshikawas(dataFiltrada);
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
-    };
+    }, [fetchData]);
 
       useEffect(() => {
         if (filteredIshikawas.length > 0) {
@@ -104,19 +101,7 @@ const IshikawaRev = () => {
             }
             setCorrecciones(correccionesIniciales);
         }
-    }, [filteredIshikawas]);    
-    
-    useEffect(() => {
-        if (ishikawas.length > 0) {
-            const nuevosFiltrados = ishikawas.filter(({ idRep, idReq, proName }) => idRep === _id && idReq === id && proName === nombre);
-            setFilteredIshikawas(nuevosFiltrados);
-            if (nuevosFiltrados.length === 0) {
-                setMensaje('No hay nada por aquí.');
-            } else {
-                setMensaje('');
-            }
-        }
-    }, [ishikawas, _id, id, nombre]);   
+    }, [filteredIshikawas]);       
       
       useEffect(() => {
         const fetchUsuarios = async () => {
@@ -130,6 +115,18 @@ const IshikawaRev = () => {
       
         fetchUsuarios();
       }, []);
+
+      useEffect(() => {
+        if (ishikawas.length > 0) {
+            const nuevosFiltrados = ishikawas.filter(({ idRep, idReq, proName }) => idRep === _id && idReq === id && proName === nombre);
+            setFilteredIshikawas(nuevosFiltrados);
+            if (nuevosFiltrados.length === 0) {
+                setMensaje('No hay nada por aquí.');
+            } else {
+                setMensaje('');
+            }
+        }
+    }, [ishikawas, _id, id, nombre]);
 
 
       const handlePrintPDF = () => {
@@ -517,26 +514,6 @@ const IshikawaRev = () => {
                 Generando archivo PDF...
             </div>
             </div>
-
-            {(ishikawas.length === 0 || mensaje) && <div className="mensaje-error">
-                <div className='select-ish'>
-                {rechazo.map((ishikawa, asig) => (
-                    <div key={asig}>
-                         <div className='asignado-ishi'>Asignado: {ishikawa.auditado}</div>
-                    </div>
-                ))}
-                <select onChange={handleSelectChangeAud} value={valorSeleccionado}>
-                <option value="">Seleccione...</option>
-                {usuarios && usuarios.map(usuario => (
-            <option key={usuario._id} value={usuario.Nombre}>{usuario.Nombre}</option>
-                ))}
-                </select>
-                <button onClick={Asignar}>Asignar</button>
-            </div>
-                <div className='mens-error'>
-                <div style={{display:'flex', justifyContent:'center'}}>{mensaje}</div> 
-                <div style={{display:'flex',fontSize:'100px', justifyContent:'center'}}>🏝️</div></div>
-                </div>}
                 {filteredIshikawas.map((ishikawa, index) => (
                 <div key={index}>
                     {ishikawa.estado === 'En revisión' && (
@@ -807,6 +784,25 @@ const IshikawaRev = () => {
                 </div>
                 ))}
             </div>
+            {(ishikawas.length === 0 || mensaje) && <div className="mensaje-error">
+                <div className='select-ish'>
+                {rechazo.map((ishikawa, asig) => (
+                    <div key={asig}>
+                         <div className='asignado-ishi'>Asignado: {ishikawa.auditado}</div>
+                    </div>
+                ))}
+                <select onChange={handleSelectChangeAud} value={valorSeleccionado}>
+                <option value="">Seleccione...</option>
+                {usuarios && usuarios.map(usuario => (
+            <option key={usuario._id} value={usuario.Nombre}>{usuario.Nombre}</option>
+                ))}
+                </select>
+                <button onClick={Asignar}>Asignar</button>
+            </div>
+                <div className='mens-error'>
+                <div style={{display:'flex', justifyContent:'center'}}>{mensaje}</div> 
+                <div style={{display:'flex',fontSize:'100px', justifyContent:'center'}}>🏝️</div></div>
+                </div>}
          </div>
     );
 };
