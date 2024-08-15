@@ -12,56 +12,55 @@ const Reporte = () => {
     const [, setCriteriosConteo] = useState({});
     const [, setTotalCriterios] = useState(0);
 
+    const procesarDatos = (response, userData) => {
+        const datosFiltrados = response.data.filter((dato) => 
+            (dato.AuditorLiderEmail === userData.Correo || 
+                (dato.EquipoAuditor.length > 0 && dato.EquipoAuditor.some(auditor => auditor.Correo === userData.Correo))) &&
+            (dato.Estado !== "pendiente" && dato.Estado !== "Devuelto")
+        );
+    
+        datosFiltrados.sort((a, b) => new Date(b.FechaElaboracion) - new Date(a.FechaElaboracion));
+    
+        let conteo = {};
+        let total = 0;
+        datosFiltrados.forEach(dato => {
+            dato.Programa.forEach(programa => {
+                programa.Descripcion.forEach(desc => {
+                    if (desc.Criterio && desc.Criterio !== 'NA') {
+                        if (!conteo[desc.Criterio]) {
+                            conteo[desc.Criterio] = 0;
+                        }
+                        conteo[desc.Criterio]++;
+                        total++;
+                    }
+                });
+            });
+        });
+    
+        return { datosFiltrados, conteo, total };
+    };
+    
     useEffect(() => {
         const obtenerDatos = async () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
                 if (userData && userData.Correo) {
-                    const datosFiltrados = response.data.filter((dato) => 
-                        (dato.AuditorLiderEmail === userData.Correo || 
-                            (dato.EquipoAuditor.length > 0 && dato.EquipoAuditor.some(auditor => auditor.Correo === userData.Correo))) && (dato.Estado !== "pendiente" && dato.Estado !== "Devuelto")
-                    );
-        
-                    // Ordenar por FechaElaboracion del más reciente al más antiguo
-                    datosFiltrados.sort((a, b) => {
-                        const fechaElaboracionA = new Date(a.FechaElaboracion);
-                        const fechaElaboracionB = new Date(b.FechaElaboracion);
-                        return fechaElaboracionB - fechaElaboracionA;
-                    });
-        
-                    let conteo = {};
-                    let total = 0;
-                    datosFiltrados.forEach(dato => {
-                        dato.Programa.forEach(programa => {
-                            programa.Descripcion.forEach(desc => {
-                                if (desc.Criterio && desc.Criterio !== 'NA') {
-                                    if (!conteo[desc.Criterio]) {
-                                        conteo[desc.Criterio] = 0;
-                                    }
-                                    conteo[desc.Criterio]++;
-                                    total++;
-                                }
-                            });
-                        });
-                    });
-        
+                    const { datosFiltrados, conteo, total } = procesarDatos(response, userData);
                     setDatos(datosFiltrados);
                     setCriteriosConteo(conteo);
                     setTotalCriterios(total);
-        
-                    // Ocultar todas las duraciones excepto la más reciente por defecto
-                    const duracionesOcultas = datosFiltrados.slice(1).map(dato => dato.Duracion);
-                    setHiddenDurations(duracionesOcultas);
+                    setHiddenDurations(datosFiltrados.slice(1).map(dato => dato.Duracion));
                 } else {
                     console.log('userData o userData.Correo no definidos:', userData);
                 }
             } catch (error) {
                 console.error('Error al obtener los datos:', error);
             }
-        };        
-
+        };
+    
         obtenerDatos();
     }, [userData]);
+    
 
     const toggleDuration = (duration) => {
         setHiddenDurations(hiddenDurations.includes(duration) ?
@@ -258,7 +257,13 @@ const Reporte = () => {
                                                             )}
                                                     </td>
                                                     <td>
-                                                        <div>{dato.Auditados}</div>
+                                                    <div>
+                                                        {dato.Auditados.map((audita, audIdx) => (
+                                                            <div key={audIdx}>
+                                                            {audita.Nombre}
+                                                            </div>
+                                                        ))}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             </thead>

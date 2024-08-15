@@ -125,83 +125,122 @@ const IshikawaRev = () => {
             } else {
                 setMensaje('');
             }
+        } else {
+            setMensaje('Cargando datos...');
         }
     }, [ishikawas, _id, id, nombre]);
+    
 
 
-      const handlePrintPDF = () => {
-        const showLoading = () => {
-          document.getElementById('loading-overlay').style.display = 'flex';
-        };
-      
-        const hideLoading = () => {
-          document.getElementById('loading-overlay').style.display = 'none';
-        };
-      
-        // Mostrar el mensaje de carga
-        showLoading();
-      
-        // Obtener los elementos individuales que se desean imprimir en páginas separadas
-        const part1 = document.getElementById('pdf-content-part1');
-        const part2 = document.getElementById('pdf-content-part2');
-      
-        const convertTextAreasToDivs = (element) => {
-          const textareas = element.querySelectorAll('textarea');
-      
-          textareas.forEach((textarea) => {
-            // Crear un nuevo elemento div
+    const handlePrintPDF = () => {
+    const showLoading = () => {
+        document.getElementById('loading-overlay').style.display = 'flex';
+    };
+
+    const hideLoading = () => {
+        document.getElementById('loading-overlay').style.display = 'none';
+    };
+
+    showLoading();
+
+    const part1 = document.getElementById('pdf-content-part1');
+    const part2 = document.getElementById('pdf-content-part2');
+
+    const convertTextAreasToDivs = (element) => {
+        const textareas = element.querySelectorAll('textarea');
+
+        textareas.forEach((textarea) => {
             const div = document.createElement('div');
             div.textContent = textarea.value;
-      
-            // Copiar clases
             div.className = textarea.className;
-      
-            // Copiar estilos en línea
             div.style.cssText = textarea.style.cssText;
-      
-            // Reemplazar el textarea con el div
             textarea.parentNode.replaceChild(div, textarea);
-          });
-        };
-      
-        // Función para convertir un elemento en una imagen y añadirla al PDF
-        const addPartToPDF = (element, pdf, isLastPage) => {
-          convertTextAreasToDivs(element); // Convertir textareas a divs antes de capturar
-      
-          return html2canvas(element, {
-            scale: 2.5, // Ajusta la escala para mejorar la resolución
-            useCORS: true, // Permitir CORS si se necesitan recursos externos
-          }).then((canvas) => {
-            const imgData = canvas.toDataURL('image/jpeg', 0.8); // Usar JPEG con calidad del 80%
+        });
+    };
+
+    const addPartToPDF = (element, pdf, isLastPage, pageNumber) => {
+        convertTextAreasToDivs(element);
+
+        return html2canvas(element, {
+            scale: 2.5,
+            useCORS: true,
+        }).then((canvas) => {
+            const imgData = canvas.toDataURL('image/jpeg', 0.8);
             const imgWidth = pdf.internal.pageSize.getWidth();
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
+
             const marginX = (pdf.internal.pageSize.getWidth() - imgWidth) / 2;
-            const marginY = (pdf.internal.pageSize.getHeight() - imgHeight) / 6;
-      
-            pdf.addImage(imgData, 'JPEG', marginX, marginY, imgWidth, imgHeight, undefined, 'FAST'); // Usa compresión rápida
-      
-            if (!isLastPage) {
-              pdf.addPage(); // Añadir nueva página si no es la última parte
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const availableHeight = pageHeight - 3;
+            
+            // Definir margen superior dinámico según el número de página
+            const marginY = 1.5;
+
+            let currentHeight = imgHeight;
+            let currentPage = pageNumber;
+
+            if (currentHeight <= availableHeight) {
+                pdf.addImage(imgData, 'JPEG', marginX, marginY, imgWidth, currentHeight, undefined, 'FAST');
+            } else {
+                let yOffset = 0;
+                while (currentHeight > availableHeight) {
+                    const croppedCanvas = document.createElement('canvas');
+                    croppedCanvas.width = canvas.width;
+                    croppedCanvas.height = availableHeight * (canvas.width / imgWidth);
+
+                    const ctx = croppedCanvas.getContext('2d');
+                    ctx.drawImage(canvas, 0, yOffset, canvas.width, croppedCanvas.height, 0, 0, croppedCanvas.width, croppedCanvas.height);
+
+                    const croppedImgData = croppedCanvas.toDataURL('image/jpeg', 0.8);
+                    pdf.addImage(croppedImgData, 'JPEG', marginX, marginY, imgWidth, availableHeight, undefined, 'FAST');
+
+                    currentHeight -= availableHeight;
+                    yOffset += croppedCanvas.height;
+                    currentPage++;
+                    pdf.addPage();
+                }
+
+                if (currentHeight > 0) {
+                    const finalCanvas = document.createElement('canvas');
+                    finalCanvas.width = canvas.width;
+                    finalCanvas.height = currentHeight * (canvas.width / imgWidth);
+
+                    const finalCtx = finalCanvas.getContext('2d');
+                    finalCtx.drawImage(canvas, 0, yOffset, canvas.width, finalCanvas.height, 0, 0, finalCanvas.width, finalCanvas.height);
+
+                    const finalImgData = finalCanvas.toDataURL('image/jpeg', 0.8);
+                    pdf.addImage(finalImgData, 'JPEG', marginX, marginY, imgWidth, currentHeight, undefined, 'FAST');
+                }
             }
-          });
-        };
-      
-        // Crear un nuevo documento PDF
-        const pdf = new jsPDF('landscape', 'cm', 'letter');
-      
-        // Añadir las partes al PDF
-        addPartToPDF(part1, pdf, false) // Añadir primera parte
-          .then(() => addPartToPDF(part2, pdf, true)) // Añadir segunda parte y guardar
-          .then(() => {
+
+            if (!isLastPage) {
+                pdf.addPage();
+            }
+
+            return currentPage;
+        });
+    };
+
+    const pdf = new jsPDF('landscape', 'cm', 'letter');
+
+    let currentPage = 1;
+
+    addPartToPDF(part1, pdf, false, currentPage)
+        .then((newPageNumber) => {
+            currentPage = newPageNumber;
+            return addPartToPDF(part2, pdf, true, currentPage);
+        })
+        .then(() => {
             pdf.save("diagrama_ishikawa.pdf");
-            hideLoading(); // Ocultar el mensaje de carga después de guardar
-          })
-          .catch((error) => {
+            hideLoading();
+        })
+        .catch((error) => {
             console.error('Error generating PDF:', error);
-            hideLoading(); // Asegurar que el mensaje de carga se oculta incluso si hay un error
-          });
-      };
+            hideLoading();
+        });
+};
+
+  
       
 
     const handleCorreccionChange = (index, field, value) => {
