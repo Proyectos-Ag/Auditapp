@@ -147,7 +147,6 @@ setPercentages(initialPercentages);
         );
     };   
     
-
     const handleCheckboxChange = (periodIdx, programIdx, descIdx, checkboxName) => {
         const key = `${periodIdx}_${programIdx}_${descIdx}`;
         setSelectedCheckboxes(prevState => {
@@ -178,7 +177,6 @@ setPercentages(initialPercentages);
         });
     };    
         
-
     const handleOpenModal = (fieldKey) => {
         setSelectedField(fieldKey);
         setModalOpen(true);
@@ -339,7 +337,6 @@ setPercentages(initialPercentages);
         return true;
     };
     
-
     const getTdClass = (periodIdx, programIdx, descIdx, checkboxName) => {
         const key = `${periodIdx}_${programIdx}_${descIdx}`;
         if (selectedCheckboxes[key] === checkboxName) {

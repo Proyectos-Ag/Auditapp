@@ -13,9 +13,9 @@ const Ishikawa = () => {
   const [datos, setDatos] = useState(null);
   const [programa, setPrograma] = useState(null);
   const [descripcion, setDescripcion] = useState(null);
-  const [requisito, setRequisito] = useState('');
-  const [hallazgo, setHallazgo] = useState('');
-  const [auditado, setAuditados] = useState('');
+  const [requisito] = useState('');
+  const [hallazgo] = useState('');
+  const [auditado] = useState(userData.Nombre);
   const [proceso,  setEnProceso] = useState([]);
   const [asignado,  setAsignado] = useState([]);
   const [revisado,  setRevisado] = useState([]);
@@ -74,7 +74,7 @@ const Ishikawa = () => {
         if (userData && userData.Correo) {
           const datosFiltrados = response.data.find(dato => dato._id === _id);
           if (datosFiltrados) {
-            const programaEncontrado = datosFiltrados.Programa.find(prog => 
+            const programaEncontrado = datosFiltrados.Programa.find(prog =>
               prog.Descripcion.some(desc => desc.ID === id && prog.Nombre === nombre)
             );
             if (programaEncontrado) {
@@ -82,9 +82,17 @@ const Ishikawa = () => {
               setDatos(datosFiltrados);
               setPrograma(programaEncontrado);
               setDescripcion(descripcionEncontrada);
-              setRequisito(descripcionEncontrada.Requisito);
-              setHallazgo(descripcionEncontrada.Hallazgo);
-              setAuditados(descripcionEncontrada.Auditados);
+
+              // Asegúrate de que los datos se configuren correctamente
+              setData({
+                problema: descripcionEncontrada?.Problema || '',
+                afectacion: descripcionEncontrada?.Afectacion || '',
+                requisito: descripcionEncontrada?.Requisito || '',
+                hallazgo: descripcionEncontrada?.Hallazgo || '',
+                participantes: descripcionEncontrada?.Participantes || '',
+                correccion: descripcionEncontrada?.Correccion || '',
+                causa: descripcionEncontrada?.Causa || ''
+              });
             }
           }
         }
@@ -92,9 +100,9 @@ const Ishikawa = () => {
         console.error('Error al obtener los datos:', error);
       }
     };
-  
+
     obtenerDatos();
-  }, [userData, _id, id, nombre]);  
+  }, [userData, _id, id, nombre]);
 
   useEffect(() => {
     verificarRegistro();
@@ -545,7 +553,7 @@ const obtenerEstiloTextarea = (texto, causa) => {
       : {};
 };
   
-  if (!datos || !programa || !descripcion) {
+  if (!datos || !programa || !descripcion || !diagrama) {
     return <div>Cargando...</div>;
   }
  
@@ -607,7 +615,7 @@ const obtenerEstiloTextarea = (texto, causa) => {
           <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
           <div className='posicion-en'>
             <h2>Problema:
-              <textarea type="text" className="problema-input" name='problema' value={descripcion.Observacion} onChange={handleDatos}
+              <textarea type="text" className="problema-input" name='problema' value={descripcion.Observacion ? descripcion.Observacion : formData.problema} onChange={handleDatos}
               style={{fontSize:'20px'}} placeholder="Agregar problema. . ." required disabled={revisado}>
               </textarea>
             </h2>

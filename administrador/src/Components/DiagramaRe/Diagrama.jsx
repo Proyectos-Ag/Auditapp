@@ -4,11 +4,14 @@ import './css/Diagrama.css'
 import Logo from "../../assets/img/logoAguida.png";
 import Navigation from "../Navigation/Navbar";
 import Ishikawa from '../../assets/img/Ishikawa-transformed.png';
+import Swal from 'sweetalert2';
 
 const Diagrama = () => {
     const [ishikawas, setIshikawas] = useState([]);
     const [visibleIndex, setVisibleIndex] = useState(0);
     const [showPart, setShowPart] = useState(true);
+    const [showNotaRechazo, setShowNotaRechazo] = useState(false);
+    const [notaRechazo, setNotaRechazo] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -81,6 +84,35 @@ const Diagrama = () => {
         });
     };
 
+    const handleGuardarRechazo = async (id) => {
+        try {
+            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${id}`, {
+                estado: 'Rechazado',
+                notaRechazo 
+            });
+        } catch (error) {
+            console.error('Error updating data:', error);
+            alert('Hubo un error al actualizar la información');
+        }
+        };
+    
+        const Rechazar = async (id) => {
+            Swal.fire({
+              title: '¿Está seguro de querer rechazar este diagrama?',
+              text: '¡El diagrama será devuelto!',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#3ccc37',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Sí, rechazar',
+              cancelButtonText: 'Cancelar'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                handleGuardarRechazo (id);
+              }
+            });
+          };
+
     return (
         <div>
             <div style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -97,16 +129,37 @@ const Diagrama = () => {
                     {visibleIndex === index && (
                     <div >
                         <div className="image-container-dia" >
+
+                        {showNotaRechazo && (
+                                <div className="nota-rechazo-container">
+                                    <textarea
+                                        value={notaRechazo}
+                                        onChange={(e) => setNotaRechazo(e.target.value)}
+                                        className='textarea-ishi'
+                                        rows="4"
+                                        cols="50"
+                                        placeholder="Escribe aquí la razón del rechazo"
+                                    />
+                                </div>
+                            )}
+                        <div className='buttons-g'>
+                                <button onClick={() => setShowNotaRechazo(!showNotaRechazo)}>
+                                    {showNotaRechazo ? 'Ocultar Nota' : 'Nota'}
+                                </button>
+                                <button onClick={() => Rechazar(ishikawa._id)} className='boton-rechazar' >Rechazar</button>
+                                
+                            </div>
+
                         <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
                         <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
                         <div className='posicion-en'>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <h2 style={{ marginLeft: '30rem', marginRight: '10px' }}>Problema: </h2>
-                                <div style={{ width: '30rem', fontSize: '20px' }}>{ishikawa.problema}</div>
+                                <h2 style={{ marginLeft: '50rem', marginRight: '10px' }}>Problema: </h2>
+                                <div style={{ width: '50rem', fontSize: '20px' }}>{ishikawa.problema}</div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <h2 style={{ marginLeft: '30rem', marginRight: '10px' }}>Afectación: </h2>
-                                <div style={{ width: '30rem', fontSize: '20px' }}>{ishikawa.afectacion}</div>
+                                <h2 style={{ marginLeft: '50rem', marginRight: '10px' }}>Afectación: </h2>
+                                <div style={{ width: '50rem', fontSize: '20px' }}>{ishikawa.afectacion}</div>
                             </div>
                         </div>
                         <div className='posicion-en-3'>
@@ -134,7 +187,7 @@ const Diagrama = () => {
                                     <textarea className="text-area" name='text13' value={item.text13} style={{ top: '35rem', left: '36rem' }} disabled></textarea>
                                     <textarea className="text-area" name='text14' value={item.text14} style={{ top: '39rem', left: '16.6rem' }} disabled></textarea>
                                     <textarea className="text-area" name='text15' value={item.text15} style={{ top: '39rem', left: '32.8rem' }} disabled></textarea>
-                                    <textarea className="text-area" style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} value={item.problema}></textarea>
+                                    <textarea className="text-area" style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} value={ishikawa.problema} disabled></textarea>
                                 </div>
                             ))}
                         </div>

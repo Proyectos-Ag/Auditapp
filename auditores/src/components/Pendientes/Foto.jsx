@@ -9,6 +9,7 @@ function Fotos({ open, onClose, onCapture }) {
   const [stream, setStream] = useState(null);
   const [camera, setCamera] = useState('user');
   const [zoom, setZoom] = useState(1);
+  const [focus, setFocus] = useState(0);
 
   const verCamara = async () => {
     try {
@@ -49,7 +50,6 @@ function Fotos({ open, onClose, onCapture }) {
       context.drawImage(video, 0, 0, w, h);
       setHayFoto(true);
 
-      // Captura la imagen como una base64 string
       const dataUrl = foto.toDataURL('image/png');
       onCapture(dataUrl);
     }
@@ -72,12 +72,24 @@ function Fotos({ open, onClose, onCapture }) {
     const newZoom = event.target.value;
     setZoom(newZoom);
 
-    const track = stream.getVideoTracks()[0];
-    const capabilities = track.getCapabilities();
-    if (capabilities.zoom) {
-      const settings = track.getSettings();
+    const track = stream?.getVideoTracks()[0];
+    const capabilities = track?.getCapabilities();
+    if (capabilities?.zoom) {
       track.applyConstraints({
         advanced: [{ zoom: newZoom }]
+      });
+    }
+  };
+
+  const handleFocusChange = (event) => {
+    const newFocus = event.target.value;
+    setFocus(newFocus);
+
+    const track = stream?.getVideoTracks()[0];
+    const capabilities = track?.getCapabilities();
+    if (capabilities?.focusDistance) {
+      track.applyConstraints({
+        advanced: [{ focusDistance: newFocus }]
       });
     }
   };
@@ -102,7 +114,9 @@ function Fotos({ open, onClose, onCapture }) {
             <Card>
               <video ref={videoDiv} style={{ width: '100%', height: 'auto'}}></video>
               <Card.Content>
+                {/* Control de Zoom */}
                 <input
+                className='funciones'
                   type="range"
                   min="1"
                   max="3"
@@ -110,17 +124,34 @@ function Fotos({ open, onClose, onCapture }) {
                   value={zoom}
                   onChange={handleZoomChange}
                 />
+
+                {/* Control de Enfoque */}
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={focus}
+                  onChange={handleFocusChange}
+                />
+
+                {/* Botón para tomar la foto */}
                 <button className="camera-button" color="teal" onClick={tomarFoto} disabled={!open}>
                   <span className="material-symbols-outlined" style={{fontSize: "40px",}}>photo_camera</span>
                 </button>
+
+                {/* Botón para cambiar la cámara */}
                 <Button className="camera-switch-button" color="blue" onClick={cambiarCamara}>
-                  <span className="material-symbols-outlined" >switch_camera</span>
+                  <span className="material-symbols-outlined">switch_camera</span>
                 </Button>
-                <Button color="red" onClick={onClose}>
-                  <Icon name="close" /> Cerrar
+
+                {/* Botón para cerrar la cámara */}
+                <Button color="red" className="camera-button-salir" onClick={() => { detenerCamara(); onClose(); }}>
+                  <Icon name="close" /> Salir
                 </Button>
               </Card.Content>
             </Card>
+
             <Card>
               <canvas ref={fotoDiv}></canvas>
               {hayFoto && (

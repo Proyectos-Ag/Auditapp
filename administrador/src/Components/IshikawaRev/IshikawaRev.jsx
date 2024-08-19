@@ -569,6 +569,7 @@ const IshikawaRev = () => {
                                     />
                                 </div>
                             )}
+                            
                             <div className='buttons-g'>
                                 <button onClick={() => setShowNotaRechazo(!showNotaRechazo)}>
                                     {showNotaRechazo ? 'Ocultar Nota' : 'Nota'}

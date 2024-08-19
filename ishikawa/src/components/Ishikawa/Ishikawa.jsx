@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useEffect,useContext, useState } from 'react';
 import axios from 'axios';
 import './css/Ishikawa.css'
 import Logo from "../../assets/img/logoAguida.png";
@@ -9,16 +9,18 @@ import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../App';
 
 const CreacionIshikawa = () => {
-  const [isEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const { userData } = useContext(UserContext);
   const navigate = useNavigate();
   const [showPart, setShowPart] = useState(true);
+  const [ishikawaRecords, setIshikawaRecords] = useState([]); // Almacena los registros filtrados
+  const [selectedRecordId, setSelectedRecordId] = useState(null); // Almacena el ID del registro seleccionado
 
   const [formData, setFormData] = useState({
     problema: '',
     afectacion: '',
     requisito: '',
-    auditado: '',
+    auditado: userData.Nombre,
     hallazgo: '',
     fecha: '',
     participantes: '',
@@ -48,6 +50,105 @@ const CreacionIshikawa = () => {
   const [actividades, setActividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: '' }]);
 
   const fechaElaboracion = new Date().toISOString();
+
+  useEffect(() => {
+    const fetchIshikawaRecords = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+        const filteredRecords = response.data.filter(item =>
+          item.estado === 'Rechazado' && item.auditado === userData.Nombre
+        );
+        setIshikawaRecords(filteredRecords);
+      } catch (error) {
+        console.error('Error fetching Ishikawa records:', error);
+      }
+    };
+  
+    fetchIshikawaRecords();
+  }, [userData.Nombre]);
+
+  const handleSelectRecord = (e) => {
+    const selectedId = e.target.value;
+  
+    if (selectedId === "") {
+      // Si selecciona "Nuevo...", limpiamos el formulario
+      setSelectedRecordId(null); // Reseteamos el ID seleccionado
+      setFormData({
+        problema: '',
+        afectacion: '',
+        requisito: '',
+        auditado: userData.Nombre,
+        hallazgo: '',
+        fecha: '',
+        participantes: '',
+        correccion: '',
+        causa: ''
+      });
+  
+      setDiagrama([{
+        problema: '',
+        text1: '',
+        text2: '',
+        text3: '',
+        text4: '',
+        text5: '',
+        text6: '',
+        text7: '',
+        text8: '',
+        text9: '',
+        text10: '',
+        text11: '',
+        text12: '',
+        text13: '',
+        text14: '',
+        text15: ''
+      }]);
+  
+      setActividades([{ actividad: '', responsable: '', fechaCompromiso: '' }]);
+      setIsEditing(false); // Cambiamos el modo a "creación"
+    } else {
+      const selectedRecord = ishikawaRecords.find(record => record._id === selectedId);
+    
+      if (selectedRecord) {
+        setSelectedRecordId(selectedId);
+        setFormData({
+          problema: selectedRecord.problema || '',
+          afectacion: selectedRecord.afectacion || '',
+          requisito: selectedRecord.requisito || '',
+          auditado: selectedRecord.auditado || '',
+          hallazgo: selectedRecord.hallazgo || '',
+          fecha: selectedRecord.fecha || '',
+          participantes: selectedRecord.participantes || '',
+          correccion: selectedRecord.correccion || '',
+          causa: selectedRecord.causa || '',
+          notaRechazo: selectedRecord.notaRechazo || ''
+        });
+    
+        setDiagrama(selectedRecord.diagrama || [{
+          problema: '',
+          text1: '',
+          text2: '',
+          text3: '',
+          text4: '',
+          text5: '',
+          text6: '',
+          text7: '',
+          text8: '',
+          text9: '',
+          text10: '',
+          text11: '',
+          text12: '',
+          text13: '',
+          text14: '',
+          text15: ''
+        }]);
+    
+        setActividades(selectedRecord.actividades || [{ actividad: '', responsable: '', fechaCompromiso: '' }]);
+        setIsEditing(true); // Modo edición activado
+      }
+    }
+  };
+  
 
   const handleDiagrama = (e) => {
     const { name, value } = e.target;
@@ -82,7 +183,7 @@ const CreacionIshikawa = () => {
         estado: 'Hecho',
         fechaElaboracion
       };
-      console.log('Datos enviados:', data);
+  
       const result = await Swal.fire({
         title: '¿Estás seguro de querer guardar?',
         text: 'El diagrama será enviado a revisión.',
@@ -93,17 +194,59 @@ const CreacionIshikawa = () => {
         confirmButtonText: 'Sí, guardar',
         cancelButtonText: 'Cancelar'
       });
+  
+      // Solo procede si el usuario confirma
       if (result.isConfirmed) {
-        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
-        console.log('Datos guardados:', response.data);
+        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+        Swal.fire('Guardado', 'El diagrama ha sido guardado.', 'success');
         navigate('/diagramas');
-      } else {
-        Swal.fire('Cancelado', 'El diagrama no ha sido guardado.', 'info');
       }
     } catch (error) {
       console.error('Error al guardar los datos:', error.response ? error.response.data : error.message);
     }
   };
+  
+  const handleUpdate = async () => {
+    try {
+      const data = {
+        fecha: formData.fecha,
+        problema: formData.problema,
+        requisito: formData.requisito,
+        auditado: userData.Nombre,
+        hallazgo: formData.hallazgo,
+        correccion: formData.correccion,
+        causa: formData.causa,
+        diagrama,
+        participantes: formData.participantes,
+        afectacion: formData.afectacion,
+        actividades,
+        estado: 'Hecho',
+        fechaElaboracion
+      };
+  
+      const result = await Swal.fire({
+        title: '¿Estás seguro de querer actualizar?',
+        text: 'El diagrama será actualizado.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3ccc37',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, actualizar',
+        cancelButtonText: 'Cancelar'
+      });
+  
+      // Solo procede si el usuario confirma
+      if (result.isConfirmed) {
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${selectedRecordId}`, data);
+        Swal.fire('Actualizado', 'El diagrama ha sido actualizado.', 'success');
+        navigate('/diagramas');
+      }
+    } catch (error) {
+      console.error('Error al actualizar los datos:', error.response ? error.response.data : error.message);
+    }
+  };
+  
+  
 
   const Guardar = async () => {
     if (
@@ -114,13 +257,31 @@ const CreacionIshikawa = () => {
       !formData.correccion ||
       !formData.fecha ||
       !formData.causa ||
-      diagrama.some(dia => !dia.problema || !dia.text1 || !dia.text2 || !dia.text3 || !dia.text10 || !dia.text11) ||
+      diagrama.some(dia => !dia.text1 || !dia.text2 || !dia.text3 || !dia.text10 || !dia.text11) ||
       actividades.some(act => !act.actividad || !act.responsable || !act.fechaCompromiso)
     ) {
       console.log('Por favor, complete todos los campos requeridos antes de guardar.');
       return;
     }
     await handleSave();
+  };
+
+  const Actualizar = async () => {
+    if (
+      !formData.hallazgo ||
+      !formData.requisito||
+      !formData.afectacion ||
+      !formData.problema ||
+      !formData.correccion ||
+      !formData.fecha ||
+      !formData.causa ||
+      diagrama.some(dia => !dia.text1 || !dia.text2 || !dia.text3 || !dia.text10 || !dia.text11) ||
+      actividades.some(act => !act.actividad || !act.responsable || !act.fechaCompromiso)
+    ) {
+      console.log('Por favor, complete todos los campos requeridos antes de guardar.');
+      return;
+    }
+    await handleUpdate();
   };
 
   const agregarFilaActividad = () => {
@@ -169,10 +330,32 @@ const CreacionIshikawa = () => {
       <form onSubmit={(e) => {
           e.preventDefault(); // Prevenir el envío automático del formulario
           if (isEditing) {
+            Actualizar();
+          } else {
             Guardar();
           }
         }}>
+          
       <div>
+      
+      <div style={{textAlign:'center'}}>
+      <h2>Seleccionar un Registro de Ishikawa:</h2>
+        <select className='selector-ish' onChange={handleSelectRecord} value={selectedRecordId || ''}>
+          <option value="">Nuevo...</option>
+          {ishikawaRecords.map(record => (
+            <option key={record._id} value={record._id}>
+              Corregir: {record.problema}
+            </option>
+          ))}
+        </select>
+        </div>
+
+        {formData.notaRechazo ? (
+          <div className='th-comentario'>
+             <div style={{padding:'15px'}}>{formData.notaRechazo}</div>
+          </div>
+         ): ''}
+
         <div className="image-container">
         <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
         <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
@@ -195,7 +378,7 @@ const CreacionIshikawa = () => {
           </div>
           <div className='posicion-en-2'>
             <h3>Fecha: 
-            <input type="date" name='fecha'
+            <input type="date" name='fecha' value={formData.fecha}
                   style={{ marginTop: '0.4rem', color: '#000000' }} placeholder="Agregar afectación. . ." required 
                    onChange={handleFormDataChange} />
             </h3>

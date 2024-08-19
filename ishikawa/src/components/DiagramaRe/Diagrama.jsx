@@ -16,7 +16,8 @@ const Diagrama = () => {
         const fetchData = async () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-                const dataFiltrada = response.data.filter(item => item.estado === 'Hecho' && item.auditado === userData.Nombre);
+                const dataFiltrada = response.data.filter(item => item.estado === 'Hecho' && 
+                    item.auditado === userData.Nombre);
                 
                 // Ordenar por fechaElaboracion
                 const dataOrdenada = dataFiltrada.sort((a, b) => new Date(a.fechaElaboracion) - new Date(b.fechaElaboracion));
@@ -103,12 +104,12 @@ const Diagrama = () => {
                         <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
                         <div className='posicion-en'>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <h2 style={{ marginLeft: '30rem', marginRight: '10px' }}>Problema: </h2>
-                                <div style={{ width: '30rem', fontSize: '20px' }}>{ishikawa.problema}</div>
+                                <h2 style={{ marginLeft: '50rem', marginRight: '10px' }}>Problema: </h2>
+                                <div style={{ width: '50rem', fontSize: '20px' }}>{ishikawa.problema}</div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <h2 style={{ marginLeft: '30rem', marginRight: '10px' }}>Afectación: </h2>
-                                <div style={{ width: '30rem', fontSize: '20px' }}>{ishikawa.afectacion}</div>
+                                <h2 style={{ marginLeft: '50rem', marginRight: '10px' }}>Afectación: </h2>
+                                <div style={{ width: '50rem', fontSize: '20px' }}>{ishikawa.afectacion}</div>
                             </div>
                         </div>
                         <div className='posicion-en-3'>
@@ -136,7 +137,7 @@ const Diagrama = () => {
                                     <textarea className="text-area" name='text13' value={item.text13} style={{ top: '35rem', left: '36rem' }} disabled></textarea>
                                     <textarea className="text-area" name='text14' value={item.text14} style={{ top: '39rem', left: '16.6rem' }} disabled></textarea>
                                     <textarea className="text-area" name='text15' value={item.text15} style={{ top: '39rem', left: '32.8rem' }} disabled></textarea>
-                                    <textarea className="text-area" style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} value={item.problema}></textarea>
+                                    <textarea className="text-area" style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} value={ishikawa.problema} disabled></textarea>
                                 </div>
                             ))}
                         </div>
