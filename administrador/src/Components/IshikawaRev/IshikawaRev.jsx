@@ -29,7 +29,7 @@ const IshikawaRev = () => {
     const [showNotaRechazo, setShowNotaRechazo] = useState(false);
     const [tempFechaCompromiso, setTempFechaCompromiso] = useState('');
     const [actividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: [] }]);
-    const [correcciones, setCorrecciones] = useState([{ actividad: '', responsable: '', fechaCompromiso: [], cerrada: '' }]);
+    const [correcciones, setCorrecciones] = useState([{ actividad: '', responsable: '', fechaCompromiso: null, cerrada: '' }]);
     const [nuevaCorreccion, setNuevaCorreccion] = useState({actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
 
     const fetchData = useCallback(async () => {
@@ -90,18 +90,36 @@ const IshikawaRev = () => {
         fetchData();
     }, [fetchData]);
 
-      useEffect(() => {
+    useEffect(() => {
         if (filteredIshikawas.length > 0) {
-            const correccionesIniciales = filteredIshikawas[0].correcciones.map(correccion => ({
-                ...correccion,
-                fechaCompromiso: new Date(correccion.fechaCompromiso).toISOString().split('T')[0]  // Formato YYYY-MM-DD
-            }));
+            const correccionesIniciales = filteredIshikawas[0].correcciones.map(correccion => {
+                let fechaCompromiso = null; // Valor predeterminado
+                
+                if (correccion.fechaCompromiso && correccion.fechaCompromiso !== '') {
+                    const fecha = new Date(correccion.fechaCompromiso);
+                    
+                    // Verificar si la fecha es válida
+                    if (!isNaN(fecha.getTime())) {
+                        fechaCompromiso = fecha.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+                    }
+                }
+    
+                return {
+                    ...correccion,
+                    fechaCompromiso
+                };
+            });
+    
             if (correccionesIniciales.length === 0) {
-                correccionesIniciales.push({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
+                correccionesIniciales.push({ actividad: '', responsable: '', fechaCompromiso: null, cerrada: '' });
             }
+    
             setCorrecciones(correccionesIniciales);
         }
-    }, [filteredIshikawas]);       
+    }, [filteredIshikawas]);
+    
+    
+              
       
       useEffect(() => {
         const fetchUsuarios = async () => {
@@ -240,8 +258,6 @@ const IshikawaRev = () => {
         });
 };
 
-  
-      
 
     const handleCorreccionChange = (index, field, value) => {
         const nuevasCorrecciones = [...correcciones];
@@ -262,6 +278,34 @@ const IshikawaRev = () => {
     const handleAgregarFila = () => {
         setCorrecciones([...correcciones, nuevaCorreccion]);
         setNuevaCorreccion({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
+    };
+
+    const handleGuardarCambios2 = async () => {
+        try {
+            if (filteredIshikawas.length === 0) {
+                alert('No hay datos para actualizar');
+                return;
+            }
+    
+            const { _id } = filteredIshikawas[0];
+            const updatedIshikawa = {
+                correcciones
+            };
+    
+            console.log('Enviando datos a actualizar:', updatedIshikawa);
+    
+            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, {
+                estado: 'Aprobado',
+                ...updatedIshikawa
+            });
+    
+            console.log('Respuesta del servidor:', response.data);
+    
+            alert('Información actualizada correctamente');
+        } catch (error) {
+            console.error('Error updating data:', error);
+            alert('Hubo un error al actualizar la información');
+        }
     };
             
     const handleGuardarCambios = async () => {
@@ -571,6 +615,7 @@ const IshikawaRev = () => {
                             )}
                             
                             <div className='buttons-g'>
+                           
                                 <button onClick={() => setShowNotaRechazo(!showNotaRechazo)}>
                                     {showNotaRechazo ? 'Ocultar Nota' : 'Nota'}
                                 </button>
@@ -733,7 +778,16 @@ const IshikawaRev = () => {
                         </tbody>
                     </table>
 
+                    {
+                    (!aprobado) ? null : (
+                    <button onClick={handleGuardarCambios2}>
+                    Guardar Cambios
+                    </button>
+                    )}
+
                     <form onSubmit={Finalizar}>
+                    {
+                    (!aprobado && !revisado) ? null : (
                     <table style={{ border: 'none' }}>
                         <thead>
                             <tr>
@@ -804,13 +858,15 @@ const IshikawaRev = () => {
                         ))}
                     </tbody>
                     </table>
+                    )}
                     {
-                    (revisado) ? null : (
+                    (aprobado) ? 
                     <div>
                         <button onClick={(e) => {
                          e.preventDefault();
                          handleAgregarFila();}} className='button-agregar'>Agregar Fila</button>
                     </div>
+                     : ( null
                     )}
                     <div className='button-final'>
                     {
