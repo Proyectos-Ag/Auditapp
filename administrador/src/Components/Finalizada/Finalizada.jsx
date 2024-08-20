@@ -343,8 +343,8 @@ const Finalizada = () => {
                                                             <th>Programa</th>
                                                             <th>Lineamiento</th>
                                                             <th>Criterio</th>
+                                                            <th>Problema</th>
                                                             <th>Hallazgos</th>
-                                                            <th>Evidencia</th>
                                                             <th>Acciones</th>
                                                             <th>Fecha</th>
                                                             <th>Responsable</th>

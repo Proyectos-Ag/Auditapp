@@ -343,6 +343,7 @@ const ReporteF = () => {
 
                                                             // Si ishikawa existe y el nombre de usuario coincide con ishikawa.auditado, la fila será incluida
                                                             return ishikawa && (userData.Nombre === ishikawa.auditado && ishikawa.idRep === dato._id);
+                                                            
                                                         }
                                                         return false;
                                                         }).map((desc, descIdx) => {

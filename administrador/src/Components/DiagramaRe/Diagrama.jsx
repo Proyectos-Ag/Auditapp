@@ -17,7 +17,7 @@ const Diagrama = () => {
         const fetchData = async () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-                const dataFiltrada = response.data.filter(item => item.estado === 'Hecho');
+                const dataFiltrada = response.data.filter(item => (item.estado === 'Hecho' || item.estado === 'Aprobado') && !item.hasOwnProperty('idRep'));
                 
                 // Ordenar por fechaElaboracion
                 const dataOrdenada = dataFiltrada.sort((a, b) => new Date(a.fechaElaboracion) - new Date(b.fechaElaboracion));
@@ -30,24 +30,6 @@ const Diagrama = () => {
     
         fetchData();
     }, []);
-    
-
-    useEffect(() => {
-        const simulateInputChange = () => {
-          const textareas = document.querySelectorAll('textarea');
-          textareas.forEach((textarea) => {
-            const event = {
-              target: textarea,
-              name: textarea.name,
-              value: textarea.value
-            };
-            handleInputChange(event);
-          });
-        };
-    
-        simulateInputChange(); // Ejecutar la función al cargar el componente
-    
-      }, [ishikawas]);
 
       const toggleVisibility = (index) => {
         setVisibleIndex(visibleIndex === index ? null : index);
@@ -84,6 +66,34 @@ const Diagrama = () => {
         });
     };
 
+    const handleAprobar = async (id) => {
+        try {
+            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${id}`, {
+                estado: 'Aprobado'
+            });
+        } catch (error) {
+            console.error('Error updating data:', error);
+            alert('Hubo un error al actualizar la información');
+        }
+        };
+    
+        const Aprobar = async (id) => {
+            Swal.fire({
+              title: '¿Está seguro de querer aprobar este diagrama?',
+              text: '¡Esta acción no se puede revertir!',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#3ccc37',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Sí, aprobar',
+              cancelButtonText: 'Cancelar'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                handleAprobar (id);
+              }
+            });
+          };
+
     const handleGuardarRechazo = async (id) => {
         try {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${id}`, {
@@ -112,6 +122,23 @@ const Diagrama = () => {
               }
             });
           };
+
+          useEffect(() => {
+            const simulateInputChange = () => {
+              const textareas = document.querySelectorAll('textarea');
+              textareas.forEach((textarea) => {
+                const event = {
+                  target: textarea,
+                  name: textarea.name,
+                  value: textarea.value
+                };
+                handleInputChange(event);
+              });
+            };
+        
+            simulateInputChange(); // Ejecutar la función al cargar el componente
+        
+          }, [ishikawas]);
 
     return (
         <div>
@@ -142,13 +169,18 @@ const Diagrama = () => {
                                     />
                                 </div>
                             )}
+
+                        {
+                        (ishikawa.estado === 'Aprobado') ? null : (
                         <div className='buttons-g'>
                                 <button onClick={() => setShowNotaRechazo(!showNotaRechazo)}>
                                     {showNotaRechazo ? 'Ocultar Nota' : 'Nota'}
                                 </button>
                                 <button onClick={() => Rechazar(ishikawa._id)} className='boton-rechazar' >Rechazar</button>
+                                <button onClick={() => Aprobar(ishikawa._id)} >Aprobar</button>
                                 
                             </div>
+                            )}
 
                         <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
                         <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
@@ -246,7 +278,7 @@ const Diagrama = () => {
                                 <tr>
                                     <th className="conformity-header">Actividad</th>
                                     <th className="conformity-header">Responsable</th>
-                                    <th className="conformity-header">Fecha Compromiso</th>
+                                    <th className="conformity-header">Fecha Verificación</th>
                                     <th colSpan="2" className="conformity-header">
                                         Acción Correctiva Cerrada
                                     </th>
@@ -272,6 +304,7 @@ const Diagrama = () => {
             </div>
         </div>
     );
+    
 };
 
 export default Diagrama;

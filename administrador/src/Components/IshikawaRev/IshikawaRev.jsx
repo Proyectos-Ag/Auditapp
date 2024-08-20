@@ -793,7 +793,7 @@ const IshikawaRev = () => {
                             <tr>
                                 <th className="conformity-header">Actividad</th>
                                 <th className="conformity-header">Responsable</th>
-                                <th className="conformity-header">Fecha Compromiso</th>
+                                <th className="conformity-header">Fecha Verificación</th>
                                 <th colSpan="2" className="conformity-header">
                                      Acción Correctiva Cerrada
                                     <div style={{ display: 'flex' }}>
