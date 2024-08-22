@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { UserContext } from '../../App';
 import Swal from 'sweetalert2'; 
+import withReactContent from 'sweetalert2-react-content';
 
 const Ishikawa = () => {
   const { userData } = useContext(UserContext);
@@ -28,6 +29,7 @@ const Ishikawa = () => {
   const [fechaElaboracion, setFechaElaboracion] = useState('');
   const [tempFechaCompromiso, setTempFechaCompromiso] = useState('');
   const [, setSelectedTextareas] = useState(new Set());
+  const MySwal = withReactContent(Swal);
  
   const [formData,setData] = useState({
     problema: '',
@@ -544,10 +546,38 @@ const obtenerEstiloTextarea = (texto, causa) => {
       ? { backgroundColor: '#f1fc5e9f', borderRadius: '10px' } 
       : {};
 };
-  
-  if (!datos || !programa || !descripcion) {
-    return <div>Cargando...</div>;
-  }
+
+const mostrarCargando = () => {
+  MySwal.fire({
+    title: 'Cargando...',
+    text: 'Por favor, espere',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+};
+
+const ocultarCargando = () => {
+  Swal.close();
+};
+
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      mostrarCargando(); // Mostrar el pop-up de carga
+      await verificarRegistro();
+      ocultarCargando(); // Ocultar el pop-up de carga después de recibir los datos
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      ocultarCargando(); // Ocultar el pop-up de carga en caso de error
+    }
+  };
+
+  fetchData();
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
  
   if (proceso) {
     return (
@@ -624,7 +654,7 @@ const obtenerEstiloTextarea = (texto, causa) => {
           </div>
           <div >
             <img src={ishikawa} alt="Diagrama de Ishikawa" className="responsive-image" />
-            {diagrama.map((dia, index) => (
+            { diagrama.length === 0 ? 'Recargar': diagrama.map((dia, index) => (
             <div key={index}>
            <textarea maxLength={145} className="text-area" name="text1" value={dia.text1} onChange={handleInputChange} 
            style={{ top: '19.1rem', left: '8.7rem', ...obtenerEstiloTextarea(dia.text1, formData.causa)}} placeholder="Texto..." required disabled={revisado} onDoubleClick={handleDoubleClick}
