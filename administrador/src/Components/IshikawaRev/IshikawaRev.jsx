@@ -1,5 +1,4 @@
 import React, { useEffect, useState,useCallback,useContext } from 'react';
-import './css/IshikawaRev.css';
 import Navigation from "../Navigation/Navbar";
 import Logo from "../../assets/img/logoAguida.png";
 import { useParams } from 'react-router-dom';
@@ -9,6 +8,9 @@ import { UserContext } from '../../App';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import Fotos from './Foto'; 
+import './css/Modal.css';
+import './css/IshikawaRev.css';
 
 const IshikawaRev = () => {
     const { userData } = useContext(UserContext);
@@ -18,6 +20,11 @@ const IshikawaRev = () => {
     const { _id, id, nombre} = useParams();
     const [valorSeleccionado, setValorSeleccionado] = useState('');
     const [, setDatos] = useState(null);
+    const [selectedField, setSelectedField] = useState(null); 
+    const [imageModalOpen, setImageModalOpen] = useState(false);
+    const [capturedPhotos, setCapturedPhotos] = useState({}); 
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [modalOpen, setModalOpen] = useState(false); 
     const [mensaje, setMensaje] = useState('');
     const [notaRechazo, setNotaRechazo] = useState('');
     const [rechazo,  setRechazo] = useState([]);
@@ -25,12 +32,31 @@ const IshikawaRev = () => {
     const [usuarios, setUsuarios] = useState([]);
     const [aprobado,  setAprobado] = useState([]);
     const [showPart, setShowPart] = useState(true);
+    const [selectedIndex, setSelectedIndex] = useState(null);
     const [showReprogramar, setShowReprogramar] = useState(false);
     const [showNotaRechazo, setShowNotaRechazo] = useState(false);
     const [tempFechaCompromiso, setTempFechaCompromiso] = useState('');
     const [actividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: [] }]);
-    const [correcciones, setCorrecciones] = useState([{ actividad: '', responsable: '', fechaCompromiso: null, cerrada: '' }]);
+    const [correcciones, setCorrecciones] = useState([{ actividad: '', responsable: '', fechaCompromiso: null, cerrada: '', evidencia: ''}]);
     const [nuevaCorreccion, setNuevaCorreccion] = useState({actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
+    const [diagrama] = useState([{
+        problema: '',
+        text1: '',
+        text2: '',
+        text3: '',
+        text4: '',
+        text5: '',
+        text6: '',
+        text7: '',
+        text8: '',
+        text9: '',
+        text10: '',
+        text11: '',
+        text12: '',
+        text13: '',
+        text14: '',
+        text15: ''
+       }]);
 
     const fetchData = useCallback(async () => {
       try {
@@ -116,10 +142,7 @@ const IshikawaRev = () => {
     
             setCorrecciones(correccionesIniciales);
         }
-    }, [filteredIshikawas]);
-    
-    
-              
+    }, [filteredIshikawas]);  
       
       useEffect(() => {
         const fetchUsuarios = async () => {
@@ -147,8 +170,6 @@ const IshikawaRev = () => {
             setMensaje('Cargando datos...');
         }
     }, [ishikawas, _id, id, nombre]);
-    
-
 
     const handlePrintPDF = () => {
     const showLoading = () => {
@@ -280,44 +301,74 @@ const IshikawaRev = () => {
         setNuevaCorreccion({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
     };
 
-    const handleGuardarCambios2 = async () => {
+    const handleGuardarCambios2 = async (selectedIndex) => {
         try {
             if (filteredIshikawas.length === 0) {
                 alert('No hay datos para actualizar');
                 return;
             }
     
+            // Mapeo de correcciones para asignar valor a evidencia
+            const correccionesActualizadas = correcciones.map((correccion, i) => {
+                const fieldKey = `${id}_${i}`;
+                const imagenBase64 = capturedPhotos[fieldKey]
+                    ? capturedPhotos[fieldKey].startsWith('data:image/png;base64,')
+                        ? capturedPhotos[fieldKey]
+                        : `data:image/png;base64,${capturedPhotos[fieldKey]}`
+                    : correccion.evidencia;  // Mantén la evidencia actual si no hay una nueva imagen
+            
+                return {
+                    ...correccion,
+                    evidencia: imagenBase64
+                };
+            });
+            
             const { _id } = filteredIshikawas[0];
             const updatedIshikawa = {
-                correcciones
+                correcciones: correccionesActualizadas
             };
-    
-            console.log('Enviando datos a actualizar:', updatedIshikawa);
     
             const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, {
                 estado: 'Aprobado',
                 ...updatedIshikawa
             });
-    
             console.log('Respuesta del servidor:', response.data);
-    
-            alert('Información actualizada correctamente');
+            Swal.fire({
+                title: 'Éxito!',
+                text: 'Información guardada correctamente.',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+              });
         } catch (error) {
-            console.error('Error updating data:', error);
+            console.error('Error al actualizar la información:', error);
             alert('Hubo un error al actualizar la información');
         }
-    };
+    };    
             
-    const handleGuardarCambios = async () => {
+    const handleGuardarCambios = async (selectedIndex) => {
         try {
             if (filteredIshikawas.length === 0) {
                 alert('No hay datos para actualizar');
                 return;
             }
+
+            const correccionesActualizadas = correcciones.map((correccion, i) => {
+                const fieldKey = `${id}_${i}`;
+                const imagenBase64 = capturedPhotos[fieldKey]
+                    ? capturedPhotos[fieldKey].startsWith('data:image/png;base64,')
+                        ? capturedPhotos[fieldKey]
+                        : `data:image/png;base64,${capturedPhotos[fieldKey]}`
+                    : correccion.evidencia;  // Mantén la evidencia actual si no hay una nueva imagen
+            
+                return {
+                    ...correccion,
+                    evidencia: imagenBase64
+                };
+            });
     
             const { _id } = filteredIshikawas[0];
             const updatedIshikawa = {
-                correcciones
+                correcciones: correccionesActualizadas
             };
     
             console.log('Enviando datos a actualizar:', updatedIshikawa);
@@ -326,17 +377,23 @@ const IshikawaRev = () => {
                 estado: 'Revisado',
                 ...updatedIshikawa
             });
-    
             console.log('Respuesta del servidor:', response.data);
-    
-            alert('Información actualizada correctamente');
+            Swal.fire({
+                title: 'Éxito!',
+                text: 'El diagrama se ha finalizado correctamente.',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            }).then(() => {
+                // Recargar la ventana actual después de cerrar el Swal
+                window.location.reload();
+            });
         } catch (error) {
             console.error('Error updating data:', error);
             alert('Hubo un error al actualizar la información');
         }
     };    
 
-    const Finalizar = async (event) => {
+    const Finalizar = async (event,selectedIndex) => {
         event.preventDefault();
         Swal.fire({
           title: '¿Está seguro de querer finalizar este diagrama?',
@@ -349,7 +406,7 @@ const IshikawaRev = () => {
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
-            handleGuardarCambios();
+            handleGuardarCambios(selectedIndex);
           }
         });
       };
@@ -458,7 +515,7 @@ const IshikawaRev = () => {
                 hallazgo:'',
                 correccion: '',
                 causa: '',
-                diagrama: [],
+                diagrama: diagrama,
                 participantes: '',
                 afectacion: '',
                 actividades: [],
@@ -576,13 +633,37 @@ const IshikawaRev = () => {
 
   return trimmedCausaParts.some(part => part === trimmedTextAreaValue);
 }
-    
 
-    const obtenerEstiloTextarea = (texto, causa) => {
-      return verificarCoincidencia(texto, causa) 
-          ? { backgroundColor: '#f1fc5e9f', borderRadius: '10px' } 
-          : {};
-    };
+const handleOpenModal = (fieldKey) => {
+    setSelectedField(fieldKey);
+    setModalOpen(true);
+};
+
+const handleImageClick = (imageSrc) => {
+    setSelectedImage(imageSrc);
+    setImageModalOpen(true);
+};  
+
+const closeModal = () => {
+    setImageModalOpen(false);
+    setSelectedImage(null);
+};
+
+const handleCapture = (dataUrl) => {
+    if (selectedField) {
+        setCapturedPhotos(prev => ({
+            ...prev,
+            [selectedField]: dataUrl.startsWith('data:image/png;base64,') ? dataUrl : `data:image/png;base64,${dataUrl}`
+        }));
+    }
+    setModalOpen(false);
+};    
+
+const obtenerEstiloTextarea = (texto, causa) => {
+    return verificarCoincidencia(texto, causa) 
+    ? { backgroundColor: '#f1fc5e9f', borderRadius: '10px' } 
+    : {};
+};
 
     return (
         <div>
@@ -778,105 +859,158 @@ const IshikawaRev = () => {
                         </tbody>
                     </table>
 
-                    {
-                    (!aprobado) ? null : (
-                    <button onClick={handleGuardarCambios2}>
-                    Guardar Cambios
-                    </button>
-                    )}
-
-                    <form onSubmit={Finalizar}>
+                    <form onSubmit={(event) => Finalizar(event, selectedIndex)}>
                     {
                     (!aprobado && !revisado) ? null : (
-                    <table style={{ border: 'none' }}>
+                        <table style={{ border: 'none' }}>
                         <thead>
                             <tr>
                                 <th className="conformity-header">Actividad</th>
                                 <th className="conformity-header">Responsable</th>
                                 <th className="conformity-header">Fecha Verificación</th>
                                 <th colSpan="2" className="conformity-header">
-                                     Acción Correctiva Cerrada
+                                    Acción Correctiva Cerrada
                                     <div style={{ display: 'flex' }}>
                                         <div className="left">Sí</div>
                                         <div className="right">No</div>
                                     </div>
                                 </th>
+                                <th className="conformity-header"  style={{ width: '10em'}}>Evidencia</th>
                             </tr>
                         </thead>
                         <tbody>
-                        {correcciones.map((correccion, index) => (
-                            <tr key={index}>
-                                <td>
-                                    <textarea
-                                        type="text"
-                                        value={correccion.actividad}
-                                        onChange={(e) => handleCorreccionChange(index, 'actividad', e.target.value)}
-                                        className="no-border" required
-                                    />
-                                </td>
-                                <td>
-                                    <textarea
-                                        type="text"
-                                        value={correccion.responsable}
-                                        onChange={(e) => handleCorreccionChange(index, 'responsable', e.target.value)}
-                                        className="no-border" required
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        type="date"
-                                        value={correccion.fechaCompromiso}
-                                        onChange={(e) => handleCorreccionChange(index, 'fechaCompromiso', e.target.value)}
-                                        className="no-border" required
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        type="checkbox"
-                                        checked={correccion.cerrada === 'Sí'}
-                                        onChange={(e) => handleCorreccionChange(index, 'cerrada', e.target.checked)}
-                                        className="no-border"
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        type="checkbox"
-                                        checked={correccion.cerrada === 'No'}
-                                        onChange={(e) => handleCorreccionChange(index, 'cerradaNo', e.target.checked)}
-                                        className="no-border"
-                                    />
-                                </td>
-                                <td className='cancel-acc'>
-                                    {index > 0 && (
-                                        <button 
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleEliminarFila(index);}}>Eliminar</button>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
+                            {correcciones.map((correccion, index) => {
+                                const fieldKey = `${id}_${index}`;
+                                const base64String = correccion.evidencia && typeof correccion.evidencia === 'string'
+                                    ? correccion.evidencia.startsWith('data:image/png;base64,')
+                                        ? correccion.evidencia
+                                        : `data:image/png;base64,${correccion.evidencia}`
+                                    : ''; // Devuelve una cadena vacía si `evidencia` no está definida o no es una cadena
+                                return (
+                                    <tr key={index} onClick={() => setSelectedIndex(index)}>
+                                        <td>
+                                            <textarea
+                                                type="text"
+                                                value={correccion.actividad}
+                                                onChange={(e) => handleCorreccionChange(index, 'actividad', e.target.value)}
+                                                className="no-border" required
+                                            />
+                                        </td>
+                                        <td>
+                                            <textarea
+                                                type="text"
+                                                value={correccion.responsable}
+                                                onChange={(e) => handleCorreccionChange(index, 'responsable', e.target.value)}
+                                                className="no-border" required
+                                            />
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="date"
+                                                value={correccion.fechaCompromiso}
+                                                onChange={(e) => handleCorreccionChange(index, 'fechaCompromiso', e.target.value)}
+                                                className="no-border" required
+                                            />
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                checked={correccion.cerrada === 'Sí'}
+                                                onChange={(e) => handleCorreccionChange(index, 'cerrada', e.target.checked)}
+                                                className="no-border"
+                                            />
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                checked={correccion.cerrada === 'No'}
+                                                onChange={(e) => handleCorreccionChange(index, 'cerradaNo', e.target.checked)}
+                                                className="no-border"
+                                            />
+                                        </td>
+                                        <td>
+                                            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+                                            {aprobado && (
+                                            <div className="button-foto" onClick={() => handleOpenModal(fieldKey)}>
+                                                <span className="material-symbols-outlined">
+                                                    add_a_photo
+                                                </span>
+                                            </div>
+                                            )}
+                                            {correccion.evidencia && (
+                                                <img
+                                                    src={base64String}
+                                                    alt="Evidencia"
+                                                    style={{ width: '100%', height: 'auto' }}
+                                                    className="hallazgo-imagen"
+                                                    onClick={() => handleImageClick(base64String)}
+                                                />
+                                            )}
+                                            {capturedPhotos[fieldKey] && (
+                                                <img
+                                                    src={capturedPhotos[fieldKey]}
+                                                    alt="Captura"
+                                                    style={{ width: '100%', height: 'auto' }}
+                                                    onClick={() => handleImageClick(capturedPhotos[fieldKey])}
+                                                />
+                                            )}
+                                        </td>
+                                        {aprobado && (
+                                        <td className='cancel-acc'>
+                                            {index > 0 && (
+                                                <button onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleEliminarFila(index);
+                                                }}>
+                                                    Eliminar
+                                                </button>
+                                            )}
+                                        </td>
+                                        )}
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
                     </table>
                     )}
-                    {
-                    (aprobado) ? 
-                    <div>
-                        <button onClick={(e) => {
-                         e.preventDefault();
-                         handleAgregarFila();}} className='button-agregar'>Agregar Fila</button>
-                    </div>
-                     : ( null
+                    {/* Botón "Agregar Fila" */}
+                    {aprobado && (
+                        <div>
+                            <button onClick={(e) => {
+                                e.preventDefault();
+                                handleAgregarFila();
+                            }} className='button-agregar'>
+                                Agregar Fila
+                            </button>
+                        </div>
                     )}
+
+                    {/* Botón "Guardar Cambios" */}
+                    {aprobado && selectedIndex !== null && (
+                            <button className='button-agregar'
+                            onClick={(e) => {e.preventDefault(); handleGuardarCambios2(selectedIndex);}}>
+                                Guardar Cambios
+                            </button>
+                    )}
+
                     <div className='button-final'>
-                    {
-                    (!aprobado) ? null : (
-                    <button type='submit' >Finalizar</button>
-                    )}
+                        {/* Botón "Finalizar" */}
+                        {aprobado && (
+                            <button type='submit'>Finalizar</button>
+                        )}
                     </div>
                     </form>
                     </div>
-                </div>
+
+                    <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
+                    {imageModalOpen && (
+                        <div className="modal-overlay" onClick={closeModal}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <img src={selectedImage} alt="Ampliada" className="modal-image" />
+                            </div>
+                        </div>
+                    )}
+                    </div>
                 </div>
                 ))}
             </div>
@@ -899,6 +1033,7 @@ const IshikawaRev = () => {
                 <div style={{display:'flex', justifyContent:'center'}}>{mensaje}</div> 
                 <div style={{display:'flex',fontSize:'100px', justifyContent:'center'}}>🏝️</div></div>
                 </div>}
+                
          </div>
     );
 };

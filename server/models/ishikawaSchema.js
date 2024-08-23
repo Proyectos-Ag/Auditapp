@@ -30,7 +30,8 @@ const correccionSchema = new mongoose.Schema({
     actividad: String,
     responsable: String,
     fechaCompromiso: [String],
-    cerrada: String
+    cerrada: String,
+    evidencia: String
 });
 
 const ishikawaSchema = new mongoose.Schema({

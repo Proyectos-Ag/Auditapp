@@ -654,7 +654,7 @@ useEffect(() => {
           </div>
           <div >
             <img src={ishikawa} alt="Diagrama de Ishikawa" className="responsive-image" />
-            { diagrama.length === 0 ? 'Recargar': diagrama.map((dia, index) => (
+            {diagrama.map((dia, index) => (
             <div key={index}>
            <textarea maxLength={145} className="text-area" name="text1" value={dia.text1} onChange={handleInputChange} 
            style={{ top: '19.1rem', left: '8.7rem', ...obtenerEstiloTextarea(dia.text1, formData.causa)}} placeholder="Texto..." required disabled={revisado} onDoubleClick={handleDoubleClick}
@@ -707,7 +707,7 @@ useEffect(() => {
              style={{ top: '39rem', left: '32.8rem', ...obtenerEstiloTextarea(dia.text15, formData.causa) }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
   
-            <textarea maxlength="105" className="text-area" name='problema' value={formData.problema} onChange={handleDiagrama}
+            <textarea maxlength="105" className="text-area" name='problema' value={descripcion.Observacion ? descripcion.Observacion : formData.problema} onChange={handleInputChange} onClick={handleDiagrama}
              style={{ top: '27rem', left: '67.5rem',width:'8.5rem', height:'8rem' }}placeholder="Problema..." required disabled={revisado}></textarea>
             </div>
           ))}

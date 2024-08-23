@@ -1,6 +1,5 @@
-import { Container, Card, Icon, Button, Modal } from 'semantic-ui-react';
-import './css/Camara.css';
 import { useEffect, useRef, useState } from 'react';
+import './css/Camara.css';
 
 function Fotos({ open, onClose, onCapture }) {
   const videoDiv = useRef(null);
@@ -107,66 +106,56 @@ function Fotos({ open, onClose, onCapture }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, camera]);
 
+  if (!open) return null;
+
   return (
-    <Modal open={open} onClose={onClose} size="small" className="fixed-modal">
-      <Modal.Content>
-        <Container className="miApp" fluid textAlign="center">
-          <Card.Group centered>
-            <Card>
-              <video ref={videoDiv} style={{ width: '100%', height: 'auto'}}></video>
-              <Card.Content>
-                {/* Control de Zoom */}
-                <input
-                className='funciones'
-                  type="range"
-                  min="1"
-                  max="3"
-                  step="0.1"
-                  value={zoom}
-                  onChange={handleZoomChange}
-                />
+    <div className={`modal ${open ? 'open' : 'closed'}`}>
+      <div className="fixed-modal">
+        <div className="camera-container">
+          <video ref={videoDiv} style={{ width: '100%', height: 'auto'}}></video>
 
-                {/* Control de Enfoque */}
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="1"
-                  value={focus}
-                  onChange={handleFocusChange}
-                />
+          <div className="controls">
+            <input
+              className="zoom-slider"
+              type="range"
+              min="1"
+              max="3"
+              step="0.1"
+              value={zoom}
+              onChange={handleZoomChange}
+            />
+            <input
+              className="focus-slider"
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={focus}
+              onChange={handleFocusChange}
+            />
 
-                {/* Botón para tomar la foto */}
-                <button className="camera-button" color="teal" onClick={tomarFoto} disabled={!open}>
-                  <span className="material-symbols-outlined" style={{fontSize: "40px",}}>photo_camera</span>
-                </button>
+            <button className="camera-button" onClick={tomarFoto} disabled={!open}>
+              <span className="material-symbols-outlined" style={{ fontSize: '40px' }}>photo_camera</span>
+            </button>
 
-                {/* Botón para cambiar la cámara */}
-                <Button className="camera-switch-button" color="blue" onClick={cambiarCamara}>
-                  <span className="material-symbols-outlined">switch_camera</span>
-                </Button>
+            <button className="camera-switch-button" onClick={cambiarCamara}>
+              <span className="material-symbols-outlined">switch_camera</span>
+            </button>
 
-                {/* Botón para cerrar la cámara */}
-                <Button color="red" className="camera-button-salir" onClick={() => { detenerCamara(); onClose(); }}>
-                  <Icon name="close" /> Salir
-                </Button>
-              </Card.Content>
-            </Card>
+            <button className="camera-button-salir" onClick={() => { detenerCamara(); onClose(); }}>
+              <span>Salir</span>
+            </button>
+          </div>
 
-            <Card>
-              <canvas ref={fotoDiv}></canvas>
-              {hayFoto && (
-                <Card.Content>
-                  <Button color="red" onClick={cerrarFoto}>
-                    <Icon name="close" /> Cerrar Foto
-                  </Button>
-                </Card.Content>
-              )}
-            </Card>
-          </Card.Group>
-        </Container>
-      </Modal.Content>
-    </Modal>
+          <canvas ref={fotoDiv} className="foto-canvas"></canvas>
+          {hayFoto && (
+            <button className="close-photo-button" onClick={cerrarFoto}>
+              <span className="material-symbols-outlined">close</span> Cerrar Foto
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

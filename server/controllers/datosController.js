@@ -194,7 +194,7 @@ const actualizarEstado = async (req, res)=> {
         // Enviar correo electrónico al Auditor Líder
     const mailOptionsAuditor = {
       from: process.env.EMAIL_USER,
-      to: 'rcruces@aguida.com',
+      to: 'soleje28062004@gmail.com',
       subject: 'Se ha enviado una auditoria para revisión',
       text: `${usuario} ha enviado una auditoria para su revisión`,
     };
