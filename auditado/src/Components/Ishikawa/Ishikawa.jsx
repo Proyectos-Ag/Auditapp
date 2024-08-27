@@ -63,11 +63,9 @@ const Ishikawa = () => {
   
   const { _id, id, nombre} = useParams();
   const idRep = _id;
-  const {Observacion}= useParams();
 
   console.log('ID recibido 1:', _id);
   console.log('ID recibido:', id);
-  console.log(' recibido:', Observacion);
 
   useEffect(() => {
     const obtenerDatos = async () => {
