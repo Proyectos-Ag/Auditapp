@@ -9,15 +9,16 @@ mongoose.connection.on('connected', async () => {
 
   try {
     // Busca un usuario root
-    const user = await Usuarios.findOne({ Correo: 'ruben@gmail.com' });
+    const user = await Usuarios.findOne({ Correo: 'rcruces@aguida.com' });
     if (!user) {
       // Si no existe un usuario root, crea uno
       const rootUser = new Usuarios({
-        Nombre: 'Ruben',
+        Nombre: 'Rubén Cruces Paz',
         FechaIngreso: new Date(),
-        Correo: 'ruben@gmail.com',
+        Correo: 'rcruces@aguida.com',
         Contraseña: 'root321', // Asegúrate de encriptar esta contraseña en un entorno de producción
         Puesto: 'Global',
+        Departamento: 'Calidad',
         Escolaridad: 'Ingenieria en Alimentos',
         TipoUsuario: 'Administrador'
         // Agrega aquí cualquier otro campo que necesites

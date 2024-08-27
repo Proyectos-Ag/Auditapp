@@ -71,7 +71,7 @@ function DrawerList({ handleLogout }) {
   const drawerItems = [
     { text: "Inicio", href: "/home" },
     {
-      text: "Auditorias" , subItems: [
+      text: "Auditorías" , subItems: [
         { text: "Llenado de Checklist", href: "/pendiente" },
         { text: "Reportes Generados", href: "/reporte" }
       ]

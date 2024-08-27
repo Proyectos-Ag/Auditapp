@@ -119,6 +119,24 @@ const ReporteF = () => {
         });
     };
 
+    const getButtonBackgroundColor = (estado) => {
+        let backgroundColor;
+        if (estado === 'Asignado') {
+            backgroundColor = '#055e99'; 
+        } else if (estado === 'En revisión') {
+            backgroundColor = '#ffe817'; 
+        } else if (estado === 'Rechazado') {
+            backgroundColor = '#ff1515'; 
+        } else if (estado === 'Aprobado') {
+            backgroundColor = '#25d1dd'; 
+        } else if (estado === 'Revisado') {
+            backgroundColor = '#25f71e'; 
+        } else {
+            backgroundColor = '#585858'; // Por defecto
+        }
+        return backgroundColor;
+    };
+
     const navIshikawa = (_id, id, nombre) => {
         navigate(`/ishikawa/${_id}/${id}/${nombre}`);
     };    
@@ -381,7 +399,6 @@ const ReporteF = () => {
                                                                 ) : null}
                                                             </td>
                                                             <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].actividad : '') : ''}</td>
-                                                            <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
                                                             <td>
                                                                 {ishikawa ? (
                                                                 ishikawa.actividades.length > 0 && ishikawa.actividades[0].fechaCompromiso.length > 0 ? 
@@ -389,9 +406,12 @@ const ReporteF = () => {
                                                                     ''
                                                                 ) : ''}
                                                             </td>
+                                                            <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
                                                             <td>
                                                                 {ishikawa && userData.Nombre === ishikawa.auditado ? (
-                                                                <button className="button-estado" onClick={() => navIshikawa(dato._id, desc.ID, programa.Nombre)}>
+                                                                <button className="button-estado" 
+                                                                style={{ backgroundColor: ishikawa ? getButtonBackgroundColor(ishikawa.estado) : '#6e6e6e' }}
+                                                                onClick={() => navIshikawa(dato._id, desc.ID, programa.Nombre)}>
                                                                     {ishikawa.estado || 'Pendiente'}
                                                                 </button>
                                                                 ) : null}

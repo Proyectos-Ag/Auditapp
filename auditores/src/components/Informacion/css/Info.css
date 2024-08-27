@@ -8,3 +8,26 @@
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
+
+.inf-usuario{
+  text-align: center;
+}
+
+.inf-contra{
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.inf-contra button{
+  background-color: #00cc7e;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  color: #ffffff;
+}
+
+.input-inf{
+  width: 50%;
+  height: 20px;
+  margin-bottom: 10px;
+}

@@ -248,6 +248,30 @@ const Reporte = () => {
         });
       };
 
+      const eliminarReporte = async (id) => {
+        Swal.fire({
+            title: '¿Estás seguro de querer eliminar este reporte?',
+            text: '¡El reporte será eliminado permanentemente!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/datos/${id}`);
+                    obtenerDatos();
+                    Swal.fire('Eliminado', 'El reporte ha sido eliminado.', 'success');
+                } catch (error) {
+                    console.error('Error al eliminar el reporte:', error);
+                    Swal.fire('Error', 'No se pudo eliminar el reporte.', 'error');
+                }
+            }
+        });
+    };
+
 
     return (
         <div className='espacio-repo'>
@@ -312,6 +336,9 @@ const Reporte = () => {
                                         </button>
                                         <button className='boton-rechazar' onClick={() => Rechazar(dato._id, dato.AuditorLiderEmail)}>Rechazar</button>
                                         <button onClick={() => Aprobar(dato._id, PuntuacionObtenida, confExternas,estatus, porcentajeTotal, dato.AuditorLiderEmail)}>Aprobar</button>
+                                        <button onClick={() => eliminarReporte(dato._id)} className='btn-eliminar'>
+                                    Eliminar Reporte
+                                    </button>
                                     </div>     
                                     {visibleTextAreas[dato._id] && (
                                         <textarea

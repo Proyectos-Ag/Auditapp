@@ -51,6 +51,7 @@ const Informacion = () => {
         }
       );
       setMessage('Contraseña actualizada exitosamente');
+      console.log(response);
       
       // Limpiar el formulario
       setNewPassword('');

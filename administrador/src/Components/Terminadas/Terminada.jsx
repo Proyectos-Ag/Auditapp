@@ -169,6 +169,30 @@ const Terminada = () => {
         }
         return backgroundColor;
     };
+
+    const eliminarReporte = async (id) => {
+        Swal.fire({
+            title: '¿Estás seguro de querer eliminar este reporte?',
+            text: '¡El reporte será eliminado permanentemente!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/datos/${id}`);
+                    obtenerDatos();
+                    Swal.fire('Eliminado', 'El reporte ha sido eliminado.', 'success');
+                } catch (error) {
+                    console.error('Error al eliminar el reporte:', error);
+                    Swal.fire('Error', 'No se pudo eliminar el reporte.', 'error');
+                }
+            }
+        });
+    };
     
 
     const navIshikawa = (_id, id, nombre) => {
@@ -238,6 +262,9 @@ const Terminada = () => {
                                     <div className='contenedor-repo'>
                                     <div className='buttons-estado'>
                                     <button onClick={() => Finalizar(dato._id, porcentaje)}>Finalizar</button>
+                                    <button onClick={() => eliminarReporte(dato._id)} className='btn-eliminar'>
+                                    Eliminar Reporte
+                                    </button>
                                     </div>
                                         <div className="header-container-datos-repo">
                                             <img src={logo} alt="Logo Empresa" className="logo-empresa-repo" />
@@ -385,7 +412,7 @@ const Terminada = () => {
                                                             <th>Lineamiento</th>
                                                             <th>Criterio</th>
                                                             <th>Problema</th>
-                                                            <th>Hallazgos</th>
+                                                            <th>{dato.PuntuacionMaxima ? 'Hallazgo' : 'Evidencia'}</th>
                                                             <th>Acciones</th>
                                                             <th>Fecha</th>
                                                             <th>Responsable</th>

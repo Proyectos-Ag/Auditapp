@@ -8,6 +8,7 @@ import Pendiente from './components/Pendientes/Pendiente';
 import Fotos from './components/Pendientes/Foto';
 import Reporte from './components/Reportes/Reporte';
 import Informacion from './components/Informacion/Informacion';
+import ProtectedRoute from './ProtectedRoute';
 
 export const UserContext = createContext(null);
 
@@ -18,11 +19,11 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Login />} /> 
-          <Route path="/home" element={<Inicio/>}/> 
-          <Route path="/pendiente" element={<Pendiente/>}/> 
+          <Route path="/home" element={<ProtectedRoute><Inicio/></ProtectedRoute>}/> 
+          <Route path="/pendiente" element={<ProtectedRoute><Pendiente/></ProtectedRoute>}/> 
           <Route path="/foto" element={<Fotos/>}/> 
-          <Route path="/reporte" element={<Reporte/>}/> 
-          <Route path="/informacion" element={<Informacion/>}/> 
+          <Route path="/reporte" element={<ProtectedRoute><Reporte/></ProtectedRoute>}/> 
+          <Route path="/informacion" element={<ProtectedRoute><Informacion/></ProtectedRoute>}/> 
         </Routes>
       </Router>
     </div>

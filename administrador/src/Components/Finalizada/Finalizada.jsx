@@ -6,6 +6,7 @@ import Navigation from '../Navigation/Navbar';
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import './css/Final.css'
 
 const Finalizada = () => {
     const { userData } = useContext(UserContext);
@@ -125,37 +126,117 @@ const Finalizada = () => {
         navigate(`/ishikawa/${_id}/${id}`);
     }; 
     
-    const generatePDF = async (id) => {
-        const input = document.getElementById(id);
-        const canvas = await html2canvas(input);
-        const imgData = canvas.toDataURL('image/png');
-        
-        const pdf = new jsPDF('l', 'cm', 'letter');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        
-        const imgProps = pdf.getImageProperties(imgData);
-        const imageHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    const handlePrintPDF = () => {
+        const showLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        };
     
-        // Define the threshold height for splitting the page
-        const thresholdHeight = pdfHeight * 0.75; // Adjust this value as needed
+        const hideLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'none';
+        };
     
-        if (imageHeight <= thresholdHeight) {
-            // If the image height is within the threshold, add it to the PDF as a single page
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imageHeight);
-        } else {
-            // Split the content into multiple pages
-            let yOffset = 0;
-            while (yOffset < imageHeight) {
-                pdf.addImage(imgData, 'PNG', 0, -yOffset, pdfWidth, imageHeight);
-                yOffset += pdfHeight;
-                if (yOffset < imageHeight) {
+        showLoading();
+    
+        const part1 = document.getElementById('pdf-content-part1');
+        const part2 = document.getElementById('pdf-content-part2');
+    
+        const addPartToPDF = (element, pdf, isLastPage, pageNumber) => {
+    
+            return html2canvas(element, {
+                scale: 2.5,
+                useCORS: true,
+            }).then((canvas) => {
+                const imgData = canvas.toDataURL('image/jpeg', 0.8);
+                const imgWidth = pdf.internal.pageSize.getWidth();
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+                const marginX = (pdf.internal.pageSize.getWidth() - imgWidth) / 2;
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const availableHeight = pageHeight - 3;
+                
+                // Definir margen superior dinámico según el número de página
+                const marginY = 1.5;
+    
+                let currentHeight = imgHeight;
+                let currentPage = pageNumber;
+    
+                if (currentHeight <= availableHeight) {
+                    pdf.addImage(imgData, 'JPEG', marginX, marginY, imgWidth, currentHeight, undefined, 'FAST');
+                } else {
+                    let yOffset = 0;
+                    while (currentHeight > availableHeight) {
+                        const croppedCanvas = document.createElement('canvas');
+                        croppedCanvas.width = canvas.width;
+                        croppedCanvas.height = availableHeight * (canvas.width / imgWidth);
+    
+                        const ctx = croppedCanvas.getContext('2d');
+                        ctx.drawImage(canvas, 0, yOffset, canvas.width, croppedCanvas.height, 0, 0, croppedCanvas.width, croppedCanvas.height);
+    
+                        const croppedImgData = croppedCanvas.toDataURL('image/jpeg', 0.8);
+                        pdf.addImage(croppedImgData, 'JPEG', marginX, marginY, imgWidth, availableHeight, undefined, 'FAST');
+    
+                        currentHeight -= availableHeight;
+                        yOffset += croppedCanvas.height;
+                        currentPage++;
+                        pdf.addPage();
+                    }
+    
+                    if (currentHeight > 0) {
+                        const finalCanvas = document.createElement('canvas');
+                        finalCanvas.width = canvas.width;
+                        finalCanvas.height = currentHeight * (canvas.width / imgWidth);
+    
+                        const finalCtx = finalCanvas.getContext('2d');
+                        finalCtx.drawImage(canvas, 0, yOffset, canvas.width, finalCanvas.height, 0, 0, finalCanvas.width, finalCanvas.height);
+    
+                        const finalImgData = finalCanvas.toDataURL('image/jpeg', 0.8);
+                        pdf.addImage(finalImgData, 'JPEG', marginX, marginY, imgWidth, currentHeight, undefined, 'FAST');
+                    }
+                }
+    
+                if (!isLastPage) {
                     pdf.addPage();
                 }
-            }
+    
+                return currentPage;
+            });
+        };
+    
+        const pdf = new jsPDF('portrait', 'cm', 'letter');
+    
+        let currentPage = 1;
+    
+        addPartToPDF(part1, pdf, false, currentPage)
+            .then((newPageNumber) => {
+                currentPage = newPageNumber;
+                return addPartToPDF(part2, pdf, true, currentPage);
+            })
+            .then(() => {
+                pdf.save("diagrama_ishikawa.pdf");
+                hideLoading();
+            })
+            .catch((error) => {
+                console.error('Error generating PDF:', error);
+                hideLoading();
+            });
+    }; 
+    
+    const getButtonBackgroundColor = (estado) => {
+        let backgroundColor;
+        if (estado === 'Asignado') {
+            backgroundColor = '#055e99'; 
+        } else if (estado === 'En revisión') {
+            backgroundColor = '#ffe817'; 
+        } else if (estado === 'Rechazado') {
+            backgroundColor = '#ff1515'; 
+        } else if (estado === 'Aprobado') {
+            backgroundColor = '#25d1dd'; 
+        } else if (estado === 'Revisado') {
+            backgroundColor = '#25f71e'; 
+        } else {
+            backgroundColor = '#585858'; // Por defecto
         }
-        
-        pdf.save(`reporte_${id}.pdf`);
+        return backgroundColor;
     };
 
     return (
@@ -163,6 +244,13 @@ const Finalizada = () => {
             <div style={{ position: 'absolute', top: 0, left: 0 }}>
                 <Navigation />
             </div>
+            {/*Mensaje de generacion*/}
+            <div id="loading-overlay" style={{display:'none'}}>
+            <div class="loading-content">
+                Generando archivo PDF...
+            </div>
+            </div>
+
             <div className="datos-container-repo">
             <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Reportes Finalizados</h1>
 
@@ -195,11 +283,11 @@ const Finalizada = () => {
                                     <h2 onClick={() => toggleDuration(dato.Duracion)}>
                                         Fecha de Elaboración: {formatDate(dato.FechaElaboracion)}
                                     </h2>
-                                    <button onClick={() => generatePDF(`reporte-${periodIdx}`)}>Guardar como PDF</button>
+                                    <button onClick={handlePrintPDF}>Guardar como PDF</button>
                                 </div>
 
                                 <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
-                                    <div className='contenedor-repo'>
+                                    <div id='pdf-content-part1' className='contenedor-repo-fin'>
                                         <div className="header-container-datos-repo">
                                             <img src={logo} alt="Logo Empresa" className="logo-empresa-repo" />
                                             <div className='encabezado'>
@@ -324,14 +412,21 @@ const Finalizada = () => {
                                                             )}
                                                         </td>
                                                         <td>
-                                                            <div>{dato.Auditados}</div>
+                                                        {dato.Auditados.map((audita, audIdx) => (
+                                                            <div key={audIdx}>
+                                                            {audita.Nombre}
+                                                            </div>
+                                                        ))}
                                                         </td>
                                                     </tr>
                                                 </tbody>
                                             </table>
+                                            </div>
+                                            </div>
                                             <div>
+                                                <div id='pdf-content-part2' className='contenedor-repo-fin-2'>
                                                 <table>
-                                                    <thead>
+                                                    <thead >
                                                         <tr>
                                                             <th colSpan="6" className="conformity-header-repo">Resultados</th>
                                                             <th colSpan="4" className="conformity-header-repo">Porcentaje de Cumplimiento: <span>
@@ -344,7 +439,7 @@ const Finalizada = () => {
                                                             <th>Lineamiento</th>
                                                             <th>Criterio</th>
                                                             <th>Problema</th>
-                                                            <th>Hallazgos</th>
+                                                            <th>{dato.PuntuacionMaxima ? 'Hallazgo' : 'Evidencia'}</th>
                                                             <th>Acciones</th>
                                                             <th>Fecha</th>
                                                             <th>Responsable</th>
@@ -352,6 +447,7 @@ const Finalizada = () => {
                                                             
                                                         </tr>
                                                     </thead>
+                                                    
                                                     <tbody>
                                                         {dato.Programa.map((programa, programIdx) =>
                                                             programa.Descripcion.map((desc, descIdx) => {
@@ -397,7 +493,9 @@ const Finalizada = () => {
                                                                                 ) : ''}
                                                                             </td>
                                                                             <td>
-                                                                                <button className='button-estado' onClick={() => navIshikawa(dato._id, desc.ID)}>{ishikawa ? ishikawa.estado : 'Pendiente'}</button>
+                                                                                <button className='button-estado'
+                                                                                style={{ backgroundColor: ishikawa ? getButtonBackgroundColor(ishikawa.estado) : '#6e6e6e' }}
+                                                                                 onClick={() => navIshikawa(dato._id, desc.ID)}>{ishikawa ? ishikawa.estado : 'Pendiente'}</button>
                                                                             </td>
                                                                         </tr>
                                                                     );
@@ -408,9 +506,8 @@ const Finalizada = () => {
                                                         )}
                                                     </tbody>
                                                 </table>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         );

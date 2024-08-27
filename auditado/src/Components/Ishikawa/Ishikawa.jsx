@@ -283,7 +283,7 @@ const handleDoubleClick = (e) => {
         participantes: formData.participantes,
         afectacion: formData.afectacion,
         actividades,
-        estado: 'Pendiente'
+        estado: 'Asignado'
       };
   
       const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, data);

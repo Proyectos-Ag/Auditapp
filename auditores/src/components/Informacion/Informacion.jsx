@@ -51,6 +51,7 @@ const Informacion = () => {
         }
       );
       setMessage('Contraseña actualizada exitosamente');
+      console.log(response);
       
       // Limpiar el formulario
       setNewPassword('');
@@ -62,32 +63,41 @@ const Informacion = () => {
 
   return (
     <div>
-        <div style={{ position: 'absolute', top: 0, left: 0 }}>
+    <div style={{ position: 'absolute', top: 0, left: 0 }}>
                 <Navigation />
-            </div>
+    </div>
+
+    <div className='container'>
     <div className='content-inf'>
-      <h1>Información del Usuario</h1>
-      <p>Nombre: {userData.Nombre}</p>
-      <p>Email: {userData.Correo}</p>
-      <p>Tipo de Usuario: {tipo}</p>
-      <p>Puesto: {userData.Puesto}</p>
-      <p>Departamento: {userData.Departamento}</p>
+      <h1 style={{textAlign:'center', fontSize:'40px'}}>Información del Usuario</h1>
+      <p style={{marginLeft:'5em'}}>Nombre: {userData.Nombre}</p>
+      <p style={{marginLeft:'5em'}}>Email: {userData.Correo}</p>
+      <p style={{marginLeft:'5em'}}>Tipo de Usuario: {tipo}</p>
+      <p style={{marginLeft:'5em'}}>Puesto: {userData.Puesto}</p>
+      <p style={{marginLeft:'5em'}}>Departamento: {userData.Departamento}</p>
       
-      <h2>Cambiar Contraseña</h2>
+      <h2 className='inf-usuario'>Cambiar Contraseña</h2>
+      <div className='inf-contra'>
       <input 
+      className='input-inf'
         type="password" 
         placeholder="Nueva Contraseña" 
         value={newPassword} 
         onChange={(e) => setNewPassword(e.target.value)} 
       />
       <input 
+      className='input-inf'
         type="password" 
         placeholder="Confirmar Nueva Contraseña" 
         value={confirmPassword} 
         onChange={(e) => setConfirmPassword(e.target.value)} 
       />
-      <button onClick={handlePasswordChange}>Cambiar Contraseña</button>
+    </div>
+    <div  className='inf-contra'>
+    <button onClick={handlePasswordChange}>Cambiar Contraseña</button>
       {message && <p>{message}</p>}
+      </div>
+    </div>
     </div>
     </div>
   );

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { UserContext } from './App';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+const MySwal = withReactContent(Swal);
 
 const AuthProvider = ({ children }) => {
   const [userData, setUserData] = useState(() => {
@@ -34,9 +37,26 @@ const AuthProvider = ({ children }) => {
     verifyToken();
   }, []);
 
+  const mostrarCargando = () => {
+    MySwal.fire({
+      title: 'Cargando...',
+      text: 'Por favor, espere',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+  };
+  
+  const ocultarCargando = () => {
+    Swal.close();
+  };
+  
   if (loading) {
     // Mostrar un indicador de carga mientras se verifica el token
-    return <div>Cargando...</div>;
+    return mostrarCargando();
+  }else{
+    ocultarCargando();
   }
 
   return (
