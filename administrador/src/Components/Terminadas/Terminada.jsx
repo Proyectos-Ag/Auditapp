@@ -12,17 +12,21 @@ const Terminada = () => {
     const [datos, setDatos] = useState([]);
     const [ishikawas, setIshikawas] = useState([]);
     const [hiddenDurations, setHiddenDurations] = useState([]);
-    const [, setCriteriosConteo] = useState({});
-    const [, setTotalCriterios] = useState(0);
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetchData();
-        obtenerDatos();
+        if (userData && userData.Correo) {
+            fetchData();
+            obtenerDatos();
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[userData]);
+    }, [userData]);    
 
     const obtenerDatos = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
             if (userData && userData.Correo) {
@@ -30,7 +34,6 @@ const Terminada = () => {
                     dato.Estado === "Terminada"
                 );
     
-                // Ordenar por FechaElaboracion del más reciente al más antiguo
                 datosFiltrados.sort((a, b) => {
                     const fechaElaboracionA = new Date(a.FechaElaboracion);
                     const fechaElaboracionB = new Date(b.FechaElaboracion);
@@ -38,7 +41,6 @@ const Terminada = () => {
                 });
     
                 let conteo = {};
-                let total = 0;
                 datosFiltrados.forEach(dato => {
                     dato.Programa.forEach(programa => {
                         programa.Descripcion.forEach(desc => {
@@ -47,38 +49,47 @@ const Terminada = () => {
                                     conteo[desc.Criterio] = 0;
                                 }
                                 conteo[desc.Criterio]++;
-                                total++;
                             }
                         });
                     });
                 });
     
                 setDatos(datosFiltrados);
-                setCriteriosConteo(conteo);
-                setTotalCriterios(total);
-    
-                // Ocultar todas las duraciones excepto la más reciente por defecto
                 const duracionesOcultas = datosFiltrados.slice(1).map(dato => dato.Duracion);
                 setHiddenDurations(duracionesOcultas);
+    
             } else {
                 console.log('userData o userData.Correo no definidos:', userData);
             }
         } catch (error) {
             console.error('Error al obtener los datos:', error);
+            setError('Error al obtener los datos.');
+        } finally {
+            setLoading(false);
         }
-    };
+    };    
 
     const fetchData = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
             const dataFiltrada = response.data.filter(item => 
-            item.estado === 'En revisión' ||  item.estado === 'Revisado' ||  item.estado === 'Rechazado' ||
-             item.estado === 'Aprobado' || item.estado === 'Asignado' ) ;
+                item.estado === 'En revisión' ||  
+                item.estado === 'Revisado' ||  
+                item.estado === 'Rechazado' ||
+                item.estado === 'Aprobado' ||  
+                item.estado === 'Asignado' 
+            );
             setIshikawas(dataFiltrada);
         } catch (error) {
             console.error('Error fetching data:', error);
+            setError('Error fetching data.');
+        } finally {
+            setLoading(false);
         }
     };
+    
 
     const toggleDuration = (duration) => {
         setHiddenDurations(hiddenDurations.includes(duration) ?
@@ -202,11 +213,15 @@ const Terminada = () => {
             <div style={{ position: 'absolute', top: 0, left: 0 }}>
                 <Navigation />
             </div>
+
+            {loading && <p>Cargando...</p>}
+            {error && <p>Error: {error}</p>}
+            {!loading && !error && (
             <div className="datos-container-repo">
             <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Revisión de Ishikawa</h1>
             {datos.length === 0?(
                 <div className='aviso'>No hay ishikawas por revisar... 🏜️</div>
-              ):('')}
+              ):(
 
                 <div className="form-group-datos">
                     {datos.map((dato, periodIdx) => {
@@ -492,7 +507,9 @@ const Terminada = () => {
                         );
                     })}
                 </div>
+                )}
             </div>
+            )}
         </div>
     );    
 };
