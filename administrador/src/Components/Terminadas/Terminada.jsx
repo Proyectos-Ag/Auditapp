@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useMemo,useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { UserContext } from '../../App';
 import logo from "../../assets/img/logoAguida.png";
@@ -190,7 +190,20 @@ const Terminada = () => {
             }
         });
     };
-    
+
+    const ishikawasMap = useMemo(() => {
+        return ishikawas.reduce((acc, ish) => {
+            acc[`${ish.idReq}-${ish.idRep}-${ish.proName}`] = ish;
+            return acc;
+        }, {});
+    }, [ishikawas]);
+
+    // Función para ajustar la fecha
+    const ajustarFecha = (fechaString) => {
+        const fecha = new Date(fechaString);
+        fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset());
+        return fecha.toLocaleDateString('es-ES');
+    };
 
     const navIshikawa = (_id, id, nombre) => {
         navigate(`/ishikawa/${_id}/${id}/${nombre}`);
@@ -401,93 +414,85 @@ const Terminada = () => {
                                                 </tbody>
                                             </table>
                                             <div>
-                                                <table>
-                                                    <thead>
-                                                        <tr>
-                                                            <th colSpan="6" className="conformity-header-repo">Resultados</th>
-                                                            <th colSpan="4" className="conformity-header-repo">Porcentaje de Cumplimiento: {porcentaje.toFixed(2)}%</th>
-                                                        </tr>
-                                                        <tr>
-                                                            <th>ID</th>
-                                                            <th>Programa</th>
-                                                            <th>Lineamiento</th>
-                                                            <th>Criterio</th>
-                                                            <th>Problema</th>
-                                                            <th style={{ maxWidth: '10em' }}>{dato.PuntuacionMaxima ? 'Hallazgo' : 'Evidencia'}</th>
-                                                            <th>Acciones</th>
-                                                            <th>Fecha</th>
-                                                            <th>Responsable</th>
-                                                            <th>Efectividad</th>
-                                                            
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {dato.Programa.map((programa, programIdx) =>
-                                                            programa.Descripcion.map((desc, descIdx) => {
-                                                                const base64Prefix = 'data:image/png;base64,';
-                                                                const isBase64Image = desc.Hallazgo.includes(base64Prefix);
-    
-                                                                if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
-                                                                    const ishikawa = ishikawas.find(ish => {
-                                                                        return ish.idReq === desc.ID && ish.idRep === dato._id && ish.proName === programa.Nombre;
-                                                                    });
-
-                                                                    const ajustarFecha = (fechaString) => {
-                                                                        const fecha = new Date(fechaString);
-                                                                        fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset());
-                                                                        return fecha.toLocaleDateString('es-ES');
-                                                                    };
-    
-                                                                    return (
-                                                                        <tr key={descIdx}>
-                                                                            <td>{desc.ID}</td>
-                                                                            <td className='alingR2'>{programa.Nombre}</td>
-                                                                            <td className='alingR'>{desc.Requisito}</td>
-                                                                            <td>{desc.Criterio}</td>
-                                                                            <td>{desc.Observacion}</td>
-                                                                            <td key={descIdx} className='alingR'>
-                                                                            {desc.Hallazgo ? (
-                                                                                isBase64Image ? (
-                                                                                    <img
-                                                                                        src={desc.Hallazgo}
-                                                                                        alt="Evidencia"
-                                                                                        className="hallazgo-imagen"
-                                                                                    />
-                                                                                ) : (
-                                                                                    <span>{desc.Hallazgo}</span>
-                                                                                )
-                                                                            ) : null}
-                                                                        </td>
-                                                                            <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].actividad : '') : ''}</td>
-                                                                            <td>
-                                                                            {ishikawa ? (
-                                                                                    ishikawa.actividades.length > 0 && ishikawa.actividades[0].fechaCompromiso.length > 0 ? 
-                                                                                        ajustarFecha(ishikawa.actividades[0].fechaCompromiso.slice(-1)[0]) : 
-                                                                                        ''
-                                                                                ) : ''}
-                                                                            </td>
-
-                                                                            <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
-                                                                            <td>
-                                                                                <button 
-                                                                                    className='button-estado'
-                                                                                    style={{ backgroundColor: ishikawa ? getButtonBackgroundColor(ishikawa.estado) : '#6e6e6e' }}
-                                                                                    onClick={() => navIshikawa(dato._id, desc.ID, programa.Nombre)}
-                                                                                >
-                                                                                    {ishikawa ? ishikawa.estado : 'Pendiente'}
-                                                                                </button>
-                                                                                <div>{ishikawa ? ishikawa.auditado : ''}</div>
-                                                                            </td>
-                                                                        </tr>
-                                                                    );
-                                                                } else {
-                                                                    return null;
-                                                                }
-                                                            })
-                                                        )}
-                                                    </tbody>
-                                                </table>
-                                            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th colSpan="6" className="conformity-header-repo">Resultados</th>
+                        <th colSpan="4" className="conformity-header-repo">Porcentaje de Cumplimiento: {porcentaje.toFixed(2)}%</th>
+                    </tr>
+                    <tr>
+                        <th>ID</th>
+                        <th>Programa</th>
+                        <th>Lineamiento</th>
+                        <th>Criterio</th>
+                        <th>Problema</th>
+                        <th style={{ maxWidth: '10em' }}>{dato.PuntuacionMaxima ? 'Hallazgo' : 'Evidencia'}</th>
+                        <th>Acciones</th>
+                        <th>Fecha</th>
+                        <th>Responsable</th>
+                        <th>Efectividad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {dato.Programa.map((programa, programIdx) =>
+                        programa.Descripcion.map((desc, descIdx) => {
+                            const base64Prefix = 'data:image/png;base64,';
+                            const isBase64Image = desc.Hallazgo.includes(base64Prefix);
+                            
+                            // Evita renderizar filas no necesarias
+                            if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
+                                const ishikawaKey = `${desc.ID}-${dato._id}-${programa.Nombre}`;
+                                const ishikawa = ishikawasMap[ishikawaKey];
+                                
+                                return (
+                                    <tr key={descIdx}>
+                                        <td>{desc.ID}</td>
+                                        <td className='alingR2'>{programa.Nombre}</td>
+                                        <td className='alingR'>{desc.Requisito}</td>
+                                        <td>{desc.Criterio}</td>
+                                        <td>{desc.Observacion}</td>
+                                        <td key={descIdx} className='alingR'>
+                                            {desc.Hallazgo ? (
+                                                isBase64Image ? (
+                                                    <img
+                                                        src={desc.Hallazgo}
+                                                        alt="Evidencia"
+                                                        className="hallazgo-imagen"
+                                                    />
+                                                ) : (
+                                                    <span>{desc.Hallazgo}</span>
+                                                )
+                                            ) : null}
+                                        </td>
+                                        <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].actividad : '') : ''}</td>
+                                        <td>
+                                            {ishikawa ? (
+                                                ishikawa.actividades.length > 0 && ishikawa.actividades[0].fechaCompromiso.length > 0 ? 
+                                                    ajustarFecha(ishikawa.actividades[0].fechaCompromiso.slice(-1)[0]) : 
+                                                    ''
+                                            ) : ''}
+                                        </td>
+                                        <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
+                                        <td>
+                                            <button 
+                                                className='button-estado'
+                                                style={{ backgroundColor: ishikawa ? getButtonBackgroundColor(ishikawa.estado) : '#6e6e6e' }}
+                                                onClick={() => navIshikawa(dato._id, desc.ID, programa.Nombre)}
+                                            >
+                                                {ishikawa ? ishikawa.estado : 'Pendiente'}
+                                            </button>
+                                            <div>{ishikawa ? ishikawa.auditado : ''}</div>
+                                        </td>
+                                    </tr>
+                                );
+                            } else {
+                                return null;
+                            }
+                        })
+                    )}
+                </tbody>
+            </table>
+        </div>
                                         </div>
                                     </div>
                                 </div>
