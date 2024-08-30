@@ -412,7 +412,7 @@ const Terminada = () => {
                                                             <th>Lineamiento</th>
                                                             <th>Criterio</th>
                                                             <th>Problema</th>
-                                                            <th>{dato.PuntuacionMaxima ? 'Hallazgo' : 'Evidencia'}</th>
+                                                            <th style={{ maxWidth: '16em' }}>{dato.PuntuacionMaxima ? 'Hallazgo' : 'Evidencia'}</th>
                                                             <th>Acciones</th>
                                                             <th>Fecha</th>
                                                             <th>Responsable</th>

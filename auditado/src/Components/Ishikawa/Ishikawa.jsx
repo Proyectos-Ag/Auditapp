@@ -635,7 +635,9 @@ useEffect(() => {
           <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
           <div className='posicion-en'>
             <h2>Problema:
-              <textarea type="text" className="problema-input" name='problema' value={descripcion?.Observacion || formData.problema} onChange={handleDatos}
+              <textarea type="text" className="problema-input" name='problema' 
+              value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : formData.problema}
+              onChange={handleDatos}
               style={{fontSize:'20px'}} placeholder="Agregar problema. . ." required disabled={revisado}>
               </textarea>
             </h2>
@@ -705,7 +707,7 @@ useEffect(() => {
              style={{ top: '39rem', left: '32.8rem', ...obtenerEstiloTextarea(dia.text15, formData.causa) }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
   
-            <textarea maxlength="105" className="text-area" name='problema' value={descripcion?.Observacion || formData.problema} onChange={handleInputChange} onClick={handleDiagrama}
+            <textarea maxlength="105" className="text-area" name='problema' value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : formData.problema} onChange={handleInputChange} onClick={handleDiagrama}
              style={{ top: '27rem', left: '67.5rem',width:'8.5rem', height:'8rem' }}placeholder="Problema..." required disabled={revisado}></textarea>
             </div>
           ))}
@@ -737,7 +739,7 @@ useEffect(() => {
                        <div style={{width:'70em', textAlign:'justify'}}>{desc.Requisito}</div>
                     <h3>Hallazgo:</h3>
                     <div className='hallazgo-container'> {/*aqui va la observacion*/}
-                      <div style={{width:'70em', textAlign:'justify'}}>{desc.Hallazgo}</div>
+                      <div style={{width:'70em', textAlign:'justify'}}>{datos.PuntuacionMaxima ? desc.Hallazgo : desc.Observacion}</div>
                     </div>
                     <h3>Acción inmediata o corrección: </h3>
                     <textarea type="text" className="textarea-acc" name='correccion' value={formData.correccion} onChange={handleDatos}

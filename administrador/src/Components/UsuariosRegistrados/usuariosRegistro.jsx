@@ -190,9 +190,9 @@ const UsuariosRegistro = () => {
     try {
       const userToDegradar = users.find(user => user._id === userId);
       if (userToDegradar && userToDegradar.PromedioEvaluacion < 80) {
-        const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/usuarios/${userId}`, { TipoUsuario: 'empleado' });
+        const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/usuarios/${userId}`, { TipoUsuario: 'auditado' });
         setUsers(users.map(user => (user._id === userId ? response.data : user)));
-        alert('Usuario degradado a empleado exitosamente');
+        alert('Usuario degradado a auditado exitosamente');
       } else {
         alert('El usuario no puede ser degradado a empleado porque su promedio de evaluación es mayor o igual a 80');
       }
