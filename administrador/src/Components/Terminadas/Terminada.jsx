@@ -74,14 +74,7 @@ const Terminada = () => {
         setError(null);
         try {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-            const dataFiltrada = response.data.filter(item => 
-                item.estado === 'En revisión' ||  
-                item.estado === 'Revisado' ||  
-                item.estado === 'Rechazado' ||
-                item.estado === 'Aprobado' ||  
-                item.estado === 'Asignado' 
-            );
-            setIshikawas(dataFiltrada);
+            setIshikawas(response.data); // Accede a response.data para obtener el array de ishikawas
         } catch (error) {
             console.error('Error fetching data:', error);
             setError('Error fetching data.');
@@ -90,37 +83,32 @@ const Terminada = () => {
         }
     };
     
-
     const toggleDuration = (duration) => {
-        setHiddenDurations(hiddenDurations.includes(duration) ?
-            hiddenDurations.filter((dur) => dur !== duration) :
-            [...hiddenDurations, duration]
+        setHiddenDurations(prevHidden =>
+            prevHidden.includes(duration) ?
+                prevHidden.filter((dur) => dur !== duration) :
+                [...prevHidden, duration]
         );
-    };
+    };    
 
     const contarCriteriosPorTipo = (criterios, tipo) => {
-        return Object.keys(criterios).filter(criterio => criterio === tipo).reduce((acc, criterio) => {
-            acc[criterio] = criterios[criterio];
+        return Object.keys(criterios).reduce((acc, criterio) => {
+            if (criterio === tipo) acc[criterio] = criterios[criterio];
             return acc;
         }, {});
     };
-
+    
     const checkboxValues = {
         'Conforme': 1,
         'm': 0.7,
         'M': 0.3,
         'C': 0
     };
-
+    
     const calcularPuntosTotales = (conteo) => {
-        let puntosTotales = 0;
-        for (const [criterio, valor] of Object.entries(conteo)) {
-            if (checkboxValues[criterio] !== undefined) {
-                puntosTotales += valor * checkboxValues[criterio];
-            }
-        }
-        return puntosTotales.toFixed(2);
-    };
+        return Object.entries(conteo).reduce((acc, [criterio, valor]) => 
+            acc + (checkboxValues[criterio] ? valor * checkboxValues[criterio] : 0), 0).toFixed(2);
+    };    
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
