@@ -17,6 +17,7 @@ const Terminada = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        fetchData();
         obtenerDatos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     },[userData]);
@@ -67,20 +68,17 @@ const Terminada = () => {
         }
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-                const dataFiltrada = response.data.filter(item => 
-                item.estado === 'En revisión' ||  item.estado === 'Revisado' ||  item.estado === 'Rechazado' ||
-                 item.estado === 'Aprobado' || item.estado === 'Asignado' ) ;
-                setIshikawas(dataFiltrada);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
-        fetchData();
-    }, []);
+    const fetchData = async () => {
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+            const dataFiltrada = response.data.filter(item => 
+            item.estado === 'En revisión' ||  item.estado === 'Revisado' ||  item.estado === 'Rechazado' ||
+             item.estado === 'Aprobado' || item.estado === 'Asignado' ) ;
+            setIshikawas(dataFiltrada);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
 
     const toggleDuration = (duration) => {
         setHiddenDurations(hiddenDurations.includes(duration) ?
