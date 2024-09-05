@@ -6,6 +6,10 @@ const datosController = require('../controllers/datosController');
 // Ruta para el registro
 router.post('/', datosController.nuevoAuditoria);
 router.get('/', datosController.obtenerTodosDatos);
+router.get('/esp', datosController.obtenerDatosEsp);
+router.get('/por/:_id', datosController.obtenerDatoPorId);
+router.get('/datos-filtrados', datosController.obtenerDatosFiltrados);
+
 
 // Ruta para actualizar datos existentes
 router.put('/:id', datosController.actualizarEstado);

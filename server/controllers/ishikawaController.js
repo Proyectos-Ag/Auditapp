@@ -13,13 +13,39 @@ const crearIshikawa = async (req, res) => {
 };
 
 const obtenerIshikawas = async (req, res) => {
-    try {
-        const ishikawas = await Ishikawa.find();
-        res.status(200).json(ishikawas);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+  const { idRep, idReq, proName } = req.query;
+
+  try {
+      const query = {};
+
+      if (idRep) query.idRep = idRep;
+      if (idReq) query.idReq = idReq;
+      if (proName) query.proName = proName;
+
+      const ishikawas = await Ishikawa.find(query);
+      res.status(200).json(ishikawas);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
 };
+
+const obtenerIshikawasId = async (req, res) => {
+  try {
+      const { _id } = req.params;
+      
+      // Filtrar los Ishikawas donde idRep sea igual al id de la URL
+      const ishikawas = await Ishikawa.find({ idRep: _id }, 'idRep idReq proName estado actividades'); // Aquí puedes seleccionar los campos específicos que deseas devolver
+      
+      if (ishikawas.length === 0) {
+          return res.status(404).json({ message: 'No se encontraron registros con el id proporcionado' });
+      }
+
+      res.status(200).json(ishikawas);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+};
+
 
 const actualizarIshikawa = async (req, res) => {
     try {
@@ -69,5 +95,6 @@ const actualizarFechaCompromiso = async (req, res) => {
     crearIshikawa,
     obtenerIshikawas,
     actualizarIshikawa,
-    actualizarFechaCompromiso
+    actualizarFechaCompromiso,
+    obtenerIshikawasId
   };

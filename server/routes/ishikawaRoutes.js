@@ -5,6 +5,7 @@ const ishikawaController = require('../controllers/ishikawaController');
 
 router.post('/', ishikawaController.crearIshikawa);
 router.get('/', ishikawaController.obtenerIshikawas);
+router.get('/por/:_id', ishikawaController.obtenerIshikawasId);
 router.put('/fecha/:id', ishikawaController.actualizarFechaCompromiso);
 router.put('/:id', ishikawaController.actualizarIshikawa);
 

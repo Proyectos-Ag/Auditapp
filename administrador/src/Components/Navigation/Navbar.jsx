@@ -94,7 +94,7 @@ function DrawerList({ handleLogout }) {
       text: "Auditorías", subItems: [
         { text: "Generar Auditoría", href: "/datos" },
         { text: "Revisión de Auditoría", href: "/revicion" },
-        { text: "Revisión de Ishikawa", href: "/terminada" },
+        { text: "Revisión de Ishikawa", href: "/revish" },
         { text: "Auditorías Finalizadas", href: "/finalizadas" }
       ],
       showSubmenu: showAuditoriasSubmenu,

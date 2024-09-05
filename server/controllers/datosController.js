@@ -224,6 +224,61 @@ const obtenerTodosDatos = async (req, res) => {
   }
 };
 
+const obtenerDatosFiltrados = async (req, res) => {
+  const { _id, id, nombre } = req.query;
+
+  try {
+      // Busca el dato por su _id
+      const datosFiltrados = await Datos.findOne({ _id });
+
+      if (!datosFiltrados) {
+          return res.status(404).json({ message: 'Datos no encontrados' });
+      }
+
+      // Filtra el programa con la descripción específica
+      const programaEncontrado = datosFiltrados.Programa.find(prog =>
+          prog.Descripcion.some(desc => desc.ID === id && prog.Nombre === nombre)
+      );
+
+      if (!programaEncontrado) {
+          return res.status(404).json({ message: 'Programa no encontrado' });
+      }
+
+      res.status(200).json({ datosFiltrados, programaEncontrado });
+  } catch (error) {
+      console.error('Error al obtener los datos filtrados:', error);
+      res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+};
+
+const obtenerDatosEsp = async (req, res) => {
+  try {
+    // Selecciona solo los campos que deseas incluir en la respuesta
+    const datos = await Datos.find().select('_id FechaElaboracion TipoAuditoria Duracion Estado'); 
+
+    res.status(200).json(datos);
+  } catch (error) {
+    console.error('Error al obtener los datos:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+};
+
+const obtenerDatoPorId = async (req, res) => {
+  const { _id } = req.params; // Obtener la ID de los parámetros de la URL
+
+  try {
+      const dato = await Datos.findById(_id);
+      if (!dato) {
+          return res.status(404).json({ error: 'Dato no encontrado' });
+      }
+      res.status(200).json(dato);
+  } catch (error) {
+      console.error('Error al obtener el dato:', error);
+      res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+};
+
+
 // Carga masiva de auditorías desde un archivo Excel
 const cargaMasiva = async (req, res) => {
   try {
@@ -335,5 +390,8 @@ module.exports = {
   obtenerTodosDatos,
   cargaMasiva,
   actualizarEstado,
-  datosEstado
+  datosEstado,
+  obtenerDatosEsp,
+  obtenerDatoPorId,
+  obtenerDatosFiltrados
 };

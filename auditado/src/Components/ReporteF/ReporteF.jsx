@@ -347,7 +347,6 @@ const ReporteF = () => {
                                                             <th>Fecha</th>
                                                             <th>Responsable</th>
                                                             <th>Efectividad</th>
-                                                            
                                                         </tr>
                                                     </thead>
                                                     <tbody>

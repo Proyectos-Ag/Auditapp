@@ -7,22 +7,22 @@ const MySwal = withReactContent(Swal);
 
 const AuthProvider = ({ children }) => {
   const [userData, setUserData] = useState(() => {
-    // Inicializar userData desde localStorage si está disponible
     const storedUserData = localStorage.getItem('userData');
     return storedUserData ? JSON.parse(storedUserData) : null;
   });
-  const [loading, setLoading] = useState(true); // Estado para controlar la carga
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const verifyToken = async () => {
       try {
         const token = localStorage.getItem('token');
-        if (token) {
+        // Si ya tienes token y datos de usuario guardados, no hagas otra consulta
+        if (token && !userData) {
           const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/verifyToken`, { token });
           const data = { ...response.data, token };
           setUserData(data);
           localStorage.setItem('userData', JSON.stringify(data));
-        } else {
+        } else if (!token) {
           setUserData(null);
         }
       } catch (error) {
@@ -30,12 +30,12 @@ const AuthProvider = ({ children }) => {
         localStorage.removeItem('userData');
         setUserData(null);
       } finally {
-        setLoading(false); // Finaliza el estado de carga
+        setLoading(false);
       }
     };
 
     verifyToken();
-  }, []);
+  }, [userData]);
 
   const mostrarCargando = () => {
     MySwal.fire({
@@ -47,15 +47,14 @@ const AuthProvider = ({ children }) => {
       }
     });
   };
-  
+
   const ocultarCargando = () => {
     Swal.close();
   };
-  
+
   if (loading) {
-    // Mostrar un indicador de carga mientras se verifica el token
     return mostrarCargando();
-  }else{
+  } else {
     ocultarCargando();
   }
 

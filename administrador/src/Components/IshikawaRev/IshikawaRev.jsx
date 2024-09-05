@@ -60,7 +60,13 @@ const IshikawaRev = () => {
 
     const fetchData = useCallback(async () => {
       try {
-          const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, {
+            params: {
+                idRep: _id,
+                idReq: id,
+                proName: nombre
+            }
+        });        
           const dataFiltrada = response.data.filter(item =>
               ['En revisión', 'Revisado', 'Aprobado'].includes(item.estado)
           );
@@ -68,6 +74,7 @@ const IshikawaRev = () => {
       } catch (error) {
           console.error('Error fetching data:', error);
       }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -75,25 +82,26 @@ const IshikawaRev = () => {
   }, [fetchData]);
 
   useEffect(() => {
-      const obtenerDatos = async () => {
-          try {
-              const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
-              if (userData?.Correo) {
-                  const datosFiltrados = response.data.find(dato => dato._id === _id);
-                  if (datosFiltrados) {
-                      const programaEncontrado = datosFiltrados.Programa.find(prog =>
-                          prog.Descripcion.some(desc => desc.ID === id && prog.Nombre === nombre)
-                      );
-                      setDatos(datosFiltrados);
-                      setPrograma(programaEncontrado);
-                  }
-              }
-          } catch (error) {
-              console.error('Error al obtener los datos:', error);
-          }
-      };
-      obtenerDatos();
-  }, [userData, _id, id, nombre]);
+    const obtenerDatos = async () => {
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/datos-filtrados`, {
+                params: {
+                    _id: _id,
+                    id: id,
+                    nombre: nombre
+                }
+            });
+
+            if (response.data) {
+                setDatos(response.data.datosFiltrados);
+                setPrograma(response.data.programaEncontrado);
+            }
+        } catch (error) {
+            console.error('Error al obtener los datos:', error);
+        }
+    };
+    obtenerDatos();
+}, [userData, _id, id, nombre]);
 
       useEffect(() => {
         const simulateInputChange = () => {
@@ -111,10 +119,6 @@ const IshikawaRev = () => {
         simulateInputChange(); // Ejecutar la función al cargar el componente
     
       }, [ishikawas]);
-      
-      useEffect(() => {
-        fetchData();
-    }, [fetchData]);
 
     useEffect(() => {
         if (filteredIshikawas.length > 0) {
@@ -483,9 +487,16 @@ const IshikawaRev = () => {
         verificarRegistro();
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [_id, id]);
+
     const verificarRegistro = async () => {
         try {
-          const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, {
+                params: {
+                    idRep: _id,
+                    idReq: id,
+                    proName: nombre
+                }
+            });
           const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && item.proName === nombre && 
             (item.estado === 'Rechazado' || item.estado === 'Revisado' || item.estado === 'Aprobado'|| item.estado === 'Asignado'));
           const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre && item.estado === 'Aprobado');

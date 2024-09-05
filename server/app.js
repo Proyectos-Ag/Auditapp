@@ -5,7 +5,6 @@ const logger = require('morgan');
 const cors = require('cors');
 const createError = require('http-errors');
 const dotenv = require('dotenv');
-const compression = require('compression'); // Importa compression
 
 const usuariosRouter = require('./routes/usuarioRoutes');
 const loginRoutes = require('./routes/loginRoutes');
@@ -28,8 +27,6 @@ const mongo = require('./config/dbconfig');
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-
-app.use(compression());
 
 app.use(cors());
 app.use(logger('dev'));

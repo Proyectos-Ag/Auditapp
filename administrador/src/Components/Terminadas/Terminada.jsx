@@ -6,8 +6,10 @@ import './css/Terminada.css';
 import Navigation from '../Navigation/Navbar';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { useParams } from 'react-router-dom';
 
 const Terminada = () => {
+    const {_id} = useParams();
     const { userData } = useContext(UserContext);
     const [datos, setDatos] = useState([]);
     const [ishikawas, setIshikawas] = useState([]);
@@ -15,6 +17,8 @@ const Terminada = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    console.log(_id);
 
     useEffect(() => {
         const fetchDataAndObtainData = async () => {
@@ -42,53 +46,26 @@ const Terminada = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
-            if (userData && userData.Correo) {
-                const datosFiltrados = response.data.filter((dato) => 
-                    dato.Estado === "Terminada"
-                );
-    
-                datosFiltrados.sort((a, b) => {
-                    const fechaElaboracionA = new Date(a.FechaElaboracion);
-                    const fechaElaboracionB = new Date(b.FechaElaboracion);
-                    return fechaElaboracionB - fechaElaboracionA;
-                });
-    
-                let conteo = {};
-                datosFiltrados.forEach(dato => {
-                    dato.Programa.forEach(programa => {
-                        programa.Descripcion.forEach(desc => {
-                            if (desc.Criterio && desc.Criterio !== 'NA') {
-                                if (!conteo[desc.Criterio]) {
-                                    conteo[desc.Criterio] = 0;
-                                }
-                                conteo[desc.Criterio]++;
-                            }
-                        });
-                    });
-                });
-    
-                setDatos(datosFiltrados);
-                const duracionesOcultas = datosFiltrados.slice(1).map(dato => dato.Duracion);
-                setHiddenDurations(duracionesOcultas);
-    
-            } else {
-                console.log('userData o userData.Correo no definidos:', userData);
-            }
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/por/${_id}`);
+            
+            // Verifica si response.data es un array, si no, conviértelo en uno
+            const datosRecibidos = Array.isArray(response.data) ? response.data : [response.data];
+            
+            setDatos(datosRecibidos);
         } catch (error) {
             console.error('Error al obtener los datos:', error);
             setError('Error al obtener los datos.');
         } finally {
             setLoading(false);
         }
-    };    
+    };      
 
     const fetchData = async () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-            setIshikawas(response.data); // Accede a response.data para obtener el array de ishikawas
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/por/${_id}`);
+            setIshikawas(Array.isArray(response.data) ? response.data : [response.data]); 
         } catch (error) {
             console.error('Error fetching data:', error);
             setError('Error fetching data.');
@@ -228,9 +205,7 @@ const Terminada = () => {
             <div style={{ position: 'absolute', top: 0, left: 0 }}>
                 <Navigation />
             </div>
-
-            {loading && <p>Cargando...</p>}
-            {error && <p>Error: {error}</p>}
+           
             {!loading && !error && (
             <div className="datos-container-repo">
             <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Revisión de Ishikawa</h1>

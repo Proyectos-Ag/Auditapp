@@ -20,6 +20,7 @@ import Diagrama from './Components/DiagramaRe/Diagrama';
 import CargaMasiva from './Components/DatosGenerales/CargaMasiva';
 import Estadisticas from './Components/Estadisticas/Estadisticas';
 import ProtectedRoute from './ProtectedRoute';
+import RevIshi from './Components/Terminadas/VistaRevIsh';
 
 export const UserContext = createContext(null);
 
@@ -36,7 +37,7 @@ function App() {
           <Route path="/home" element={<ProtectedRoute><Inicio/></ProtectedRoute>}/>
           <Route path="/usuariosRegistrados" element={<ProtectedRoute><UsuariosRegis /></ProtectedRoute>} /> 
           <Route path="/revicion" element={<ProtectedRoute><Revicion /></ProtectedRoute>} />
-          <Route path="/terminada" element={<ProtectedRoute><Terminada /></ProtectedRoute>} />
+          <Route path="/terminada/:_id" element={<ProtectedRoute><Terminada /></ProtectedRoute>} />
           <Route path="/ishikawa" element={<ProtectedRoute><Ishikawa/></ProtectedRoute>} />
           <Route path="/ishikawa/:_id/:id/:nombre" element={<ProtectedRoute><IshikawaRev/></ProtectedRoute>}/>
           <Route path="/finalizadas" element={<ProtectedRoute><Finalizada/></ProtectedRoute>}/>
@@ -46,6 +47,7 @@ function App() {
           <Route path="/diagrama" element={<ProtectedRoute><Diagrama /></ProtectedRoute>} />
           <Route path="/carga" element={<ProtectedRoute><CargaMasiva /></ProtectedRoute>} />
           <Route path="/estadisticas" element={<ProtectedRoute><Estadisticas /></ProtectedRoute>} />
+          <Route path="/revish" element={<ProtectedRoute><RevIshi /></ProtectedRoute>} />
         </Routes>
       </Router>
     </div>
