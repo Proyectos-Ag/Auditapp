@@ -414,7 +414,7 @@ const Terminada = () => {
                                                             <th>Programa</th>
                                                             <th>Lineamiento</th>
                                                             <th>Criterio</th>
-                                                            <th>Problema/Hallazgo</th>
+                                                            <th>Problema</th>
                                                             <th style={{ maxWidth: '10em' }}>{dato.PuntuacionMaxima ? 'Hallazgo' : 'Evidencia'}</th>
                                                             <th>Acciones</th>
                                                             <th>Fecha</th>
@@ -439,7 +439,7 @@ const Terminada = () => {
                                                                             <td className='alingR2'>{programa.Nombre}</td>
                                                                             <td className='alingR'>{desc.Requisito}</td>
                                                                             <td>{desc.Criterio}</td>
-                                                                            <td><li>Problema:{desc.Observacion}</li><li> Hallazgo:{}</li></td>
+                                                                            <td>{desc.Observacion}</td>
                                                                             <td key={descIdx} className='alingR'>
                                                                                 {desc.Hallazgo ? (
                                                                                     isBase64Image ? (
