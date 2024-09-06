@@ -804,6 +804,7 @@ const obtenerEstiloTextarea = (texto, causa) => {
                     <div style={{ marginBottom: '20px', width:'72em' }}>{ishikawa.causa}</div>
                     </div>
                     <div className='table-ish'>
+                    <h3>SOLUCIÓN</h3>
                     <table style={{ border: 'none' }}>
                         <thead>
                         <tr>
@@ -873,6 +874,8 @@ const obtenerEstiloTextarea = (texto, causa) => {
                     <form onSubmit={(event) => Finalizar(event, selectedIndex)}>
                     {
                     (!aprobado && !revisado) ? null : (
+                        <>
+                        <h3>EFECTIVIDAD</h3>
                         <table style={{ border: 'none' }}>
                         <thead>
                             <tr>
@@ -983,6 +986,7 @@ const obtenerEstiloTextarea = (texto, causa) => {
                             })}
                         </tbody>
                     </table>
+                    </>
                     )}
                     {/* Botón "Agregar Fila" */}
                     {aprobado && (

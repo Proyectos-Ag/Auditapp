@@ -217,6 +217,7 @@ setPercentages(initialPercentages);
                         ID: desc.ID,
                         Criterio: selectedCheckboxes[fieldKey] || '',
                         Observacion: document.querySelector(`textarea[name=Observaciones_${periodIdx}_${programIdx}_${descIdx}]`).value,
+                        Problema: document.querySelector(`textarea[name=Problemas_${periodIdx}_${programIdx}_${descIdx}]`).value || desc.Problema,
                         Hallazgo: capturedPhotos[fieldKey] || desc.Hallazgo || ''
                     };
                 });
@@ -282,6 +283,7 @@ setPercentages(initialPercentages);
                         ID: desc.ID,
                         Criterio: selectedCheckboxes[fieldKey] || '',
                         Observacion: document.querySelector(`textarea[name=Observaciones_${periodIdx}_${programIdx}_${descIdx}]`).value,
+                        Problema: document.querySelector(`textarea[name=Problemas_${periodIdx}_${programIdx}_${descIdx}]`).value || desc.Problema,
                         Hallazgo: capturedPhotos[fieldKey] || desc.Hallazgo || ''
                     };
                 });
@@ -426,7 +428,7 @@ setPercentages(initialPercentages);
                                                             <th>M</th>
                                                             <th>C</th>
                                                             <th>NA</th>
-                                                            <th className='padingH'>Hallazgos</th>
+                                                            <th className='padingH'>Problema/Hallazgos</th>
                                                             <th>Evidencia</th>
                                                         </tr>
                                                     </thead>
@@ -450,14 +452,21 @@ setPercentages(initialPercentages);
                                                                             />
                                                                         </td>
                                                                     ))}
-                                                                    <td className='espacio-test'>
+                                                                   <td className='espacio-test flex-column'>
+                                                                        <textarea 
+                                                                            name={`Problemas_${periodIdx}_${programIdx}_${descIdx}`} 
+                                                                            defaultValue={desc.Problema}
+                                                                            className="textarea-custom"
+                                                                            style={{height:"20px"}}
+                                                                            placeholder='Problema. . .'
+                                                                        ></textarea>
                                                                         <textarea
                                                                             name={`Observaciones_${periodIdx}_${programIdx}_${descIdx}`}
                                                                             defaultValue={desc.Observacion}
                                                                             className="textarea-custom"
+                                                                            placeholder='Hallazgo. . .'
                                                                         ></textarea>
                                                                     </td>
-                                                                    
                                                                     <td>
                                                                     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
                                                                     <div className="button-foto" onClick={() => handleOpenModal(fieldKey)}>

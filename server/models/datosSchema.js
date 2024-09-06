@@ -6,6 +6,7 @@ const DescripcionSchema = new mongoose.Schema({
   Requisito: { type: String, required: true },
   Observacion: { type: String },
   Hallazgo: String,
+  Problema: { type: String }
 });
 
 const ProgramaSchema = new mongoose.Schema({

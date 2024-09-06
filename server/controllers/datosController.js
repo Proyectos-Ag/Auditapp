@@ -178,6 +178,7 @@ const actualizarEstado = async (req, res)=> {
                 if (descripcion) {
                     descripcion.Criterio = obs.Criterio; // Agrega esta línea para actualizar el Criterio
                     descripcion.Observacion = obs.Observacion;
+                    descripcion.Problema = obs.Problema;
                     descripcion.Hallazgo = obs.Hallazgo;
                 }
             });

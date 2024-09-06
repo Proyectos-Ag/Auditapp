@@ -186,7 +186,7 @@ th.conformity-header {
     width: 100%;
     height: 100px;
     box-sizing: border-box;
-    border: none;
+
 }
 
 .selected-conforme {
@@ -251,3 +251,14 @@ th.conformity-header {
     display: flex;
     margin-right: -25rem;
 }
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.textarea-custom {
+    margin-bottom: 10px;  /* Añade espacio entre los textarea */
+    width: 100%;          /* Asegúrate de que ocupen todo el ancho disponible */
+}
+
