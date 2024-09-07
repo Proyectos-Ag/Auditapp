@@ -636,7 +636,7 @@ useEffect(() => {
           <div className='posicion-en'>
             <h2>Problema:
               <textarea type="text" className="problema-input" name='problema' 
-              value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : formData.problema}
+              value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : descripcion.Problema}
               onChange={handleDatos}
               style={{fontSize:'20px'}} placeholder="Agregar problema. . ." required disabled={revisado}>
               </textarea>
