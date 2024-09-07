@@ -38,6 +38,7 @@ const handleLogout = () => {
   }).then((result) => {
     if (result.isConfirmed) {
       localStorage.removeItem('token');
+      localStorage.removeItem('userData');
       setUserData(null);
       navigate('/');
     }
