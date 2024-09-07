@@ -41,7 +41,7 @@ const Ishikawa = () => {
   });
   
   const [diagrama,setDiagrama] = useState([{
-    problema: formData.problema,
+    problema: descripcion.Problema,
     text1: '',
     text2: '',
     text3: '',
