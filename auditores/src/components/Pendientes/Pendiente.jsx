@@ -21,7 +21,6 @@ const Pendientes = () => {
     const [imageModalOpen, setImageModalOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
 
-
     const checkboxValues = {
         'Conforme': 1,
         'm': 0.7,
@@ -374,6 +373,16 @@ setPercentages(initialPercentages);
         }
     };
 
+    const handleDeleteImage = (fieldKey) => {
+    setCapturedPhotos(prev => {
+        const updatedPhotos = { ...prev };
+        delete updatedPhotos[fieldKey];  // Elimina la imagen del objeto
+        return updatedPhotos;
+    });
+    closeModal();  // Cierra el modal después de eliminar la imagen
+};
+
+
     return (
         <div>
             <div style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -511,11 +520,18 @@ setPercentages(initialPercentages);
                 <div className="modal-overlay" onClick={closeModal}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <img src={selectedImage} alt="Ampliada" className="modal-image" />
+                        {/* Botón para eliminar la imagen */}
+                        <button 
+                            className="delete-button" 
+                            onClick={() => handleDeleteImage(selectedField)}
+                        >
+                            Eliminar Imagen
+                        </button>
                     </div>
                 </div>
             )}
-        </div>
-        
+
+        </div> 
     ); 
 
 };

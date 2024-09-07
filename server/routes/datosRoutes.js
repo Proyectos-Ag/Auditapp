@@ -10,7 +10,6 @@ router.get('/esp', datosController.obtenerDatosEsp);
 router.get('/por/:_id', datosController.obtenerDatoPorId);
 router.get('/datos-filtrados', datosController.obtenerDatosFiltrados);
 
-
 // Ruta para actualizar datos existentes
 router.put('/:id', datosController.actualizarEstado);
 

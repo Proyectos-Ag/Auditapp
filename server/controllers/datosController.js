@@ -279,7 +279,6 @@ const obtenerDatoPorId = async (req, res) => {
   }
 };
 
-
 // Carga masiva de auditorías desde un archivo Excel
 const cargaMasiva = async (req, res) => {
   try {
