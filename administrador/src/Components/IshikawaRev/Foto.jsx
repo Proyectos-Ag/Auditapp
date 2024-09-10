@@ -16,7 +16,7 @@ function Fotos({ open, onClose, onCapture }) {
         detenerCamara();
       }
       const currentStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1080, height: 720, facingMode: camera }
+        video: { width: 1920, height: 1080, facingMode: camera }
       });
       setStream(currentStream);
       if (videoDiv.current) {
@@ -36,7 +36,7 @@ function Fotos({ open, onClose, onCapture }) {
   };
 
   const tomarFoto = () => {
-    const w = 720;
+    const w = 1080;
     const h = w / (16 / 9);
 
     const video = videoDiv.current;
