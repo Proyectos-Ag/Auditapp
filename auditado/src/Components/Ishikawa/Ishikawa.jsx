@@ -41,7 +41,7 @@ const Ishikawa = () => {
   });
   
   const [diagrama,setDiagrama] = useState([{
-    problema: descripcion.Problema,
+    problema: '',
     text1: '',
     text2: '',
     text3: '',
@@ -213,7 +213,7 @@ const handleDoubleClick = (e) => {
         idReq: id,
         fecha: fechaElaboracion,
         auditado,
-        problema: formData.problema,
+        problema: descripcion.Problema,
         requisito,
         hallazgo,
         correccion: formData.correccion,
@@ -272,7 +272,7 @@ const handleDoubleClick = (e) => {
         idReq: id,
         fecha: fechaElaboracion,
         auditado,
-        problema: formData.problema,
+        problema: descripcion.Problema,
         requisito,
         hallazgo,
         correccion: formData.correccion,
@@ -634,13 +634,18 @@ useEffect(() => {
           <img src={Logo} alt="Logo Aguida" className='logo-empresa' />
           <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
           <div className='posicion-en'>
-            <h2>Problema:
+          {programa?.Descripcion && programa.Descripcion
+            .filter(desc => desc.ID === id && programa.Nombre === nombre)
+            .map((desc, index) => {
+              return(
+            <h2 key={index}>Problema:
               <textarea type="text" className="problema-input" name='problema' 
-              value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : descripcion.Problema}
+              value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : desc.Problema}
               onChange={handleDatos}
               style={{fontSize:'20px'}} placeholder="Agregar problema. . ." required disabled={revisado}>
               </textarea>
             </h2>
+            )})}
             <div style={{ display: 'flex', position:'absolute' }}>
               <h2>Afectación: </h2> 
               <h3 style={{marginTop:'1.65rem', marginLeft:'0.5rem'}}>{id} {programa?.Nombre}</h3>
@@ -707,10 +712,17 @@ useEffect(() => {
              style={{ top: '39rem', left: '32.8rem', ...obtenerEstiloTextarea(dia.text15, formData.causa) }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
   
-            <textarea maxlength="105" className="text-area" name='problema' value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : descripcion.Problema} onChange={handleInputChange} onClick={handleDiagrama}
-             style={{ top: '27rem', left: '67.5rem',width:'8.5rem', height:'8rem' }}placeholder="Problema..." required disabled={revisado}></textarea>
+            
             </div>
           ))}
+
+          {programa?.Descripcion && programa.Descripcion
+            .filter(desc => desc.ID === id && programa.Nombre === nombre)
+            .map((desc, index) => {
+              return(
+          <textarea key={index} maxlength="105" className="text-area" name='problema' value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : desc.Problema} onChange={handleInputChange} onClick={handleDiagrama}
+             style={{ top: '27rem', left: '67.5rem',width:'8.5rem', height:'8rem' }}placeholder="Problema..." required disabled={revisado}></textarea>
+            )})}
           </div>
           <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
   

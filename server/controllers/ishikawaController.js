@@ -32,14 +32,16 @@ const obtenerIshikawas = async (req, res) => {
 const obtenerIshikawasId = async (req, res) => {
   try {
       const { _id } = req.params;
-      
+
       // Filtrar los Ishikawas donde idRep sea igual al id de la URL
-      const ishikawas = await Ishikawa.find({ idRep: _id }, 'idRep idReq proName estado actividades'); // Aquí puedes seleccionar los campos específicos que deseas devolver
-      
+      const ishikawas = await Ishikawa.find({ idRep: _id }, 'idRep idReq proName estado actividades');
+
+      // Si no hay registros, devuelve un array vacío.
       if (ishikawas.length === 0) {
-          return res.status(404).json({ message: 'No se encontraron registros con el id proporcionado' });
+          return res.status(200).json([]); // Devuelve un array vacío
       }
 
+      // Devolver los registros encontrados
       res.status(200).json(ishikawas);
   } catch (error) {
       res.status(500).json({ error: error.message });
