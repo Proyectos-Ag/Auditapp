@@ -7,8 +7,10 @@ const datosController = require('../controllers/datosController');
 router.post('/', datosController.nuevoAuditoria);
 router.get('/', datosController.obtenerTodosDatos);
 router.get('/esp', datosController.obtenerDatosEsp);
+router.get('/esp/aud', datosController.obtenerDatosEspAud);
 router.get('/por/:_id', datosController.obtenerDatoPorId);
 router.get('/datos-filtrados', datosController.obtenerDatosFiltrados);
+router.get('/datos-filtrados-aud/:_id', datosController.obtenerDatosFiltradosAud);
 
 // Ruta para actualizar datos existentes
 router.put('/:id', datosController.actualizarEstado);

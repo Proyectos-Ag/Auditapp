@@ -9,6 +9,7 @@ import ProtectedRoute from './ProtectedRoute';
 import Ishikawa from './Components/Ishikawa/Ishikawa';
 import Diagrama from './Components/DiagramaRe/Diagrama';
 import Informacion from './Components/Informacion/Informacion';
+import VistaReportes from './Components/ReporteF/VistaReportes';
 
 export const UserContext = createContext(null);
 
@@ -19,11 +20,12 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Login />} /> 
-          <Route path="/reporte" element={<ProtectedRoute><Reporte/></ProtectedRoute>}/>
+          <Route path="/reporte/:_id" element={<ProtectedRoute><Reporte/></ProtectedRoute>}/>
           <Route path="/home" element={<ProtectedRoute><Inicio/></ProtectedRoute>}/>
           <Route path="/ishikawa/:_id/:id/:nombre" element={<ProtectedRoute><Ishikawa/></ProtectedRoute>}/>
           <Route path="/diagrama" element={<ProtectedRoute><Diagrama/></ProtectedRoute>}/>
           <Route path="/informacion" element={<ProtectedRoute><Informacion/></ProtectedRoute>}/>
+          <Route path="/vistarep" element={<ProtectedRoute><VistaReportes/></ProtectedRoute>}/>
         </Routes>
       </Router>
     </div>

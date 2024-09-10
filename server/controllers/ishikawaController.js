@@ -92,11 +92,55 @@ const actualizarFechaCompromiso = async (req, res) => {
       res.status(400).json({ error: error.message });
     }
   };
+
+  const obtenerIshikawaPorDato = async (req, res) => {
+    const { _id } = req.params; // Obtener la ID del dato desde la URL
+    const { proName } = req.query; // Obtener los filtros adicionales desde los query params
+  
+    try {
+      // Filtrar los datos de Ishikawa según idRep, idReq, y proName
+      const ishikawas = await Ishikawa.find({
+        idRep: _id,        // Filtrar por idRep (la ID del dato)
+        proName: proName   // Filtrar por proName (si está en los query params)
+      });
+  
+      // Retornar los datos de Ishikawa filtrados
+      res.status(200).json(ishikawas);
+    } catch (error) {
+      console.error('Error al obtener los datos de Ishikawa:', error);
+      res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+    }
+  };  
+
+  const eliminarEvidencia = async (req, res) => {
+    try {
+        const { id, index } = req.params; // id del Ishikawa y el índice de la corrección
+        const ishikawa = await Ishikawa.findById(id);
+
+        if (!ishikawa) {
+            return res.status(404).json({ error: 'Ishikawa no encontrado' });
+        }
+
+        // Eliminar evidencia de la corrección en el índice dado
+        if (ishikawa.actividades[index]) {
+            ishikawa.actividades[index].evidencia = ''; // O null, según prefieras
+            await ishikawa.save();
+            res.status(200).json({ message: 'Evidencia eliminada' });
+        } else {
+            res.status(400).json({ error: 'Corrección no encontrada' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
   
   module.exports = {
     crearIshikawa,
     obtenerIshikawas,
     actualizarIshikawa,
     actualizarFechaCompromiso,
-    obtenerIshikawasId
+    obtenerIshikawasId,
+    obtenerIshikawaPorDato,
+    eliminarEvidencia
   };

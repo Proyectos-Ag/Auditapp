@@ -5,86 +5,37 @@ import logo from "../../assets/img/logoAguida.png";
 import './css/ReporteF.css'; 
 import Navigation from '../Navigation/navbar';
 import { useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 const ReporteF = () => {
+    const {_id} = useParams();
     const { userData } = useContext(UserContext);
     const [datos, setDatos] = useState([]);
     const [ishikawas, setIshikawas] = useState([]);
-    const [hiddenDurations, setHiddenDurations] = useState([]);
-    const [, setCriteriosConteo] = useState({});
-    const [, setTotalCriterios] = useState(0);
     const navigate = useNavigate();
 
     useEffect(() => {
         const obtenerDatos = async () => {
-            try {
-                // Obtener datos de Ishikawa
-                const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-                const ishikawasFiltradas = responseIshikawa.data.filter(item =>
-                    item.estado === 'En revisión' || item.estado === 'Aprobado' ||
-                    item.estado === 'Revisado' || item.estado === 'Rechazado' ||
-                    item.estado === 'Asignado' || item.estado === 'Pendiente'
-                );
-                setIshikawas(ishikawasFiltradas);
-    
-                // Obtener datos principales
-                const responseDatos = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
-                if (userData && userData.Correo) {
-                    const datosFiltrados = responseDatos.data.filter((dato) => {
-                        const cumpleConAuditado = ishikawasFiltradas.some(ishikawa => ishikawa.auditado === userData.Nombre
-                        );
-                        return dato.Auditados.some(auditado => (auditado.Nombre === userData.Nombre || cumpleConAuditado)) && 
-                               dato.Estado === "Terminada";
-                    });
-    
-                    // Ordenar por FechaElaboracion del más reciente al más antiguo
-                    datosFiltrados.sort((a, b) => {
-                        const fechaElaboracionA = new Date(a.FechaElaboracion);
-                        const fechaElaboracionB = new Date(b.FechaElaboracion);
-                        return fechaElaboracionB - fechaElaboracionA;
-                    });
-    
-                    let conteo = {};
-                    let total = 0;
-                    datosFiltrados.forEach(dato => {
-                        dato.Programa.forEach(programa => {
-                            programa.Descripcion.forEach(desc => {
-                                if (desc.Criterio && desc.Criterio !== 'NA') {
-                                    if (!conteo[desc.Criterio]) {
-                                        conteo[desc.Criterio] = 0;
-                                    }
-                                    conteo[desc.Criterio]++;
-                                    total++;
-                                }
-                            });
-                        });
-                    });
-    
-                    setDatos(datosFiltrados);
-                    setCriteriosConteo(conteo);
-                    setTotalCriterios(total);
-    
-                    // Ocultar todas las duraciones excepto la más reciente por defecto
-                    const duracionesOcultas = datosFiltrados.slice(1).map(dato => dato.Duracion);
-                    setHiddenDurations(duracionesOcultas);
-                } else {
-                    console.log('userData o userData.Correo no definidos:', userData);
-                }
-            } catch (error) {
-                console.error('Error al obtener los datos:', error);
-            }
-        };
-    
-        obtenerDatos();
-    }, [userData]);  // Ejecutar cada vez que `userData` cambie
-    
+          try {
+            // Obtener datos principales
+            const responseDatos = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/datos-filtrados-aud/${_id}`, {
+              params: { correo: userData.Correo }
+            });
+            setDatos([responseDatos.data]);
+      
+            // Obtener datos de Ishikawa
+            const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/pordato/${_id}`,{
+                params: { idRep: _id, proName: userData.Nombre }
+            });
+            setIshikawas([responseIshikawa.data]);
 
-    const toggleDuration = (duration) => {
-        setHiddenDurations(hiddenDurations.includes(duration) ?
-            hiddenDurations.filter((dur) => dur !== duration) :
-            [...hiddenDurations, duration]
-        );
-    };
+          } catch (error) {
+            console.error('Error al obtener los datos:', error);
+          }
+        };
+      
+        obtenerDatos();
+      }, [userData, _id]);          
 
     const contarCriteriosPorTipo = (criterios, tipo) => {
         return Object.keys(criterios).filter(criterio => criterio === tipo).reduce((acc, criterio) => {
@@ -191,12 +142,12 @@ const ReporteF = () => {
                         return (
                             <div key={periodIdx}>
                                 <div className="duracion-bloque-repo">
-                                    <h2 onClick={() => toggleDuration(dato.Duracion)}>
+                                    <h2>
                                         Fecha de Elaboración: {formatDate(dato.FechaElaboracion)}
                                     </h2>
                                 </div>
 
-                                <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
+                                <div className="update-button-container">
                                     <div className='contenedor-repo'>
                                         <div className="header-container-datos-repo">
                                             <img src={logo} alt="Logo Empresa" className="logo-empresa-repo" />
@@ -354,12 +305,6 @@ const ReporteF = () => {
                                                         programa.Descripcion.filter(desc => {
 
                                                         if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
-                                                            const ishikawa = ishikawas.find(ish => {
-                                                            return ish.idReq === desc.ID && ish.idRep === dato._id && ish.proName === programa.Nombre;
-                                                            });
-
-                                                            // Si ishikawa existe y el nombre de usuario coincide con ishikawa.auditado, la fila será incluida
-                                                            return ishikawa && (userData.Nombre === ishikawa.auditado && ishikawa.idRep === dato._id);
                                                             
                                                         }
                                                         return false;

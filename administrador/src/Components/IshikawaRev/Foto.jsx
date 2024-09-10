@@ -20,16 +20,16 @@ function Fotos({ open, onClose, onCapture }) {
     };
 
     if (capabilities?.brightness) {
-      constraints.advanced.push({ brightness: 1.0 }); // Ajuste de brillo
+      constraints.advanced.push({ brightness: 1.0 });
     }
     if (capabilities?.contrast) {
-      constraints.advanced.push({ contrast: 1.0 }); // Ajuste de contraste
+      constraints.advanced.push({ contrast: 1.0 });
     }
     if (capabilities?.exposureMode && settings?.exposureMode !== 'continuous') {
-      constraints.advanced.push({ exposureMode: 'continuous' }); // Exposición continua
+      constraints.advanced.push({ exposureMode: 'continuous' });
     }
     if (capabilities?.whiteBalanceMode && settings?.whiteBalanceMode !== 'continuous') {
-      constraints.advanced.push({ whiteBalanceMode: 'continuous' }); // Balance de blancos continuo
+      constraints.advanced.push({ whiteBalanceMode: 'continuous' });
     }
 
     track?.applyConstraints(constraints);
@@ -48,7 +48,7 @@ function Fotos({ open, onClose, onCapture }) {
         videoDiv.current.srcObject = currentStream;
         videoDiv.current.play();
       }
-      aplicarMejoras(); // Aplicar mejoras de calidad de imagen
+      aplicarMejoras();
     } catch (err) {
       console.log(err);
     }
@@ -73,15 +73,13 @@ function Fotos({ open, onClose, onCapture }) {
       foto.height = h;
       const context = foto.getContext('2d');
 
-      // Habilitar suavizado de imagen para mejorar la calidad
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = 'high';
 
       context.drawImage(video, 0, 0, w, h);
       setHayFoto(true);
 
-      // Generar imagen con máxima calidad
-      const dataUrl = foto.toDataURL('image/png', 1.0); // Calidad máxima (1.0)
+      const dataUrl = foto.toDataURL('image/png', 1.0);
       onCapture(dataUrl);
     }
   };
@@ -131,6 +129,15 @@ function Fotos({ open, onClose, onCapture }) {
     }
   };
 
+  const handleVideoClick = (event) => {
+    const video = videoDiv.current;
+    const rect = video.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    // Lógica para ajustar el enfoque basado en las coordenadas x, y
+    console.log(`Clicked at coordinates: x=${x}, y=${y}`);
+  };
+
   useEffect(() => {
     if (open) {
       verCamara();
@@ -150,11 +157,15 @@ function Fotos({ open, onClose, onCapture }) {
     <div className={`modal ${open ? 'open' : 'closed'}`}>
       <div className="fixed-modal">
         <div className="camera-container">
-          <video ref={videoDiv} style={{ width: '100%', height: 'auto' }}></video>
+          <video
+            ref={videoDiv}
+            style={{ width: '100%', height: 'auto' }}
+            onClick={handleVideoClick}
+          ></video>
 
           <div className="controls">
             <input
-              className='funciones-2'
+              className="funciones-2"
               type="range"
               min="1"
               max="3"
@@ -163,7 +174,7 @@ function Fotos({ open, onClose, onCapture }) {
               onChange={handleZoomChange}
             />
             <input
-            className='funciones'
+              className="funciones"
               type="range"
               min="0"
               max="100"

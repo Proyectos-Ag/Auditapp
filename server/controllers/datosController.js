@@ -255,7 +255,7 @@ const obtenerDatosFiltrados = async (req, res) => {
 const obtenerDatosEsp = async (req, res) => {
   try {
     // Selecciona solo los campos que deseas incluir en la respuesta
-    const datos = await Datos.find().select('_id FechaElaboracion TipoAuditoria Duracion Estado'); 
+    const datos = await Datos.find({ Estado: 'Terminada' },'_id FechaElaboracion TipoAuditoria Duracion Estado'); 
 
     res.status(200).json(datos);
   } catch (error) {
@@ -263,6 +263,24 @@ const obtenerDatosEsp = async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor', details: error.message });
   }
 };
+
+const obtenerDatosEspAud = async (req, res) => {
+  try {
+    const { correo } = req.query;
+    
+    // Filtrar por Estado 'Terminada' y correo dentro del array 'Auditados'
+    const datos = await Datos.find({
+      Estado: 'Terminada',
+      'Auditados.Correo': correo  // Buscar en el campo 'Correo' del array 'Auditados'
+    }, '_id FechaElaboracion TipoAuditoria Duracion Estado'); 
+
+    res.status(200).json(datos);
+  } catch (error) {
+    console.error('Error al obtener los datos:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+};
+
 
 const obtenerDatoPorId = async (req, res) => {
   const { _id } = req.params; // Obtener la ID de los parámetros de la URL
@@ -278,6 +296,34 @@ const obtenerDatoPorId = async (req, res) => {
       res.status(500).json({ error: 'Error interno del servidor', details: error.message });
   }
 };
+
+const obtenerDatosFiltradosAud = async (req, res) => {
+  const { _id } = req.params; // Obtener la ID desde la URL
+  const { correo } = req.query; // Correo para el filtrado
+
+  try {
+    // Buscar el dato específico por ID
+    const dato = await Datos.findById(_id);
+
+    if (!dato) {
+      return res.status(404).json({ error: 'Dato no encontrado' });
+    }
+
+    // Filtrar si el correo coincide con algún correo en el array 'Auditados'
+    const esAuditado = dato.Auditados.some(auditado => auditado.Correo === correo);
+
+    if (!esAuditado) {
+      return res.status(403).json({ error: 'Acceso denegado. No eres un auditado para este dato.' });
+    }
+
+    // Retornar el dato si pasa el filtro
+    res.status(200).json(dato);
+  } catch (error) {
+    console.error('Error al obtener el dato:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+};
+
 
 // Carga masiva de auditorías desde un archivo Excel
 const cargaMasiva = async (req, res) => {
@@ -393,5 +439,7 @@ module.exports = {
   datosEstado,
   obtenerDatosEsp,
   obtenerDatoPorId,
-  obtenerDatosFiltrados
+  obtenerDatosFiltrados,
+  obtenerDatosEspAud,
+  obtenerDatosFiltradosAud
 };

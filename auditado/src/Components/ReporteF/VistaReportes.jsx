@@ -1,18 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useContext } from 'react';
 import axios from 'axios';
-import './css/RevIsh.css'
+import './css/VistaR.css'
 import logo from '../../assets/img/logoAguida-min.png';
 import { useNavigate } from 'react-router-dom';
-import Navigation from '../Navigation/Navbar';
+import Navigation from '../Navigation/navbar';
+import { UserContext } from '../../App';
 
-const RevIshi = () => {
+const VistaReportes = () => {
+  const { userData } = useContext(UserContext);
   const [datos, setDatos] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchDatos = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/esp`);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/esp/aud`, {
+          params: { correo: userData.Correo },
+        });
         setDatos(response.data);
       } catch (error) {
         console.error('Error al obtener los datos:', error);
@@ -20,7 +24,7 @@ const RevIshi = () => {
     };
   
     fetchDatos();
-  }, []);  
+  }, [userData]);   
 
   const formatearFecha = (fecha) => {
     const nuevaFecha = new Date(fecha);
@@ -32,7 +36,7 @@ const RevIshi = () => {
   };
 
   const navReporte = (_id) => {
-    navigate(`/terminada/${_id}`);
+    navigate(`/reporte/${_id}`);
 };
 
   return (
@@ -64,4 +68,4 @@ const RevIshi = () => {
   );
 };
 
-export default RevIshi;
+export default VistaReportes;

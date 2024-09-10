@@ -668,7 +668,24 @@ const handleCapture = (dataUrl) => {
         }));
     }
     setModalOpen(false);
-};    
+};  
+
+const handleEliminarEvidencia = async (index) => {
+    try {
+        const response = await axios.put(`/ishikawa/eliminar-evidencia/${id}/${index}`);
+        
+        if (response.status === 200) {
+            // Actualizar el estado local después de eliminar la evidencia en la base de datos
+            const nuevasCorrecciones = [...correcciones];
+            nuevasCorrecciones[index].evidencia = ''; // O null
+            setCorrecciones(nuevasCorrecciones);
+            alert('Evidencia eliminada exitosamente');
+        }
+    } catch (error) {
+        console.error('Error al eliminar la evidencia:', error);
+        alert('Hubo un error al eliminar la evidencia');
+    }
+};
 
 const obtenerEstiloTextarea = (texto, causa) => {
     return verificarCoincidencia(texto, causa) 
@@ -952,14 +969,19 @@ const obtenerEstiloTextarea = (texto, causa) => {
                                             </div>
                                             )}
                                             {correccion.evidencia && (
-                                                <img
+                                                <>
+                                                    <img
                                                     src={base64String}
                                                     alt="Evidencia"
                                                     style={{ width: '100%', height: 'auto' }}
                                                     className="hallazgo-imagen"
                                                     onClick={() => handleImageClick(base64String)}
-                                                />
-                                            )}
+                                                    />
+                                                    <button onClick={() => handleEliminarEvidencia(index)}>
+                                                    Eliminar Evidencia
+                                                    </button>
+                                                </>
+                                                )}
                                             {capturedPhotos[fieldKey] && (
                                                 <img
                                                     src={capturedPhotos[fieldKey]}
