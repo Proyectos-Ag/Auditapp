@@ -10,6 +10,31 @@ function Fotos({ open, onClose, onCapture }) {
   const [zoom, setZoom] = useState(1);
   const [focus, setFocus] = useState(0);
 
+  const aplicarMejoras = () => {
+    const track = stream?.getVideoTracks()[0];
+    const capabilities = track?.getCapabilities();
+    const settings = track?.getSettings();
+    
+    const constraints = {
+      advanced: []
+    };
+
+    if (capabilities?.brightness) {
+      constraints.advanced.push({ brightness: 1.0 }); // Ajuste de brillo
+    }
+    if (capabilities?.contrast) {
+      constraints.advanced.push({ contrast: 1.0 }); // Ajuste de contraste
+    }
+    if (capabilities?.exposureMode && settings?.exposureMode !== 'continuous') {
+      constraints.advanced.push({ exposureMode: 'continuous' }); // Exposición continua
+    }
+    if (capabilities?.whiteBalanceMode && settings?.whiteBalanceMode !== 'continuous') {
+      constraints.advanced.push({ whiteBalanceMode: 'continuous' }); // Balance de blancos continuo
+    }
+
+    track?.applyConstraints(constraints);
+  };
+
   const verCamara = async () => {
     try {
       if (stream) {
@@ -23,6 +48,7 @@ function Fotos({ open, onClose, onCapture }) {
         videoDiv.current.srcObject = currentStream;
         videoDiv.current.play();
       }
+      aplicarMejoras(); // Aplicar mejoras de calidad de imagen
     } catch (err) {
       console.log(err);
     }
@@ -46,10 +72,16 @@ function Fotos({ open, onClose, onCapture }) {
       foto.width = w;
       foto.height = h;
       const context = foto.getContext('2d');
+
+      // Habilitar suavizado de imagen para mejorar la calidad
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = 'high';
+
       context.drawImage(video, 0, 0, w, h);
       setHayFoto(true);
 
-      const dataUrl = foto.toDataURL('image/png');
+      // Generar imagen con máxima calidad
+      const dataUrl = foto.toDataURL('image/png', 1.0); // Calidad máxima (1.0)
       onCapture(dataUrl);
     }
   };
@@ -73,9 +105,12 @@ function Fotos({ open, onClose, onCapture }) {
 
     const track = stream?.getVideoTracks()[0];
     const capabilities = track?.getCapabilities();
+
     if (capabilities?.zoom) {
+      const maxZoom = capabilities.zoom.max;
+      const minZoom = capabilities.zoom.min;
       track.applyConstraints({
-        advanced: [{ zoom: newZoom }]
+        advanced: [{ zoom: Math.min(Math.max(newZoom, minZoom), maxZoom) }]
       });
     }
   };
@@ -86,9 +121,12 @@ function Fotos({ open, onClose, onCapture }) {
 
     const track = stream?.getVideoTracks()[0];
     const capabilities = track?.getCapabilities();
+
     if (capabilities?.focusDistance) {
+      const maxFocus = capabilities.focusDistance.max;
+      const minFocus = capabilities.focusDistance.min;
       track.applyConstraints({
-        advanced: [{ focusDistance: newFocus }]
+        advanced: [{ focusDistance: Math.min(Math.max(newFocus, minFocus), maxFocus) }]
       });
     }
   };
@@ -112,11 +150,11 @@ function Fotos({ open, onClose, onCapture }) {
     <div className={`modal ${open ? 'open' : 'closed'}`}>
       <div className="fixed-modal">
         <div className="camera-container">
-          <video ref={videoDiv} style={{ width: '100%', height: 'auto'}}></video>
+          <video ref={videoDiv} style={{ width: '100%', height: 'auto' }}></video>
 
           <div className="controls">
             <input
-              className="zoom-slider"
+              className='funciones-2'
               type="range"
               min="1"
               max="3"
@@ -125,7 +163,7 @@ function Fotos({ open, onClose, onCapture }) {
               onChange={handleZoomChange}
             />
             <input
-              className="focus-slider"
+            className='funciones'
               type="range"
               min="0"
               max="100"
