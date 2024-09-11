@@ -1007,8 +1007,9 @@ const obtenerEstiloTextarea = (texto, causa) => {
                                                 />
                                             )}
                                         </td>
-                                        {aprobado && (
                                         <td className='cancel-acc'>
+                                        {aprobado && (
+                                            <>
                                             {index > 0 && (
                                                 <button 
                                                 className='eliminar-ev'
@@ -1019,6 +1020,8 @@ const obtenerEstiloTextarea = (texto, causa) => {
                                                     Eliminar
                                                 </button>
                                             )}
+                                            </>
+                                             )}
 
                                         <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
                                             {imageModalOpen && (
@@ -1037,7 +1040,7 @@ const obtenerEstiloTextarea = (texto, causa) => {
                                             </div>
                                         )}
                                         </td>
-                                        )}
+                                       
                                     </tr>
                                 );
                             })}
