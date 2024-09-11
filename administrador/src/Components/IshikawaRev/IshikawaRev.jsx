@@ -67,9 +67,7 @@ const IshikawaRev = () => {
                 proName: nombre
             }
         });        
-          const dataFiltrada = response.data.filter(item =>
-              ['En revisión', 'Revisado', 'Aprobado'].includes(item.estado)
-          );
+
           setIshikawas(response.data);
       } catch (error) {
           console.error('Error fetching data:', error);
@@ -176,115 +174,119 @@ useEffect(() => {
     }, [ishikawas, _id, id, nombre]);
 
     const handlePrintPDF = () => {
-    const showLoading = () => {
-        document.getElementById('loading-overlay').style.display = 'flex';
-    };
-
-    const hideLoading = () => {
-        document.getElementById('loading-overlay').style.display = 'none';
-    };
-
-    showLoading();
-
-    const part1 = document.getElementById('pdf-content-part1');
-    const part2 = document.getElementById('pdf-content-part2');
-
-    const convertTextAreasToDivs = (element) => {
-        const textareas = element.querySelectorAll('textarea');
-
-        textareas.forEach((textarea) => {
-            const div = document.createElement('div');
-            div.textContent = textarea.value;
-            div.className = textarea.className;
-            div.style.cssText = textarea.style.cssText;
-            textarea.parentNode.replaceChild(div, textarea);
-        });
-    };
-
-    const addPartToPDF = (element, pdf, isLastPage, pageNumber) => {
-        convertTextAreasToDivs(element);
-
-        return html2canvas(element, {
-            scale: 2.5,
-            useCORS: true,
-        }).then((canvas) => {
-            const imgData = canvas.toDataURL('image/jpeg', 0.8);
-            const imgWidth = pdf.internal.pageSize.getWidth();
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-            const marginX = (pdf.internal.pageSize.getWidth() - imgWidth) / 2;
+        const showLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        };
+    
+        const hideLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'none';
+        };
+    
+        showLoading();
+    
+        const part1 = document.getElementById('pdf-content-part1');
+        const part2 = document.getElementById('pdf-content-part2');
+    
+        const convertTextAreasToDivs = (element) => {
+            const textareas = element.querySelectorAll('textarea');
+            textareas.forEach((textarea) => {
+                const div = document.createElement('div');
+                div.textContent = textarea.value;
+                div.className = textarea.className;
+                div.style.cssText = textarea.style.cssText;
+                textarea.parentNode.replaceChild(div, textarea);
+            });
+        };
+    
+        const getElementHeight = (element) => {
+            return new Promise((resolve, reject) => {
+                html2canvas(element, { scale: 2.5, useCORS: true }).then((canvas) => {
+                    resolve(canvas.height);
+                }).catch((error) => reject(error));
+            });
+        };
+    
+        const processElement = (el, pdf, yOffset, pageHeight, pageWidth) => {
+            return new Promise((resolve, reject) => {
+                html2canvas(el, { scale: 2.5, useCORS: true }).then((canvas) => {
+                    const imgData = canvas.toDataURL('image/jpeg', 0.8);
+                    const imgWidth = pdf.internal.pageSize.getWidth();
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+                    if (yOffset + imgHeight > pageHeight) {
+                        pdf.addPage();
+                        yOffset = 1.5; // Resetear margen superior en nueva página
+                    }
+    
+                    pdf.addImage(imgData, 'JPEG', 1.5, yOffset, imgWidth, imgHeight, undefined, 'FAST');
+                    yOffset += imgHeight;
+    
+                    resolve(yOffset);
+                }).catch((error) => reject(error));
+            });
+        };
+    
+        const addPartToPDF = async (element, pdf, isLastPage, pageNumber) => {
+            convertTextAreasToDivs(element);
+    
+            const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
-            const availableHeight = pageHeight - 3;
-            
-            // Definir margen superior dinámico según el número de página
-            const marginY = 1.5;
-
-            let currentHeight = imgHeight;
-            let currentPage = pageNumber;
-
-            if (currentHeight <= availableHeight) {
-                pdf.addImage(imgData, 'JPEG', marginX, marginY, imgWidth, currentHeight, undefined, 'FAST');
-            } else {
-                let yOffset = 0;
-                while (currentHeight > availableHeight) {
-                    const croppedCanvas = document.createElement('canvas');
-                    croppedCanvas.width = canvas.width;
-                    croppedCanvas.height = availableHeight * (canvas.width / imgWidth);
-
-                    const ctx = croppedCanvas.getContext('2d');
-                    ctx.drawImage(canvas, 0, yOffset, canvas.width, croppedCanvas.height, 0, 0, croppedCanvas.width, croppedCanvas.height);
-
-                    const croppedImgData = croppedCanvas.toDataURL('image/jpeg', 0.8);
-                    pdf.addImage(croppedImgData, 'JPEG', marginX, marginY, imgWidth, availableHeight, undefined, 'FAST');
-
-                    currentHeight -= availableHeight;
-                    yOffset += croppedCanvas.height;
-                    currentPage++;
-                    pdf.addPage();
-                }
-
-                if (currentHeight > 0) {
-                    const finalCanvas = document.createElement('canvas');
-                    finalCanvas.width = canvas.width;
-                    finalCanvas.height = currentHeight * (canvas.width / imgWidth);
-
-                    const finalCtx = finalCanvas.getContext('2d');
-                    finalCtx.drawImage(canvas, 0, yOffset, canvas.width, finalCanvas.height, 0, 0, finalCanvas.width, finalCanvas.height);
-
-                    const finalImgData = finalCanvas.toDataURL('image/jpeg', 0.8);
-                    pdf.addImage(finalImgData, 'JPEG', marginX, marginY, imgWidth, currentHeight, undefined, 'FAST');
+            let yOffset = 1.5; // Margen superior
+    
+            const childElements = Array.from(element.childNodes);
+    
+            for (const child of childElements) {
+                if (child.tagName === 'TABLE') {
+                    const rows = child.querySelectorAll('tr');
+                    for (const row of rows) {
+                        const cells = row.querySelectorAll('td');
+                        for (const cell of cells) {
+                            const cellHeight = await getElementHeight(cell);
+                            if (yOffset + cellHeight > pageHeight) {
+                                pdf.addPage();
+                                yOffset = 1.5; // Resetear margen superior en nueva página
+                            }
+                            await processElement(cell, pdf, yOffset, pageHeight, pageWidth);
+                        }
+                    }
+                } else {
+                    const elementHeight = await getElementHeight(child);
+                    if (yOffset + elementHeight > pageHeight) {
+                        pdf.addPage();
+                        yOffset = 1.5; // Resetear margen superior en nueva página
+                    }
+                    await processElement(child, pdf, yOffset, pageHeight, pageWidth);
                 }
             }
-
+    
             if (!isLastPage) {
                 pdf.addPage();
             }
+    
+            return pageNumber;
+        };
+    
+        const pdf = new jsPDF('landscape', 'cm', 'letter');
+    
+        let currentPage = 1;
+    
+        addPartToPDF(part1, pdf, false, currentPage)
+            .then((newPageNumber) => {
+                currentPage = newPageNumber;
+                return addPartToPDF(part2, pdf, true, currentPage);
+            })
+            .then(() => {
+                pdf.save("diagrama_ishikawa.pdf");
+                hideLoading();
+            })
+            .catch((error) => {
+                console.error('Error generating PDF:', error);
+                hideLoading();
+            });
+    };    
 
-            return currentPage;
-        });
-    };
 
-    const pdf = new jsPDF('landscape', 'cm', 'letter');
-
-    let currentPage = 1;
-
-    addPartToPDF(part1, pdf, false, currentPage)
-        .then((newPageNumber) => {
-            currentPage = newPageNumber;
-            return addPartToPDF(part2, pdf, true, currentPage);
-        })
-        .then(() => {
-            pdf.save("diagrama_ishikawa.pdf");
-            hideLoading();
-        })
-        .catch((error) => {
-            console.error('Error generating PDF:', error);
-            hideLoading();
-        });
-};
-
-
-    const handleCorreccionChange = (index, field, value) => {
+const handleCorreccionChange = (index, field, value) => {
         const nuevasCorrecciones = [...correcciones];
         
         if (field === 'cerrada') {
@@ -806,7 +808,7 @@ const obtenerEstiloTextarea = (texto, causa) => {
                         <textarea className="text-area" name='text15' value={item.text15}
                             style={{ top: '39rem', left: '32.8rem', ...obtenerEstiloTextarea(item.text15, ishikawa.causa)  }} disabled></textarea>
                         <textarea className="text-area"
-                            style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} value={ishikawa.problema? ishikawa.problema : item.problema}></textarea>
+                            style={{ top: '27rem', left: '67.5rem', width: '7.9rem', height: '8rem' }} value={ishikawa.problema? ishikawa.problema : item.problema}></textarea>
                         </div>
                     ))}
                     </div>
@@ -980,7 +982,10 @@ const obtenerEstiloTextarea = (texto, causa) => {
                                         <td>
                                             <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
                                             {aprobado && (
-                                            <div className="button-foto" onClick={() => handleOpenModal(fieldKey)}>
+                                            <div className="button-foto" onClick={(e) => {
+                                                e.preventDefault();
+                                                handleOpenModal(fieldKey);
+                                            }}>
                                                 <span className="material-symbols-outlined">
                                                     add_a_photo
                                                 </span>
@@ -1023,7 +1028,6 @@ const obtenerEstiloTextarea = (texto, causa) => {
                                             </>
                                              )}
 
-                                        <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
                                             {imageModalOpen && (
                                                 <div className="modal-overlay" onClick={closeModal}>
                                                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -1075,6 +1079,7 @@ const obtenerEstiloTextarea = (texto, causa) => {
                         )}
                     </div>
                     </form>
+                    <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
                     </div>
 
                     </div>
