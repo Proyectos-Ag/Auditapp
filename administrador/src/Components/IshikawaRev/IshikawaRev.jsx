@@ -70,7 +70,7 @@ const IshikawaRev = () => {
           const dataFiltrada = response.data.filter(item =>
               ['En revisión', 'Revisado', 'Aprobado'].includes(item.estado)
           );
-          setIshikawas(dataFiltrada);
+          setIshikawas(response.data);
       } catch (error) {
           console.error('Error fetching data:', error);
       }
@@ -103,7 +103,7 @@ const IshikawaRev = () => {
     obtenerDatos();
 }, [userData, _id, id, nombre]);
 
-      useEffect(() => {
+useEffect(() => {
         const simulateInputChange = () => {
           const textareas = document.querySelectorAll('textarea');
           textareas.forEach((textarea) => {
@@ -118,7 +118,7 @@ const IshikawaRev = () => {
     
         simulateInputChange(); // Ejecutar la función al cargar el componente
     
-      }, [ishikawas]);
+}, [filteredIshikawas]);
 
     useEffect(() => {
         if (filteredIshikawas.length > 0) {
