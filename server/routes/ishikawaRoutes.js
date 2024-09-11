@@ -9,7 +9,7 @@ router.get('/por/:_id', ishikawaController.obtenerIshikawasId);
 router.get('/pordato/:_id', ishikawaController.obtenerIshikawaPorDato);
 router.put('/fecha/:id', ishikawaController.actualizarFechaCompromiso);
 router.put('/:id', ishikawaController.actualizarIshikawa);
-router.put('/eliminar-evidencia/:id/:index', ishikawaController.eliminarEvidencia);
+router.put('/eliminar-evidencia/:index/:idIsh/:idCorr', ishikawaController.eliminarEvidencia);
 
 
 module.exports = router;

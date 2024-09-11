@@ -114,26 +114,33 @@ const actualizarFechaCompromiso = async (req, res) => {
 
   const eliminarEvidencia = async (req, res) => {
     try {
-        const { id, index } = req.params; // id del Ishikawa y el índice de la corrección
-        const ishikawa = await Ishikawa.findById(id);
+        const { index, idIsh, idCorr } = req.params;
+
+        // Buscar el documento Ishikawa por su _id
+        const ishikawa = await Ishikawa.findById(idIsh);
 
         if (!ishikawa) {
             return res.status(404).json({ error: 'Ishikawa no encontrado' });
         }
 
-        // Eliminar evidencia de la corrección en el índice dado
-        if (ishikawa.actividades[index]) {
-            ishikawa.actividades[index].evidencia = ''; // O null, según prefieras
-            await ishikawa.save();
-            res.status(200).json({ message: 'Evidencia eliminada' });
-        } else {
-            res.status(400).json({ error: 'Corrección no encontrada' });
+        // Buscar la corrección dentro de ishikawa por su _id
+        const correccion = ishikawa.correcciones.id(idCorr);
+
+        if (!correccion) {
+            return res.status(400).json({ error: 'Corrección no encontrada' });
         }
+
+        // Eliminar la evidencia
+        correccion.evidencia = ''; // O null, según tu preferencia
+
+        // Guardar los cambios en la base de datos
+        await ishikawa.save();
+
+        res.status(200).json({ message: 'Evidencia eliminada exitosamente' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
-
   
   module.exports = {
     crearIshikawa,

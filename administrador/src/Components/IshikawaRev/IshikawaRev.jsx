@@ -670,15 +670,16 @@ const handleCapture = (dataUrl) => {
     setModalOpen(false);
 };  
 
-const handleEliminarEvidencia = async (index) => {
+const handleEliminarEvidencia = async (index, idIsh, idCorr ) => {
     try {
-        const response = await axios.put(`/ishikawa/eliminar-evidencia/${id}/${index}`);
+        const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/eliminar-evidencia/${index}/${idIsh}/${idCorr}`);
         
         if (response.status === 200) {
             // Actualizar el estado local después de eliminar la evidencia en la base de datos
             const nuevasCorrecciones = [...correcciones];
             nuevasCorrecciones[index].evidencia = ''; // O null
             setCorrecciones(nuevasCorrecciones);
+            closeModal();
             alert('Evidencia eliminada exitosamente');
         }
     } catch (error) {
@@ -686,6 +687,23 @@ const handleEliminarEvidencia = async (index) => {
         alert('Hubo un error al eliminar la evidencia');
     }
 };
+
+const EliminarEv = async (index, idIsh, idCorr) => {
+    Swal.fire({
+      title: '¿Está seguro de querer eliminar la evidencia?',
+      text: '¡Esta acción es irreversible!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3ccc37',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleEliminarEvidencia(index, idIsh, idCorr);
+      }
+    });
+  };
 
 const obtenerEstiloTextarea = (texto, causa) => {
     return verificarCoincidencia(texto, causa) 
@@ -977,9 +995,7 @@ const obtenerEstiloTextarea = (texto, causa) => {
                                                     className="hallazgo-imagen"
                                                     onClick={() => handleImageClick(base64String)}
                                                     />
-                                                    <button onClick={() => handleEliminarEvidencia(index)}>
-                                                    Eliminar Evidencia
-                                                    </button>
+                                                    
                                                 </>
                                                 )}
                                             {capturedPhotos[fieldKey] && (
@@ -994,13 +1010,32 @@ const obtenerEstiloTextarea = (texto, causa) => {
                                         {aprobado && (
                                         <td className='cancel-acc'>
                                             {index > 0 && (
-                                                <button onClick={(e) => {
+                                                <button 
+                                                className='eliminar-ev'
+                                                onClick={(e) => {
                                                     e.preventDefault();
                                                     handleEliminarFila(index);
                                                 }}>
                                                     Eliminar
                                                 </button>
                                             )}
+
+                                        <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
+                                            {imageModalOpen && (
+                                                <div className="modal-overlay" onClick={closeModal}>
+                                                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                                        <img src={selectedImage} alt="Ampliada" className="modal-image" />
+                                                <button 
+                                                    className='eliminar-ev'
+                                                    onClick={(e) => {
+                                                    e.preventDefault();
+                                                    EliminarEv(index,ishikawa._id, correccion._id)
+                                                     }}>
+                                                    Eliminar Evidencia
+                                                </button>
+                                                    </div>
+                                            </div>
+                                        )}
                                         </td>
                                         )}
                                     </tr>
@@ -1039,14 +1074,6 @@ const obtenerEstiloTextarea = (texto, causa) => {
                     </form>
                     </div>
 
-                    <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
-                    {imageModalOpen && (
-                        <div className="modal-overlay" onClick={closeModal}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                <img src={selectedImage} alt="Ampliada" className="modal-image" />
-                            </div>
-                        </div>
-                    )}
                     </div>
                 </div>
                 ))}
