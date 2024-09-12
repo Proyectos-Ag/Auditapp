@@ -14,6 +14,7 @@ const programasRoutes = require('./routes/programaRoutes');
 const authRoutes = require('./routes/authRoutes');
 const fotoRoutes = require('./routes/fotoRoutes');
 const ishikawa = require('./routes/ishikawaRoutes');
+const evaluacionRoutes = require('./routes/evaluacionRoutes');
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ app.use('/areas', areasRoutes);
 app.use('/auth', authRoutes);
 app.use('/foto', fotoRoutes);
 app.use('/ishikawa', ishikawa);
+app.use('/evaluacion', evaluacionRoutes);
 
 // Manejar la ruta raíz
 app.get('/', (req, res) => {

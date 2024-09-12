@@ -66,6 +66,7 @@ function DrawerList({ handleLogout }) {
   const [showAuditoriasSubmenu, setShowAuditoriasSubmenu] = useState(false);
   const [showIshikawaSubmenu, setShowIshikawaSubmenu] = useState(false);
   const [showCalendariosSubmenu, setShowCalendariosSubmenu] = useState(false);
+  const [showEvaluacionesSubmenu, setShowEvaluacionesSubmenu] = useState(false);
 
   const toggleAuditoriasSubmenu = () => {
     setShowAuditoriasSubmenu(!showAuditoriasSubmenu);
@@ -84,7 +85,13 @@ function DrawerList({ handleLogout }) {
     setShowAuditoriasSubmenu(false);
     setShowIshikawaSubmenu(false);
   };
-  
+
+  const toggleEvaluacionesSubmenu = () => {
+    setShowEvaluacionesSubmenu(!showCalendariosSubmenu);
+    setShowAuditoriasSubmenu(false);
+    setShowIshikawaSubmenu(false);
+    setShowCalendariosSubmenu(false);
+  };
 
   const drawerItems = [
     { text: "Usuarios", href: "/usuariosRegistrados" },
@@ -116,6 +123,15 @@ function DrawerList({ handleLogout }) {
       ],
       showSubmenu: showCalendariosSubmenu,
       toggleSubmenu: toggleCalendariosSubmenu
+    },
+    {
+      text: "Evaluaciónes",
+      subItems: [
+        { text: "Realizar Evaluación", href: "/evuaauditor" },
+        { text: "Ver evaluaciónes", href: "/vereva" }
+      ],
+      showSubmenu: showEvaluacionesSubmenu,
+      toggleSubmenu: toggleEvaluacionesSubmenu
     },
     { text: "Carga Masiva", href: "/carga" },
     { text: "Estadisticas", href: "/estadisticas" }

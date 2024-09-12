@@ -21,6 +21,8 @@ import CargaMasiva from './Components/DatosGenerales/CargaMasiva';
 import Estadisticas from './Components/Estadisticas/Estadisticas';
 import ProtectedRoute from './ProtectedRoute';
 import RevIshi from './Components/Terminadas/VistaRevIsh';
+import Evaluacion from './Components/Evaluaciones/evaluaciones';
+import Verevaluaciones from './Components/Evaluaciones/verevaluaciones'
 
 export const UserContext = createContext(null);
 
@@ -48,6 +50,8 @@ function App() {
           <Route path="/carga" element={<ProtectedRoute><CargaMasiva /></ProtectedRoute>} />
           <Route path="/estadisticas" element={<ProtectedRoute><Estadisticas /></ProtectedRoute>} />
           <Route path="/revish" element={<ProtectedRoute><RevIshi /></ProtectedRoute>} />
+          <Route path="/evuaauditor" element={<ProtectedRoute><Evaluacion /></ProtectedRoute>} />
+          <Route path="/vereva" element={<ProtectedRoute><Verevaluaciones/></ProtectedRoute>}/>
         </Routes>
       </Router>
     </div>
