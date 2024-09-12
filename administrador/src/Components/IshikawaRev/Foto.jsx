@@ -1,155 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import './css/Camara.css';
 
 function Fotos({ open, onClose, onCapture }) {
-  const videoDiv = useRef(null);
-  const fotoDiv = useRef(null);
   const [hayFoto, setHayFoto] = useState(false);
-  const [stream, setStream] = useState(null);
-  const [camera, setCamera] = useState('user');
-  const [zoom, setZoom] = useState(1);
-  const [focus, setFocus] = useState(0);
 
-  const aplicarMejoras = () => {
-    const track = stream?.getVideoTracks()[0];
-    const capabilities = track?.getCapabilities();
-    const settings = track?.getSettings();
-    
-    const constraints = {
-      advanced: []
-    };
-
-    if (capabilities?.brightness) {
-      constraints.advanced.push({ brightness: 1.0 });
-    }
-    if (capabilities?.contrast) {
-      constraints.advanced.push({ contrast: 1.0 });
-    }
-    if (capabilities?.exposureMode && settings?.exposureMode !== 'continuous') {
-      constraints.advanced.push({ exposureMode: 'continuous' });
-    }
-    if (capabilities?.whiteBalanceMode && settings?.whiteBalanceMode !== 'continuous') {
-      constraints.advanced.push({ whiteBalanceMode: 'continuous' });
-    }
-
-    track?.applyConstraints(constraints);
-  };
-
-  const verCamara = async () => {
-    try {
-      if (stream) {
-        detenerCamara();
-      }
-      const currentStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1920, height: 1080, facingMode: camera }
-      });
-      setStream(currentStream);
-      if (videoDiv.current) {
-        videoDiv.current.srcObject = currentStream;
-        videoDiv.current.play();
-      }
-      aplicarMejoras();
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const detenerCamara = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-  };
-
-  const tomarFoto = () => {
-    const w = 1080;
-    const h = w / (16 / 9);
-
-    const video = videoDiv.current;
-    const foto = fotoDiv.current;
-
-    if (foto && video) {
-      foto.width = w;
-      foto.height = h;
-      const context = foto.getContext('2d');
-
-      context.imageSmoothingEnabled = true;
-      context.imageSmoothingQuality = 'high';
-
-      context.drawImage(video, 0, 0, w, h);
-      setHayFoto(true);
-
-      const dataUrl = foto.toDataURL('image/png', 1.0);
-      onCapture(dataUrl);
+  const handleCapture = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setHayFoto(true);
+        onCapture(reader.result); // Envía la imagen capturada en formato base64
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const cerrarFoto = () => {
-    const f = fotoDiv.current;
-    if (f) {
-      const context = f.getContext('2d');
-      context.clearRect(0, 0, f.width, f.height);
-      setHayFoto(false);
-    }
+    setHayFoto(false);
   };
-
-  const cambiarCamara = () => {
-    setCamera(prevCamera => (prevCamera === 'user' ? 'environment' : 'user'));
-  };
-
-  const handleZoomChange = (event) => {
-    const newZoom = event.target.value;
-    setZoom(newZoom);
-
-    const track = stream?.getVideoTracks()[0];
-    const capabilities = track?.getCapabilities();
-
-    if (capabilities?.zoom) {
-      const maxZoom = capabilities.zoom.max;
-      const minZoom = capabilities.zoom.min;
-      track.applyConstraints({
-        advanced: [{ zoom: Math.min(Math.max(newZoom, minZoom), maxZoom) }]
-      });
-    }
-  };
-
-  const handleFocusChange = (event) => {
-    const newFocus = event.target.value;
-    setFocus(newFocus);
-
-    const track = stream?.getVideoTracks()[0];
-    const capabilities = track?.getCapabilities();
-
-    if (capabilities?.focusDistance) {
-      const maxFocus = capabilities.focusDistance.max;
-      const minFocus = capabilities.focusDistance.min;
-      track.applyConstraints({
-        advanced: [{ focusDistance: Math.min(Math.max(newFocus, minFocus), maxFocus) }]
-      });
-    }
-  };
-
-  const handleVideoClick = (event) => {
-    const video = videoDiv.current;
-    const rect = video.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    // Lógica para ajustar el enfoque basado en las coordenadas x, y
-    console.log(`Clicked at coordinates: x=${x}, y=${y}`);
-  };
-
-  useEffect(() => {
-    if (open) {
-      verCamara();
-    } else {
-      detenerCamara();
-    }
-
-    return () => {
-      detenerCamara();
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, camera]);
 
   if (!open) return null;
 
@@ -157,51 +26,29 @@ function Fotos({ open, onClose, onCapture }) {
     <div className={`modal ${open ? 'open' : 'closed'}`}>
       <div className="fixed-modal">
         <div className="camera-container">
-          <video
-            ref={videoDiv}
-            style={{ width: '100%', height: 'auto' }}
-            onClick={handleVideoClick}
-          ></video>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment" // "environment" para cámara trasera, "user" para la frontal
+            onChange={handleCapture}
+            style={{ display: 'none' }} // Oculta el input
+            id="cameraInput"
+          />
+          <label htmlFor="cameraInput" className="camera-button">
+            <span className="material-symbols-outlined" style={{ fontSize: '40px' }}>photo_camera</span>
+          </label>
 
-          <div className="controls">
-            <input
-              className="funciones-2"
-              type="range"
-              min="1"
-              max="3"
-              step="0.1"
-              value={zoom}
-              onChange={handleZoomChange}
-            />
-            <input
-              className="funciones"
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              value={focus}
-              onChange={handleFocusChange}
-            />
-
-            <button className="camera-button" onClick={tomarFoto} disabled={!open}>
-              <span className="material-symbols-outlined" style={{ fontSize: '40px' }}>photo_camera</span>
-            </button>
-
-            <button className="camera-switch-button" onClick={cambiarCamara}>
-              <span className="material-symbols-outlined">switch_camera</span>
-            </button>
-
-            <button className="camera-button-salir" onClick={() => { detenerCamara(); onClose(); }}>
-              <span>Salir</span>
-            </button>
-          </div>
-
-          <canvas ref={fotoDiv} className="foto-canvas"></canvas>
           {hayFoto && (
-            <button className="close-photo-button" onClick={cerrarFoto}>
-              <span className="material-symbols-outlined">close</span> Cerrar Foto
-            </button>
+            <div className="preview-container">
+              <button className="close-photo-button" onClick={cerrarFoto}>
+                <span className="material-symbols-outlined">close</span> Cerrar Foto
+              </button>
+            </div>
           )}
+
+          <button className="camera-button-salir" onClick={onClose}>
+            <span>Salir</span>
+          </button>
         </div>
       </div>
     </div>
