@@ -317,17 +317,20 @@ const handleCorreccionChange = (index, field, value) => {
             // Mapeo de correcciones para asignar valor a evidencia
             const correccionesActualizadas = correcciones.map((correccion, i) => {
                 const fieldKey = `${id}_${i}`;
-                const imagenBase64 = capturedPhotos[fieldKey]
-                    ? capturedPhotos[fieldKey].startsWith('data:image/png;base64,')
-                        ? capturedPhotos[fieldKey]
-                        : `data:image/png;base64,${capturedPhotos[fieldKey]}`
-                    : correccion.evidencia;  // Mantén la evidencia actual si no hay una nueva imagen
+                
+                // Capturamos la imagen en base64 si existe en capturedPhotos
+                let imagenBase64 = capturedPhotos[fieldKey] || correccion.evidencia;
+            
+                // Si existe la imagen y no comienza con el prefijo base64, lo añadimos
+                if (imagenBase64 && !imagenBase64.startsWith('data:image/png;base64,')) {
+                    imagenBase64 = `data:image/png;base64,${imagenBase64}`;
+                }
             
                 return {
                     ...correccion,
                     evidencia: imagenBase64
                 };
-            });
+            });            
             
             const { _id } = filteredIshikawas[0];
             const updatedIshikawa = {
