@@ -9,11 +9,20 @@ function Fotos({ open, onClose, onCapture }) {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64String = reader.result;  // Aquí el prefijo ya está incluido
+        let base64String = reader.result;  // Aquí el prefijo ya está incluido
+
+        // Verifica si el prefijo ya está en base64String (png, jpeg, etc.)
+        const prefijosBase64 = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
+
+        // Solo añade el prefijo si no empieza con uno de los prefijos conocidos
+        if (!prefijosBase64.some(prefijo => base64String.startsWith(prefijo))) {
+          base64String = `data:image/png;base64,${base64String}`;  // Agrega el prefijo en caso de ser necesario
+        }
+
         setHayFoto(true);
-        onCapture(base64String); // Envía la imagen capturada en formato base64 con el prefijo
+        onCapture(base64String); // Envía la imagen capturada en formato base64 con el prefijo adecuado
       };
-      reader.readAsDataURL(file);  // Esto ya incluye 'data:image/png;base64,'
+      reader.readAsDataURL(file);  // Esto ya incluye 'data:image/png;base64,' o 'data:image/jpeg;base64,'
     }
   };
 
