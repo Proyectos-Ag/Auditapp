@@ -307,7 +307,7 @@ const handleCorreccionChange = (index, field, value) => {
         setNuevaCorreccion({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
     };
 
-    const handleGuardarCambios2 = async (selectedIndex) => {
+const handleGuardarCambios2 = async (selectedIndex) => {
         try {
             if (filteredIshikawas.length === 0) {
                 alert('No hay datos para actualizar');
@@ -320,11 +320,6 @@ const handleCorreccionChange = (index, field, value) => {
                 
                 // Capturamos la imagen en base64 si existe en capturedPhotos
                 let imagenBase64 = capturedPhotos[fieldKey] || correccion.evidencia;
-            
-                // Si existe la imagen y no comienza con el prefijo base64, lo añadimos
-                if (imagenBase64 && !imagenBase64.startsWith('data:image/png;base64,')) {
-                    imagenBase64 = `data:image/png;base64,${imagenBase64}`;
-                }
             
                 return {
                     ...correccion,
@@ -340,7 +335,7 @@ const handleCorreccionChange = (index, field, value) => {
             const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, {
                 estado: 'Aprobado',
                 ...updatedIshikawa
-            });
+            }); 
             console.log('Respuesta del servidor:', response.data);
             Swal.fire({
                 title: 'Éxito!',
@@ -367,13 +362,6 @@ const handleCorreccionChange = (index, field, value) => {
                 // Captura la imagen en base64 si existe en capturedPhotos, o usa la evidencia existente
                 let imagenBase64 = capturedPhotos[fieldKey] || correccion.evidencia;
             
-                // Verifica si la imagen ya tiene un prefijo base64 (ya sea PNG o JPEG)
-                const prefijosBase64 = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
-            
-                // Solo añade el prefijo si no empieza con uno de los prefijos conocidos
-                if (imagenBase64 && !prefijosBase64.some(prefijo => imagenBase64.startsWith(prefijo))) {
-                    imagenBase64 = `data:image/png;base64,${imagenBase64}`;  // Ajusta el formato base si es necesario
-                }
             
                 return {
                     ...correccion,
@@ -944,123 +932,122 @@ const obtenerEstiloTextarea = (texto, causa) => {
                             </tr>
                         </thead>
                         <tbody>
-  {correcciones.map((correccion, index) => {
-    const fieldKey = `${id}_${index}`;
-    
-    // Lista de prefijos conocidos
-    const prefijosBase64 = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
+                    {correcciones.map((correccion, index) => {
+                        const fieldKey = `${id}_${index}`;
+                        
+                        // Lista de prefijos conocidos
+                        const prefijosBase64 = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
 
-    // Verifica si `correccion.evidencia` es una cadena y si tiene un prefijo válido
-    const base64String = correccion.evidencia && typeof correccion.evidencia === 'string'
-      ? prefijosBase64.some(prefijo => correccion.evidencia.startsWith(prefijo))
-        ? correccion.evidencia  // Si ya tiene un prefijo válido, úsalo
-        : `data:image/png;base64,${correccion.evidencia}`  // Si no tiene prefijo, agrega uno por defecto (png)
-      : '';  // Devuelve una cadena vacía si no hay evidencia
+                        // Verifica si `correccion.evidencia` es una cadena y si tiene un prefijo válido
+                        const base64String = correccion.evidencia && typeof correccion.evidencia === 'string'
+                        ? prefijosBase64.some(prefijo => correccion.evidencia.startsWith(prefijo))
+                            ? correccion.evidencia  // Si ya tiene un prefijo válido, úsalo
+                            : `data:image/png;base64,${correccion.evidencia}`  // Si no tiene prefijo, agrega uno por defecto (png)
+                        : '';  // Devuelve una cadena vacía si no hay evidencia
 
-    return (
-      <tr key={index} onClick={() => setSelectedIndex(index)}>
-        <td>
-          <textarea
-            type="text"
-            value={correccion.actividad}
-            onChange={(e) => handleCorreccionChange(index, 'actividad', e.target.value)}
-            className="no-border" required
-          />
-        </td>
-        <td>
-          <textarea
-            type="text"
-            value={correccion.responsable}
-            onChange={(e) => handleCorreccionChange(index, 'responsable', e.target.value)}
-            className="no-border" required
-          />
-        </td>
-        <td>
-          <input
-            type="date"
-            value={correccion.fechaCompromiso}
-            onChange={(e) => handleCorreccionChange(index, 'fechaCompromiso', e.target.value)}
-            className="no-border" required
-          />
-        </td>
-        <td>
-          <input
-            type="checkbox"
-            checked={correccion.cerrada === 'Sí'}
-            onChange={(e) => handleCorreccionChange(index, 'cerrada', e.target.checked)}
-            className="no-border"
-          />
-        </td>
-        <td>
-          <input
-            type="checkbox"
-            checked={correccion.cerrada === 'No'}
-            onChange={(e) => handleCorreccionChange(index, 'cerradaNo', e.target.checked)}
-            className="no-border"
-          />
-        </td>
-        <td>
-          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-          {aprobado && (
-            <div className="button-foto" onClick={(e) => {
-              e.preventDefault();
-              handleOpenModal(fieldKey);
-            }}>
-              <span className="material-symbols-outlined">add_a_photo</span>
-            </div>
-          )}
-          {correccion.evidencia && (
-            <>
-              <img
-                src={base64String}  // Usa la imagen con el prefijo adecuado
-                alt="Evidencia"
-                style={{ width: '100%', height: 'auto' }}
-                className="hallazgo-imagen"
-                onClick={() => handleImageClick(base64String)}
-              />
-            </>
-          )}
-          {capturedPhotos[fieldKey] && (
-            <img
-              src={capturedPhotos[fieldKey]}
-              alt="Captura"
-              style={{ width: '100%', height: 'auto' }}
-              onClick={() => handleImageClick(capturedPhotos[fieldKey])}
-            />
-          )}
-        </td>
-        <td className='cancel-acc'>
-          {aprobado && index > 0 && (
-            <button 
-              className='eliminar-ev'
-              onClick={(e) => {
-                e.preventDefault();
-                handleEliminarFila(index);
-              }}>
-              Eliminar
-            </button>
-          )}
-        </td>
-        {imageModalOpen && (
-          <div className="modal-overlay" onClick={closeModal}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <img src={selectedImage} alt="Ampliada" className="modal-image" />
-              <button 
-                className='eliminar-ev'
-                onClick={(e) => {
-                  e.preventDefault();
-                  EliminarEv(index,ishikawa._id, correccion._id)
-                }}>
-                Eliminar Evidencia
-              </button>
-            </div>
-          </div>
-        )}
-      </tr>
-    );
-  })}
-</tbody>
-
+                        return (
+                        <tr key={index} onClick={() => setSelectedIndex(index)}>
+                            <td>
+                            <textarea
+                                type="text"
+                                value={correccion.actividad}
+                                onChange={(e) => handleCorreccionChange(index, 'actividad', e.target.value)}
+                                className="no-border" required
+                            />
+                            </td>
+                            <td>
+                            <textarea
+                                type="text"
+                                value={correccion.responsable}
+                                onChange={(e) => handleCorreccionChange(index, 'responsable', e.target.value)}
+                                className="no-border" required
+                            />
+                            </td>
+                            <td>
+                            <input
+                                type="date"
+                                value={correccion.fechaCompromiso}
+                                onChange={(e) => handleCorreccionChange(index, 'fechaCompromiso', e.target.value)}
+                                className="no-border" required
+                            />
+                            </td>
+                            <td>
+                            <input
+                                type="checkbox"
+                                checked={correccion.cerrada === 'Sí'}
+                                onChange={(e) => handleCorreccionChange(index, 'cerrada', e.target.checked)}
+                                className="no-border"
+                            />
+                            </td>
+                            <td>
+                            <input
+                                type="checkbox"
+                                checked={correccion.cerrada === 'No'}
+                                onChange={(e) => handleCorreccionChange(index, 'cerradaNo', e.target.checked)}
+                                className="no-border"
+                            />
+                            </td>
+                            <td>
+                            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+                            {aprobado && (
+                                <div className="button-foto" onClick={(e) => {
+                                e.preventDefault();
+                                handleOpenModal(fieldKey);
+                                }}>
+                                <span className="material-symbols-outlined">add_a_photo</span>
+                                </div>
+                            )}
+                            {correccion.evidencia && (
+                                <>
+                                <img
+                                    src={base64String}  // Usa la imagen con el prefijo adecuado
+                                    alt="Evidencia"
+                                    style={{ width: '100%', height: 'auto' }}
+                                    className="hallazgo-imagen"
+                                    onClick={() => handleImageClick(base64String)}
+                                />
+                                </>
+                            )}
+                            {capturedPhotos[fieldKey] && (
+                                <img
+                                src={capturedPhotos[fieldKey]}
+                                alt="Captura"
+                                style={{ width: '100%', height: 'auto' }}
+                                onClick={() => handleImageClick(capturedPhotos[fieldKey])}
+                                />
+                            )}
+                            </td>
+                            <td className='cancel-acc'>
+                            {aprobado && index > 0 && (
+                                <button 
+                                className='eliminar-ev'
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    handleEliminarFila(index);
+                                }}>
+                                Eliminar
+                                </button>
+                            )}
+                            </td>
+                            {imageModalOpen && (
+                            <div className="modal-overlay" onClick={closeModal}>
+                                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <img src={selectedImage} alt="Ampliada" className="modal-image" />
+                                <button 
+                                    className='eliminar-ev'
+                                    onClick={(e) => {
+                                    e.preventDefault();
+                                    EliminarEv(index,ishikawa._id, correccion._id)
+                                    }}>
+                                    Eliminar Evidencia
+                                </button>
+                                </div>
+                            </div>
+                            )}
+                        </tr>
+                        );
+                    })}
+                    </tbody>
                     </table>
                     </>
                     )}
