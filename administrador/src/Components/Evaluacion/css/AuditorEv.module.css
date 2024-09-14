@@ -1,0 +1,96 @@
+.auditorEvaluacionesContainer {
+    width: 80%;
+    margin: 70px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .auditorEvaluacionesContainer button {
+    padding: 10px 20px;
+    background-color: #003366;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .auditorEvaluacionesContainer button:hover {
+    background-color: #0055a5;
+  }
+  
+    
+    .auditorSelect {
+      margin-bottom: 20px;
+    }
+    
+    .auditorSelect label {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    
+    .auditorSelect select {
+      padding: 5px;
+      font-size: 16px;
+    }
+    
+    .evaluaciones h2 {
+      margin-top: 20px;
+    }
+    
+    .evaluacionCursos,
+    .evaluacionConocimientos,
+    .evaluacionAtributos {
+      margin-bottom: 20px;
+    }
+    
+    .auditorEvaluacionesContainer table {
+      width: 100%;
+      border-collapse: collapse;
+  }
+    
+  .auditorEvaluacionesContainer table th, 
+  .auditorEvaluacionesContainer table td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+  }
+    
+  .auditorEvaluacionesContainer table th {
+    background-color: #f0f0f0;
+  }
+    
+  .evaluacionExperiencia,
+  .evaluacionFormacion,
+  .evaluacionPorcentaje {
+    margin-bottom: 20px;
+  }
+    
+  .auditorEvaluacionesContainer h3 {
+    margin-bottom: 10px;
+    color: #333;
+  }
+  
+  .info-secciones {
+    margin-top: 20px;
+  }
+    
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+    
+  .info-table th,
+  .info-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+    
+  .info-table th {
+    background-color: #f4f4f4;
+  }

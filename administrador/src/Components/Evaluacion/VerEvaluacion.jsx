@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './css/auditorEvaluaciones.css'; // CSS específico para este componente
 import Navigation from "../Navigation/Navbar";
+import styles from './css/AuditorEv.module.css';
 
 
 const AuditorEvaluaciones = () => {
@@ -62,11 +62,11 @@ const AuditorEvaluaciones = () => {
   return (
   <div>
     <div style={{ position: 'absolute', top: 0, left: 0 }}>
-                <Navigation />
+        <Navigation />
       </div>
-    <div className="auditor-evaluaciones-container">
+    <div className={styles.auditorEvaluacionesContainer}>
       <h1>Vista para Evaluaciones</h1>
-      <div className="auditor-select">
+      <div className={styles.auditorSelect}>
         <label htmlFor="auditor">Selecciona un auditor:</label>
         <select onChange={(e) => setSelectedAuditor(e.target.value)} value={selectedAuditor}>
           <option value="">Selecciona un auditor</option>
@@ -77,7 +77,7 @@ const AuditorEvaluaciones = () => {
       </div>
 
       {noEvaluaciones && (
-        <div className="no-evaluaciones">
+        <div className={styles.no-evaluaciones}>
           <p>Este usuario no cuenta con evaluaciones.</p>
           <button onClick={handleEvaluar}>Evaluar</button>
           <button onClick={handleCancelar}>Cancelar</button>
@@ -85,11 +85,11 @@ const AuditorEvaluaciones = () => {
       )}
 
       {evaluaciones.length > 0 && !noEvaluaciones && (
-        <div className="evaluaciones">
+        <div className={styles.evaluaciones}>
           <h2>Evaluaciones de {auditores.find(a => a._id === selectedAuditor)?.Nombre}</h2>
           
           {/* Aquí van las tablas informativas */}
-          <div className="informativas">
+          <div className={styles.informativas}>
             <h3>INDICADORES DE EVALUACIÓN</h3>
             <table>
               <thead>
@@ -158,7 +158,7 @@ const AuditorEvaluaciones = () => {
           </div>
           
           {/* Tablas de evaluaciones */}
-          <div className="evaluacion-cursos">
+          <div className={styles.evaluacionCursos}>
             <h3>Cursos:</h3>
             <table>
               <thead>
@@ -180,7 +180,7 @@ const AuditorEvaluaciones = () => {
             </table>
           </div>
 
-          <div className="evaluacion-conocimientos">
+          <div className={styles.evaluacionConocimientos}>
             <h3>Conocimientos y Habilidades:</h3>
             <table>
               <thead>
@@ -200,7 +200,7 @@ const AuditorEvaluaciones = () => {
             </table>
           </div>
 
-          <div className="evaluacion-atributos">
+          <div className={styles.evaluacionAtributos}>
             <h3>Atributos y Cualidades Personales:</h3>
             <table>
               <thead>
@@ -220,14 +220,14 @@ const AuditorEvaluaciones = () => {
             </table>
           </div>
 
-          <div className="evaluacion-experiencia">
+          <div className={styles.evaluacionExperiencia}>
             <h3>Experiencia:</h3>
             <p><strong>Tiempo laborando:</strong> {evaluaciones[0]?.experiencia.tiempoLaborando}</p>
             <p><strong>Miembro del equipo de inocuidad:</strong> {evaluaciones[0]?.experiencia.equipoInocuidad ? 'Sí' : 'No'}</p>
             <p><strong>Auditorías internas:</strong> {evaluaciones[0]?.experiencia.auditoriasInternas}</p>
           </div>
 
-          <div className="evaluacion-formacion">
+          <div className={styles.evaluacionFormacion}>
             <h3>Formación Profesional:</h3>
             <p><strong>Nivel de estudios:</strong> {evaluaciones[0]?.formacionProfesional.nivelEstudios}</p>
             <p><strong>Especialidad:</strong> {evaluaciones[0]?.formacionProfesional.especialidad}</p>
@@ -237,7 +237,7 @@ const AuditorEvaluaciones = () => {
             )}
           </div>
 
-          <div className="evaluacion-porcentaje">
+          <div className={styles.evaluacionPorcentaje}>
             <h3>Porcentaje Total: {evaluaciones[0]?.porcentajeTotal}%</h3>
           </div>
         </div>

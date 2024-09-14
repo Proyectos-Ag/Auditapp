@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navigation from "../Navigation/Navbar";
-import './css/eva.css';
+import styles from './css/Evalua.module.css';
 
 const Evaluaciones = () => {
   const [auditores, setAuditores] = useState([]);
@@ -249,8 +249,6 @@ const Evaluaciones = () => {
     setResultadoFinal(resultadoFinalCalculado);
 };
 
-  
-
   const limpiarCampos = () => {
     setEvaluacion({
       cursos: {
@@ -330,9 +328,9 @@ const Evaluaciones = () => {
   return (
   <div>
     <div style={{ position: 'absolute', top: 0, left: 0 }}>
-                <Navigation />
+        <Navigation />
       </div>
-    <div className="evaluaciones">
+    <div className={styles.evaluaciones}>
       <h1>Evaluación de Auditores Internos</h1>
       <p>GESTIÓN PARA LA CALIDAD</p>
       <p>GCF070</p>
@@ -355,7 +353,7 @@ const Evaluaciones = () => {
             <thead>
               <tr>
                 <th>Curso</th>
-                <th>Calificación</th>
+                <th>Calificación (%)</th>
                 <th>Aprobado</th>
               </tr>
             </thead>
@@ -527,7 +525,7 @@ const Evaluaciones = () => {
             </tbody>
           </table>
 
-          <div className="tabla-indicadores">
+          <div >
   <h2>Indicadores de Evaluación</h2>
   <table>
     <thead>
@@ -567,7 +565,7 @@ const Evaluaciones = () => {
   </table>
 </div>
 
-<div className="tabla-calificacion">
+<div>
   <h2>Calificación Total Obtenida</h2>
   <table>
     <thead>
@@ -609,6 +607,5 @@ const Evaluaciones = () => {
   );
 
 };
-
 
 export default Evaluaciones;

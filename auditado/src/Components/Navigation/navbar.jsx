@@ -73,7 +73,7 @@ function DrawerList({ handleLogout }) {
     { text: "Inicio", href: "/home" },
     {
       text: "Auditorías", subItems: [
-        { text: "Reportes", href: "/reporte" },
+        { text: "Reportes", href: "/vistarep" },
         { text: "Auditorias terminadas", href: "/" }
       ]
     },

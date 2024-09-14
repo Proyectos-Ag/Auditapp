@@ -26,7 +26,8 @@
     border: 1px solid #000;
 }
 
-.evaluaciones th, td {
+.evaluaciones th, 
+.evaluaciones td {
     border: 1px solid #000;
     padding: 10px;
     text-align: left;
@@ -139,7 +140,9 @@
         max-width: 90%;
     }
 
-    .evaluaciones table, th, td {
+    .evaluaciones table, 
+    .evaluaciones th, 
+    .evaluaciones td {
         font-size: 13px;
         padding: 10px;
     }
@@ -164,7 +167,9 @@
         max-width: 1000px;
     }
 
-    .evaluaciones table, th, td {
+    .evaluaciones table, 
+    .evaluaciones th, 
+    .evaluaciones td {
         font-size: 14px;
     }
 

@@ -24,10 +24,10 @@ const ReporteF = () => {
             setDatos([responseDatos.data]);
       
             // Obtener datos de Ishikawa
-            const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/pordato/${_id}`,{
-                params: { idRep: _id, proName: userData.Nombre }
-            });
+            const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/por/${_id}`);
             setIshikawas([responseIshikawa.data]);
+
+            console.log("datos recibidos",[responseIshikawa.data]);
 
           } catch (error) {
             console.error('Error al obtener los datos:', error);
