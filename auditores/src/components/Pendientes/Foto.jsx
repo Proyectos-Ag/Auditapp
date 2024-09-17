@@ -1,172 +1,74 @@
-import { Container, Card, Icon, Button, Modal } from 'semantic-ui-react';
-import './css/Camara.css';
 import { useEffect, useRef, useState } from 'react';
+import './css/Camara.css';
 
 function Fotos({ open, onClose, onCapture }) {
-  const videoDiv = useRef(null);
-  const fotoDiv = useRef(null);
   const [hayFoto, setHayFoto] = useState(false);
-  const [stream, setStream] = useState(null);
-  const [camera, setCamera] = useState('user');
-  const [zoom, setZoom] = useState(1);
-  const [focus, setFocus] = useState(0);
+  const inputRef = useRef(null);  // Referencia al input de archivo
 
-  const verCamara = async () => {
-    try {
-      if (stream) {
-        detenerCamara();
-      }
-      const currentStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1080, height: 720, facingMode: camera }
-      });
-      setStream(currentStream);
-      if (videoDiv.current) {
-        videoDiv.current.srcObject = currentStream;
-        videoDiv.current.play();
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  const handleCapture = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        let base64String = reader.result;
 
-  const detenerCamara = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-  };
+        // Verifica si el prefijo ya está en base64String (png, jpeg, etc.)
+        const prefijosBase64 = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
 
-  const tomarFoto = () => {
-    const w = 720;
-    const h = w / (16 / 9);
+        // Solo añade el prefijo si no empieza con uno de los prefijos conocidos
+        if (!prefijosBase64.some(prefijo => base64String.startsWith(prefijo))) {
+          base64String = `data:image/png;base64,${base64String}`;
+        }
 
-    const video = videoDiv.current;
-    const foto = fotoDiv.current;
-
-    if (foto && video) {
-      foto.width = w;
-      foto.height = h;
-      const context = foto.getContext('2d');
-      context.drawImage(video, 0, 0, w, h);
-      setHayFoto(true);
-
-      const dataUrl = foto.toDataURL('image/png');
-      onCapture(dataUrl);
-    }
-  };
-
-  const cerrarFoto = () => {
-    const f = fotoDiv.current;
-    if (f) {
-      const context = f.getContext('2d');
-      context.clearRect(0, 0, f.width, f.height);
-      setHayFoto(false);
-    }
-  };
-
-  const cambiarCamara = () => {
-    setCamera(prevCamera => (prevCamera === 'user' ? 'environment' : 'user'));
-  };
-
-  const handleZoomChange = (event) => {
-    const newZoom = event.target.value;
-    setZoom(newZoom);
-
-    const track = stream?.getVideoTracks()[0];
-    const capabilities = track?.getCapabilities();
-    if (capabilities?.zoom) {
-      track.applyConstraints({
-        advanced: [{ zoom: newZoom }]
-      });
-    }
-  };
-
-  const handleFocusChange = (event) => {
-    const newFocus = event.target.value;
-    setFocus(newFocus);
-
-    const track = stream?.getVideoTracks()[0];
-    const capabilities = track?.getCapabilities();
-    if (capabilities?.focusDistance) {
-      track.applyConstraints({
-        advanced: [{ focusDistance: newFocus }]
-      });
+        setHayFoto(true);
+        onCapture(base64String); // Envía la imagen capturada en formato base64 con el prefijo adecuado
+      };
+      reader.readAsDataURL(file);  // Esto ya incluye 'data:image/png;base64,' o 'data:image/jpeg;base64,'
     }
   };
 
   useEffect(() => {
     if (open) {
-      verCamara();
-    } else {
-      detenerCamara();
+      inputRef.current.click();  // Dispara automáticamente el clic en el input de archivo
     }
+  }, [open]);  // Se ejecuta cuando el modal se abre
 
-    return () => {
-      detenerCamara();
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, camera]);
+  const cerrarFoto = () => {
+    setHayFoto(false);
+  };
+
+  if (!open) return null;
 
   return (
-    <Modal open={open} onClose={onClose} size="small" className="fixed-modal">
-      <Modal.Content>
-        <Container className="miApp" fluid textAlign="center">
-          <Card.Group centered>
-            <Card>
-              <video ref={videoDiv} style={{ width: '100%', height: 'auto'}}></video>
-              <Card.Content>
-                {/* Control de Zoom */}
-                <input
-                className='funciones'
-                  type="range"
-                  min="1"
-                  max="3"
-                  step="0.1"
-                  value={zoom}
-                  onChange={handleZoomChange}
-                />
+    <div className={`modal ${open ? 'open' : 'closed'}`}>
+      <div className="fixed-modal">
+        <div className="camera-container">
+          <input
+            ref={inputRef}  // Asigna la referencia al input de archivo
+            type="file"
+            accept="image/*"
+            capture="environment" // "environment" para cámara trasera, "user" para la frontal
+            onChange={handleCapture}
+            style={{ display: 'none' }} // Oculta el input
+            id="cameraInput"
+          />
+          
+          <h1 style={{ textAlign: 'center', color: '#fff' }}>Accediendo a la cámara</h1>
 
-                {/* Control de Enfoque */}
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="1"
-                  value={focus}
-                  onChange={handleFocusChange}
-                />
+          {hayFoto && (
+            <div className="preview-container">
+              <button className="close-photo-button" onClick={cerrarFoto}>
+                <span className="material-symbols-outlined">close</span> Cerrar Foto
+              </button>
+            </div>
+          )}
 
-                {/* Botón para tomar la foto */}
-                <button className="camera-button" color="teal" onClick={tomarFoto} disabled={!open}>
-                  <span className="material-symbols-outlined" style={{fontSize: "40px",}}>photo_camera</span>
-                </button>
-
-                {/* Botón para cambiar la cámara */}
-                <Button className="camera-switch-button" color="blue" onClick={cambiarCamara}>
-                  <span className="material-symbols-outlined">switch_camera</span>
-                </Button>
-
-                {/* Botón para cerrar la cámara */}
-                <Button color="red" className="camera-button-salir" onClick={() => { detenerCamara(); onClose(); }}>
-                  <Icon name="close" /> Salir
-                </Button>
-              </Card.Content>
-            </Card>
-
-            <Card>
-              <canvas ref={fotoDiv}></canvas>
-              {hayFoto && (
-                <Card.Content>
-                  <Button color="red" onClick={cerrarFoto}>
-                    <Icon name="close" /> Cerrar Foto
-                  </Button>
-                </Card.Content>
-              )}
-            </Card>
-          </Card.Group>
-        </Container>
-      </Modal.Content>
-    </Modal>
+          <button className="camera-button-salir" onClick={onClose}>
+            <span>Salir</span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

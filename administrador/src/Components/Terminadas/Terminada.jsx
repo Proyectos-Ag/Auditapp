@@ -431,7 +431,7 @@ const Terminada = () => {
                                                                 // Evita renderizar filas no necesarias
                                                                 if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
                                                                     const ishikawaKey = `${desc.ID}-${dato._id}-${programa.Nombre}`;
-                                                                    const ishikawa = ishikawasMap[ishikawaKey];
+                                                                    const ishikawa = ishikawasMap[ishikawaKey]; 
                                                                     
                                                                     return (
                                                                         <tr key={descIdx}>

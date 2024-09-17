@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, {  useMemo,useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { UserContext } from '../../App';
 import logo from "../../assets/img/logoAguida.png";
@@ -22,6 +22,8 @@ const ReporteF = () => {
               params: { correo: userData.Correo }
             });
             setDatos([responseDatos.data]);
+
+            console.log("Datos",[responseDatos.data]);
       
             // Obtener datos de Ishikawa
             const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/por/${_id}`);
@@ -90,7 +92,14 @@ const ReporteF = () => {
 
     const navIshikawa = (_id, id, nombre) => {
         navigate(`/ishikawa/${_id}/${id}/${nombre}`);
-    };    
+    };  
+    
+    const ishikawasMap = useMemo(() => {
+        return ishikawas.reduce((acc, ish) => {
+            acc[`${ish.idReq}-${ish.idRep}-${ish.proName}`] = ish;
+            return acc;
+        }, {});
+    }, [ishikawas]);
 
     return (
         <div className='espacio-repo'>
@@ -302,25 +311,21 @@ const ReporteF = () => {
                                                     </thead>
                                                     <tbody>
                                                     {dato.Programa.map((programa, programIdx) =>
-                                                        programa.Descripcion.filter(desc => {
-
-                                                        if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
-                                                            
-                                                        }
-                                                        return false;
-                                                        }).map((desc, descIdx) => {
+                                                        programa.Descripcion.map((desc, descIdx) => {
                                                         const base64Prefix = 'data:image/png;base64,';
                                                         const isBase64Image = desc.Hallazgo.includes(base64Prefix);
-
-                                                        const ishikawa = ishikawas.find(ish => {
-                                                            return ish.idReq === desc.ID && ish.idRep === dato._id && ish.proName === programa.Nombre;
-                                                        });
 
                                                         const ajustarFecha = (fechaString) => {
                                                             const fecha = new Date(fechaString);
                                                             fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset());
                                                             return fecha.toLocaleDateString('es-ES');
                                                         };
+
+                                                        // Evita renderizar filas no necesarias
+                                                        if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
+                                                            const ishikawaKey = `${desc.ID}-${dato._id}-${programa.Nombre}`;
+                                                            const ishikawa = ishikawasMap[ishikawaKey];
+                                                            console.log("A ver", ishikawa);
 
                                                         return (
                                                             <tr key={descIdx}>
@@ -362,6 +367,9 @@ const ReporteF = () => {
                                                             </td>
                                                             </tr>
                                                         );
+                                                    } else {
+                                                        return null;
+                                                    }
                                                         })
                                                     )}
                                                     </tbody>

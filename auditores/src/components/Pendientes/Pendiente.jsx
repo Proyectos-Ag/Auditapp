@@ -183,13 +183,17 @@ setPercentages(initialPercentages);
 
     const handleCapture = (dataUrl) => {
         if (selectedField) {
+            const prefijosBase64 = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
+    
             setCapturedPhotos(prev => ({
                 ...prev,
-                [selectedField]: dataUrl.startsWith('data:image/png;base64,') ? dataUrl : `data:image/png;base64,${dataUrl}`
+                [selectedField]: prefijosBase64.some(prefijo => dataUrl.startsWith(prefijo))
+                    ? dataUrl  // Si ya tiene un prefijo válido, usa el dataUrl tal como está
+                    : `data:image/png;base64,${dataUrl}`  // Si no tiene prefijo, agrega uno por defecto (png)
             }));
         }
         setModalOpen(false);
-    };    
+    };   
 
     const navigate = useNavigate();
 
@@ -444,9 +448,15 @@ setPercentages(initialPercentages);
                                                     <tbody>
                                                         {programa.Descripcion.map((desc, descIdx) => {
                                                             const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
-                                                            const base64String = desc.Hallazgo.startsWith('data:image/png;base64,')
-                                                                    ? desc.Hallazgo
-                                                                    : `data:image/png;base64,${desc.Hallazgo}`;
+                                                            // Lista de prefijos conocidos
+                                                            const prefijosBase64 = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
+
+                                                            // Verifica si `correccion.evidencia` es una cadena y si tiene un prefijo válido
+                                                            const base64String = desc.Hallazgo && typeof desc.Hallazgo === 'string'
+                                                            ? prefijosBase64.some(prefijo => desc.Hallazgo.startsWith(prefijo))
+                                                                ? desc.Hallazgo  // Si ya tiene un prefijo válido, úsalo
+                                                                : `data:image/png;base64,${desc.Hallazgo}`  // Si no tiene prefijo, agrega uno por defecto (png)
+                                                            : '';  // Devuelve una cadena vacía si no hay evidencia
                                                             return (
                                                                 <tr key={descIdx}>
                                                                     <td>{desc.ID}</td>
