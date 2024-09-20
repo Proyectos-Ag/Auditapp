@@ -181,19 +181,18 @@ setPercentages(initialPercentages);
         setModalOpen(true);
     };
 
-    const handleCapture = (dataUrl) => {
+    const handleCapture = (blob) => {
         if (selectedField) {
-            const prefijosBase64 = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
-    
+            // Convierte el BLOB en una URL temporal que pueda ser usada para previsualizar la imagen
+            const blobUrl = URL.createObjectURL(blob);
+            
             setCapturedPhotos(prev => ({
                 ...prev,
-                [selectedField]: prefijosBase64.some(prefijo => dataUrl.startsWith(prefijo))
-                    ? dataUrl  // Si ya tiene un prefijo válido, usa el dataUrl tal como está
-                    : `data:image/png;base64,${dataUrl}`  // Si no tiene prefijo, agrega uno por defecto (png)
+                [selectedField]: blobUrl  // Almacena la URL del BLOB en lugar de Base64
             }));
         }
         setModalOpen(false);
-    };   
+    };      
 
     const navigate = useNavigate();
 
@@ -446,75 +445,63 @@ setPercentages(initialPercentages);
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {programa.Descripcion.map((desc, descIdx) => {
-                                                            const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
-                                                            // Lista de prefijos conocidos
-                                                            const prefijosBase64 = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
+  {programa.Descripcion.map((desc, descIdx) => {
+    const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+    
+    // Aquí no necesitas manejar prefijos Base64, solo te preocupas de que sea un BLOB o base64
+    const imageSrc = capturedPhotos[fieldKey] || desc.Hallazgo || '';
 
-                                                            // Verifica si `correccion.evidencia` es una cadena y si tiene un prefijo válido
-                                                            const base64String = desc.Hallazgo && typeof desc.Hallazgo === 'string'
-                                                            ? prefijosBase64.some(prefijo => desc.Hallazgo.startsWith(prefijo))
-                                                                ? desc.Hallazgo  // Si ya tiene un prefijo válido, úsalo
-                                                                : `data:image/png;base64,${desc.Hallazgo}`  // Si no tiene prefijo, agrega uno por defecto (png)
-                                                            : '';  // Devuelve una cadena vacía si no hay evidencia
-                                                            return (
-                                                                <tr key={descIdx}>
-                                                                    <td>{desc.ID}</td>
-                                                                    <td className='alingR'>{desc.Requisito}</td>
-                                                                    {['Conforme', 'm', 'M', 'C', 'NA'].map((checkboxName) => (
-                                                                        <td key={checkboxName} className={getTdClass(periodIdx, programIdx, descIdx, checkboxName)}>
-                                                                            <input
-                                                                                type="checkbox"
-                                                                                name={`${checkboxName}_${periodIdx}_${programIdx}_${descIdx}`}
-                                                                                checked={selectedCheckboxes[fieldKey] === checkboxName}
-                                                                                onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, checkboxName)}
-                                                                            />
-                                                                        </td>
-                                                                    ))}
-                                                                   <td className='espacio-test flex-column'>
-                                                                        <textarea 
-                                                                            name={`Problemas_${periodIdx}_${programIdx}_${descIdx}`} 
-                                                                            defaultValue={desc.Problema}
-                                                                            className="textarea-custom"
-                                                                            style={{height:"20px"}}
-                                                                            placeholder='Problema. . .'
-                                                                        ></textarea>
-                                                                        <textarea
-                                                                            name={`Observaciones_${periodIdx}_${programIdx}_${descIdx}`}
-                                                                            defaultValue={desc.Observacion}
-                                                                            className="textarea-custom"
-                                                                            placeholder='Hallazgo. . .'
-                                                                        ></textarea>
-                                                                    </td>
-                                                                    <td>
-                                                                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-                                                                    <div className="button-foto" onClick={() => handleOpenModal(fieldKey)}>
-                                                                        <span className="material-symbols-outlined">
-                                                                            add_a_photo
-                                                                        </span>
-                                                                    </div>
-                                                                    {desc.Hallazgo ? (
-                                                                        <img
-                                                                            src={base64String}
-                                                                            alt="Evidencia"
-                                                                            className="hallazgo-imagen"
-                                                                            onClick={() => handleImageClick(base64String)}
-                                                                        />
-                                                                    ) : null}
-                                                                    {capturedPhotos[fieldKey] && (
-                                                                        <img
-                                                                            src={capturedPhotos[fieldKey]}
-                                                                            alt="Captura"
-                                                                            style={{ width: '100%', height: 'auto' }}
-                                                                            onClick={() => handleImageClick(capturedPhotos[fieldKey])}
-                                                                        />
-                                                                    )}
-                                                                </td>
+    return (
+      <tr key={descIdx}>
+        <td>{desc.ID}</td>
+        <td className='alingR'>{desc.Requisito}</td>
+        {['Conforme', 'm', 'M', 'C', 'NA'].map((checkboxName) => (
+          <td key={checkboxName} className={getTdClass(periodIdx, programIdx, descIdx, checkboxName)}>
+            <input
+              type="checkbox"
+              name={`${checkboxName}_${periodIdx}_${programIdx}_${descIdx}`}
+              checked={selectedCheckboxes[fieldKey] === checkboxName}
+              onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, checkboxName)}
+            />
+          </td>
+        ))}
+        <td className='espacio-test flex-column'>
+          <textarea 
+            name={`Problemas_${periodIdx}_${programIdx}_${descIdx}`} 
+            defaultValue={desc.Problema}
+            className="textarea-custom"
+            style={{height:"20px"}}
+            placeholder='Problema...'
+          ></textarea>
+          <textarea
+            name={`Observaciones_${periodIdx}_${programIdx}_${descIdx}`}
+            defaultValue={desc.Observacion}
+            className="textarea-custom"
+            placeholder='Hallazgo...'
+          ></textarea>
+        </td>
+        <td>
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+          <div className="button-foto" onClick={() => handleOpenModal(fieldKey)}>
+            <span className="material-symbols-outlined">
+              add_a_photo
+            </span>
+          </div>
+          
+          {imageSrc && (
+            <img
+              src={typeof imageSrc === 'string' ? imageSrc : URL.createObjectURL(imageSrc)} // Si es string (base64), úsalo directamente, si es Blob, usa createObjectURL
+              alt="Evidencia"
+              className="hallazgo-imagen"
+              onClick={() => handleImageClick(imageSrc)}
+            />
+          )}
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
 
-                                                                </tr>
-                                                            );
-                                                        })}
-                                                    </tbody>
                                                 </table>
                                             </div>
                                         ))

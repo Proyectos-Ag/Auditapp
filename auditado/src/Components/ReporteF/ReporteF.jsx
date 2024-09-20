@@ -26,10 +26,11 @@ const ReporteF = () => {
             console.log("Datos",[responseDatos.data]);
       
             // Obtener datos de Ishikawa
-            const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/por/${_id}`);
-            setIshikawas([responseIshikawa.data]);
-
-            console.log("datos recibidos",[responseIshikawa.data]);
+            const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/pordato/${_id}`,{
+                params: { nombre: userData.Nombre }
+            });
+            setIshikawas(Array.isArray(responseIshikawa.data) ? responseIshikawa.data : [responseIshikawa.data]);
+            console.log('Ishikawa',responseIshikawa);
 
           } catch (error) {
             console.error('Error al obtener los datos:', error);
@@ -323,10 +324,13 @@ const ReporteF = () => {
 
                                                         // Evita renderizar filas no necesarias
                                                         if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
-                                                            const ishikawaKey = `${desc.ID}-${dato._id}-${programa.Nombre}`;
+                                                            const ishikawaKey = `${desc.ID}-${dato._id}-${programa.Nombre}`; 
                                                             const ishikawa = ishikawasMap[ishikawaKey];
-                                                            console.log("A ver", ishikawa);
 
+                                                        if (!ishikawa || ishikawa.length === 0) {
+                                                            return null;
+                                                        }    
+                                                            
                                                         return (
                                                             <tr key={descIdx}>
                                                             <td>{desc.ID}</td>

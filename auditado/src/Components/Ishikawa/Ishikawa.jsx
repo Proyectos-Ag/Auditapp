@@ -15,6 +15,7 @@ const Ishikawa = () => {
   const [programa, setPrograma] = useState(null);
   const [descripcion, setDescripcion] = useState(null);
   const [requisito, setRequisito] = useState('');
+  const { _id, id, nombre} = useParams();
   const [hallazgo, setHallazgo] = useState('');
   const [auditado, setAuditados] = useState('');
   const [proceso,  setEnProceso] = useState([]);
@@ -60,8 +61,7 @@ const Ishikawa = () => {
    }]);
    
    const [actividades, setActividades] = useState({ actividad: '', responsable: '', fechaCompromiso: [] });
-  
-  const { _id, id, nombre} = useParams();
+
   const idRep = _id;
 
   console.log('ID recibido 1:', _id);
@@ -161,7 +161,7 @@ const Ishikawa = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
     }
-  };
+  }
 
   const handleTempFechaChange = (value) => {
     setTempFechaCompromiso(value);

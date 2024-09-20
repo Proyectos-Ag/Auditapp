@@ -95,22 +95,24 @@ const actualizarFechaCompromiso = async (req, res) => {
   };
 
   const obtenerIshikawaPorDato = async (req, res) => {
-    const { _id } = req.params; // Obtener la ID del dato desde la URL
-    const { proName } = req.query; // Obtener los filtros adicionales desde los query params
-  
     try {
-      // Filtrar los datos de Ishikawa según idRep, idReq, y proName
-      const ishikawas = await Ishikawa.find({
-        idRep: _id,        // Filtrar por idRep (la ID del dato)
-        proName: proName   // Filtrar por proName (si está en los query params)
-      });
-  
-      // Retornar los datos de Ishikawa filtrados
+      const { _id } = req.params;
+      const { nombre } = req.query;
+      console.log(`_id: ${_id}, nombre: ${nombre}`);
+      // Filtrar los Ishikawas donde idRep sea igual al id de la URL
+      const ishikawas = await Ishikawa.find({ idRep: _id, auditado: nombre}, 
+      'idRep idReq proName estado actividades auditado');
+
+      // Si no hay registros, devuelve un array vacío.
+      if (ishikawas.length === 0) {
+          return res.status(200).json([]); // Devuelve un array vacío
+      }
+
+      // Devolver los registros encontrados
       res.status(200).json(ishikawas);
-    } catch (error) {
-      console.error('Error al obtener los datos de Ishikawa:', error);
-      res.status(500).json({ error: 'Error interno del servidor', details: error.message });
-    }
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
   };  
 
   const eliminarEvidencia = async (req, res) => {

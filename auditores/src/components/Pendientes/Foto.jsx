@@ -10,22 +10,15 @@ function Fotos({ open, onClose, onCapture }) {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        let base64String = reader.result;
-
-        // Verifica si el prefijo ya está en base64String (png, jpeg, etc.)
-        const prefijosBase64 = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
-
-        // Solo añade el prefijo si no empieza con uno de los prefijos conocidos
-        if (!prefijosBase64.some(prefijo => base64String.startsWith(prefijo))) {
-          base64String = `data:image/png;base64,${base64String}`;
-        }
-
+        const arrayBuffer = reader.result;
+        const blob = new Blob([arrayBuffer], { type: file.type });
+        
         setHayFoto(true);
-        onCapture(base64String); // Envía la imagen capturada en formato base64 con el prefijo adecuado
+        onCapture(blob); // Envía el BLOB capturado
       };
-      reader.readAsDataURL(file);  // Esto ya incluye 'data:image/png;base64,' o 'data:image/jpeg;base64,'
+      reader.readAsArrayBuffer(file);  // Lee el archivo como ArrayBuffer
     }
-  };
+  };  
 
   useEffect(() => {
     if (open) {

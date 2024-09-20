@@ -58,6 +58,9 @@ const IshikawaRev = () => {
         text15: ''
        }]);
 
+    console.log(id);
+    console.log(_id);
+
     const fetchData = useCallback(async () => {
       try {
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, {

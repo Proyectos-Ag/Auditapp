@@ -102,7 +102,7 @@ function DrawerList({ handleLogout }) {
         { text: "Generar Auditoría", href: "/datos" },
         { text: "Revisión de Auditoría", href: "/revicion" },
         { text: "Revisión de Ishikawa", href: "/revish" },
-        { text: "Auditorías Finalizadas", href: "/finalizadas" }
+        { text: "Auditorías Finalizadas", href: "/vistafin" }
       ],
       showSubmenu: showAuditoriasSubmenu,
       toggleSubmenu: toggleAuditoriasSubmenu

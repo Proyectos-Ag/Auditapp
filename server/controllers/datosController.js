@@ -264,6 +264,18 @@ const obtenerDatosEsp = async (req, res) => {
   }
 };
 
+const obtenerDatosEspFinal = async (req, res) => {
+  try {
+    // Selecciona solo los campos que deseas incluir en la respuesta
+    const datos = await Datos.find({ Estado: 'Finalizado' },'_id FechaElaboracion TipoAuditoria Duracion Estado'); 
+
+    res.status(200).json(datos);
+  } catch (error) {
+    console.error('Error al obtener los datos:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+};
+
 const obtenerDatosEspAud = async (req, res) => {
   try {
     const { correo } = req.query;
@@ -441,5 +453,6 @@ module.exports = {
   obtenerDatoPorId,
   obtenerDatosFiltrados,
   obtenerDatosEspAud,
-  obtenerDatosFiltradosAud
+  obtenerDatosFiltradosAud,
+  obtenerDatosEspFinal
 };

@@ -22,7 +22,8 @@ import Estadisticas from './Components/Estadisticas/Estadisticas';
 import ProtectedRoute from './ProtectedRoute';
 import RevIshi from './Components/Terminadas/VistaRevIsh';
 import Evaluacion from './Components/Evaluacion/Evaluacion';
-import Verevaluaciones from './Components/Evaluacion/VerEvaluacion'
+import Verevaluaciones from './Components/Evaluacion/VerEvaluacion';
+import VistaFinalizadas from './Components/Finalizada/VistaFinalizadas';
 
 export const UserContext = createContext(null);
 
@@ -40,9 +41,10 @@ function App() {
           <Route path="/usuariosRegistrados" element={<ProtectedRoute><UsuariosRegis /></ProtectedRoute>} /> 
           <Route path="/revicion" element={<ProtectedRoute><Revicion /></ProtectedRoute>} />
           <Route path="/terminada/:_id" element={<ProtectedRoute><Terminada /></ProtectedRoute>} />
+          <Route path="/finalizadas/:_id" element={<ProtectedRoute><Finalizada/></ProtectedRoute>}/>
           <Route path="/ishikawa" element={<ProtectedRoute><Ishikawa/></ProtectedRoute>} />
           <Route path="/ishikawa/:_id/:id/:nombre" element={<ProtectedRoute><IshikawaRev/></ProtectedRoute>}/>
-          <Route path="/finalizadas" element={<ProtectedRoute><Finalizada/></ProtectedRoute>}/>
+          <Route path="/vistafin" element={<ProtectedRoute><VistaFinalizadas/></ProtectedRoute>}/>
           <Route path="/auditcalendar" element={<ProtectedRoute><Calendarioss/></ProtectedRoute>} />
           <Route path="/calendario" element={<ProtectedRoute><Calendarios /></ProtectedRoute>} />
           <Route path="/departamento" element={<ProtectedRoute><Departaments /></ProtectedRoute>} />
