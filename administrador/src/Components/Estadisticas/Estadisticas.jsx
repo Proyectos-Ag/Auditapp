@@ -27,7 +27,7 @@ const Estadisticas = () => {
         setObservations(observationsData);
 
         const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-        const reviewedObservationsData = ishikawaResponse.data.filter(ishikawa => ishikawa.estado === 'revisado');
+        const reviewedObservationsData = ishikawaResponse.data.filter(ishikawa => ishikawa.estado === 'Revisado');
         setReviewedObservations(reviewedObservationsData);
       } catch (error) {
         console.error('Error fetching data:', error);
