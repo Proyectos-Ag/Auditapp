@@ -31,7 +31,7 @@ const VistaFinalizadas = () => {
   };
 
   const navReporte = (_id) => {
-    navigate(`/terminada/${_id}`);
+    navigate(`/finalizadas/${_id}`);
 };
 
   return (
@@ -40,7 +40,7 @@ const VistaFinalizadas = () => {
                 <Navigation />
       </div>
       <div className='cont-card-repo'>
-      <h1>Revisión de Ishikawa</h1>
+      <h1>Auditorías Finalizadas</h1>
       </div>
       {datos.length > 0 ? (
         <div className='cont-card-repo'>

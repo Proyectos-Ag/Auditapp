@@ -7,80 +7,53 @@ import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import './css/Final.css'
+import { useParams } from 'react-router-dom';
 
 const Finalizada = () => {
     const { userData } = useContext(UserContext);
     const [datos, setDatos] = useState([]);
     const [ishikawas, setIshikawas] = useState([]);
     const [hiddenDurations, setHiddenDurations] = useState([]);
-    const [, setCriteriosConteo] = useState({});
-    const [, setTotalCriterios] = useState(0);
     const navigate = useNavigate();
+    const {_id} = useParams();
 
     useEffect(() => {
-        obtenerDatos();
+        const fetchDataAndObtainData = async () => {
+            try {
+                // Fetch both data
+                await Promise.all([fetchData(), obtenerDatos()]);
+            } catch (error) {
+                console.error('Error al obtener los datos:', error);
+            } 
+        };
+    
+        if (userData && userData.Correo) {
+            fetchDataAndObtainData();
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[userData]);
+    }, [userData]);
 
     const obtenerDatos = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
-            if (userData && userData.Correo) {
-                const datosFiltrados = response.data.filter((dato) => 
-                    dato.Estado === "Finalizado"
-                );
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/por/${_id}`);
+            const datosRecibidos = Array.isArray(response.data) ? response.data : [response.data];
     
-                // Ordenar por FechaElaboracion del más reciente al más antiguo
-                datosFiltrados.sort((a, b) => {
-                    const fechaElaboracionA = new Date(a.FechaElaboracion);
-                    const fechaElaboracionB = new Date(b.FechaElaboracion);
-                    return fechaElaboracionB - fechaElaboracionA;
-                });
-    
-                let conteo = {};
-                let total = 0;
-                datosFiltrados.forEach(dato => {
-                    dato.Programa.forEach(programa => {
-                        programa.Descripcion.forEach(desc => {
-                            if (desc.Criterio && desc.Criterio !== 'NA') {
-                                if (!conteo[desc.Criterio]) {
-                                    conteo[desc.Criterio] = 0;
-                                }
-                                conteo[desc.Criterio]++;
-                                total++;
-                            }
-                        });
-                    });
-                });
-    
-                setDatos(datosFiltrados);
-                setCriteriosConteo(conteo);
-                setTotalCriterios(total);
-    
-                // Ocultar todas las duraciones excepto la más reciente por defecto
-                const duracionesOcultas = datosFiltrados.slice(1).map(dato => dato.Duracion);
-                setHiddenDurations(duracionesOcultas);
-            } else {
-                console.log('userData o userData.Correo no definidos:', userData);
-            }
+            setDatos(datosRecibidos);
         } catch (error) {
             console.error('Error al obtener los datos:', error);
         }
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-                const dataFiltrada = response.data.filter(item => 
-                item.estado === 'En revisión' ||  item.estado === 'Revisado' ||  item.estado === 'Rechazado' || item.estado === 'Aprobado' ) ;
-                setIshikawas(dataFiltrada);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
-        fetchData();
-    }, []);
+    const fetchData = async () => {
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/por/${_id}`);
+            setIshikawas(Array.isArray(response.data) ? response.data : [response.data]); 
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        } finally {
+            
+        }
+    };
 
     const toggleDuration = (duration) => {
         setHiddenDurations(hiddenDurations.includes(duration) ?
