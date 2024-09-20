@@ -95,8 +95,8 @@ const Finalizada = () => {
         });
     };
 
-    const navIshikawa = (_id, id) => {
-        navigate(`/ishikawa/${_id}/${id}`);
+    const navIshikawa = (_id, id, nombre) => {
+        navigate(`/ishikawa/${_id}/${id}/${nombre}`);
     }; 
     
     const handlePrintPDF = () => {
@@ -466,9 +466,14 @@ const Finalizada = () => {
                                                                                 ) : ''}
                                                                             </td>
                                                                             <td>
-                                                                                <button className='button-estado'
-                                                                                style={{ backgroundColor: ishikawa ? getButtonBackgroundColor(ishikawa.estado) : '#6e6e6e' }}
-                                                                                 onClick={() => navIshikawa(dato._id, desc.ID)}>{ishikawa ? ishikawa.estado : 'Pendiente'}</button>
+                                                                                <button 
+                                                                                    className='button-estado'
+                                                                                    style={{ backgroundColor: ishikawa ? getButtonBackgroundColor(ishikawa.estado) : '#6e6e6e' }}
+                                                                                    onClick={() => navIshikawa(dato._id, desc.ID, programa.Nombre)}
+                                                                                >
+                                                                                    {ishikawa ? ishikawa.estado : 'Pendiente'}
+                                                                                </button>
+                                                                                <div>{ishikawa ? ishikawa.auditado : ''}</div>
                                                                             </td>
                                                                         </tr>
                                                                     );
