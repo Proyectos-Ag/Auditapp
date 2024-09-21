@@ -124,7 +124,7 @@ const Ishikawa = () => {
 
     simulateInputChange(); // Ejecutar la función al cargar el componente
 
-  }, [diagrama]);
+  }, [datos]);
 
   const verificarRegistro = async () => {
     try {

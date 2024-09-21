@@ -8,6 +8,7 @@ import { UserContext } from '../../App';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import withReactContent from 'sweetalert2-react-content';
 import Fotos from './Foto'; 
 import './css/Modal.css';
 import './css/IshikawaRev.css';
@@ -39,6 +40,7 @@ const IshikawaRev = () => {
     const [actividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: [] }]);
     const [correcciones, setCorrecciones] = useState([{ actividad: '', responsable: '', fechaCompromiso: null, cerrada: '', evidencia: ''}]);
     const [nuevaCorreccion, setNuevaCorreccion] = useState({actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
+    const MySwal = withReactContent(Swal);
     const [diagrama] = useState([{
         problema: '',
         text1: '',
@@ -717,6 +719,37 @@ const obtenerEstiloTextarea = (texto, causa) => {
     ? { backgroundColor: '#f1fc5e9f', borderRadius: '10px' } 
     : {};
 };
+
+const mostrarCargando = () => {
+    MySwal.fire({
+      title: 'Cargando...',
+      text: 'Por favor, espere',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+  };
+  
+  const ocultarCargando = () => {
+    Swal.close();
+  };
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        mostrarCargando(); // Mostrar el pop-up de carga
+        await verificarRegistro();
+        ocultarCargando(); // Ocultar el pop-up de carga después de recibir los datos
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        ocultarCargando(); // Ocultar el pop-up de carga en caso de error
+      }
+    };
+  
+    fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
     return (
         <div>
