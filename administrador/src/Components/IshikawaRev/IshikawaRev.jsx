@@ -151,32 +151,49 @@ useEffect(() => {
         }
     }, [filteredIshikawas]);  
       
-      useEffect(() => {
-        const fetchUsuarios = async () => {
-          try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
-            setUsuarios(response.data);
-          } catch (error) {
-            console.error("Error al obtener los usuarios", error);
-          }
-        };
-      
-        fetchUsuarios();
-      }, []);
-
-      useEffect(() => {
-        if (ishikawas.length > 0) {
-            const nuevosFiltrados = ishikawas.filter(({ idRep, idReq, proName }) => idRep === _id && idReq === id && proName === nombre);
-            setFilteredIshikawas(nuevosFiltrados);
-            if (nuevosFiltrados.length === 0) {
-                setMensaje('No hay nada por aquí.');
-            } else {
-                setMensaje('');
-            }
-        } else {
-            setMensaje('Cargando datos...');
+useEffect(() => {
+    const fetchUsuarios = async () => {
+        try {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
+        setUsuarios(response.data);
+        } catch (error) {
+        console.error("Error al obtener los usuarios", error);
         }
-    }, [ishikawas, _id, id, nombre]);
+    };
+      
+    fetchUsuarios();
+}, []);
+
+
+useEffect(() => {
+    const fetchData = async () => {
+        try {
+            mostrarCargando(); // Mostrar el pop-up de carga
+            await verificarRegistro();
+            ocultarCargando(); // Ocultar el pop-up de carga después de recibir los datos
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            ocultarCargando(); // Ocultar el pop-up de carga en caso de error
+          }
+    };
+    fetchData();
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
+useEffect(() => {
+    if (ishikawas.length > 0) {
+        const nuevosFiltrados = ishikawas.filter(({ idRep, idReq, proName }) => idRep === _id && idReq === id && proName === nombre);
+        setFilteredIshikawas(nuevosFiltrados);
+        if (nuevosFiltrados.length === 0) {
+            setMensaje('No hay nada por aquí.');
+        } else {
+            setMensaje('');
+        }
+    } else {
+        setMensaje('Cargando datos...');
+    }
+}, [ishikawas, _id, id, nombre]);
+
 
     const handlePrintPDF = () => {
         const showLoading = () => {
@@ -480,19 +497,19 @@ const handleGuardarCambios2 = async (selectedIndex) => {
         });
       };
       
-    const handleEliminarFila = (index) => {
-        const nuevasCorrecciones = [...correcciones];
-        nuevasCorrecciones.splice(index, 1);
-        setCorrecciones(nuevasCorrecciones);
-        console.log('Correcciones después de eliminar:', nuevasCorrecciones);
-    };
+const handleEliminarFila = (index) => {
+    const nuevasCorrecciones = [...correcciones];
+    nuevasCorrecciones.splice(index, 1);
+    setCorrecciones(nuevasCorrecciones);
+    console.log('Correcciones después de eliminar:', nuevasCorrecciones);
+};
 
-    useEffect(() => {
-        verificarRegistro();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [_id, id]);
+useEffect(() => {
+    verificarRegistro();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [_id, id]);
 
-    const verificarRegistro = async () => {
+const verificarRegistro = async () => {
         try {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, {
                 params: {
@@ -515,9 +532,9 @@ const handleGuardarCambios2 = async (selectedIndex) => {
 
     const handleTempFechaChange = (value) => {
         setTempFechaCompromiso(value);
-    };
+};
 
-    const handleSave = async () => {
+const handleSave = async () => {
         try {
             const data = {
                 idRep: _id,
@@ -555,9 +572,9 @@ const handleGuardarCambios2 = async (selectedIndex) => {
             console.error('Error al guardar los datos:', error);
             Swal.fire('Error', 'Hubo un problema al guardar los datos.', 'error');
         }
-    };  
+};  
     
-    const Asignar = async () => {
+const Asignar = async () => {
         Swal.fire({
           title: '¿Está seguro de querer asignar este diagrama?',
           text: '¡Se le notificará al auditado!',
@@ -572,9 +589,9 @@ const handleGuardarCambios2 = async (selectedIndex) => {
             handleSave();
           }
         });
-      };
+};
 
-    const handleUpdateFechaCompromiso = async (index) => {
+const handleUpdateFechaCompromiso = async (index) => {
         try {
             const nuevaFecha = tempFechaCompromiso;
             const actividadActualizada = {
@@ -599,9 +616,9 @@ const handleGuardarCambios2 = async (selectedIndex) => {
             console.error('Error al actualizar la fecha de compromiso:', error);
             Swal.fire('Error', 'No se pudo actualizar la fecha de compromiso', 'error');
         }
-    };
+};
 
-    const handleInputChange = (e) => {
+const handleInputChange = (e) => {
         const { value } = e.target;
       
         // Define el tamaño de fuente según el rango de caracteres
@@ -621,17 +638,17 @@ const handleGuardarCambios2 = async (selectedIndex) => {
         }
 
         e.target.style.fontSize = fontSize;
-      };
+};
     
-    const colores = ['black', 'blue', 'green', 'yellow','orange', 'red'];
+const colores = ['black', 'blue', 'green', 'yellow','orange', 'red'];
 
-    const handleSelectChange = (event, index) => {
-        event.target.style.color = colores[index % colores.length];
-    };
+const handleSelectChange = (event, index) => {
+    event.target.style.color = colores[index % colores.length];
+};
 
-    const handleSelectChangeAud = (event) => {
-        setValorSeleccionado(event.target.value);
-      };
+const handleSelectChangeAud = (event) => {
+    setValorSeleccionado(event.target.value);
+};
 
       function verificarCoincidencia(textAreaValue, causa) {
   // Verificar que los valores no sean undefined o null
@@ -712,7 +729,7 @@ const EliminarEv = async (index, idIsh, idCorr) => {
         handleEliminarEvidencia(index, idIsh, idCorr);
       }
     });
-  };
+};
 
 const obtenerEstiloTextarea = (texto, causa) => {
     return verificarCoincidencia(texto, causa) 
@@ -729,27 +746,11 @@ const mostrarCargando = () => {
         Swal.showLoading();
       }
     });
-  };
+};
   
-  const ocultarCargando = () => {
+const ocultarCargando = () => {
     Swal.close();
-  };
-  
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        mostrarCargando(); // Mostrar el pop-up de carga
-        await verificarRegistro();
-        ocultarCargando(); // Ocultar el pop-up de carga después de recibir los datos
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        ocultarCargando(); // Ocultar el pop-up de carga en caso de error
-      }
-    };
-  
-    fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+};
 
     return (
         <div>
@@ -1137,7 +1138,7 @@ const mostrarCargando = () => {
                 <button onClick={Asignar}>Asignar</button>
             </div>
                 <div className='mens-error'>
-                <div style={{display:'flex', justifyContent:'center'}}>{mensaje}</div> 
+                <div style={{display:'flex', justifyContent:'center'}}>{mensaje}</div>
                 <div style={{display:'flex',fontSize:'100px', justifyContent:'center'}}>🏝️</div></div>
                 </div>}
                 
