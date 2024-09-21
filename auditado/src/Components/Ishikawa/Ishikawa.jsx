@@ -124,14 +124,19 @@ const Ishikawa = () => {
 
     simulateInputChange(); // Ejecutar la función al cargar el componente
 
-  }, [datos]);
+  }, [proceso]);
 
   const verificarRegistro = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-      const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && item.proName === nombre && 
-       (item.estado === 'Rechazado' || item.estado === 'Revisado' || item.estado === 'Aprobado' || item.estado === 'Pendiente' || item.estado === 'Asignado' ));
-      const registroRechazado = dataFiltrada.find(item => item.idRep === _id && item.idReq === id && item.proName === nombre);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, {
+        params: {
+            idRep: _id,
+            idReq: id,
+            proName: nombre
+        }
+       }); 
+      const registros = response.data;
+      const registroRechazado = registros.find(item => item.idRep === _id && item.idReq === id && item.proName === nombre);
       const registroExistente = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&  item.estado === 'En revisión');
       const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&  (item.estado === 'Aprobado'));
       const registroRevisado = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&  item.estado === 'Revisado' );
@@ -142,7 +147,7 @@ const Ishikawa = () => {
       setAprobado(registroAprobado);
       setRevisado(registroRevisado);
       setEnProceso(registroExistente);
-      setRechazo(dataFiltrada);
+      setRechazo(Array.isArray(registros) ? registros : [registros]);
 
       if (registroRechazado) {
         setData({
@@ -161,12 +166,11 @@ const Ishikawa = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
     }
-  }
+}
 
-  const handleTempFechaChange = (value) => {
+const handleTempFechaChange = (value) => {
     setTempFechaCompromiso(value);
 };
-
 
 const handleDoubleClick = (e) => {
   const textarea = e.target;
@@ -415,10 +419,15 @@ const handleDoubleClick = (e) => {
 
 const handleSaveOrUpdate = async () => {
   try {
-    const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-    const existeRegistro = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre);
+    const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, {
+      params: {
+          idRep: _id,
+          idReq: id,
+          proName: nombre
+      }
+    }); 
 
-    if (existeRegistro) {
+    if (response.data) {
       handleUpdateAdvance();
     } else {
       handleSaveAdvance();
