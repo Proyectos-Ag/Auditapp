@@ -125,7 +125,7 @@ function DrawerList({ handleLogout }) {
       toggleSubmenu: toggleCalendariosSubmenu
     },
     {
-      text: "Evaluaciónes",
+      text: "Evaluaciones",
       subItems: [
         { text: "Realizar Evaluación", href: "/evuaauditor" },
         { text: "Ver evaluaciónes", href: "/vereva" }
