@@ -26,25 +26,25 @@ export default function Navigation() {
     setOpen(newOpen);
   };
 
-const handleLogout = () => {
-  Swal.fire({
-    title: '¿Estás seguro de que quieres cerrar sesión?',
-    text: '¡Tu sesión actual se cerrará!',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3ccc37',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Sí, cerrar sesión',
-    cancelButtonText: 'Cancelar'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('userData');
-      setUserData(null);
-      navigate('/');
-    }
-  });
-};
+  const handleLogout = () => {
+    Swal.fire({
+      title: '¿Estás seguro de que quieres cerrar sesión?',
+      text: '¡Tu sesión actual se cerrará!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3ccc37',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, cerrar sesión',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userData');
+        setUserData(null);
+        navigate('/');
+      }
+    });
+  };
 
   return (
     <div className="navbar-container">
@@ -125,17 +125,16 @@ function DrawerList({ handleLogout }) {
       toggleSubmenu: toggleCalendariosSubmenu
     },
     {
-      text: "Evaluaciónes",
+      text: "Evaluaciones",
       subItems: [
         { text: "Realizar Evaluación", href: "/evuaauditor" },
-        { text: "Ver evaluaciónes", href: "/vereva" }
+        { text: "Ver evaluaciones", href: "/vereva" }
       ],
       showSubmenu: showEvaluacionesSubmenu,
       toggleSubmenu: toggleEvaluacionesSubmenu
     },
     { text: "Carga Masiva", href: "/carga" },
-    { text: "Estadisticas", href: "/estadisticas" }
-    
+    { text: "Estadísticas", href: "/estadisticas" }
   ];
 
   return (
@@ -151,12 +150,12 @@ function DrawerList({ handleLogout }) {
                 <Dropdown.Toggle variant="transparent" className="dropdown-toggle">
                   <ListItem disablePadding className="list-item" onClick={item.toggleSubmenu}>
                     <ListItemButton>
-                    <ListItemText primary={item.text} className="list-item-text" />
-                    {item.showSubmenu ? <MdExpandLess /> : <MdExpandMore />}
+                      <ListItemText primary={item.text} className="list-item-text" />
+                      {item.showSubmenu ? <MdExpandLess /> : <MdExpandMore />}
                     </ListItemButton>
                   </ListItem>
                 </Dropdown.Toggle>
-                <Dropdown.Menu style={{ display: item.showSubmenu ? 'block' : 'none' }}>
+                <Dropdown.Menu className={`submenu ${item.showSubmenu ? 'open' : ''}`}>
                   {item.subItems.map((subItem, subIndex) => (
                     <Dropdown.Item key={subIndex}>
                       <button className="link-button" onClick={() => window.location.href = subItem.href}>
@@ -169,15 +168,9 @@ function DrawerList({ handleLogout }) {
             ) : (
               <ListItem disablePadding className="list-item">
                 <ListItemButton>
-                  {item.onClick ? (
-                    <button className="link-button" onClick={item.onClick}>
-                      <ListItemText primary={item.text} className="list-item-text" />
-                    </button>
-                  ) : (
-                    <button className="link-button" onClick={() => window.location.href = item.href}>
-                      <ListItemText primary={item.text} className="list-item-text" />
-                    </button>
-                  )}
+                  <button className="link-button" onClick={() => window.location.href = item.href}>
+                    <ListItemText primary={item.text} className="list-item-text" />
+                  </button>
                 </ListItemButton>
               </ListItem>
             )}

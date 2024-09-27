@@ -58,7 +58,7 @@ const RevIshi = () => {
         ))}
       </div>
       ) : (
-        <p>No se encontraron datos.</p>
+        <h2 className='cont-card-repo'>No hay ishikawas por revisar.</h2>
       )}
     </div>
   );

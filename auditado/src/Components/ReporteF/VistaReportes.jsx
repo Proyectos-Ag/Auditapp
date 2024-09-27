@@ -45,7 +45,7 @@ const VistaReportes = () => {
                 <Navigation />
       </div>
       <div className='cont-card-repo'>
-      <h1>Revisión de Ishikawa</h1>
+      <h1>Reportes en proceso</h1>
       </div>
       {datos.length > 0 ? (
         <div className='cont-card-repo'>
@@ -62,7 +62,7 @@ const VistaReportes = () => {
         ))}
       </div>
       ) : (
-        <p>No se encontraron datos.</p>
+        <h2 className='cont-card-repo'>No hay repostes en proceso.</h2>
       )}
     </div>
   );

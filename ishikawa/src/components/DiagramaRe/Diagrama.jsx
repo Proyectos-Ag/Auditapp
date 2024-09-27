@@ -173,6 +173,7 @@ const Diagrama = () => {
                             </div>
                         </div>
                         <div className='table-ish'>
+                        <h3>SOLUCIÓN</h3>
                         <table style={{ border: 'none' }}>
                             <thead>
                                 <tr>
@@ -191,6 +192,7 @@ const Diagrama = () => {
                                 ))}
                             </tbody>
                         </table>
+                        <h3>EFECTIVIDAD</h3>
                         <table style={{ border: 'none' }}>
                             <thead>
                                 <tr>

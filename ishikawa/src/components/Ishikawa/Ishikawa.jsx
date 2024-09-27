@@ -457,6 +457,7 @@ const CreacionIshikawa = () => {
           </div>
 
           <div className='table-ish'>
+          <h3>SOLUCIÓN</h3>
             <table style={{ border: 'none' }}>
               <thead>
                 <tr>

@@ -57,7 +57,7 @@ const VistaFinalizadas = () => {
         ))}
       </div>
       ) : (
-        <p>No se encontraron datos.</p>
+        <h2 className='cont-card-repo'>No hay auditorías finalizadas</h2>
       )}
     </div>
   );
