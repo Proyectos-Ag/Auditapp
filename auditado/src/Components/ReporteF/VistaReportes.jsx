@@ -18,24 +18,30 @@ const VistaReportes = () => {
         // Hacer la petición para obtener los datos de Ishikawa
         const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/por/vista/${nombre}`);
         console.log("aquiiiii", responseIshikawa);
-    
+  
         // Verificar que la respuesta tenga datos
         const respIsh = Array.isArray(responseIshikawa.data) ? responseIshikawa.data : [responseIshikawa.data];
         if (!respIsh || respIsh.length === 0) {
           console.warn("No se encontraron datos de Ishikawa.");
           return;
         }
-    
+  
+        // Crear un conjunto para almacenar los idRep consultados
+        const idRepConsultados = new Set();
+  
         // Iterar sobre cada objeto en respIsh
         const promises = respIsh.map(async (ishikawa) => {
           const idRep = ishikawa?.idRep;
           console.log("idRep: ", idRep);
-    
-          // Verificar que idRep exista antes de hacer la solicitud
-          if (!idRep) {
-            console.error("No se pudo obtener el idRep para uno de los registros.");
-            return null; // Si no hay idRep, ignorar este elemento
+  
+          // Verificar que idRep exista y no se haya consultado ya
+          if (!idRep || idRepConsultados.has(idRep)) {
+            console.warn(`El idRep ${idRep} ya ha sido consultado o es inválido.`);
+            return null; // Ignorar si ya fue consultado o no es válido
           }
+  
+          // Marcar el idRep como consultado
+          idRepConsultados.add(idRep);
   
           // Hacer la solicitud de datos basados en idRep
           try {
@@ -49,16 +55,16 @@ const VistaReportes = () => {
             return null; // Si hay un error en una solicitud, retornar null
           }
         });
-    
+  
         // Esperar a que todas las solicitudes se completen
         const allDatos = await Promise.all(promises);
-        
+  
         // Filtrar los resultados que no sean null y "aplanar" arrays anidados
         const filteredDatos = allDatos.filter(dato => dato !== null).flat();
   
         console.log("Datos filtrados", filteredDatos);
         setDatos(filteredDatos);
-    
+  
       } catch (error) {
         console.error('Error al obtener los datos:', error);
       }
@@ -66,7 +72,7 @@ const VistaReportes = () => {
   
     // Llamar la función
     fetchDatos();
-  }, [userData]);
+  }, [userData]);  
   
 
 const formatearFecha = (fecha) => {
