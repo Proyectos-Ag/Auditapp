@@ -115,6 +115,27 @@ const actualizarFechaCompromiso = async (req, res) => {
   }
   };  
 
+  const obtenerIshikawaVista = async (req, res) => {
+    try {
+        const { nombre } = req.params;
+        
+        const ishikawas = await Ishikawa.find({ auditado: nombre}, 
+          'idRep');
+
+        if (ishikawas.length === 0) {
+            console.log('No se encontraron registros de Ishikawa.');
+            return res.status(200).json([]); // Devuelve un array vacío
+        }
+
+        console.log(`Registros enviados al cliente: ${JSON.stringify(ishikawas)}`);
+        res.status(200).json(ishikawas);
+    } catch (error) {
+        console.error('Error en obtenerIshikawaVista:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
   const eliminarEvidencia = async (req, res) => {
     try {
         const { index, idIsh, idCorr } = req.params;
@@ -152,5 +173,6 @@ const actualizarFechaCompromiso = async (req, res) => {
     actualizarFechaCompromiso,
     obtenerIshikawasId,
     obtenerIshikawaPorDato,
-    eliminarEvidencia
+    eliminarEvidencia,
+    obtenerIshikawaVista
   };

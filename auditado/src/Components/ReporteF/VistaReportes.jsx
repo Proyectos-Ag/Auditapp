@@ -13,29 +13,72 @@ const VistaReportes = () => {
 
   useEffect(() => {
     const fetchDatos = async () => {
+      const nombre = userData.Nombre;
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/esp/aud`, {
-          params: { correo: userData.Correo },
+        // Hacer la petición para obtener los datos de Ishikawa
+        const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/por/vista/${nombre}`);
+        console.log("aquiiiii", responseIshikawa);
+    
+        // Verificar que la respuesta tenga datos
+        const respIsh = Array.isArray(responseIshikawa.data) ? responseIshikawa.data : [responseIshikawa.data];
+        if (!respIsh || respIsh.length === 0) {
+          console.warn("No se encontraron datos de Ishikawa.");
+          return;
+        }
+    
+        // Iterar sobre cada objeto en respIsh
+        const promises = respIsh.map(async (ishikawa) => {
+          const idRep = ishikawa?.idRep;
+          console.log("idRep: ", idRep);
+    
+          // Verificar que idRep exista antes de hacer la solicitud
+          if (!idRep) {
+            console.error("No se pudo obtener el idRep para uno de los registros.");
+            return null; // Si no hay idRep, ignorar este elemento
+          }
+  
+          // Hacer la solicitud de datos basados en idRep
+          try {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/esp/aud`, {
+              params: { idRep },
+            });
+            console.log(response.data);
+            return response.data; // Devolver los datos obtenidos
+          } catch (error) {
+            console.error(`Error al obtener los datos para idRep ${idRep}:`, error);
+            return null; // Si hay un error en una solicitud, retornar null
+          }
         });
-        setDatos(response.data);
+    
+        // Esperar a que todas las solicitudes se completen
+        const allDatos = await Promise.all(promises);
+        
+        // Filtrar los resultados que no sean null y "aplanar" arrays anidados
+        const filteredDatos = allDatos.filter(dato => dato !== null).flat();
+  
+        console.log("Datos filtrados", filteredDatos);
+        setDatos(filteredDatos);
+    
       } catch (error) {
         console.error('Error al obtener los datos:', error);
       }
     };
   
+    // Llamar la función
     fetchDatos();
-  }, [userData]);   
+  }, [userData]);
+  
 
-  const formatearFecha = (fecha) => {
-    const nuevaFecha = new Date(fecha);
-    return nuevaFecha.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
+const formatearFecha = (fecha) => {
+  const nuevaFecha = new Date(fecha);
+  return nuevaFecha.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+};
 
-  const navReporte = (_id) => {
+const navReporte = (_id) => {
     navigate(`/reporte/${_id}`);
 };
 

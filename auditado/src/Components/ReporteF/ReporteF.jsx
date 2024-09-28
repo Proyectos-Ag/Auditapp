@@ -18,9 +18,7 @@ const ReporteF = () => {
         const obtenerDatos = async () => {
           try {
             // Obtener datos principales
-            const responseDatos = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/datos-filtrados-aud/${_id}`, {
-              params: { correo: userData.Correo }
-            });
+            const responseDatos = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/por/${_id}`);
             setDatos([responseDatos.data]);
 
             console.log("Datos",[responseDatos.data]);

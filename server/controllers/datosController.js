@@ -278,12 +278,13 @@ const obtenerDatosEspFinal = async (req, res) => {
 
 const obtenerDatosEspAud = async (req, res) => {
   try {
-    const { correo } = req.query;
+    const { idRep } = req.query;
+    console.log("id de reporte",idRep);
     
-    // Filtrar por Estado 'Terminada' y correo dentro del array 'Auditados'
+    // Filtrar por Estado 'Terminada' y nombre dentro del array 'Auditados'
     const datos = await Datos.find({
-      Estado: 'Terminada',
-      'Auditados.Correo': correo  // Buscar en el campo 'Correo' del array 'Auditados'
+      _id: idRep,
+      Estado: 'Terminada'
     }, '_id FechaElaboracion TipoAuditoria Duracion Estado'); 
 
     res.status(200).json(datos);
