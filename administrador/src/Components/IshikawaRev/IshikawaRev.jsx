@@ -195,117 +195,156 @@ useEffect(() => {
 }, [ishikawas, _id, id, nombre]);
 
 
-    const handlePrintPDF = () => {
-        const showLoading = () => {
-            document.getElementById('loading-overlay').style.display = 'flex';
-        };
-    
-        const hideLoading = () => {
-            document.getElementById('loading-overlay').style.display = 'none';
-        };
-    
-        showLoading();
-    
-        const part1 = document.getElementById('pdf-content-part1');
-        const part2 = document.getElementById('pdf-content-part2');
-    
-        const convertTextAreasToDivs = (element) => {
-            const textareas = element.querySelectorAll('textarea');
-            textareas.forEach((textarea) => {
-                const div = document.createElement('div');
-                div.textContent = textarea.value;
-                div.className = textarea.className;
-                div.style.cssText = textarea.style.cssText;
-                textarea.parentNode.replaceChild(div, textarea);
-            });
-        };
-    
-        const getElementHeight = (element) => {
-            return new Promise((resolve, reject) => {
-                html2canvas(element, { scale: 2.5, useCORS: true }).then((canvas) => {
-                    resolve(canvas.height);
-                }).catch((error) => reject(error));
-            });
-        };
-    
-        const processElement = (el, pdf, yOffset, pageHeight, pageWidth) => {
-            return new Promise((resolve, reject) => {
-                html2canvas(el, { scale: 2.5, useCORS: true }).then((canvas) => {
-                    const imgData = canvas.toDataURL('image/jpeg', 0.8);
-                    const imgWidth = pdf.internal.pageSize.getWidth();
-                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
-                    if (yOffset + imgHeight > pageHeight) {
-                        pdf.addPage();
-                        yOffset = 1.5; // Resetear margen superior en nueva página
-                    }
-    
-                    pdf.addImage(imgData, 'JPEG', 1.5, yOffset, imgWidth, imgHeight, undefined, 'FAST');
-                    yOffset += imgHeight;
-    
-                    resolve(yOffset);
-                }).catch((error) => reject(error));
-            });
-        };
-    
-        const addPartToPDF = async (element, pdf, isLastPage, pageNumber) => {
-            convertTextAreasToDivs(element);
-    
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            const pageHeight = pdf.internal.pageSize.getHeight();
-            let yOffset = 1.5; // Margen superior
-    
-            const childElements = Array.from(element.childNodes);
-    
-            for (const child of childElements) {
-                if (child.tagName === 'TABLE') {
-                    const rows = child.querySelectorAll('tr');
-                    for (const row of rows) {
-                        const cells = row.querySelectorAll('td');
-                        for (const cell of cells) {
-                            const cellHeight = await getElementHeight(cell);
-                            if (yOffset + cellHeight > pageHeight) {
-                                pdf.addPage();
-                                yOffset = 1.5; // Resetear margen superior en nueva página
-                            }
-                            await processElement(cell, pdf, yOffset, pageHeight, pageWidth);
-                        }
-                    }
-                } else {
-                    const elementHeight = await getElementHeight(child);
-                    if (yOffset + elementHeight > pageHeight) {
-                        pdf.addPage();
-                        yOffset = 1.5; // Resetear margen superior en nueva página
-                    }
-                    await processElement(child, pdf, yOffset, pageHeight, pageWidth);
+const handlePrintPDF = () => {
+    const showLoading = () => {
+        document.getElementById('loading-overlay').style.display = 'flex';
+    };
+
+    const hideLoading = () => {
+        document.getElementById('loading-overlay').style.display = 'none';
+    };
+
+    showLoading();
+
+    const part1 = document.getElementById('pdf-content-part1');
+    const part2 = document.getElementById('pdf-content-part2');
+    const part3 = document.getElementById('pdf-content-part3');
+
+    const convertTextAreasToDivs = (element) => {
+        const textareas = element.querySelectorAll('textarea');
+        textareas.forEach((textarea) => {
+            const div = document.createElement('div');
+            div.textContent = textarea.value;
+            div.className = textarea.className;
+            div.style.cssText = textarea.style.cssText;
+            textarea.parentNode.replaceChild(div, textarea);
+        });
+    };
+
+    const processElement = (el, pdf, yOffset, pageHeight, pageWidth, marginLeft, marginRight) => {
+        return new Promise((resolve) => {
+            html2canvas(el, { scale: 2.5, useCORS: true }).then((canvas) => {
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+
+                if (canvasWidth === 0 || canvasHeight === 0) {
+                    return resolve(yOffset);
                 }
-            }
-    
-            if (!isLastPage) {
-                pdf.addPage();
-            }
-    
-            return pageNumber;
-        };
-    
-        const pdf = new jsPDF('landscape', 'cm', 'letter');
-    
-        let currentPage = 1;
-    
-        addPartToPDF(part1, pdf, false, currentPage)
-            .then((newPageNumber) => {
-                currentPage = newPageNumber;
-                return addPartToPDF(part2, pdf, true, currentPage);
-            })
-            .then(() => {
-                pdf.save("diagrama_ishikawa.pdf");
-                hideLoading();
-            })
-            .catch((error) => {
-                console.error('Error generating PDF:', error);
-                hideLoading();
+
+                const imgWidth = pageWidth - marginLeft - marginRight; // Ajuste de ancho con márgenes
+                const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
+
+                if (isNaN(imgHeight) || imgHeight <= 0) {
+                    return resolve(yOffset);
+                }
+
+                // Si no cabe en la página actual, se pasa a la siguiente
+                if (yOffset + imgHeight > pageHeight) {
+                    
+                    yOffset = 0.5;
+                }
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.8);
+                pdf.addImage(imgData, 'JPEG', marginLeft, yOffset, imgWidth, imgHeight, 'FAST');
+                yOffset += imgHeight;
+
+                resolve(yOffset);
+            }).catch((error) => {
+                console.error("Error generating canvas for element:", error);
+                resolve(yOffset);
             });
-    };    
+        });
+    };
+
+    const processPart3 = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3) => {
+        convertTextAreasToDivs(element);
+
+        const childElements = Array.from(element.childNodes);
+
+        for (const child of childElements) {
+            if (child.tagName === 'TABLE') {
+                const rows = child.querySelectorAll('tr');
+                for (const row of rows) {
+                    const cells = row.querySelectorAll('td');
+                    for (const cell of cells) {
+                        const cellHeight = await getElementHeight(cell);
+                        if (yOffset + cellHeight > pageHeight) {
+                            pdf.addPage();
+                            yOffset = 0.5; // Reiniciar en la nueva página
+                        }
+                        yOffset = await processElement(cell, pdf, yOffset, pageHeight, pageWidth, marginLeft3, marginRight3);
+                    }
+                }
+            } else {
+                const elementHeight = await getElementHeight(child);
+                if (yOffset + elementHeight > pageHeight) {
+                    pdf.addPage();
+                    yOffset = 0.5; // Reiniciar en la nueva página
+                }
+                yOffset = await processElement(child, pdf, yOffset, pageHeight, pageWidth, marginLeft3, marginRight3);
+            }
+        }
+        return yOffset;
+    };
+
+    const getElementHeight = (element) => {
+        return new Promise((resolve) => {
+            html2canvas(element, { scale: 2.5, useCORS: true }).then((canvas) => {
+                resolve(canvas.height);
+            }).catch((error) => {
+                console.error('Error calculating element height:', error);
+                resolve(0);
+            });
+        });
+    };
+
+    const pdf = new jsPDF('landscape', 'cm', 'letter');
+
+    let yOffset = 0.5;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const marginLeft = 0;  // Ajuste de margen izquierdo
+    const marginRight = 0; // Ajuste de margen derecho
+    const marginLeft3 = 1.5;  // Ajuste de margen izquierdo
+    const marginRight3 = 1.5; // Ajuste de margen derecho
+
+    const processCanvas = (canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight) => {
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+
+        const imgWidth = pageWidth - marginLeft - marginRight; // Ajuste de ancho con márgenes
+        const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
+
+        if (yOffset + imgHeight > pageHeight) {
+            pdf.addPage();
+            yOffset = 0.5;
+        }
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
+        pdf.addImage(imgData, 'JPEG', marginLeft, yOffset, imgWidth, imgHeight);
+
+        return yOffset + imgHeight;
+    };
+
+    // Procesar la parte 1 completa
+    html2canvas(part1, { scale: 2.5, useCORS: true }).then((canvas) => {
+        yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight);
+
+        // Procesar la parte 2 completa sin añadir nueva página
+        return html2canvas(part2, { scale: 2.5, useCORS: false });
+    }).then((canvas) => {
+        yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight);
+
+        // Procesar la parte 3 justo después de la parte 2, si cabe en la misma hoja
+        return processPart3(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3);
+    }).then(() => {
+        pdf.save("diagrama_ishikawa.pdf");
+        hideLoading();
+    }).catch((error) => {
+        console.error('Error generating PDF:', error);
+        hideLoading();
+    });
+};
 
 
 const handleCorreccionChange = (index, field, value) => {
@@ -879,10 +918,13 @@ const ocultarCargando = () => {
                     <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
                     <div style={{ marginBottom: '20px', width:'72em' }}>{ishikawa.causa}</div>
                     </div>
+                    </div>
+                    <div className='image-container3' id='pdf-content-part3'>
                     <div className='table-ish'>
-                    <h3>SOLUCIÓN</h3>
+                    
                     <table style={{ border: 'none' }}>
                         <thead>
+                            <tr><h3>SOLUCIÓN</h3></tr>
                         <tr>
                             <th className="conformity-header">Actividad</th>
                             <th className="conformity-header">Responsable</th>
@@ -951,9 +993,9 @@ const ocultarCargando = () => {
                     {
                     (!aprobado && !revisado) ? null : (
                         <>
-                        <h3>EFECTIVIDAD</h3>
                         <table style={{ border: 'none' }}>
                         <thead>
+                            <tr><h3>EFECTIVIDAD</h3></tr>
                             <tr>
                                 <th className="conformity-header">Actividad</th>
                                 <th className="conformity-header">Responsable</th>
@@ -1117,8 +1159,7 @@ const ocultarCargando = () => {
                     </form>
                     <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
                     </div>
-
-                    </div>
+                    </div> 
                 </div>
                 ))}
             </div>
