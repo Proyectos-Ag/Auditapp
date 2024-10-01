@@ -214,7 +214,7 @@ const handlePrintPDF = () => {
         const textareas = element.querySelectorAll('textarea');
         textareas.forEach((textarea) => {
             const div = document.createElement('div');
-            div.textContent = textarea.value;
+            div.innerHTML = textarea.value.replace(/\n/g, '<br>'); // Reemplazar saltos de línea por <br>
             div.className = textarea.className;
             div.style.cssText = textarea.style.cssText;
             textarea.parentNode.replaceChild(div, textarea);
@@ -231,17 +231,17 @@ const handlePrintPDF = () => {
                     return resolve(yOffset);
                 }
 
-                const imgWidth = pageWidth - marginLeft - marginRight; // Ajuste de ancho con márgenes
+                const imgWidth = pageWidth - marginLeft - marginRight;
                 const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
 
                 if (isNaN(imgHeight) || imgHeight <= 0) {
                     return resolve(yOffset);
                 }
 
-                // Si no cabe en la página actual, se pasa a la siguiente
+                // Verificar si el contenido cabe en la página actual
                 if (yOffset + imgHeight > pageHeight) {
-                    
-                    yOffset = 0.5;
+                    pdf.addPage();
+                    yOffset = 0.5; // Reiniciar en la nueva página
                 }
 
                 const imgData = canvas.toDataURL('image/jpeg', 0.8);
@@ -256,31 +256,26 @@ const handlePrintPDF = () => {
         });
     };
 
-    const processPart3 = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3) => {
+    const processPart3WithTdCut = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, marginTop3) => {
         convertTextAreasToDivs(element);
-
+    
         const childElements = Array.from(element.childNodes);
+    
+        // Aplicar margen superior calculado para la parte 3
+        yOffset += marginTop3;
 
         for (const child of childElements) {
             if (child.tagName === 'TABLE') {
-                const rows = child.querySelectorAll('tr');
+                const rows = Array.from(child.querySelectorAll('tr'));
                 for (const row of rows) {
-                    const cells = row.querySelectorAll('td');
-                    for (const cell of cells) {
-                        const cellHeight = await getElementHeight(cell);
-                        if (yOffset + cellHeight > pageHeight) {
-                            pdf.addPage();
-                            yOffset = 0.5; // Reiniciar en la nueva página
-                        }
-                        yOffset = await processElement(cell, pdf, yOffset, pageHeight, pageWidth, marginLeft3, marginRight3);
+                    const rowHeight = await getElementHeight(row);
+                    if (yOffset + rowHeight > pageHeight) {
+                        pdf.addPage();
+                        yOffset = 0.5; // Reiniciar en la nueva página
                     }
+                    yOffset = await processElement(row, pdf, yOffset, pageHeight, pageWidth, marginLeft3, marginRight3);
                 }
             } else {
-                const elementHeight = await getElementHeight(child);
-                if (yOffset + elementHeight > pageHeight) {
-                    pdf.addPage();
-                    yOffset = 0.5; // Reiniciar en la nueva página
-                }
                 yOffset = await processElement(child, pdf, yOffset, pageHeight, pageWidth, marginLeft3, marginRight3);
             }
         }
@@ -303,16 +298,16 @@ const handlePrintPDF = () => {
     let yOffset = 0.5;
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const marginLeft = 0;  // Ajuste de margen izquierdo
-    const marginRight = 0; // Ajuste de margen derecho
-    const marginLeft3 = 1.5;  // Ajuste de margen izquierdo
-    const marginRight3 = 1.5; // Ajuste de margen derecho
+    const marginLeft = 0;
+    const marginRight = 0;
+    const marginLeft3 = 1.5;
+    const marginRight3 = 1.5;
 
     const processCanvas = (canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight) => {
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
 
-        const imgWidth = pageWidth - marginLeft - marginRight; // Ajuste de ancho con márgenes
+        const imgWidth = pageWidth - marginLeft - marginRight;
         const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
 
         if (yOffset + imgHeight > pageHeight) {
@@ -327,16 +322,19 @@ const handlePrintPDF = () => {
     };
 
     // Procesar la parte 1 completa
+    convertTextAreasToDivs(part1); // Asegurarse de convertir los textarea en divs
     html2canvas(part1, { scale: 2.5, useCORS: true }).then((canvas) => {
         yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight);
 
         // Procesar la parte 2 completa sin añadir nueva página
-        return html2canvas(part2, { scale: 2.5, useCORS: false });
+        return html2canvas(part2, { scale: 2.5, useCORS: true });
     }).then((canvas) => {
+        const marginTop3 = 1.0; // Margen superior fijo para la parte 3
+
         yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight);
 
-        // Procesar la parte 3 justo después de la parte 2, si cabe en la misma hoja
-        return processPart3(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3);
+        // Añadir la parte 3 sin cortar los td a la mitad
+        return processPart3WithTdCut(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, marginTop3);
     }).then(() => {
         pdf.save("diagrama_ishikawa.pdf");
         hideLoading();
