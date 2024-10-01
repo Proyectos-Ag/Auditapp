@@ -221,96 +221,50 @@ const handlePrintPDF = () => {
         });
     };
 
-    const processElement = (el, pdf, yOffset, pageHeight, pageWidth, marginLeft, marginRight) => {
-        return new Promise((resolve) => {
-            html2canvas(el, { scale: 2.5, useCORS: true }).then((canvas) => {
-                const canvasWidth = canvas.width;
-                const canvasHeight = canvas.height;
+    // Función que procesa la tabla fila por fila y agrega un margen al final de cada página
+    const processTableWithRowControl = async (tableElement, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+        const rows = tableElement.querySelectorAll('tr');
 
-                if (canvasWidth === 0 || canvasHeight === 0) {
-                    return resolve(yOffset);
-                }
+        for (const row of rows) {
+            // Calcular la altura de la fila actual usando html2canvas
+            const rowCanvas = await html2canvas(row, { scale: 2.5, useCORS: true });
+            const rowHeight = (rowCanvas.height * (pageWidth - marginLeft - marginRight)) / rowCanvas.width;
 
-                const imgWidth = pageWidth - marginLeft - marginRight;
-                const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
-
-                if (isNaN(imgHeight) || imgHeight <= 0) {
-                    return resolve(yOffset);
-                }
-
-                // Verificar si el contenido cabe en la página actual
-                if (yOffset + imgHeight > pageHeight) {
-                    pdf.addPage();
-                    yOffset = 0.5; // Reiniciar en la nueva página
-                }
-
-                const imgData = canvas.toDataURL('image/jpeg', 0.8);
-                pdf.addImage(imgData, 'JPEG', marginLeft, yOffset, imgWidth, imgHeight, 'FAST');
-                yOffset += imgHeight;
-
-                resolve(yOffset);
-            }).catch((error) => {
-                console.error("Error generating canvas for element:", error);
-                resolve(yOffset);
-            });
-        });
-    };
-
-    const processPart3WithTdCut = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, marginTop3) => {
-        convertTextAreasToDivs(element);
-    
-        const childElements = Array.from(element.childNodes);
-    
-        // Aplicar margen superior calculado para la parte 3
-        yOffset += marginTop3;
-
-        for (const child of childElements) {
-            if (child.tagName === 'TABLE') {
-                const rows = Array.from(child.querySelectorAll('tr'));
-                for (const row of rows) {
-                    const rowHeight = await getElementHeight(row);
-                    if (yOffset + rowHeight > pageHeight) {
-                        pdf.addPage();
-                        yOffset = 0.5; // Reiniciar en la nueva página
-                    }
-                    yOffset = await processElement(row, pdf, yOffset, pageHeight, pageWidth, marginLeft3, marginRight3);
-                }
-            } else {
-                yOffset = await processElement(child, pdf, yOffset, pageHeight, pageWidth, marginLeft3, marginRight3);
+            // Verificar si la fila completa cabe en la página con el margen inferior considerado
+            if (yOffset + rowHeight + bottomMargin > pageHeight) {
+                pdf.addPage(); // Agregar una nueva página si la fila no cabe
+                yOffset = 0.5; // Reiniciar el offset en la nueva página
             }
+
+            // Agregar la imagen de la fila al PDF
+            const rowImgData = rowCanvas.toDataURL('image/jpeg', 0.8);
+            pdf.addImage(rowImgData, 'JPEG', marginLeft, yOffset, pageWidth - marginLeft - marginRight, rowHeight);
+            yOffset += rowHeight;
         }
+
         return yOffset;
     };
 
-    const getElementHeight = (element) => {
-        return new Promise((resolve) => {
-            html2canvas(element, { scale: 2.5, useCORS: true }).then((canvas) => {
-                resolve(canvas.height);
-            }).catch((error) => {
-                console.error('Error calculating element height:', error);
-                resolve(0);
-            });
-        });
+    const processPart3WithTableRows = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+        convertTextAreasToDivs(element); // Convertir textareas a divs
+
+        const table = element.querySelector('table'); // Asumimos que el contenido de la parte 3 es una tabla
+        if (table) {
+            yOffset = await processTableWithRowControl(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+        }
+
+        return yOffset;
     };
 
-    const pdf = new jsPDF('landscape', 'cm', 'letter');
-
-    let yOffset = 0.5;
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const marginLeft = 0;
-    const marginRight = 0;
-    const marginLeft3 = 1.5;
-    const marginRight3 = 1.5;
-
-    const processCanvas = (canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight) => {
+    const processCanvas = (canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
 
         const imgWidth = pageWidth - marginLeft - marginRight;
         const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
 
-        if (yOffset + imgHeight > pageHeight) {
+        // Verificar si la imagen completa cabe con el margen inferior
+        if (yOffset + imgHeight + bottomMargin > pageHeight) {
             pdf.addPage();
             yOffset = 0.5;
         }
@@ -321,20 +275,29 @@ const handlePrintPDF = () => {
         return yOffset + imgHeight;
     };
 
+    const pdf = new jsPDF('landscape', 'cm', 'letter');
+
+    let yOffset = 0.5;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const marginLeft = 0;
+    const marginRight = 0;
+    const marginLeft3 = 2;
+    const marginRight3 = 2;
+    const bottomMargin = 1.0; // Establecer un margen inferior de 1 cm
+
     // Procesar la parte 1 completa
     convertTextAreasToDivs(part1); // Asegurarse de convertir los textarea en divs
     html2canvas(part1, { scale: 2.5, useCORS: true }).then((canvas) => {
-        yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight);
+        yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
 
         // Procesar la parte 2 completa sin añadir nueva página
         return html2canvas(part2, { scale: 2.5, useCORS: true });
     }).then((canvas) => {
-        const marginTop3 = 1.0; // Margen superior fijo para la parte 3
+        yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
 
-        yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight);
-
-        // Añadir la parte 3 sin cortar los td a la mitad
-        return processPart3WithTdCut(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, marginTop3);
+        // Procesar la parte 3 fila por fila con margen inferior
+        return processPart3WithTableRows(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, bottomMargin);
     }).then(() => {
         pdf.save("diagrama_ishikawa.pdf");
         hideLoading();
