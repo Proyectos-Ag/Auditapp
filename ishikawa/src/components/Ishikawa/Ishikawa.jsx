@@ -15,6 +15,7 @@ const CreacionIshikawa = () => {
   const [showPart, setShowPart] = useState(true);
   const [ishikawaRecords, setIshikawaRecords] = useState([]); // Almacena los registros filtrados
   const [selectedRecordId, setSelectedRecordId] = useState(null); // Almacena el ID del registro seleccionado
+  const [, setSelectedTextareas] = useState(new Set());
 
   const [formData, setFormData] = useState({
     problema: '',
@@ -245,8 +246,35 @@ const CreacionIshikawa = () => {
       console.error('Error al actualizar los datos:', error.response ? error.response.data : error.message);
     }
   };
+
+  const handleDoubleClick = (e) => {
+    const textarea = e.target;
   
+    setSelectedTextareas((prevSelected) => {
+      const newSelected = new Set(prevSelected);
   
+      if (newSelected.has(textarea)) {
+        // Si el textarea ya está seleccionado, deseleccionarlo
+        newSelected.delete(textarea);
+        textarea.style.backgroundColor = '';
+      } else {
+        // Si el textarea no está seleccionado, seleccionarlo
+        newSelected.add(textarea);
+        textarea.style.backgroundColor = '#f1fc5e9f';
+        textarea.style.borderRadius = '10px';
+      }
+  
+      // Actualizar los textos seleccionados en el campo 'causa'
+      setFormData((prevState) => ({
+        ...prevState,
+        causa: Array.from(newSelected).map(t => t.value).join('; ')
+      }));
+  
+      return newSelected;
+    });
+  
+    textarea.select(); // Selecciona el texto dentro del textarea
+  };
 
   const Guardar = async () => {
     if (
@@ -387,39 +415,59 @@ const CreacionIshikawa = () => {
             <img src={Ishikawa} alt="Diagrama de Ishikawa" className="responsive-image" />
             {diagrama.map((dia, index) => (
               <div key={index}>
-                <textarea maxLength={145} className="text-area" name='text1' value={dia.text1} onChange={handleInputChange}
-                  style={{ top: '19.1rem', left: '8.7rem' }} placeholder="Texto..." required />
-                <textarea maxLength={145} className="text-area" name='text2' value={dia.text2} onChange={handleInputChange}
-                  style={{ top: '19.1rem', left: '25.4rem' }} placeholder="Texto..." required />
-                <textarea maxLength={145} className="text-area" name='text3' value={dia.text3} onChange={handleInputChange}
-                  style={{ top: '19.1rem', left: '41.2rem' }} placeholder="Texto..." required />
-                <textarea maxLength={145} className="text-area" name='text4' value={dia.text4} onChange={handleInputChange}
-                  style={{ top: '23.2rem', left: '12.2rem' }} placeholder="Texto..." />
-                <textarea maxLength={145} className="text-area" name='text5' value={dia.text5} onChange={handleInputChange}
-                  style={{ top: '23.2rem', left: '28.8rem' }} placeholder="Texto..." />
-                <textarea maxLength={145} className="text-area" name='text6' value={dia.text6} onChange={handleInputChange}
-                  style={{ top: '23.2rem', left: '45rem' }} placeholder="Texto..." />
-                <textarea maxLength={145} className="text-area" name='text7' value={dia.text7} onChange={handleInputChange}
-                  style={{ top: '27.2rem', left: '15.5rem' }} placeholder="Texto..." />
-                <textarea maxLength={145} className="text-area" name='text8' value={dia.text8} onChange={handleInputChange}
-                  style={{ top: '27.2rem', left: '32.3rem' }} placeholder="Texto..." />
-                <textarea maxLength={145} className="text-area" name='text9' value={dia.text9} onChange={handleInputChange}
-                  style={{ top: '27.2rem', left: '48.1rem' }} placeholder="Texto..." />
-                <textarea maxLength={145} className="text-area" name='text10' value={dia.text10} onChange={handleInputChange}
-                  style={{ top: '31rem', left: '23rem' }} placeholder="Texto..." required />
-                <textarea maxLength={145} className="text-area" name='text11' value={dia.text11} onChange={handleInputChange}
-                  style={{ top: '31rem', left: '39.4rem' }} placeholder="Texto..." required />
-                <textarea maxLength={145} className="text-area" name='text12' value={dia.text12} onChange={handleInputChange}
-                  style={{ top: '35rem', left: '19.7rem' }} placeholder="Texto..." />
-                <textarea maxLength={145} className="text-area" name='text13' value={dia.text13} onChange={handleInputChange}
-                  style={{ top: '35rem', left: '36rem' }} placeholder="Texto..." />
-                <textarea maxLength={145} className="text-area" name='text14' value={dia.text14} onChange={handleInputChange}
-                  style={{ top: '39rem', left: '16.6rem' }} placeholder="Texto..." />
-                <textarea maxLength={145} className="text-area" name='text15' value={dia.text15} onChange={handleInputChange}
-                  style={{ top: '39rem', left: '32.8rem' }} placeholder="Texto..." />
-                <textarea maxLength="105" className="text-area" name='problema' value={formData.problema} onChange={handleDiagrama}
+              <textarea maxLength={145} className="text-area" name="text1" value={dia.text1} onChange={handleInputChange} 
+              style={{ top: '19.1rem', left: '8.7rem'}} placeholder="Texto..." required  onDoubleClick={handleDoubleClick}
+               />
+               <textarea maxLength={145} className="text-area" name='text2' value={dia.text2} onChange={handleInputChange}
+               style={{ top: '19.1rem', left: '25.4rem'}} placeholder="Texto..." required  onDoubleClick={handleDoubleClick}
+               />
+               <textarea className="text-area" name='text3' value={dia.text3} onChange={handleInputChange}
+                style={{ top: '19.1rem', left: '41.2rem'}}placeholder="Texto..." required  onClick={handleDiagrama}
+                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+   
+               <textarea className="text-area" name='text4' value={dia.text4} onChange={handleInputChange}
+                style={{ top: '23.2rem', left: '12.2rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+               <textarea className="text-area" name='text5' value={dia.text5} onChange={handleInputChange}
+                style={{ top: '23.2rem', left: '28.8rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+               <textarea className="text-area" name='text6' value={dia.text6} onChange={handleInputChange}
+                style={{ top: '23.2rem', left: '45rem' }}placeholder="Texto..."  onClick={handleDiagrama}
+                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+       
+               <textarea className="text-area" name='text7' value={dia.text7} onChange={handleInputChange}
+                style={{ top: '27.2rem', left: '15.5rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+               <textarea className="text-area" name='text8' value={dia.text8} onChange={handleInputChange}
+                style={{ top: '27.2rem', left: '32.3rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+               <textarea className="text-area" name='text9' value={dia.text9} onChange={handleInputChange}
+                style={{ top: '27.2rem', left: '48.1rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+     
+               <textarea className="text-area" name='text10' value={dia.text10} onChange={handleInputChange}
+                style={{ top: '31rem', left: '23rem'}}placeholder="Texto..." required  onClick={handleDiagrama}
+                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+               <textarea className="text-area" name='text11' value={dia.text11} onChange={handleInputChange}
+                style={{ top: '31rem', left: '39.4rem'}}placeholder="Texto..." required  onClick={handleDiagrama}
+                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+     
+               <textarea className="text-area" name='text12' value={dia.text12} onChange={handleInputChange}
+                style={{ top: '35rem', left: '19.7rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+               <textarea className="text-area" name='text13' value={dia.text13} onChange={handleInputChange}
+                style={{ top: '35rem', left: '36rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+     
+               <textarea className="text-area" name='text14' value={dia.text14} onChange={handleInputChange}
+                style={{ top: '39rem', left: '16.6rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+               <textarea className="text-area" name='text15' value={dia.text15} onChange={handleInputChange}
+                style={{ top: '39rem', left: '32.8rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                <textarea maxLength={145} className="text-area" name='problema' value={formData.problema} onChange={handleDiagrama}
                   style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} placeholder="Problema..." />
-              </div>
+               </div>
             ))}
           </div> 
 

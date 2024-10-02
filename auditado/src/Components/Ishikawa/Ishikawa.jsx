@@ -720,8 +720,6 @@ useEffect(() => {
             <textarea className="text-area" name='text15' value={dia.text15} onChange={handleInputChange}
              style={{ top: '39rem', left: '32.8rem', ...obtenerEstiloTextarea(dia.text15, formData.causa) }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
-  
-            
             </div>
           ))}
 

@@ -21,15 +21,16 @@ const Inicio = () => {
     }
   }, []);
 
-  return (
+  return(
+    <div>
     <div className="inicio-container" style={{ position: 'relative' }}>
       <video 
+      className="video"
         ref={videoRef} 
         src={videoFile} 
         autoPlay 
         loop 
         muted 
-        style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0, zIndex: -1 }}
       />
       <div style={{ position: 'absolute', top: 0, left: 0, width: '4rem',
          borderRadius:'10px', backgroundColor:'#000000' }}>
@@ -39,14 +40,35 @@ const Inicio = () => {
         <h1>Bienvenido</h1>
         {userData && (
           <div className="user-info">
-            <br />
-            <br />
-            <br />
-            <br />
             <p className="user-name">{userData.Nombre}</p>
           </div>
         )}
       </div>
+    </div>
+
+    <div className="conten-funcion">
+    <h1>Auditorías</h1>
+    <div className="contenedor-home">
+      <div className="card-home">
+        Generar Auditoría
+      </div>
+      <div className="card-home"></div>
+      <div className="card-home"></div>
+      <div className="card-home"></div>
+    </div>
+    </div>
+
+    <div className="conten-funcion">
+    <h1>Ishikawas</h1>
+    <div className="contenedor-home">
+      <div className="card-home">
+        Generar Auditoria
+      </div>
+      <div className="card-home"></div>
+      <div className="card-home"></div>
+      <div className="card-home"></div>
+    </div>
+    </div>
     </div>
   );
 };
