@@ -238,7 +238,7 @@ const CreacionIshikawa = () => {
   
       // Solo procede si el usuario confirma
       if (result.isConfirmed) {
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${selectedRecordId}`, data);
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${selectedRecordId}`, data);
         Swal.fire('Actualizado', 'El diagrama ha sido actualizado.', 'success');
         navigate('/diagramas');
       }
