@@ -106,8 +106,22 @@
   transition: transform 0.3s ease;
   width: 10em;
   height: 13em;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
 }
 
 .card-home:hover {
   transform: translateY(-15px);
+}
+
+.imagen-mini{
+  width: 100%;
+  height: auto;
+}
+
+.fondo-home{
+  margin: 4rem auto 0;
+  background-color: #a0fda5;
 }

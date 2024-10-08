@@ -2,11 +2,15 @@ import React, { useContext, useEffect, useRef } from "react";
 import './css/inicio.css';
 import videoFile from '../../assets/img/UpscaleVideo_1_20240628.mp4';
 import Navigation from "../Navigation/Navbar";
+import pez from "../../assets/img/pez.png";
+import revision from "../../assets/img/revision.png";
 import { UserContext } from '../../App';
+import { useNavigate } from "react-router-dom";
 
 const Inicio = () => {
   const { userData, setUserData } = useContext(UserContext);
   const videoRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedUserData = localStorage.getItem('userData');
@@ -46,15 +50,25 @@ const Inicio = () => {
       </div>
     </div>
 
+    <div className="fondo-home">
+      
     <div className="conten-funcion">
     <h1>Auditorías</h1>
     <div className="contenedor-home">
-      <div className="card-home">
+      <div className="card-home" onClick={() => navigate("/datos")}>
         Generar Auditoría
       </div>
-      <div className="card-home"></div>
-      <div className="card-home"></div>
-      <div className="card-home"></div>
+      <div className="card-home" onClick={() => navigate("/revicion")}>
+        Revisión de Auditoría
+        <img src={revision} alt="Logo Aguida" className='imagen-mini' />
+      </div>
+      <div className="card-home" onClick={() => navigate("/revish")}>
+      Revisión de Ishikawa
+      <img src={pez} alt="Logo Aguida" className='imagen-mini' />
+      </div>
+      <div className="card-home" onClick={() => navigate("/vistafin")}>
+        Auditorías Finalizadas
+      </div>
     </div>
     </div>
 
@@ -69,6 +83,9 @@ const Inicio = () => {
       <div className="card-home"></div>
     </div>
     </div>
+
+    </div>
+
     </div>
   );
 };

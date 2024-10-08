@@ -25,6 +25,7 @@ const Ishikawa = () => {
   const [estRech,  setEstRech] = useState([]);
   const [showPart, setShowPart] = useState(true);
   const [rechazo,  setRechazo] = useState([]);
+  const [problema, setProblema] = useState(''); // Almacena el valor del problema
   const [nota,  setNota] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [fechaElaboracion, setFechaElaboracion] = useState('');
@@ -208,7 +209,6 @@ const handleDoubleClick = (e) => {
         alert('No hay datos para actualizar');
         return;
       }
-  
       // Obtener el `_id` del primer elemento de `rechazo`
       const { _id } = rechazo[0];
   
@@ -217,7 +217,7 @@ const handleDoubleClick = (e) => {
         idReq: id,
         fecha: fechaElaboracion,
         auditado,
-        problema: descripcion.Problema,
+        problema: problema,
         requisito,
         hallazgo,
         correccion: formData.correccion,
@@ -229,7 +229,7 @@ const handleDoubleClick = (e) => {
         estado: 'En revisión'
       };
   
-      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, data);
+      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, data);
       console.log('Datos actualizados:', response.data);
       Swal.fire({
         title: 'Actualizado',
@@ -565,6 +565,11 @@ const mostrarCargando = () => {
   });
 };
 
+const handleProblemaChange = (e) => {
+  setProblema(e.target.value); // Actualiza el estado con el valor ingresado
+};
+
+
 const ocultarCargando = () => {
   Swal.close();
 };
@@ -649,8 +654,8 @@ useEffect(() => {
               return(
             <h2 key={index}>Problema:
               <textarea type="text" className="problema-input" name='problema' 
-              value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : desc.Problema}
-              onChange={handleDatos}
+              value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : `${descripcion.Hallazgo}`}
+              onChange={handleProblemaChange}
               style={{fontSize:'20px'}} placeholder="Agregar problema. . ." required disabled={revisado}>
               </textarea>
             </h2>

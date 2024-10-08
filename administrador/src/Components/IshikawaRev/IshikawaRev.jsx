@@ -21,6 +21,7 @@ const IshikawaRev = () => {
     const { _id, id, nombre} = useParams();
     const [valorSeleccionado, setValorSeleccionado] = useState('');
     const [, setDatos] = useState(null);
+    const [selectedOption, setSelectedOption] = useState('');
     const [selectedField, setSelectedField] = useState(null); 
     const [imageModalOpen, setImageModalOpen] = useState(false);
     const [capturedPhotos, setCapturedPhotos] = useState({}); 
@@ -329,47 +330,67 @@ const handleCorreccionChange = (index, field, value) => {
         setNuevaCorreccion({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
     };
 
-const handleGuardarCambios2 = async (selectedIndex) => {
+    const handleGuardarCambios2 = async (selectedIndex) => {
         try {
             if (filteredIshikawas.length === 0) {
                 alert('No hay datos para actualizar');
                 return;
             }
     
-            // Mapeo de correcciones para asignar valor a evidencia
-            const correccionesActualizadas = correcciones.map((correccion, i) => {
-                const fieldKey = `${id}_${i}`;
-                
-                // Capturamos la imagen en base64 si existe en capturedPhotos
-                let imagenBase64 = capturedPhotos[fieldKey] || correccion.evidencia;
-            
-                return {
-                    ...correccion,
-                    evidencia: imagenBase64
-                };
-            });            
-            
-            const { _id } = filteredIshikawas[0];
-            const updatedIshikawa = {
-                correcciones: correccionesActualizadas
-            };
+            const formData = new FormData();
     
-            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, {
-                estado: 'Aprobado',
-                ...updatedIshikawa
-            }); 
+            // Agregamos todas las correcciones y asociamos las imágenes a sus índices
+            correcciones.forEach((correccion, index) => {
+                formData.append(`correcciones[${index}].actividad`, correccion.actividad || '');
+                formData.append(`correcciones[${index}].responsable`, correccion.responsable || '');
+                formData.append(`correcciones[${index}].fechaCompromiso`, correccion.fechaCompromiso || null);
+                formData.append(`correcciones[${index}].cerrada`, correccion.cerrada || '');
+            
+                // Genera una clave única para cada fila con el índice
+                const fieldKey = `${id}_${index}`;
+                const photo = capturedPhotos[fieldKey]; // Obtén la foto para este índice
+            
+                // Verifica si hay una foto válida y la añade
+                if (photo && typeof photo === 'string' && photo.startsWith('data:image')) {
+                    const blob = dataURLtoBlob(photo); // Convierte el data URL a Blob
+                    formData.append(`imageSub`, blob, `image_${index}.png`); // Asigna la imagen al índice correcto
+                }
+            });            
+    
+            const { _id } = filteredIshikawas[0]; // Usamos la ID del primer registro
+    
+            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, formData, {
+                headers: {
+                    // No es necesario establecer el content-type manualmente, axios lo hace automáticamente
+                },
+            });
+    
             console.log('Respuesta del servidor:', response.data);
             Swal.fire({
                 title: 'Éxito!',
                 text: 'Información guardada correctamente.',
                 icon: 'success',
                 confirmButtonText: 'Aceptar'
-              });
+            });
         } catch (error) {
             console.error('Error al actualizar la información:', error);
             alert('Hubo un error al actualizar la información');
         }
-};    
+    };
+    
+    function dataURLtoBlob(dataURL) {
+        const arr = dataURL.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1]; // Aquí se obtiene el tipo MIME
+        const bstr = atob(arr[1]); // Decodifica el Base64
+        const n = bstr.length;
+        const u8arr = new Uint8Array(n);
+    
+        for (let i = 0; i < n; i++) {
+            u8arr[i] = bstr.charCodeAt(i);
+        }
+    
+        return new Blob([u8arr], { type: mime }); // Devuelve un Blob con el tipo MIME adecuado
+    }  
             
     const handleGuardarCambios = async (selectedIndex) => {
         try {
@@ -398,7 +419,7 @@ const handleGuardarCambios2 = async (selectedIndex) => {
     
             console.log('Enviando datos a actualizar:', updatedIshikawa);
     
-            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, {
+            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
                 estado: 'Revisado',
                 ...updatedIshikawa
             });
@@ -409,14 +430,46 @@ const handleGuardarCambios2 = async (selectedIndex) => {
                 icon: 'success',
                 confirmButtonText: 'Aceptar'
             }).then(() => {
-                // Recargar la ventana actual después de cerrar el Swal
-                window.location.reload();
+                verificarRegistro();
             });
         } catch (error) {
             console.error('Error updating data:', error);
             alert('Hubo un error al actualizar la información');
         }
-    };    
+    }; 
+
+
+  const handleSelectChangeEstado = (event) => {
+    setSelectedOption(event.target.value);
+  };
+
+  // Función para cambiar el estado
+  const CambiarEstado = async (_id) => {
+    try {
+      if (filteredIshikawas.length === 0) {
+        alert('No hay datos para actualizar');
+        return;
+      }
+
+      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/estado/${_id}`, {
+        estado: selectedOption // Usamos la opción seleccionada
+      });
+
+      console.log('Respuesta del servidor:', response.data);
+      Swal.fire({
+        title: '¡Éxito!',
+        text: 'El diagrama ha cambiado su estado correctamente.',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+      }).then(() => {
+        verificarRegistro();
+      });
+    } catch (error) {
+      console.error('Error al actualizar:', error);
+      alert('Hubo un error al actualizar la información');
+    }
+  };
+
 
     const Finalizar = async (event,selectedIndex) => {
         event.preventDefault();
@@ -439,7 +492,7 @@ const handleGuardarCambios2 = async (selectedIndex) => {
       const handleGuardarAprobacion = async () => {
         try {
             const { _id } = filteredIshikawas[0];
-            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, {
+            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
                 estado: 'Aprobado'
             });
             fetchData();
@@ -469,7 +522,7 @@ const handleGuardarCambios2 = async (selectedIndex) => {
     const handleGuardarRechazo = async () => {
     try {
         const { _id } = filteredIshikawas[0];
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, {
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
             estado: 'Rechazado',
             notaRechazo 
         });
@@ -695,7 +748,6 @@ const handleCapture = (dataUrl) => {
     setModalOpen(false);
 };
 
-
 const handleEliminarEvidencia = async (index, idIsh, idCorr ) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/eliminar-evidencia/${index}/${idIsh}/${idCorr}`);
@@ -792,6 +844,21 @@ const ocultarCargando = () => {
                             </div>
                         </> 
                     )}
+                    
+                    <div className='opciones'>
+                    <select name="estado" id="estado-select" onChange={handleSelectChangeEstado}>
+                        <option value="">Selecciona una opción</option>
+                        <option value="Rechazado">Regresar al Auditado</option>
+                        <option value="Aprobado">Aprobar</option>
+                        <option value="Revisado">Terminar</option>
+                    </select>
+
+                    {/* Solo mostramos el botón si se ha seleccionado una opción */}
+                    {selectedOption && (
+                        <button onClick={() =>CambiarEstado(ishikawa._id)}>Cambiar Estado</button>
+                    )}
+                    
+                    </div>
                     <button className='button-pdf-imp' onClick={handlePrintPDF}>Guardar en PDF</button>
                     <div id='pdf-content-part1' className="image-container">
                     <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
@@ -877,7 +944,7 @@ const ocultarCargando = () => {
                     <h3>Acción inmediata o corrección: </h3>
                     {ishikawa.correccion}
                     <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
-                    <div style={{ marginBottom: '20px', width:'72em' }}>{ishikawa.causa}</div>
+                    <div style={{ marginBottom: '50px', width:'72em' }}>{ishikawa.causa}</div>
                     </div>
                     </div>
                     <div className='image-container3' id='pdf-content-part3'>
@@ -974,16 +1041,6 @@ const ocultarCargando = () => {
                         <tbody>
                     {correcciones.map((correccion, index) => {
                         const fieldKey = `${id}_${index}`;
-                        
-                        // Lista de prefijos conocidos
-                        const prefijosBase64 = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
-
-                        // Verifica si `correccion.evidencia` es una cadena y si tiene un prefijo válido
-                        const base64String = correccion.evidencia && typeof correccion.evidencia === 'string'
-                        ? prefijosBase64.some(prefijo => correccion.evidencia.startsWith(prefijo))
-                            ? correccion.evidencia  // Si ya tiene un prefijo válido, úsalo
-                            : `data:image/png;base64,${correccion.evidencia}`  // Si no tiene prefijo, agrega uno por defecto (png)
-                        : '';  // Devuelve una cadena vacía si no hay evidencia
 
                         return (
                         <tr key={index} onClick={() => setSelectedIndex(index)}>
@@ -1040,11 +1097,11 @@ const ocultarCargando = () => {
                             {correccion.evidencia && (
                                 <>
                                 <img
-                                    src={base64String}  // Usa la imagen con el prefijo adecuado
+                                    src={correccion.evidencia}  // Usa la imagen con el prefijo adecuado
                                     alt="Evidencia"
                                     style={{ width: '100%', height: 'auto' }}
                                     className="hallazgo-imagen"
-                                    onClick={() => handleImageClick(base64String)}
+                                    onClick={() => handleImageClick(correccion.evidencia)}
                                 />
                                 </>
                             )}

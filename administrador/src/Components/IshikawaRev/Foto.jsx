@@ -3,35 +3,53 @@ import './css/Camara.css';
 
 function Fotos({ open, onClose, onCapture }) {
   const [hayFoto, setHayFoto] = useState(false);
-  const inputRef = useRef(null);  // Referencia al input de archivo
+  const inputRef = useRef(null);  
 
   const handleCapture = (event) => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        let base64String = reader.result;
+        const imageData = reader.result; 
 
-        // Verifica si el prefijo ya está en base64String (png, jpeg, etc.)
-        const prefijosBase64 = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
+        // Generar un identificador único para cada imagen
+        const imageId = `capturedImage_${new Date().getTime()}`;
 
-        // Solo añade el prefijo si no empieza con uno de los prefijos conocidos
-        if (!prefijosBase64.some(prefijo => base64String.startsWith(prefijo))) {
-          base64String = `data:image/png;base64,${base64String}`;
-        }
+        // Almacenar cada imagen con una clave única
+        localStorage.setItem(imageId, imageData);
 
         setHayFoto(true);
-        onCapture(base64String); // Envía la imagen capturada en formato base64 con el prefijo adecuado
+        onCapture(imageData); 
       };
-      reader.readAsDataURL(file);  // Esto ya incluye 'data:image/png;base64,' o 'data:image/jpeg;base64,'
+      reader.readAsDataURL(file);  
     }
   };
 
+  // Limpiar el localStorage cuando la página se refresque o cierre
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Recorre todas las claves en el localStorage
+      Object.keys(localStorage).forEach((key) => {
+        // Elimina solo las claves que empiezan con 'capturedImage_'
+        if (key.startsWith('capturedImage_')) {
+          localStorage.removeItem(key);
+        }
+      });
+    };
+  
+    window.addEventListener('beforeunload', handleBeforeUnload);
+  
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+  
+
   useEffect(() => {
     if (open) {
-      inputRef.current.click();  // Dispara automáticamente el clic en el input de archivo
+      inputRef.current.click();  
     }
-  }, [open]);  // Se ejecuta cuando el modal se abre
+  }, [open]);
 
   const cerrarFoto = () => {
     setHayFoto(false);
@@ -44,12 +62,12 @@ function Fotos({ open, onClose, onCapture }) {
       <div className="fixed-modal">
         <div className="camera-container">
           <input
-            ref={inputRef}  // Asigna la referencia al input de archivo
+            ref={inputRef}  
             type="file"
             accept="image/*"
-            capture="environment" // "environment" para cámara trasera, "user" para la frontal
+            capture="environment" 
             onChange={handleCapture}
-            style={{ display: 'none' }} // Oculta el input
+            style={{ display: 'none' }} 
             id="cameraInput"
           />
           

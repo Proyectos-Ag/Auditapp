@@ -5,8 +5,10 @@ import Logo from "../../assets/img/logoAguida.png";
 import Navigation from "../Navigation/Navbar";
 import Ishikawa from '../../assets/img/Ishikawa-transformed.png';
 import Swal from 'sweetalert2';
+import { useParams } from 'react-router-dom';
 
 const Diagrama = () => {
+    const {_id} = useParams();
     const [ishikawas, setIshikawas] = useState([]);
     const [visibleIndex, setVisibleIndex] = useState(0);
     const [showPart, setShowPart] = useState(true);
@@ -16,22 +18,20 @@ const Diagrama = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-                const dataFiltrada = response.data.filter(item => (item.estado === 'Hecho' || item.estado === 'Aprobado') && !item.hasOwnProperty('idRep'));
-                
-                // Ordenar por fechaElaboracion
-                const dataOrdenada = dataFiltrada.sort((a, b) => new Date(a.fechaElaboracion) - new Date(b.fechaElaboracion));
-                
-                setIshikawas(dataOrdenada);
+                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/vac/por/${_id}`);
+                const ishikawasRecibidos = Array.isArray(response.data) ? response.data : [response.data];
+                setIshikawas(ishikawasRecibidos);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
         };
-    
+        
         fetchData();
-    }, []);
+    }, [_id]);
 
-      const toggleVisibility = (index) => {
+    console.log("Id para ver si no se esta ciclando",_id)
+
+    const toggleVisibility = (index) => {
         setVisibleIndex(visibleIndex === index ? null : index);
     };    
 

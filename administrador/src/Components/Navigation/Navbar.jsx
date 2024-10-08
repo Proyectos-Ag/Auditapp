@@ -110,7 +110,7 @@ function DrawerList({ handleLogout }) {
     {
       text: "Ishikawa", subItems: [
         { text: "Generar Ishikawa", href: "/ishikawa" },
-        { text: "Ishikawas Generados", href: "/diagrama" },
+        { text: "Ishikawas Generados", href: "/ishikawasesp" },
       ],
       showSubmenu: showIshikawaSubmenu,
       toggleSubmenu: toggleIshikawaSubmenu

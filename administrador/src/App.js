@@ -24,6 +24,7 @@ import RevIshi from './Components/Terminadas/VistaRevIsh';
 import Evaluacion from './Components/Evaluacion/Evaluacion';
 import Verevaluaciones from './Components/Evaluacion/VerEvaluacion';
 import VistaFinalizadas from './Components/Finalizada/VistaFinalizadas';
+import VistaIshikawas from './Components/DiagramaRe/VistaIshikawas';
 
 export const UserContext = createContext(null);
 
@@ -48,12 +49,13 @@ function App() {
           <Route path="/auditcalendar" element={<ProtectedRoute><Calendarioss/></ProtectedRoute>} />
           <Route path="/calendario" element={<ProtectedRoute><Calendarios /></ProtectedRoute>} />
           <Route path="/departamento" element={<ProtectedRoute><Departaments /></ProtectedRoute>} />
-          <Route path="/diagrama" element={<ProtectedRoute><Diagrama /></ProtectedRoute>} />
+          <Route path="/diagrama/:_id" element={<ProtectedRoute><Diagrama /></ProtectedRoute>} />
           <Route path="/carga" element={<ProtectedRoute><CargaMasiva /></ProtectedRoute>} />
           <Route path="/estadisticas" element={<ProtectedRoute><Estadisticas /></ProtectedRoute>} />
           <Route path="/revish" element={<ProtectedRoute><RevIshi /></ProtectedRoute>} />
           <Route path="/evuaauditor" element={<ProtectedRoute><Evaluacion /></ProtectedRoute>} />
           <Route path="/vereva" element={<ProtectedRoute><Verevaluaciones/></ProtectedRoute>}/>
+          <Route path="/ishikawasesp" element={<ProtectedRoute><VistaIshikawas/></ProtectedRoute>}/>
         </Routes>
       </Router>
     </div>

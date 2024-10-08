@@ -201,7 +201,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: -4rem auto 0;
+    margin: -2rem auto 0;
     width: 79em;
     height: 100%;
     max-width: 80rem;
@@ -384,8 +384,7 @@
     background-color: #114f72;
     color: #ffffff;
     border-radius: 10px;
-    margin-top: -50px;
-    margin-left: 90em;
+    margin-left: 75rem;
     padding: 10px;
     cursor: pointer;
   }
@@ -414,4 +413,10 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     font-size: 1.5em;
     text-align: center;
+  }
+
+  .opciones{
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
   }
