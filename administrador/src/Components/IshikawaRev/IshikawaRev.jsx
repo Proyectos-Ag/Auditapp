@@ -703,7 +703,7 @@ const handleSelectChangeAud = (event) => {
     setValorSeleccionado(event.target.value);
 };
 
-      function verificarCoincidencia(textAreaValue, causa) {
+    function verificarCoincidencia(textAreaValue, causa) {
   // Verificar que los valores no sean undefined o null
   if (typeof textAreaValue !== 'string' || typeof causa !== 'string') {
       return false;
