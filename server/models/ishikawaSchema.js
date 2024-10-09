@@ -51,6 +51,7 @@ const ishikawaSchema = new mongoose.Schema({
     actividades: [actividadSchema],
     correcciones: [correccionSchema],
     estado: String,
+    tipo: String,
     notaRechazo: String,
     fechaElaboracion: String
 });

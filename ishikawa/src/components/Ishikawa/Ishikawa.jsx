@@ -57,7 +57,7 @@ const CreacionIshikawa = () => {
       try {
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
         const filteredRecords = response.data.filter(item =>
-          item.estado === 'Rechazado' && item.auditado === userData.Nombre
+          (item.estado === 'Rechazado' || item.estado === 'Incompleto') && item.auditado === userData.Nombre
         );
         setIshikawaRecords(filteredRecords);
       } catch (error) {
@@ -182,25 +182,58 @@ const CreacionIshikawa = () => {
         afectacion: formData.afectacion,
         actividades,
         estado: 'Hecho',
+        tipo:'vacio',
         fechaElaboracion
       };
   
       const result = await Swal.fire({
-        title: '¿Estás seguro de querer guardar?',
-        text: 'El diagrama será enviado a revisión.',
+        title: '¿Está seguro de querer enviar?',
+        text: 'El diagrama será enviado para revisión.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3ccc37',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, guardar',
+        confirmButtonText: 'Sí, enviar',
         cancelButtonText: 'Cancelar'
       });
   
       // Solo procede si el usuario confirma
       if (result.isConfirmed) {
         await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
-        Swal.fire('Guardado', 'El diagrama ha sido guardado.', 'success');
+        Swal.fire('Enviado', 'El diagrama ha sido enviado.', 'success');
         navigate('/diagramas');
+      }
+    } catch (error) {
+      console.error('Error al guardar los datos:', error.response ? error.response.data : error.message);
+    }
+  };
+
+  const handleSaveAdvance = async () => {
+    try {
+      const data = {
+        fecha: formData.fecha,
+        problema: formData.problema,
+        requisito: formData.requisito,
+        auditado: userData.Nombre,
+        hallazgo: formData.hallazgo,
+        correccion: formData.correccion,
+        causa: formData.causa,
+        diagrama,
+        participantes: formData.participantes,
+        afectacion: formData.afectacion,
+        actividades,
+        estado: 'Incompleto',
+        fechaElaboracion
+      };
+  
+      if (selectedRecordId) {
+        // Si se está editando un registro existente
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${selectedRecordId}`, data);
+        Swal.fire('Cambios Actualizados', 'El registro ha sido actualizado.', 'success');
+      } else {
+        // Si es un nuevo registro
+        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+        Swal.fire('Registro Guardado', 'El nuevo registro ha sido creado.', 'success');
       }
     } catch (error) {
       console.error('Error al guardar los datos:', error.response ? error.response.data : error.message);
@@ -222,24 +255,25 @@ const CreacionIshikawa = () => {
         afectacion: formData.afectacion,
         actividades,
         estado: 'Hecho',
+        tipo:'vacio',
         fechaElaboracion
       };
   
       const result = await Swal.fire({
-        title: '¿Estás seguro de querer actualizar?',
-        text: 'El diagrama será actualizado.',
+        title: '¿Está seguro de querer enviar?',
+        text: 'El diagrama será enviado para revisión.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3ccc37',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, actualizar',
+        confirmButtonText: 'Sí, enviar',
         cancelButtonText: 'Cancelar'
       });
   
       // Solo procede si el usuario confirma
       if (result.isConfirmed) {
         await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${selectedRecordId}`, data);
-        Swal.fire('Actualizado', 'El diagrama ha sido actualizado.', 'success');
+        Swal.fire('Enviado', 'El diagrama ha sido enviado.', 'success');
         navigate('/diagramas');
       }
     } catch (error) {
@@ -571,7 +605,10 @@ const CreacionIshikawa = () => {
               agregarFilaActividad();
             }} className='button-agregar'>Agregar Fila</button>
           </div>
-          <button type='submit'className='button-generar-ish'  onClick={Guardar}>Guardar</button>
+          <button type='submit'className='button-agregar'  onClick={(e) => {
+            e.preventDefault();handleSaveAdvance(); }}>Guardar Cambios</button>
+          <button type='submit'className='button-generar-ish'  onClick={Guardar}>Enviar</button>
+          
         </div>
       </div>
     </form>

@@ -21,36 +21,22 @@ const Diagrama = () => {
     const [capturedPhotos, setCapturedPhotos] = useState({}); 
     const [selectedImage, setSelectedImage] = useState(null);
     const [imageModalOpen, setImageModalOpen] = useState(false);
-    const [aprobado,  setAprobado] = useState([]);
     const [correcciones, setCorrecciones] = useState([{ actividad: '', responsable: '', fechaCompromiso: null, cerrada: '', evidencia: ''}]);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/vac/por/${_id}`);
-                const ishikawasRecibidos = Array.isArray(response.data) ? response.data : [response.data];
-                setIshikawas(ishikawasRecibidos);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
-        
         fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [_id]);
 
-    const verificarRegistro = async () => {
+    const fetchData = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, {
-                params: {
-                    idRep: _id
-                }
-            });
-          const registroAprobado = response.data.some(item => item.idRep === _id && item.estado === 'Aprobado');
-          setAprobado(registroAprobado);
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/vac/por/${_id}`);
+            const ishikawasRecibidos = Array.isArray(response.data) ? response.data : [response.data];
+            setIshikawas(ishikawasRecibidos);
         } catch (error) {
-          console.error('Error fetching data:', error);
+            console.error('Error fetching data:', error);
         }
-      };
+    };
 
     const toggleVisibility = (index) => {
         setVisibleIndex(visibleIndex === index ? null : index);
@@ -92,8 +78,14 @@ const Diagrama = () => {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
                 estado: 'Aprobado'
             });
-
-            verificarRegistro();
+            Swal.fire({
+                title: 'Éxito!',
+                text: 'El diagrama se ha aprobado correctamente.',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+              }).then(async () => {
+                await fetchData(); // Asegúrate de que la verificación ocurra después de aprobar
+              });
         } catch (error) {
             console.error('Error updating data:', error);
             alert('Hubo un error al actualizar la información');
@@ -122,6 +114,15 @@ const Diagrama = () => {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
                 estado: 'Rechazado',
                 notaRechazo 
+            });
+
+            Swal.fire({
+                title: 'Éxito!',
+                text: 'El diagrama se ha rechazado correctamente.',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            }).then(() => {
+                fetchData();
             });
         } catch (error) {
             console.error('Error updating data:', error);
@@ -569,7 +570,7 @@ const Diagrama = () => {
                             </td>
                             <td>
                             <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-                            {aprobado && (
+                            {(ishikawa.estado === 'Aprobado') && (
                                 <div className="button-foto" onClick={(e) => {
                                 e.preventDefault();
                                 handleOpenModal(fieldKey);
@@ -598,7 +599,7 @@ const Diagrama = () => {
                             )}
                             </td>
                             <td className='cancel-acc'>
-                            {aprobado && index > 0 && (
+                            {(ishikawa.estado === 'Aprobado') && index > 0 && (
                                 <button 
                                 className='eliminar-ev'
                                 onClick={(e) => {
@@ -645,7 +646,7 @@ const Diagrama = () => {
                     )}
 
                     {/* Botón "Guardar Cambios" */}
-                    {aprobado && selectedIndex !== null && (
+                    {(ishikawa.estado === 'Aprobado') && selectedIndex !== null && (
                             <button className='button-agregar'
                             onClick={(e) => {e.preventDefault(); handleGuardarCambios2(selectedIndex);}}>
                                 Guardar Cambios
