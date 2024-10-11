@@ -16,7 +16,7 @@ const PendingAuditsCalendar = () => {
       try {
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
         console.log('Respuesta de la API:', response.data); // Log the response to check the data
-        const pendingAudits = response.data.filter(audit => audit.Estado === ('pendiente' || 'Terminada');
+        const pendingAudits = response.data.filter(audit => audit.Estado === ('pendiente' || 'Terminada'));
         const sortedAudits = pendingAudits.sort((a, b) => new Date(b.FechaInicio) - new Date(a.FechaInicio));
         console.log('Auditorías pendientes ordenadas:', sortedAudits); // Log the sorted data
         setAudits(sortedAudits);
