@@ -34,6 +34,13 @@ const UsuariosRegistro = () => {
   const [filtroAprobado, setFiltroAprobado] = useState('');
   const [filtroEscolaridad, setFiltroEscolaridad] = useState('');
 
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordFormData, setPasswordFormData] = useState({
+    password: '',
+    confirmPassword: ''
+  });
+  const [passwordError, setPasswordError] = useState('');
+
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -66,6 +73,46 @@ const UsuariosRegistro = () => {
     }
 
     return yearsInCompany;
+  };
+
+  const handlePasswordChange = async (userId) => {
+    setUsuarioAEditar(users.find(user => user._id === userId));
+    setShowPasswordModal(true);
+  };
+
+  const handlePasswordFormChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordFormData(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+
+    if (passwordFormData.password !== passwordFormData.confirmPassword) {
+      setPasswordError('Las contraseñas no coinciden');
+      return;
+    }
+
+    if (passwordFormData.password.length < 8) {
+      setPasswordError('La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+
+    try {
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/usuarios/cambiarPassword/${usuarioAEditar._id}`, {
+        password: passwordFormData.password
+      });
+      setShowPasswordModal(false);
+      setPasswordFormData({ password: '', confirmPassword: '' });
+      alert('Contraseña actualizada exitosamente');
+    } catch (error) {
+      console.error('Error al cambiar la contraseña:', error);
+      setPasswordError('Error al cambiar la contraseña');
+    }
   };
 
   const handleEditClick = (usuario) => {
@@ -276,6 +323,8 @@ const UsuariosRegistro = () => {
               onDegradarClick={handleDegradarClick}
               onPromocionarClick={handlePromocionarClick}
               onAgregarCalificaciones={() => handleAgregarCalificaciones(user)}
+              onPasswordChange={handlePasswordChange} // Añade esta línea
+
             />
           ))}
         </div>
@@ -289,6 +338,7 @@ const UsuariosRegistro = () => {
           onSubmit={handleGuardarCalificaciones}
           usuario={usuarioAEditar}
         />
+
         {showEditModal && (
           <div className="modal">
             <div className="modal-content edit-modal-content" style={{ overflowY: 'scroll' }}>
@@ -424,12 +474,42 @@ const UsuariosRegistro = () => {
             </div>
           </div>
         )}
+         {showPasswordModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <span className="close" onClick={() => setShowPasswordModal(false)}>&times;</span>
+            <form onSubmit={handlePasswordSubmit} className="edit-form">
+              <h2>Cambiar Contraseña</h2>
+              <div className="form-group">
+                <label>Nueva Contraseña:</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={passwordFormData.password}
+                  onChange={handlePasswordFormChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Confirmar Contraseña:</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={passwordFormData.confirmPassword}
+                  onChange={handlePasswordFormChange}
+                />
+              </div>
+              {passwordError && <p className="error">{passwordError}</p>}
+              <button type="submit" className="btn-guardar">Cambiar Contraseña</button>
+            </form>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );
 };
 
-const UserCard = ({ user, formatDate, calculateYearsInCompany, onEditClick, onDeleteClick, onDegradarClick, onPromocionarClick, onAgregarCalificaciones }) => {
+const UserCard = ({ user, formatDate, calculateYearsInCompany, onEditClick, onDeleteClick, onDegradarClick, onPromocionarClick, onAgregarCalificaciones, onPasswordChange }) => {
   const [showCalificaciones, setShowCalificaciones] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -465,6 +545,7 @@ const UserCard = ({ user, formatDate, calculateYearsInCompany, onEditClick, onDe
           <button onClick={() => onEditClick(user)}>Editar</button>
           <button onClick={() => onDeleteClick(user._id)}>Eliminar</button>
           <button onClick={onAgregarCalificaciones}>Agregar Calificaciones</button>
+          <button onClick={() => onPasswordChange(user._id)}>Cambiar Contraseña</button>
 
           {(user.TipoUsuario === 'empleado') && (
             <>
@@ -512,7 +593,5 @@ const UserCard = ({ user, formatDate, calculateYearsInCompany, onEditClick, onDe
     </div>
   );
 };
-
-
 
 export default UsuariosRegistro;

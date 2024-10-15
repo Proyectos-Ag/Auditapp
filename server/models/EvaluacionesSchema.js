@@ -3,40 +3,40 @@ const mongoose = require("mongoose");
 const EvaluacionesSchema = new mongoose.Schema({
   auditorId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Usuarios",
-    required: true
+    ref: "Usuarios"
   },
   cursos: [
     {
-      nombreCurso: { type: String, required: true },
-      calificacion: { type: Number, required: true },
-      aprobado: { type: Boolean, required: true }
+      nombreCurso: { type: String},
+      calificacion: { type: Number},
+      aprobado: { type: Boolean}
     }
   ],
   conocimientosHabilidades: [
     {
-      conocimiento: { type: String, required: true },
-      puntuacion: { type: Number, required: true, min: 0, max: 5 }
+      conocimiento: { type: String},
+      puntuacion: { type: Number, min: 0, max: 5 }
     }
   ],
   atributosCualidadesPersonales: [
     {
-      atributo: { type: String, required: true },
-      puntuacion: { type: Number, required: true, min: 0, max: 5 }
+      atributo: { type: String},
+      puntuacion: { type: Number, min: 0, max: 5 }
     }
   ],
   experiencia: {
-    tiempoLaborando: { type: String, required: true },
-    equipoInocuidad: { type: Boolean, required: true },
-    auditoriasInternas: { type: String, required: true }
+    tiempoLaborando: { type: String},
+    equipoInocuidad: { type: Boolean},
+    auditoriasInternas: { type: String}
   },
   formacionProfesional: {
-    nivelEstudios: { type: String, required: true },
-    especialidad: { type: String, required: true },
-    puntuacion: { type: Number, required: true },
+    nivelEstudios: { type: String},
+    especialidad: { type: String},
+    puntuacion: { type: Number},
     comentarios: { type: String }
   },
-  porcentajeTotal: { type: Number, default: 0 }
+  porcentajeTotal: { type: Number, default: 0 },
+  estado: { type: String}
 });
 
 module.exports = mongoose.model("Evaluaciones", EvaluacionesSchema);

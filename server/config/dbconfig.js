@@ -21,7 +21,6 @@ mongoose.connection.on('connected', async () => {
         Departamento: 'Calidad',
         Escolaridad: 'Ingenieria en Alimentos',
         TipoUsuario: 'Administrador'
-        // Agrega aquí cualquier otro campo que necesites
       });
 
       await rootUser.save();
@@ -34,7 +33,7 @@ mongoose.connection.on('connected', async () => {
   }
 });
 
-mongoose.connect(MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(MONGODB_URL)
   .catch(err => console.error('Error al conectar a MongoDB:', err));
 
 module.exports = mongoose;

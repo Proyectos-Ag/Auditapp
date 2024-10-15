@@ -5,12 +5,14 @@ import { UserContext } from '../../App';
 import './css/Login.css';
 import logo from '../../assets/img/logoAguida.png';
 import Swal from 'sweetalert2';
+import DatosV from './DatosV';
 
 const Login = () => {
   const [formData, setFormData] = useState({ Correo: '', Contraseña: '', Nombre: '' });
   const [isRegister, setIsRegister] = useState(false);
   const { setUserData } = useContext(UserContext);
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -73,6 +75,21 @@ const Login = () => {
     }
   };
 
+  const handleOpenModal = () => {
+    setShowModal(true); // Mostrar modal
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false); // Ocultar modal
+  };
+
+  const handleOverlayClick = (e) => {
+    // Si el clic es en el overlay (no dentro del contenido), cerramos el modal
+    if (e.target.classList.contains('modal-overlay')) {
+      handleCloseModal();
+    }
+  };
+
   return (
     <div className='login-container-all'>
       <div className="login-container">
@@ -129,6 +146,28 @@ const Login = () => {
             {isRegister ? 'Iniciar sesión' : '¿No tienes una cuenta?; Registrar'}
           </button>
         </form>
+
+        {/* Texto que abre el modal */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <span 
+            style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }} 
+            onClick={handleOpenModal}
+          >
+            <br />
+            v1.1(Beta)
+          </span>
+        </div>
+
+        {/* Modal */}
+        {showModal && (
+          <div className="modal-overlay" onClick={handleOverlayClick}>
+            <div onClick={(e) => e.stopPropagation()}>
+              {/* El clic dentro del modal no lo cierra */}
+              <DatosV />
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

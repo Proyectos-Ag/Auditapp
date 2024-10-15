@@ -5,7 +5,8 @@ const mongoose = require('mongoose');
 
 // Ruta para crear una nueva evaluación
 router.post('/', async (req, res) => {
-  const { auditorId, cursos, conocimientosHabilidades, atributosCualidadesPersonales, experiencia, formacionProfesional, porcentajeTotal } = req.body;
+  console.log(req.body)
+  const { auditorId, cursos, conocimientosHabilidades, atributosCualidadesPersonales, experiencia, formacionProfesional, porcentajeTotal, estado } = req.body;
 
   // Validaciones generales
   if (!auditorId || !Array.isArray(cursos) || !Array.isArray(conocimientosHabilidades) || !Array.isArray(atributosCualidadesPersonales) || !experiencia || !formacionProfesional) {
@@ -18,25 +19,31 @@ router.post('/', async (req, res) => {
   }
 
   // Validación de cursos
-  cursos.forEach(curso => {
+  for (const curso of cursos) {
     if (typeof curso.nombreCurso !== 'string' || typeof curso.calificacion !== 'number' || typeof curso.aprobado !== 'boolean') {
       return res.status(400).json({ message: 'Datos de curso inválidos' });
     }
-  });
+  }
 
   // Validación de conocimientos y habilidades
-  conocimientosHabilidades.forEach(conocimiento => {
-    if (typeof conocimiento.conocimiento !== 'string' || typeof conocimiento.puntuacion !== 'number' || conocimiento.puntuacion < 0 || conocimiento.puntuacion > 5) {
+  for (const conocimiento of conocimientosHabilidades) {
+    if (
+      typeof conocimiento.conocimiento !== 'string' ||
+      (conocimiento.puntuacion !== '' && (typeof conocimiento.puntuacion !== 'number' || conocimiento.puntuacion < 0 || conocimiento.puntuacion > 5))
+    ) {
       return res.status(400).json({ message: 'Datos de conocimientos inválidos' });
     }
-  });
+  }  
 
   // Validación de atributos y cualidades personales
-  atributosCualidadesPersonales.forEach(atributo => {
-    if (typeof atributo.atributo !== 'string' || typeof atributo.puntuacion !== 'number' || atributo.puntuacion < 0 || atributo.puntuacion > 5) {
+  for (const atributo of atributosCualidadesPersonales) {
+    if (
+      typeof atributo.atributo !== 'string' ||
+      (atributo.puntuacion !== '' && (typeof atributo.puntuacion !== 'number' || atributo.puntuacion < 0 || atributo.puntuacion > 5))
+    ) {
       return res.status(400).json({ message: 'Datos de atributos inválidos' });
     }
-  });
+  }  
 
   // Validación de experiencia
   const { tiempoLaborando, equipoInocuidad, auditoriasInternas } = experiencia;
@@ -65,9 +72,10 @@ router.post('/', async (req, res) => {
       cursos,
       conocimientosHabilidades,
       atributosCualidadesPersonales,
-      experiencia, // Se agrega el campo experiencia
-      formacionProfesional, // Se agrega el campo formación profesional
-      porcentajeTotal // Se recibe el porcentaje total calculado en el frontend
+      experiencia,
+      formacionProfesional,
+      porcentajeTotal,
+      estado
     });
 
     const evaluacionGuardada = await nuevaEvaluacion.save();
@@ -77,6 +85,47 @@ router.post('/', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { cursos, conocimientosHabilidades, atributosCualidadesPersonales, experiencia, formacionProfesional, porcentajeTotal } = req.body;
+
+  // Validaciones generales
+  if (!Array.isArray(cursos) || !Array.isArray(conocimientosHabilidades) || !Array.isArray(atributosCualidadesPersonales) || !experiencia || !formacionProfesional) {
+    return res.status(400).json({ message: 'Datos inválidos' });
+  }
+
+  // Validación de ID de evaluación
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'ID de evaluación inválido' });
+  }
+
+  try {
+    // Actualizar la evaluación en la base de datos
+    const evaluacionActualizada = await Evaluacion.findByIdAndUpdate(
+      id,
+      {
+        cursos,
+        conocimientosHabilidades,
+        atributosCualidadesPersonales,
+        experiencia,
+        formacionProfesional,
+        porcentajeTotal
+      },
+      { new: true } // Devuelve el documento actualizado
+    );
+
+    if (!evaluacionActualizada) {
+      return res.status(404).json({ message: 'Evaluación no encontrada' });
+    }
+
+    res.status(200).json(evaluacionActualizada);
+  } catch (error) {
+    console.error('Error al actualizar la evaluación:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get('/:auditorId', async (req, res) => {
   const { auditorId } = req.params;
 
@@ -98,5 +147,22 @@ router.get('/:auditorId', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+// Ruta para obtener una evaluación con estado 'Incompleta' por auditor
+
+
+router.get('/:auditorId/estado/incompleta', async (req, res) => {
+  try {
+    const { auditorId } = req.params;
+    const evaluacion = await Evaluacion.findOne({ auditorId, estado: 'Incompleta' });
+    if (!evaluacion) {
+      return res.status(404).json({ message: 'No se encontró una evaluación incompleta.' });
+    }
+    res.json(evaluacion);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al buscar la evaluación incompleta.', error });
+  }
+});
+
 
 module.exports = router;

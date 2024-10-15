@@ -151,7 +151,7 @@
 .cancel-acc {
     border: none; 
     padding: 0; 
-  }
+}
   
   .cancel-acc button {
     padding: 9px;
@@ -276,4 +276,3 @@
 .button-cam button:hover{
     background-color: #007548;
 }
-

@@ -5,12 +5,14 @@ import { UserContext } from '../../App';
 import './css/Login.css';
 import logo from '../../assets/img/logoAguida.png'
 import Swal from 'sweetalert2';
+import DatosV from './DatosV';
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({ Correo: '', Contraseña: '' });
   const [error] = useState('');
   const { setUserData } = useContext(UserContext);
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false); // Estado para controlar el modal
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,6 +38,21 @@ const LoginForm = () => {
         title: 'Error',
         text: 'Credenciales inválidas. Por favor, intenta de nuevo.',
       });
+    }
+  };
+
+  const handleOpenModal = () => {
+    setShowModal(true); // Mostrar modal
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false); // Ocultar modal
+  };
+
+  const handleOverlayClick = (e) => {
+    // Si el clic es en el overlay (no dentro del contenido), cerramos el modal
+    if (e.target.classList.contains('modal-overlay')) {
+      handleCloseModal();
     }
   };
 
@@ -74,6 +91,26 @@ const LoginForm = () => {
         </div>
         <button type="submit" className="btn-login">Iniciar Sesión</button>
       </form>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <span 
+            style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }} 
+            onClick={handleOpenModal}
+          >
+            <br />
+            v1.1(Beta)
+          </span>
+      </div>
+      {/* Modal */}
+      {showModal && (
+          <div className="modal-overlay" onClick={handleOverlayClick}>
+            <div onClick={(e) => e.stopPropagation()}>
+              {/* El clic dentro del modal no lo cierra */}
+              <DatosV />
+            </div>
+          </div>
+      )}
+
     </div>
     </div>
   );

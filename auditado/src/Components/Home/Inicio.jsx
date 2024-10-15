@@ -2,11 +2,15 @@ import React, { useContext, useEffect, useRef } from "react";
 import './css/Inicio.css';
 import videoFile from '../../assets/img/UpscaleVideo_1_20240628.mp4';
 import Navigation from "../Navigation/navbar";
+import pez from "../../assets/img/Ishikawa-mini.png";
+import usuario from "../../assets/img/usuario.png";
 import { UserContext } from '../../App';
+import { useNavigate } from "react-router-dom";
 
 const Inicio = () => {
   const { userData, setUserData } = useContext(UserContext);
   const videoRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedUserData = localStorage.getItem('userData');
@@ -21,15 +25,16 @@ const Inicio = () => {
     }
   }, []);
 
-  return (
+  return(
+    <div>
     <div className="inicio-container" style={{ position: 'relative' }}>
       <video 
+      className="video"
         ref={videoRef} 
         src={videoFile} 
         autoPlay 
         loop 
         muted 
-        style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0, zIndex: -1 }}
       />
       <div style={{ position: 'absolute', top: 0, left: 0, width: '4rem',
          borderRadius:'10px', backgroundColor:'#000000' }}>
@@ -39,14 +44,35 @@ const Inicio = () => {
         <h1>Bienvenido</h1>
         {userData && (
           <div className="user-info">
-            <br />
-            <br />
-            <br />
-            <br />
             <p className="user-name">{userData.Nombre}</p>
           </div>
         )}
       </div>
+    </div>
+
+    <div className="fondo-home">
+      
+    <div className="conten-funcion">
+    <h1>Auditorías</h1>
+    <div className="contenedor-home">
+      <div className="card-home" onClick={() => navigate("/vistarep")}>
+        Ishikawas Asignados
+        <br/><br/>
+        <img src={pez} alt="pez" className='imagen-mini' />
+      </div>
+      <div className="card-home" >
+       Auditorias Terminadas
+      </div>
+      <div className="card-home" onClick={() => navigate("/informacion")}>
+        Usuario
+        <br />
+        <br />
+        <img src={usuario} alt="usuario" className='imagen-mini' />
+      </div>
+    </div>
+    </div>
+
+    </div>
     </div>
   );
 };

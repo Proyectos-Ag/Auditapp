@@ -139,13 +139,13 @@ th.conformity-header-repo {
     text-align: center;
 }
 
-table {
+.espacio-repo table {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 20px;
 }
 
-table, th, td {
+.espacio-repo table,.espacio-repo th,.espacio-repo td {
     border: 1px solid #ddd;
 }
 

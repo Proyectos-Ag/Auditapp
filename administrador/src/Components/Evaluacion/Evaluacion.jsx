@@ -291,39 +291,107 @@ const Evaluaciones = () => {
     });
   };
 
-  const guardarEvaluacion = async () => {
+  const SelectedAuditor = async (auditorId) => {
+    try {
+      // Actualiza el auditor seleccionado
+      setSelectedAuditor(auditorId);
+      
+      // Verifica si existe un registro "Incompleta"
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/${auditorId}/estado/incompleta`);
+      const evaluacionExistente = response.data;
+  
+      if (evaluacionExistente) {
+        console.log('Registro con estado "Incompleta" encontrado:', evaluacionExistente);
+        
+        // Actualiza el estado local de la evaluación con los datos existentes
+        setEvaluacion({
+          cursos: evaluacionExistente.cursos || {},
+          conocimientos: evaluacionExistente.conocimientosHabilidades || {},
+          atributos: evaluacionExistente.atributosCualidadesPersonales || {},
+          experiencia: evaluacionExistente.experiencia || {},
+          formacionProfesional: evaluacionExistente.formacionProfesional || {},
+        });
+  
+        // Cargar otros detalles, si es necesario
+      } else {
+        console.log('No hay registro con estado "Incompleta".');
+        limpiarCampos(); // Si no existe, limpia los campos para una nueva evaluación
+      }
+    } catch (error) {
+      console.error('Error al verificar el estado de la evaluación:', error);
+    }
+  };  
+
+  const guardarEvaluacionConEstado = async (estado) => {
     try {
       const cursosArray = Object.entries(evaluacion.cursos).map(([nombreCurso, datos]) => ({
         nombreCurso,
-        calificacion: Number(datos.calificacion),
-        aprobado: datos.aprobado
+        calificacion: Number(datos.calificacion) || null, // Enviar vacío si no hay calificación
+        aprobado: datos.aprobado !== undefined ? datos.aprobado : null, // Enviar vacío si no hay aprobado
       }));
-
+  
       const conocimientosHabilidadesArray = Object.entries(evaluacion.conocimientos).map(([conocimiento, puntuacion]) => ({
         conocimiento,
-        puntuacion
+        puntuacion: puntuacion !== undefined ? puntuacion : null, // Enviar vacío si no hay puntuación
       }));
-
+  
       const atributosArray = Object.entries(evaluacion.atributos).map(([atributo, puntuacion]) => ({
         atributo,
-        puntuacion
+        puntuacion: puntuacion !== undefined ? puntuacion : null, // Enviar vacío si no hay puntuación
       }));
-
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/evaluacion`, {
-        auditorId: selectedAuditor,
-        cursos: cursosArray,
-        conocimientosHabilidades: conocimientosHabilidadesArray,
-        atributosCualidadesPersonales: atributosArray,
-        experiencia: evaluacion.experiencia,
-        formacionProfesional,
-        porcentajeTotal: resultadoFinal
-      });
-      alert('Evaluación guardada con éxito');
+  
+      let evaluacionExistente = null;
+      try {
+        // Consulta para verificar si el registro ya existe
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/${selectedAuditor}`);
+        evaluacionExistente = response.data;
+        console.log('Evaluación existente:', evaluacionExistente);
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          console.log('Registro no encontrado, se creará uno nuevo.');
+        } else {
+          console.error('Error al verificar la existencia de la evaluación:', error);
+          throw error; // Si hay otro error, termina la ejecución aquí
+        }
+      }
+  
+      // Si existe, realiza una actualización; si no, crea el registro
+      if (evaluacionExistente) {
+        // Actualizar registro existente con PUT
+        console.log('Actualizando evaluación...');
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/${selectedAuditor}`, {
+          auditorId: selectedAuditor,
+          cursos: cursosArray,
+          conocimientosHabilidades: conocimientosHabilidadesArray,
+          atributosCualidadesPersonales: atributosArray,
+          experiencia: evaluacion.experiencia !== undefined ? evaluacion.experiencia : null, // Enviar vacío si no hay experiencia
+          formacionProfesional: formacionProfesional !== undefined ? formacionProfesional : null, // Enviar vacío si no hay formación
+          porcentajeTotal: resultadoFinal !== undefined ? resultadoFinal : null, // Enviar vacío si no hay porcentaje
+          estado,
+        });
+        alert(`Evaluación actualizada como ${estado}`);
+      } else {
+        // Crear un nuevo registro con POST
+        console.log('Creando nueva evaluación...');
+        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/evaluacion`, {
+          auditorId: selectedAuditor,
+          cursos: cursosArray,
+          conocimientosHabilidades: conocimientosHabilidadesArray,
+          atributosCualidadesPersonales: atributosArray,
+          experiencia: evaluacion.experiencia !== undefined ? evaluacion.experiencia : null, // Enviar vacío si no hay experiencia
+          formacionProfesional: formacionProfesional !== undefined ? formacionProfesional : null, // Enviar vacío si no hay formación
+          porcentajeTotal: resultadoFinal !== undefined ? resultadoFinal : null, // Enviar vacío si no hay porcentaje
+          estado,
+        });
+        alert(`Evaluación guardada como ${estado}`);
+      }
+  
       limpiarCampos();
     } catch (error) {
-      console.error('Error al guardar la evaluación:', error);
+      console.error('Error al guardar o actualizar la evaluación:', error);
     }
   };
+     
 
   return (
   <div>
@@ -339,7 +407,7 @@ const Evaluaciones = () => {
       <p><strong>Fecha:</strong> {new Date().toLocaleDateString()}</p>
       <p><strong>Fecha de Ingreso:</strong> {auditorDetails ? formatearFecha(auditorDetails.FechaIngreso) : 'N/A'}</p>
       <p>La siguiente evaluación deberá ser llenada por el Gerente de Gestión para la Calidad y será aplicada a partir de la ejecución de la primera auditoría con la finalidad de conocer el rango del auditor interno.</p>
-      <select onChange={(e) => setSelectedAuditor(e.target.value)} value={selectedAuditor}>
+      <select onChange={(e) => SelectedAuditor(e.target.value)} value={selectedAuditor}>
         <option value="">Selecciona un auditor</option>
         {auditores.map(auditor => (
           <option key={auditor._id} value={auditor._id}>{auditor.Nombre}</option>
@@ -597,7 +665,8 @@ const Evaluaciones = () => {
 
           <h2>Resultado Final: {resultadoFinal.toFixed(2)}%</h2>
 
-          <button onClick={guardarEvaluacion}>Guardar Evaluación</button>
+          <button onClick={() => guardarEvaluacionConEstado('Incompleta')}>Guardar Cambios</button>
+          <button onClick={() => guardarEvaluacionConEstado('Completa')}>Guardar Evaluación</button>
           <button onClick={limpiarCampos}>Limpiar Campos</button>
         </>
       )}

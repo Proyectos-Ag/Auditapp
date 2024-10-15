@@ -6,6 +6,7 @@ import './css/login.css';
 import logo from '../assets/img/logoAguida.png';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import DatosV from './DatosV';
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({ Correo: '', Contraseña: '' });
@@ -13,6 +14,7 @@ const LoginForm = () => {
   const { setUserData } = useContext(UserContext);
   const navigate = useNavigate();
   const MySwal = withReactContent(Swal);
+  const [showModal, setShowModal] = useState(false); // Estado para controlar el modal
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,22 +31,19 @@ const LoginForm = () => {
       }
     });
   };
-  
-  // Función para ocultar el modal de carga
+
   const ocultarCargando = () => {
     Swal.close();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    // Mostrar modal de carga
     mostrarCargando();
-  
+
     try {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, formData);
       const { token, usuario } = response.data;
-  
+
       if (usuario.TipoUsuario !== 'Administrador') {
         Swal.fire({
           icon: 'error',
@@ -53,12 +52,9 @@ const LoginForm = () => {
         });
         return;
       }
-  
-      // Guardar el token y los datos del usuario en el almacenamiento local
+
       localStorage.setItem('token', token);
       setUserData(usuario);
-  
-      // Redireccionar al usuario a la página de inicio
       navigate('/home');
     } catch (error) {
       console.error(error);
@@ -68,48 +64,84 @@ const LoginForm = () => {
         text: 'Credenciales inválidas. Por favor, intenta de nuevo.',
       });
     } finally {
-      // Ocultar modal de carga después de completar la solicitud
       ocultarCargando();
+    }
+  };
+
+  const handleOpenModal = () => {
+    setShowModal(true); // Mostrar modal
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false); // Ocultar modal
+  };
+
+  const handleOverlayClick = (e) => {
+    // Si el clic es en el overlay (no dentro del contenido), cerramos el modal
+    if (e.target.classList.contains('modal-overlay')) {
+      handleCloseModal();
     }
   };
 
   return (
     <div className='login-container-all'>
-    <div className="login-container">
-      <div className="form-group">
-        <div className='espacio'>
-       <img src={logo} alt="Logo Empresa" className="logo-empresa-login" />
-       <div className='tipo-usuario'>Administradores</div>
-       </div>
-      
-       </div>
-      {error && <p className="error-message">{error}</p>}
-      <form className="login-form" onSubmit={handleSubmit}>
+      <div className="login-container">
         <div className="form-group">
-          <label htmlFor="Correo"></label>
-          <input
-            type="email"
-            name="Correo"
-            value={formData.Correo}
-            onChange={handleChange}
-            placeholder="Correo electrónico"
-            required
-          />
+          <div className='espacio'>
+            <img src={logo} alt="Logo Empresa" className="logo-empresa-login" />
+            <div className='tipo-usuario'>Administradores</div>
+          </div>
         </div>
-        <div className="form-group">
-          <label htmlFor="Contraseña"></label>
-          <input
-            type="password"
-            name="Contraseña"
-            value={formData.Contraseña}
-            onChange={handleChange}
-            placeholder="Contraseña"
-            required
-          />
+
+        {error && <p className="error-message">{error}</p>}
+
+        <form className="login-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="Correo"></label>
+            <input
+              type="email"
+              name="Correo"
+              value={formData.Correo}
+              onChange={handleChange}
+              placeholder="Correo electrónico"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="Contraseña"></label>
+            <input
+              type="password"
+              name="Contraseña"
+              value={formData.Contraseña}
+              onChange={handleChange}
+              placeholder="Contraseña"
+              required
+            />
+          </div>
+          <button type="submit" className="btn-login">Iniciar Sesión</button>
+        </form>
+
+        {/* Texto que abre el modal */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <span 
+            style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }} 
+            onClick={handleOpenModal}
+          >
+            <br />
+            v1.1(Beta)
+          </span>
         </div>
-        <button type="submit" className="btn-login">Iniciar Sesión</button>
-      </form>
-    </div>
+
+        {/* Modal */}
+        {showModal && (
+          <div className="modal-overlay" onClick={handleOverlayClick}>
+            <div onClick={(e) => e.stopPropagation()}>
+              {/* El clic dentro del modal no lo cierra */}
+              <DatosV />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
