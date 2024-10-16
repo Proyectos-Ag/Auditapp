@@ -37,9 +37,24 @@
     max-width: 80rem;
     padding: 20px;
     background-color: #ffffff;
-    border-radius: 0px 0px 8px 8px;
+    border-radius: 0px 0px 0px 0px;
     position: relative; 
     z-index: 1;
+}
+
+.image-container3-dia {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: -1rem auto 1rem -0.8rem;
+    width: 79em;
+    height: 100%;
+    max-width: 80rem;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 0px 0px 8px 8px;
+    position: relative; 
+    z-index: 2;
 }
 
 .duracion-bloque-repo-dia h2 {

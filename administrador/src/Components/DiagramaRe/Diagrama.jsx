@@ -7,6 +7,8 @@ import Ishikawa from '../../assets/img/Ishikawa-transformed.png';
 import Swal from 'sweetalert2';
 import { useParams } from 'react-router-dom';
 import Fotos from '../IshikawaRev/Foto'; 
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const Diagrama = () => {
     const {_id} = useParams();
@@ -364,7 +366,140 @@ const Diagrama = () => {
     
         return new Blob([u8arr], { type: mime }); // Devuelve un Blob con el tipo MIME adecuado
     } 
+    
 
+    const handlePrintPDF = () => {
+        const showLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        };
+    
+        const hideLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'none';
+        };
+    
+        showLoading();
+    
+        const part1 = document.getElementById('pdf-content-part1');
+        const part2 = document.getElementById('pdf-content-part2');
+        const part3 = document.getElementById('pdf-content-part3');
+    
+        const convertTextAreasToDivs = (element) => {
+            const textareas = element.querySelectorAll('textarea');
+            textareas.forEach((textarea) => {
+                const div = document.createElement('div');
+                div.innerHTML = textarea.value.replace(/\n/g, '<br>');
+                div.className = textarea.className;
+                div.style.cssText = textarea.style.cssText;
+                textarea.parentNode.replaceChild(div, textarea);
+            });
+        };
+    
+        const ensureImagesLoaded = (element) => {
+            const images = element.querySelectorAll('img');
+            const promises = Array.from(images).map((img) => {
+                return new Promise((resolve) => {
+                    if (img.complete) {
+                        resolve();
+                    } else {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    }
+                });
+            });
+            return Promise.all(promises);
+        };
+    
+        const processRowAndImages = async (row, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            // Captura cada fila, incluyendo imágenes en celdas
+            const rowCanvas = await html2canvas(row, { scale: 2.5, useCORS: true });
+            const rowHeight = (rowCanvas.height * (pageWidth - marginLeft - marginRight)) / rowCanvas.width;
+    
+            if (yOffset + rowHeight + bottomMargin > pageHeight) {
+                pdf.addPage(); // Agregar nueva página si la fila no cabe
+                yOffset = 0.5; // Reiniciar el offset en la nueva página
+            }
+    
+            const rowImgData = rowCanvas.toDataURL('image/jpeg', 0.8); // Convertir a datos base64
+            pdf.addImage(rowImgData, 'JPEG', marginLeft, yOffset, pageWidth - marginLeft - marginRight, rowHeight);
+            yOffset += rowHeight;
+    
+            return yOffset;
+        };
+    
+        const processTableWithRowControl = async (tableElement, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            const rows = tableElement.querySelectorAll('tr');
+    
+            for (const row of rows) {
+                // Procesar cada fila y sus imágenes
+                yOffset = await processRowAndImages(row, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+            }
+    
+            return yOffset;
+        };
+    
+        const processPart3WithTableRows = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            convertTextAreasToDivs(element); // Convertir textareas a divs
+            await ensureImagesLoaded(element); // Asegurar que las imágenes estén completamente cargadas
+    
+            const tables = element.querySelectorAll('table'); // Obtener todas las tablas en part3
+            if (tables.length > 0) {
+                for (const table of tables) {
+                    yOffset = await processTableWithRowControl(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+                }
+            }
+    
+            return yOffset;
+        };
+    
+        const processCanvas = (canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+    
+            const imgWidth = pageWidth - marginLeft - marginRight;
+            const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
+    
+            if (yOffset + imgHeight + bottomMargin > pageHeight) {
+                pdf.addPage();
+                yOffset = 0.5;
+            }
+    
+            const imgData = canvas.toDataURL('image/jpeg', 0.8);
+            pdf.addImage(imgData, 'JPEG', marginLeft, yOffset, imgWidth, imgHeight);
+    
+            return yOffset + imgHeight;
+        };
+    
+        const pdf = new jsPDF('landscape', 'cm', 'letter');
+    
+        let yOffset = 0.5;
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const marginLeft = 0;
+        const marginRight = 0;
+        const marginLeft3 = 2;
+        const marginRight3 = 2;
+        const bottomMargin = 1.0; // Establecer un margen inferior de 1 cm
+    
+        convertTextAreasToDivs(part1); // Convertir textareas a divs
+    
+        html2canvas(part1, { scale: 2.5, useCORS: true }).then((canvas) => {
+            yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+    
+            return html2canvas(part2, { scale: 2.5, useCORS: true });
+        }).then((canvas) => {
+            yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+    
+            // Procesar la parte 3 con tablas y manejo de filas
+            return processPart3WithTableRows(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, bottomMargin);
+        }).then(() => {
+            pdf.save("diagrama_ishikawa.pdf");
+            hideLoading();
+        }).catch((error) => {
+            console.error('Error generating PDF:', error);
+            hideLoading();
+        });
+    }; 
+    
     const handleAgregarFila = () => {
         setCorrecciones([...correcciones, { actividad: '', responsable: '', fechaCompromiso: null, cerrada: '', evidencia: '' }]);
       };
@@ -373,6 +508,13 @@ const Diagrama = () => {
         <div>
             <div style={{ position: 'absolute', top: 0, left: 0 }}>
                 <Navigation />
+            </div>
+            <button className='button-pdf-imp' style={{top:'20px'}} onClick={handlePrintPDF}>Guardar en PDF</button>
+            {/*Mensaje de generacion*/}
+            <div id="loading-overlay" style={{display:'none'}}>
+            <div class="loading-content">
+                Generando archivo PDF...
+            </div>
             </div>
             <div className='content-diagrama'>
                 {ishikawas.map((ishikawa, index) => (
@@ -384,7 +526,7 @@ const Diagrama = () => {
                     </div>
                     {visibleIndex === index && (
                     <div >
-                        <div className="image-container-dia" >
+                        <div id='pdf-content-part1' className="image-container-dia" >
 
                         {showNotaRechazo && (
                                 <div className="nota-rechazo-container">
@@ -467,7 +609,7 @@ const Diagrama = () => {
                         </div>
                         </div>
                          
-                        <div className="image-container2-dia">
+                        <div className="image-container2-dia" id='pdf-content-part2'>
                         <div key={index} >
                             <div className='posicion-bo'>
                                 <h3>No conformidad:</h3>
@@ -483,6 +625,8 @@ const Diagrama = () => {
                                 <div style={{ marginBottom: '20px', width:'72rem', overflowWrap: 'break-word' }}>{ishikawa.causa}</div>
                             </div>
                         </div>
+                        </div>
+                        <div className='image-container3-dia' id='pdf-content-part3'>
                         <div className='table-ish'>
                         <table style={{ border: 'none' }}>
                             <thead>
@@ -579,15 +723,14 @@ const Diagrama = () => {
                                 </div>
                             )}
                             {correccion.evidencia && (
-                                <>
+                                <div>
                                 <img
-                                    src={correccion.evidencia}  // Usa la imagen con el prefijo adecuado
+                                    src={correccion.evidencia}
                                     alt="Evidencia"
-                                    style={{ width: '100%', height: 'auto' }}
-                                    className="hallazgo-imagen"
+                                    style={{ width: '100%', height: '10rem' }}
                                     onClick={() => handleImageClick(correccion.evidencia)}
                                 />
-                                </>
+                                </div>
                             )}
                             {capturedPhotos[fieldKey] && (
                                 <img
