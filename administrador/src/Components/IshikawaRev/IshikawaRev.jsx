@@ -215,32 +215,51 @@ const handlePrintPDF = () => {
         const textareas = element.querySelectorAll('textarea');
         textareas.forEach((textarea) => {
             const div = document.createElement('div');
-            div.innerHTML = textarea.value.replace(/\n/g, '<br>'); // Reemplazar saltos de línea por <br>
+            div.innerHTML = textarea.value.replace(/\n/g, '<br>');
             div.className = textarea.className;
             div.style.cssText = textarea.style.cssText;
             textarea.parentNode.replaceChild(div, textarea);
         });
     };
 
-    // Función que procesa la tabla fila por fila y agrega un margen al final de cada página
+    const ensureImagesLoaded = (element) => {
+        const images = element.querySelectorAll('img');
+        const promises = Array.from(images).map((img) => {
+            return new Promise((resolve) => {
+                if (img.complete) {
+                    resolve();
+                } else {
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                }
+            });
+        });
+        return Promise.all(promises);
+    };
+
+    const processRowAndImages = async (row, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+        // Captura cada fila, incluyendo imágenes en celdas
+        const rowCanvas = await html2canvas(row, { scale: 2.5, useCORS: true });
+        const rowHeight = (rowCanvas.height * (pageWidth - marginLeft - marginRight)) / rowCanvas.width;
+
+        if (yOffset + rowHeight + bottomMargin > pageHeight) {
+            pdf.addPage(); // Agregar nueva página si la fila no cabe
+            yOffset = 0.5; // Reiniciar el offset en la nueva página
+        }
+
+        const rowImgData = rowCanvas.toDataURL('image/jpeg', 0.8); // Convertir a datos base64
+        pdf.addImage(rowImgData, 'JPEG', marginLeft, yOffset, pageWidth - marginLeft - marginRight, rowHeight);
+        yOffset += rowHeight;
+
+        return yOffset;
+    };
+
     const processTableWithRowControl = async (tableElement, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
         const rows = tableElement.querySelectorAll('tr');
 
         for (const row of rows) {
-            // Calcular la altura de la fila actual usando html2canvas
-            const rowCanvas = await html2canvas(row, { scale: 2.5, useCORS: true });
-            const rowHeight = (rowCanvas.height * (pageWidth - marginLeft - marginRight)) / rowCanvas.width;
-
-            // Verificar si la fila completa cabe en la página con el margen inferior considerado
-            if (yOffset + rowHeight + bottomMargin > pageHeight) {
-                pdf.addPage(); // Agregar una nueva página si la fila no cabe
-                yOffset = 0.5; // Reiniciar el offset en la nueva página
-            }
-
-            // Agregar la imagen de la fila al PDF
-            const rowImgData = rowCanvas.toDataURL('image/jpeg', 0.8);
-            pdf.addImage(rowImgData, 'JPEG', marginLeft, yOffset, pageWidth - marginLeft - marginRight, rowHeight);
-            yOffset += rowHeight;
+            // Procesar cada fila y sus imágenes
+            yOffset = await processRowAndImages(row, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
         }
 
         return yOffset;
@@ -248,10 +267,13 @@ const handlePrintPDF = () => {
 
     const processPart3WithTableRows = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
         convertTextAreasToDivs(element); // Convertir textareas a divs
+        await ensureImagesLoaded(element); // Asegurar que las imágenes estén completamente cargadas
 
-        const table = element.querySelector('table'); // Asumimos que el contenido de la parte 3 es una tabla
-        if (table) {
-            yOffset = await processTableWithRowControl(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+        const tables = element.querySelectorAll('table'); // Obtener todas las tablas en part3
+        if (tables.length > 0) {
+            for (const table of tables) {
+                yOffset = await processTableWithRowControl(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+            }
         }
 
         return yOffset;
@@ -264,7 +286,6 @@ const handlePrintPDF = () => {
         const imgWidth = pageWidth - marginLeft - marginRight;
         const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
 
-        // Verificar si la imagen completa cabe con el margen inferior
         if (yOffset + imgHeight + bottomMargin > pageHeight) {
             pdf.addPage();
             yOffset = 0.5;
@@ -287,17 +308,16 @@ const handlePrintPDF = () => {
     const marginRight3 = 2;
     const bottomMargin = 1.0; // Establecer un margen inferior de 1 cm
 
-    // Procesar la parte 1 completa
-    convertTextAreasToDivs(part1); // Asegurarse de convertir los textarea en divs
+    convertTextAreasToDivs(part1); // Convertir textareas a divs
+
     html2canvas(part1, { scale: 2.5, useCORS: true }).then((canvas) => {
         yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
 
-        // Procesar la parte 2 completa sin añadir nueva página
         return html2canvas(part2, { scale: 2.5, useCORS: true });
     }).then((canvas) => {
         yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
 
-        // Procesar la parte 3 fila por fila con margen inferior
+        // Procesar la parte 3 con tablas y manejo de filas
         return processPart3WithTableRows(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, bottomMargin);
     }).then(() => {
         pdf.save("diagrama_ishikawa.pdf");
@@ -306,8 +326,7 @@ const handlePrintPDF = () => {
         console.error('Error generating PDF:', error);
         hideLoading();
     });
-};
-
+}; 
 
 const handleCorreccionChange = (index, field, value) => {
         const nuevasCorrecciones = [...correcciones];

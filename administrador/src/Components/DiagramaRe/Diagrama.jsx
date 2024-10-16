@@ -368,7 +368,7 @@ const Diagrama = () => {
     } 
     
 
-    const handlePrintPDF = () => {
+     const handlePrintPDF = () => {
         const showLoading = () => {
             document.getElementById('loading-overlay').style.display = 'flex';
         };
