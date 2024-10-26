@@ -16,11 +16,11 @@ mongoose.connection.on('connected', async () => {
         Nombre: 'Rubén Cruces Paz',
         FechaIngreso: new Date(),
         Correo: 'rcruces@aguida.com',
-        Contraseña: 'root321', // Asegúrate de encriptar esta contraseña en un entorno de producción
+        Contraseña: 'root321',
         Puesto: 'Global',
         Departamento: 'Calidad',
         Escolaridad: 'Ingenieria en Alimentos',
-        TipoUsuario: 'Administrador'
+        TipoUsuario: 'administrador'
       });
 
       await rootUser.save();

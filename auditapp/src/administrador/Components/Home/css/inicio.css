@@ -1,0 +1,166 @@
+  .inicio-container.fade-in {
+    opacity: 1;
+    transition: opacity 1s ease-in-out;
+  }
+
+  .inicio-container.fade-out {
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+  }
+
+  .inicio-container h1 {
+    margin-top: 5rem; 
+    color: white;
+    font-size: 6em;
+    text-shadow: 
+    -1px -1px 0 #000,  
+    1px -1px 0 #000,   
+    -1px 1px 0 #000,   
+    1px 1px 0 #000;  
+   
+  }
+
+  @media (max-width: 600px) {
+    .inicio-container h1 {
+      font-size: 4em;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .inicio-container h1 {
+      font-size: 3.5em;
+    }
+  }
+
+  .user-name{
+    margin: 0; 
+    color: white;
+    font-size: 3em;
+    text-shadow: 
+    -1px -1px 0 #000,  
+    1px -1px 0 #000,   
+    -1px 1px 0 #000,   
+    1px 1px 0 #000;  
+  }
+
+  /*Nuevos estilos*/
+.contenedor-home {
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: space-around;
+    width: 85vw; 
+    max-width: 90vw; 
+    margin: 0 auto; 
+    padding: 2vh; 
+    border-radius: 1vw; 
+    margin-top: 5vh; 
+    border: 3px solid #ffffff;
+    background-color: #FFFFB4;
+    margin-top: 50vh;
+    margin-bottom: 15vh;
+}
+
+.video{
+  width: 100%;
+  height: 60vh;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+.inicio-container {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.conten-funcion h2{
+  margin-left: 30vw;
+}
+
+.conten-funcion {
+  margin-top: -15em;
+  position: relative;
+}
+
+.conten-funcion h1 {
+  position: absolute;
+  top: -8vh;
+  left: 7vw;
+  margin: 0; 
+  padding: 10px; 
+  color: #ffffff;
+  text-shadow: 
+    -1px -1px 0 #000,  
+    1px -1px 0 #000,   
+    -1px 1px 0 #000,   
+    1px 1px 0 #000;    
+}
+
+.card-home {
+  background-color: #a8d8ff;
+  border: 2px solid #e2e2e2;
+  border-radius: 1.5vw;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: transform 0.3s ease;
+  width: 10em;
+  height: 13em;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+}
+
+.card-home:hover {
+  transform: translateY(-15px);
+}
+
+.imagen-mini{
+  width: 100%;
+  height: auto;
+}
+
+.fondo-home{
+  margin: 6rem auto 0;
+}
+
+.fondo-home button{
+  background-color: #1b70df;
+  color: #ffffff;
+  width: 20em;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.fondo-home button:hover{
+  background-color: #317bdb;
+  cursor: pointer;
+}
+
+.superposicion{
+  z-index: 2;
+}
+
+.user-icon {
+  display: inline-flex;
+  align-items: center; 
+  gap: 8px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
+
+.migas-pan{
+  position: absolute;
+  top: 0;
+}
+
+.botones-rol{
+  display: flex;
+  justify-content: center;
+}

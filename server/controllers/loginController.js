@@ -20,14 +20,14 @@ const iniciarSesion = async (req, res) => {
 
     let tipoUsuario = '';
     switch (usuario.TipoUsuario) {
-      case 'Administrador':
-        tipoUsuario = 'Administrador';
+      case 'administrador':
+        tipoUsuario = 'administrador';
         break;
       case 'auditor':
         tipoUsuario = 'auditor';
         break;
       case 'auditado':
-        tipoUsuario = 'Auditado';
+        tipoUsuario = 'auditado';
         break;
       default:
         tipoUsuario = 'Desconocido';

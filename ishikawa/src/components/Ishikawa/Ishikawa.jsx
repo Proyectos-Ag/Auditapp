@@ -406,7 +406,7 @@ const CreacionIshikawa = () => {
           <option value="">Nuevo...</option>
           {ishikawaRecords.map(record => (
             <option key={record._id} value={record._id}>
-              Corregir: {record.problema}
+             {record.estado === 'Incompleto' ? `Continuar: ${record.problema}` : `Corregir: ${record.problema}`}
             </option>
           ))}
         </select>
