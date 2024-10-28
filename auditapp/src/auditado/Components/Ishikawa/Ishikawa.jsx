@@ -288,7 +288,7 @@ const handleDoubleClick = (e) => {
         estado: 'Asignado'
       };
   
-      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, data);
+      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, data);
       console.log('Datos actualizados:', response.data);
       Swal.fire({
         title: 'Actualizado',
@@ -760,7 +760,8 @@ useEffect(() => {
                       style={{ width:'64rem', color:'#000000'}} placeholder="Agregar Acción. . ." required disabled={revisado} ></textarea>
                     <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
                     <textarea type="text" className="textarea-acc" name='causa' value={formData.causa} onChange={handleDatos}
-                      style={{ width:'64rem', marginBottom:'20px', color:'#000000'}} placeholder="Agregar Causa. . ." required disabled={revisado}></textarea>
+                      style={{ width:'64rem', marginBottom:'20px', color:'#000000'}} 
+                      placeholder="Seleccione la causa desde el diagrama"  onKeyDown={(e) => e.preventDefault()} required ></textarea>
                   </div>
     
                 </div>
@@ -806,7 +807,6 @@ useEffect(() => {
                       (revisado) ? null : (
                       <div>
                        <select
-                          className="custom-select"
                           onChange={(e) => handleSelectChange(e, actividad.fechaCompromiso.length - 1 - actividad.fechaCompromiso.slice().reverse().findIndex(fecha => fecha === e.target.value))}
                           style={{ color: colores[actividad.fechaCompromiso.length - 1]} } // Inicializa con el color del primer elemento invertido
                         >

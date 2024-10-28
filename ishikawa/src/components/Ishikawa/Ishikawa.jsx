@@ -525,16 +525,21 @@ const CreacionIshikawa = () => {
             <div className='posicion-bo' style={{ marginRight: '5rem' }}>
               <h3>No conformidad:</h3>
               <textarea type="text" className="textarea-acc" name='requisito'
-                style={{ width: '72em', textAlign: 'justify' }} placeholder="Agregar Acción. . ." value={formData.requisito} onChange={handleFormDataChange} />
+                style={{ width: '72em', textAlign: 'justify' }} placeholder="Agregar Acción. . ." 
+                value={formData.requisito} onChange={handleFormDataChange} required />
               <h3>Hallazgo:</h3>
               <textarea type="text" className="textarea-acc" name='hallazgo'
-                style={{ width: '72em', color: '#000000' }} placeholder="Agregar Hallazgo. . ." value={formData.hallazgo} onChange={handleFormDataChange} />
+                style={{ width: '72em', color: '#000000' }} placeholder="Agregar Hallazgo. . ." 
+                value={formData.hallazgo} onChange={handleFormDataChange} required />
               <h3>Acción inmediata o corrección:</h3>
               <textarea type="text" className="textarea-acc" name='correccion'
-                style={{ width: '72em', color: '#000000' }} placeholder="Agregar Acción. . ." value={formData.correccion} onChange={handleFormDataChange} />
+                style={{ width: '72em', color: '#000000' }} placeholder="Agregar Acción. . ." 
+                value={formData.correccion} onChange={handleFormDataChange} required />
               <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
               <textarea type="text" className="textarea-acc" name='causa'
-                 style={{ marginBottom: '20px', width:'72em', overflowWrap: 'break-word' }} placeholder="Agregar Causa. . ." value={formData.causa} onChange={handleFormDataChange} />
+                 style={{ marginBottom: '20px', width:'72em', overflowWrap: 'break-word' }} 
+                 placeholder="Seleccione la causa desde el diagrama"  onKeyDown={(e) => e.preventDefault()} 
+                  value={formData.causa} onChange={handleFormDataChange} required />
             </div>
           </div>
 
@@ -607,7 +612,7 @@ const CreacionIshikawa = () => {
           </div>
           <button type='submit'className='button-agregar'  onClick={(e) => {
             e.preventDefault();handleSaveAdvance(); }}>Guardar Cambios</button>
-          <button type='submit'className='button-generar-ish'  onClick={Guardar}>Enviar</button>
+          <button type='submit'className='button-generar-ish'>Enviar</button>
           
         </div>
       </div>

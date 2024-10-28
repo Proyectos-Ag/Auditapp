@@ -620,7 +620,7 @@ const handleSave = async () => {
                 diagrama: diagrama,
                 participantes: '',
                 afectacion: '',
-                actividades: [],
+                actividades: [[]],
                 estado: 'Asignado'
             };
     
