@@ -19,17 +19,34 @@ const Login = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  const mostrarCargando = () => {
+    Swal.fire({
+      title: 'Verificando Credenciales...',
+      text: 'Por favor, espere',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+  };
+
+  const ocultarCargando = () => {
+    Swal.close();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    mostrarCargando();
+
     try {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, formData);
       const { token, usuario } = response.data;
-  
+
       // Guardar el token y los datos del usuario en el almacenamiento local
       localStorage.setItem('token', token);
       setUserData(usuario);
-      console.log(usuario)
-  
+      console.log(usuario);
+
       // Redirigir al usuario según su rol
       if (usuario.TipoUsuario === 'administrador') {
         navigate('/admin');
@@ -51,8 +68,10 @@ const Login = () => {
         title: 'Error',
         text: 'Credenciales inválidas. Por favor, intenta de nuevo.',
       });
+    } finally {
+      ocultarCargando();
     }
-  };  
+  };
 
   const handleOpenModal = () => {
     setShowModal(true); // Mostrar modal
@@ -69,45 +88,44 @@ const Login = () => {
     }
   };
 
-
   return (
     <div className='login-container-all'>
-    <div className="login-container">
-      <div className="form-group">
-        <div className='espacio'>
-       <img src={logo} alt="Logo Empresa" className="logo-empresa-login" />
-       <div className='tipo-usuario'>Auditorías</div>
-       </div>
-       </div>
-      {error && <p className="error-message">{error}</p>}
-      <form className="login-form" onSubmit={handleSubmit}>
+      <div className="login-container">
         <div className="form-group">
-          <label htmlFor="Correo"></label>
-          <input
-            type="email"
-            name="Correo"
-            value={formData.Correo}
-            onChange={handleChange}
-            placeholder="Correo electrónico"
-            required
-          />
+          <div className='espacio'>
+            <img src={logo} alt="Logo Empresa" className="logo-empresa-login" />
+            <div className='tipo-usuario'>Auditorías</div>
+          </div>
         </div>
-        <div className="form-group">
-          <label htmlFor="Contraseña"></label>
-          <input
-            type="password"
-            name="Contraseña"
-            value={formData.Contraseña}
-            onChange={handleChange}
-            placeholder="Contraseña"
-            required
-          />
-        </div>
-        <button type="submit" className="btn-login">Iniciar Sesión</button>
-      </form>
+        {error && <p className="error-message">{error}</p>}
+        <form className="login-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="Correo"></label>
+            <input
+              type="email"
+              name="Correo"
+              value={formData.Correo}
+              onChange={handleChange}
+              placeholder="Correo electrónico"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="Contraseña"></label>
+            <input
+              type="password"
+              name="Contraseña"
+              value={formData.Contraseña}
+              onChange={handleChange}
+              placeholder="Contraseña"
+              required
+            />
+          </div>
+          <button type="submit" className="btn-login">Iniciar Sesión</button>
+        </form>
 
-      {/* Texto que abre el modal */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        {/* Texto que abre el modal */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <span 
             style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }} 
             onClick={handleOpenModal}
@@ -126,7 +144,7 @@ const Login = () => {
             </div>
           </div>
         )}
-    </div>
+      </div>
     </div>
   );
 };
