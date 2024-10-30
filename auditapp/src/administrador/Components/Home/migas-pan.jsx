@@ -1,9 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import './css/inicio.css';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
-import Link from '@mui/material/Link';
-import Typography from '@mui/material/Typography';
+import { emphasize, styled } from '@mui/material/styles';
+import Chip from '@mui/material/Chip';
+import HomeIcon from '@mui/icons-material/Home';
 import { useNavigate, useLocation } from 'react-router-dom';
+
+// Definición de los estilos personalizados para los breadcrumbs
+const StyledBreadcrumb = styled(Chip)(({ theme }) => {
+  const backgroundColor =
+    theme.palette.mode === 'light'
+      ? theme.palette.grey[100]
+      : theme.palette.grey[800];
+  return {
+    backgroundColor,
+    height: theme.spacing(3),
+    color: theme.palette.text.primary,
+    fontWeight: theme.typography.fontWeightRegular,
+    '&:hover, &:focus': {
+      backgroundColor: emphasize(backgroundColor, 0.06),
+    },
+    '&:active': {
+      boxShadow: theme.shadows[1],
+      backgroundColor: emphasize(backgroundColor, 0.12),
+    },
+  };
+});
 
 const MigasPan = () => {
   const navigate = useNavigate();
@@ -11,9 +33,9 @@ const MigasPan = () => {
   const [breadcrumbHistory, setBreadcrumbHistory] = useState([]);
 
   const breadcrumbNameMap = {
-    '/admin': 'Inicio Administrador',
-    '/auditor': 'Inicio Auditor',
-    '/auditado': 'Inicio Auditado',
+    '/admin': 'Administrador',
+    '/auditor': 'Auditor',
+    '/auditado': 'Auditado',
     '/datos': 'Datos',
     '/programa': 'Programas',
     '/usuarios': 'Usuarios',
@@ -45,47 +67,42 @@ const MigasPan = () => {
 
   useEffect(() => {
     const currentPath = location.pathname;
-
     setBreadcrumbHistory((prevHistory) => {
       const pathIndex = prevHistory.indexOf(currentPath);
-
-      // Si la ruta no está en el historial, añadirla
       if (pathIndex === -1) {
         return [...prevHistory, currentPath];
       }
-      // Si la ruta ya existe, recortar el historial hasta la posición de esta ruta
       return prevHistory.slice(0, pathIndex + 1);
     });
   }, [location.pathname]);
 
   const getBreadcrumbLabel = (path, isLast) => {
     const customName = breadcrumbNameMap[path] || decodeURIComponent(path);
-    return isLast ? (
-      <Typography color="text.primary">{customName}</Typography>
-    ) : (
-      <Link
-        underline="hover"
-        color="inherit"
-        onClick={() => navigate(path)}
-        style={{ cursor: 'pointer' }}
-      >
-        {customName}
-      </Link>
+
+    const showHomeIcon = ['/admin', '/auditor', '/auditado'].includes(path);
+
+    return (
+      <StyledBreadcrumb
+        component="a"
+        onClick={() => !isLast && navigate(path)}
+        label={customName}
+        icon={showHomeIcon ? <HomeIcon fontSize="small" /> : null}
+      />
     );
   };
 
   return (
-    <div className='migas-pan'>
-    <Breadcrumbs aria-label="breadcrumb">
-      {breadcrumbHistory.map((path, index) => {
-        const isLast = index === breadcrumbHistory.length - 1;
-        return (
-          <span key={path}>
-            {getBreadcrumbLabel(path, isLast)}
-          </span>
-        );
-      })}
-    </Breadcrumbs>
+    <div className="migas-pan">
+      <Breadcrumbs aria-label="breadcrumb">
+        {breadcrumbHistory.map((path, index) => {
+          const isLast = index === breadcrumbHistory.length - 1;
+          return (
+            <span key={path}>
+              {getBreadcrumbLabel(path, isLast)}
+            </span>
+          );
+        })}
+      </Breadcrumbs>
     </div>
   );
 };

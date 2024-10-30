@@ -11,6 +11,11 @@ import withReactContent from 'sweetalert2-react-content';
 import Fotos from './Foto'; 
 import './css/Modal.css';
 import './css/IshikawaRev.css';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+
 const IshikawaRev = () => {
     const { userData } = useContext(UserContext);
     const [ishikawas, setIshikawas] = useState([]);
@@ -823,7 +828,7 @@ const ocultarCargando = () => {
 
     return (
         <div>
-            <div>
+            <div className='contenedor-ishikawa-vacio'>
 
             {/*Mensaje de generacion*/}
             <div id="loading-overlay" style={{display:'none'}}>
@@ -857,18 +862,28 @@ const ocultarCargando = () => {
                             </div>
                         </> 
                     )}
+
+                    
                     
                     <div className='opciones'>
-                    <select name="estado" id="estado-select" onChange={handleSelectChangeEstado}>
-                        <option value="">Selecciona una opción</option>
-                        <option value="Rechazado">Regresar al Auditado</option>
-                        <option value="Aprobado">Aprobar</option>
-                        <option value="Revisado">Terminar</option>
-                    </select>
+                        <h3>Cambiar estado de ishikawa:</h3>
+                    <FormControl variant='filled' sx={{ m: 1, minWidth: 120 }} size="small">
+                        <InputLabel id="estado-select">Seleccione</InputLabel>
+                        <Select
+                            name="estado"
+                            id="estado-select"
+                            label="Age"
+                            onChange={handleSelectChangeEstado}
+                        >
+                            <MenuItem value={'Rechazado'}>Regresar al Auditado</MenuItem>
+                            <MenuItem value={'Aprobado'}>Marcar como "Aprobado"</MenuItem>
+                            <MenuItem value={'Revisado'}>Marcar como "Revisado"</MenuItem>
+                        </Select>
+                        </FormControl>
 
                     {/* Solo mostramos el botón si se ha seleccionado una opción */}
                     {selectedOption && (
-                        <button onClick={() =>CambiarEstado(ishikawa._id)}>Cambiar Estado</button>
+                        <button onClick={() =>CambiarEstado(ishikawa._id)}>Cambiar</button>
                     )}
                     
                     </div>

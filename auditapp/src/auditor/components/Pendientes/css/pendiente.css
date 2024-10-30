@@ -100,12 +100,12 @@ th, td {
     background-color: #BFFF99;
 }
 
-.th-comentario{
+.th-comentario-auditor{
     background-color: #ffffff !important;
     border-color: #ff0000;
     border-style: dashed;
     margin-bottom: 2%;
-    width: 100%;
+    width: 95%;
 }
 
 .conforme-fuente{

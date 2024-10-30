@@ -113,7 +113,7 @@ const Login = () => {
             onClick={handleOpenModal}
           >
             <br />
-            v1.1(Beta)
+            v2.0(Beta)
           </span>
         </div>
 

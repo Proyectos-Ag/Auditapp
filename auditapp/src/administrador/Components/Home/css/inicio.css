@@ -128,7 +128,7 @@
 }
 
 .fondo-home button{
-  background-color: #1b70df;
+  background-color: #00268f ;
   color: #ffffff;
   width: 20em;
   border: none;
@@ -137,7 +137,7 @@
 }
 
 .fondo-home button:hover{
-  background-color: #317bdb;
+  background-color: #1b70df;
   cursor: pointer;
 }
 
@@ -157,7 +157,7 @@
 
 .migas-pan{
   position: absolute;
-  top: 0;
+  top: 20px;
 }
 
 .botones-rol{

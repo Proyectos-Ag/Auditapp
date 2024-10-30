@@ -420,4 +420,21 @@
     display: flex;
     justify-content: center;
     margin-top: 10px;
+    margin-bottom: -3em;
+  }
+
+  .opciones button{
+    background-color: #114f72;
+    color: #ffffff;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+  }
+
+  .opciones button:hover{
+    background-color: #092e44;
+  }
+
+  .contenedor-ishikawa-vacio{
+    margin-top: 5rem;
   }

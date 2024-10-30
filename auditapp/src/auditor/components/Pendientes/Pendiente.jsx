@@ -412,7 +412,7 @@ setPercentages(initialPercentages);
                                         </button>
                                     </div>
                                     {dato.Comentario && (
-                                        <th className='th-comentario'>
+                                        <th className='th-comentario-auditor'>
                                             <div>{dato.Comentario}</div>
                                         </th>
                                     )}

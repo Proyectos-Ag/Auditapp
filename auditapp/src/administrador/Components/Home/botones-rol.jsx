@@ -26,7 +26,7 @@ const BotonesRol = () => {
     <div className="botones-rol">
       {userData && userData.TipoUsuario === 'administrador' && (
         <ToggleButtonGroup
-          sx={{backgroundColor:'#6babff'}}
+          sx={{backgroundColor:'#1b70df'}}
           value={alignment}
           exclusive
           onChange={handleChange}
@@ -40,7 +40,7 @@ const BotonesRol = () => {
       
       {userData && userData.TipoUsuario === 'auditor' && (
         <ToggleButtonGroup
-          sx={{backgroundColor:'#6babff'}}
+          sx={{backgroundColor:'#1b70df'}}
           value={alignment}
           exclusive
           onChange={handleChange}
