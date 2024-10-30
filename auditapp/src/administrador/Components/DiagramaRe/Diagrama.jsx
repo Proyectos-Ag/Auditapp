@@ -540,8 +540,8 @@ const Diagrama = () => {
       };
 
     return (
-        <div>
-            <button className='button-pdf-imp' style={{top:'20px'}} onClick={handlePrintPDF}>Guardar en PDF</button>
+        <div className='top-diagrama'>
+            <button className='button-pdf-imp' style={{top:'6em'}} onClick={handlePrintPDF}>Guardar en PDF</button>
             {/*Mensaje de generacion*/}
             <div id="loading-overlay" style={{display:'none'}}>
             <div class="loading-content">
@@ -574,8 +574,8 @@ const Diagrama = () => {
                             )}
 
                         {
-                        (ishikawa.estado === 'Aprobado'|| 'Finalizado') ? null : (
-                        <div className='buttons-g'>
+                        ((ishikawa.estado === 'Aprobado')|| (ishikawa.estado === 'Finalizado')) ? null : (
+                        <div className='dia-buttons-g'>
                                 <button onClick={() => setShowNotaRechazo(!showNotaRechazo)}>
                                     {showNotaRechazo ? 'Ocultar Nota' : 'Nota'}
                                 </button>

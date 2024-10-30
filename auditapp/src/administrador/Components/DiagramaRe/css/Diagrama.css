@@ -73,3 +73,31 @@
     background-color: #00B096;
     cursor: pointer;
 }
+
+.top-diagrama{
+    margin-top: 8rem;
+}
+
+.dia-buttons-g{
+    position: absolute;
+    display: flex;
+    margin-left: 50rem;
+    gap: 10px;
+}
+
+.dia-buttons-g button{
+    margin-top: 10px;
+    width: 10rem;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    color: #ffffff;
+    font-weight: bold;
+    background-color: #00cc7e;
+    z-index: 2;
+}
+
+.dia-buttons-g button:hover{
+    background-color: #00804f;
+}
