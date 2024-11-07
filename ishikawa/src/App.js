@@ -13,7 +13,7 @@ import { checkForUpdate } from './utils/checkForUpdate';
 export const UserContext = createContext(null);
 
 function App() {
-  const [appVersion] = useState('2.0.0');
+  const [appVersion] = useState('2.1.0');
   useEffect(() => {
     const interval = setInterval(async () => {
       const hasUpdate = await checkForUpdate(appVersion);
@@ -31,7 +31,7 @@ function App() {
 
     return () => clearInterval(interval);
   }, [appVersion]);
-  
+
   return (
     <AuthProvider>
       <ToastContainer />
