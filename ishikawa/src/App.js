@@ -9,26 +9,36 @@ import ProtectedRoute from './ProtectedRoute';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { checkForUpdate } from './utils/checkForUpdate';
+import DatosV from './components/Login/DatosV';
 
 export const UserContext = createContext(null);
 
 function App() {
-  const [appVersion] = useState('2.1.0');
+  const [appVersion] = useState('2.2.0');
   useEffect(() => {
-    const interval = setInterval(async () => {
+    const showUpdateNotification = async () => {
       const hasUpdate = await checkForUpdate(appVersion);
-      if (hasUpdate) {
-        toast.info('¡Nueva actualización disponible! Recarga la página para obtener la última versión.', {
-          position: 'top-right',
-          autoClose: false,
-          closeOnClick: true,
-          draggable: true,
-          onClose: () => window.location.reload(), // Recarga la página
-        });
-        clearInterval(interval); // Detiene la verificación para evitar múltiples notificaciones
-      }
-    }, 60000); // Verifica cada minuto
+      const updateShown = localStorage.getItem('updateShown');
 
+      if (hasUpdate && !updateShown) {
+        toast.info(
+          <div>
+            ¡Nueva actualización disponible!
+            <button onClick={() => DatosV(true)}>Ver Novedades</button>
+          </div>,
+          {
+            position: 'top-right',
+            autoClose: false,
+            closeOnClick: true,
+            draggable: true,
+            onClose: () => window.location.reload(), // Recarga la página
+          }
+        );
+        localStorage.setItem('updateShown', 'true'); // Evita que se muestre de nuevo
+      }
+    };
+
+    const interval = setInterval(showUpdateNotification, 60000); // Verifica cada minuto
     return () => clearInterval(interval);
   }, [appVersion]);
 
