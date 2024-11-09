@@ -14,7 +14,7 @@ import DatosV from './components/Login/DatosV';
 export const UserContext = createContext(null);
 
 function App() {
-  const [appVersion] = useState('2.3.0');
+  const [appVersion] = useState('2.4.0');
 
 useEffect(() => {
   const showUpdateNotification = async () => {
@@ -41,9 +41,10 @@ useEffect(() => {
     }
   };
 
-  const interval = setInterval(showUpdateNotification, 60000); // Verifica cada minuto
-  return () => clearInterval(interval);
-}, [appVersion]); // Dependencia para verificar actualizaciones
+  // Llamada de la verificación de la actualización solo cuando el componente se monta
+  showUpdateNotification();
+
+}, [appVersion]); // Solo se ejecuta cuando `appVersion` cambia
 
 
   return (
