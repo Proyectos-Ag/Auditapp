@@ -14,33 +14,37 @@ import DatosV from './components/Login/DatosV';
 export const UserContext = createContext(null);
 
 function App() {
-  const [appVersion] = useState('2.2.0');
-  useEffect(() => {
-    const showUpdateNotification = async () => {
-      const hasUpdate = await checkForUpdate(appVersion);
-      const updateShown = localStorage.getItem('updateShown');
+  const [appVersion] = useState('2.3.0');
 
-      if (hasUpdate && !updateShown) {
-        toast.info(
-          <div>
-            ¡Nueva actualización disponible!
-            <button onClick={() => DatosV(true)}>Ver Novedades</button>
-          </div>,
-          {
-            position: 'top-right',
-            autoClose: false,
-            closeOnClick: true,
-            draggable: true,
-            onClose: () => window.location.reload(), // Recarga la página
-          }
-        );
-        localStorage.setItem('updateShown', 'true'); // Evita que se muestre de nuevo
-      }
-    };
+useEffect(() => {
+  const showUpdateNotification = async () => {
+    const hasUpdate = await checkForUpdate(appVersion);
+    const updateShown = localStorage.getItem('updateShown');
+    const storedVersion = localStorage.getItem('appVersion'); // Versión almacenada
 
-    const interval = setInterval(showUpdateNotification, 60000); // Verifica cada minuto
-    return () => clearInterval(interval);
-  }, [appVersion]);
+    if ((hasUpdate && !updateShown) || storedVersion !== appVersion) {
+      toast.info(
+        <div>
+          ¡Nueva actualización disponible!
+          <button onClick={() => DatosV(true)}>Ver Novedades</button>
+        </div>,
+        {
+          position: 'top-right',
+          autoClose: false,
+          closeOnClick: true,
+          draggable: true,
+          onClose: () => window.location.reload(), // Recarga la página
+        }
+      );
+      localStorage.setItem('updateShown', 'true'); // Marca que se ha mostrado
+      localStorage.setItem('appVersion', appVersion); // Guarda la versión actual
+    }
+  };
+
+  const interval = setInterval(showUpdateNotification, 60000); // Verifica cada minuto
+  return () => clearInterval(interval);
+}, [appVersion]); // Dependencia para verificar actualizaciones
+
 
   return (
     <AuthProvider>
