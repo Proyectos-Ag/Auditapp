@@ -153,12 +153,13 @@ function App() {
   useEffect(() => {
     const showUpdateNotification = async () => {
       const hasUpdate = await checkForUpdate(appVersion);
-      const updateShown = localStorage.getItem('updateShown');
-
-      if (hasUpdate && !updateShown) {
+      const storedVersion = localStorage.getItem('updateShownVersion');
+  
+      // Mostrar notificación si hay una nueva versión o si la versión no coincide con la guardada
+      if (hasUpdate || storedVersion !== appVersion) {
         toast.info(
           <div>
-            ¡Nueva actualización disponible! Recarge la página para obtener la última versión.'
+            ¡Nueva actualización disponible! Recargue la página para obtener la última versión.
             <span onClick={handleOpenModal} style={{ color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}>
               Ver Novedades
             </span>
@@ -170,10 +171,11 @@ function App() {
             draggable: true
           }
         );
-        localStorage.setItem('updateShown', 'true'); // Evita que se muestre de nuevo
+        // Almacena la versión actual para que no se vuelva a mostrar
+        localStorage.setItem('updateShownVersion', appVersion);
       }
     };
-
+  
     const interval = setInterval(showUpdateNotification, 60000); // Verifica cada minuto
     return () => clearInterval(interval);
   }, [appVersion]);
