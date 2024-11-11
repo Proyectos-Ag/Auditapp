@@ -590,74 +590,74 @@ const Evaluaciones = () => {
           </table>
 
           <div >
-  <h2>Indicadores de Evaluación</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Indicador de Evaluación</th>
-        <th>Puntuación Máxima</th>
-        <th>Valor en %</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Experiencia</td>
-        <td>10</td>
-        <td>10%</td>
-      </tr>
-      <tr>
-        <td>Capacitación</td>
-        <td>5</td>
-        <td>30%</td>
-      </tr>
-      <tr>
-        <td>Conocimiento y habilidades</td>
-        <td>25</td>
-        <td>30%</td>
-      </tr>
-      <tr>
-        <td>Formación y profesional</td>
-        <td>3</td>
-        <td>10%</td>
-      </tr>
-      <tr>
-        <td>Atributos y cualidades personales</td>
-        <td>40</td>
-        <td>20%</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+            <h2>Indicadores de Evaluación</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Indicador de Evaluación</th>
+                  <th>Puntuación Máxima</th>
+                  <th>Valor en %</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Experiencia</td>
+                  <td>10</td>
+                  <td>10%</td>
+                </tr>
+                <tr>
+                  <td>Capacitación</td>
+                  <td>5</td>
+                  <td>30%</td>
+                </tr>
+                <tr>
+                  <td>Conocimiento y habilidades</td>
+                  <td>25</td>
+                  <td>30%</td>
+                </tr>
+                <tr>
+                  <td>Formación y profesional</td>
+                  <td>3</td>
+                  <td>10%</td>
+                </tr>
+                <tr>
+                  <td>Atributos y cualidades personales</td>
+                  <td>40</td>
+                  <td>20%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-<div>
-  <h2>Calificación Total Obtenida</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Calificación Total</th>
-        <th>Descripción</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>80-100%</td>
-        <td>Competente y candidato a ser auditor líder (evaluación anual)</td>
-      </tr>
-      <tr>
-        <td>80-84%</td>
-        <td>Competente y es candidato a formar parte del equipo de inocuidad (evaluación semestral)</td>
-      </tr>
-      <tr>
-        <td>60-79%</td>
-        <td>Se puede considerar auditor de entrenamiento (evaluación trimestral)</td>
-      </tr>
-      <tr>
-        <td>Menor a 59%</td>
-        <td>Se considera no competente y fuera del equipo auditor</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+          <div>
+            <h2>Calificación Total Obtenida</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Calificación Total</th>
+                  <th>Descripción</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>80-100%</td>
+                  <td>Competente y candidato a ser auditor líder (evaluación anual)</td>
+                </tr>
+                <tr>
+                  <td>80-84%</td>
+                  <td>Competente y es candidato a formar parte del equipo de inocuidad (evaluación semestral)</td>
+                </tr>
+                <tr>
+                  <td>60-79%</td>
+                  <td>Se puede considerar auditor de entrenamiento (evaluación trimestral)</td>
+                </tr>
+                <tr>
+                  <td>Menor a 59%</td>
+                  <td>Se considera no competente y fuera del equipo auditor</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
           <h2>Resultado Final: {resultadoFinal.toFixed(2)}%</h2>
 

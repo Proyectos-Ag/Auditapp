@@ -38,7 +38,7 @@ const Inicio = () => {
         muted 
       />
       <div className="inicio-content">
-        <h1>Bienvenido</h1>
+        <h1>Bienvenidos a Auditapp</h1>
         {userData && (
           <div className="user-info">
             <p className="user-name">{userData.Nombre}</p>
@@ -60,7 +60,7 @@ const Inicio = () => {
         <img src={pez} alt="pez" className='imagen-mini' />
       </div>
       <div className="card-home" >
-       Auditorias Terminadas
+       Auditorías Terminadas
       </div>
       <div className="card-home" onClick={() => navigate("/auditado/informacion")}>
         Usuario

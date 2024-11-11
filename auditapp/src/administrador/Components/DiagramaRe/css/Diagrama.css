@@ -101,3 +101,10 @@
 .dia-buttons-g button:hover{
     background-color: #00804f;
 }
+
+.nota-rechazo-container-dia{
+    margin-left: 30rem;
+    top: 4.5rem;
+    z-index: 2;
+    position: absolute;
+}

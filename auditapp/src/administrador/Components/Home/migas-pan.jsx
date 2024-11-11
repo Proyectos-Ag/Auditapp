@@ -6,7 +6,6 @@ import Chip from '@mui/material/Chip';
 import HomeIcon from '@mui/icons-material/Home';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-// Definición de los estilos personalizados para los breadcrumbs
 const StyledBreadcrumb = styled(Chip)(({ theme }) => {
   const backgroundColor =
     theme.palette.mode === 'light'
@@ -30,7 +29,9 @@ const StyledBreadcrumb = styled(Chip)(({ theme }) => {
 const MigasPan = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [breadcrumbHistory, setBreadcrumbHistory] = useState([]);
+  const [breadcrumbHistory, setBreadcrumbHistory] = useState(
+    () => JSON.parse(localStorage.getItem('breadcrumbHistory')) || [] // Recupera desde localStorage
+  );
 
   const breadcrumbNameMap = {
     '/admin': 'Administrador',
@@ -70,15 +71,18 @@ const MigasPan = () => {
     setBreadcrumbHistory((prevHistory) => {
       const pathIndex = prevHistory.indexOf(currentPath);
       if (pathIndex === -1) {
-        return [...prevHistory, currentPath];
+        const newHistory = [...prevHistory, currentPath];
+        localStorage.setItem('breadcrumbHistory', JSON.stringify(newHistory)); // Almacena en localStorage
+        return newHistory;
       }
-      return prevHistory.slice(0, pathIndex + 1);
+      const updatedHistory = prevHistory.slice(0, pathIndex + 1);
+      localStorage.setItem('breadcrumbHistory', JSON.stringify(updatedHistory)); // Actualiza en localStorage
+      return updatedHistory;
     });
   }, [location.pathname]);
 
   const getBreadcrumbLabel = (path, isLast) => {
     const customName = breadcrumbNameMap[path] || decodeURIComponent(path);
-
     const showHomeIcon = ['/admin', '/auditor', '/auditado'].includes(path);
 
     return (

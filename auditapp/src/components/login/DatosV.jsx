@@ -5,8 +5,50 @@ const DatosV = () => {
 
   return (
     <div className="modal-body">
-        <h1>Versión 2.0 (Beta)</h1>
 
+      <h1>Versión 2.1.0 (Beta)</h1>
+        
+        <ul>
+          <h3 className="modal-title">Nueva barra de navegación</h3>
+          <li>Se agrego una nueva barra de navegación la cual es activable presionando la tecla “Tab” y en dispositivos móviles desplazando el dedo de izquierda a derecha.</li>
+        </ul>
+  
+        <ul>
+          <h3 className="modal-title">Cambio en la navegación entre roles </h3>
+          <li>Se cambio el estilo de los apartados para desplazarse entre roles.</li>
+        </ul>
+  
+        <ul>
+          <h3 className="modal-title">Ishikawa vacío</h3>
+          <li>Se  agrego un nuevo apartado para navegar a ishikawas vacíos sin la necesidad de abrir otro enlace </li>
+        </ul>
+        
+        <ul>
+          <h3 className="modal-title">Cambio en las estadísticas</h3>
+          <li>Se ajustaron las estadísticas para que, también salieran las realizadas, y Terminadas, 
+            ya que solo salían las finalizadas y los hallazgos no concordaban con las auditorías 
+            mostradas.</li>
+            <br />
+          <li>Se agregaron los filtros para que funcionara y contara de mejor manera.</li>
+          <br />
+          <li>Se modifico un poco el diseño para hacerlo más agradable.</li>
+        </ul>
+  
+        <ul>
+          <h3 className="modal-title">Se realizo el programa anual de auditorías</h3>
+          <li>Se creo un nuevo componente llamado programa anual de auditorias.</li>
+          <br />
+          <li>Se asigno a la base de datos y termino para su utilización.</li>
+          <br />
+          <li>Se continúa trabajando en los correos.</li>
+          <br />
+          <li>Se agrego un diseño acorde con colores.</li>
+        </ul>
+        <br />
+        <br />
+
+        <h1>Versión 2.0 (Beta)</h1>
+        
       <ul>
         <h3 className="modal-title">¡Un solo login!</h3>
         <li>Se han unificado los login de Administrador, Auditor y Auditado en uno solo llamado “Auditorias”, esto con el fin de optimizar el tiempo requerido para cierta acciones y mayor comodidad para el usuario.</li>

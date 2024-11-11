@@ -862,8 +862,6 @@ const ocultarCargando = () => {
                             </div>
                         </> 
                     )}
-
-                    
                     
                     <div className='opciones'>
                         <h3>Cambiar estado de ishikawa:</h3>

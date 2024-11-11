@@ -1,0 +1,137 @@
+/* AuditTable.css */
+.audit-table-container {
+    padding: 20px;
+    background-color: #ffffff;
+    max-width: 1000px;
+    margin: 0 auto;
+    border-radius: 8px;
+    font-family: 'Arial', sans-serif;
+    margin-top: 7em;
+}
+
+.audit-table-container h2 {
+    font-size: 24px;
+    text-align: center;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.audit-table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.audit-table th, 
+.audit-table td {
+    padding: 12px;
+    text-align: center;
+    font-size: 14px;
+    border: 1px solid #ccc;
+}
+
+.audit-table thead th {
+    background-color: #007bbd; /* Color azul para el encabezado */
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.audit-table td {
+    background-color: #e9f5ff; /* Color de fondo de las filas */
+}
+
+.audit-table tbody tr:nth-child(even) td {
+    background-color: #f1faff; /* Alternancia de color en las filas */
+}
+
+.audit-table tbody tr:hover td {
+    background-color: #d0ebff; /* Color de fondo al pasar el mouse */
+}
+
+/* Estilo para los estados */
+.audit-table .status {
+    font-weight: bold;
+    color: #ffffff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.audit-table .status.realizada {
+    background-color: #4CAF50; /* Verde para "Realizada" */
+}
+
+.audit-table .status.programada {
+    background-color: #0097e6; /* Azul para "Programada" */
+}
+
+.audit-table .status.por-confirmar {
+    background-color: #fbc531; /* Amarillo para "Por Confirmar" */
+}
+
+.audit-table .status.en-curso {
+    background-color: #e67e22; /* Naranja para "En Curso" */
+}
+
+.audit-table .status.no-ejecutada {
+    background-color: #e74c3c; /* Rojo para "No Ejecutada" */
+}
+
+/* Estilos para los inputs */
+.audit-table td input[type="text"],
+.audit-table td input[type="date"],
+.audit-table td select {
+    width: 90%;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.audit-table td input[type="checkbox"] {
+    transform: scale(1.2);
+}
+
+/* Botón de agregar */
+.audit-table-container button {
+    background-color: #007bbd;
+    color: #ffffff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    margin-top: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.audit-table-container button:hover {
+    background-color: #005a8e;
+}
+
+/* Estilo de los checkboxes */
+.audit-table input[type="checkbox"] {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+/* Estilos responsivos para pantallas pequeñas */
+@media (max-width: 768px) {
+    .audit-table-container {
+        padding: 10px;
+    }
+
+    .audit-table th, .audit-table td {
+        padding: 8px;
+        font-size: 14px;
+    }
+
+    .audit-table-container h2 {
+        font-size: 20px;
+    }
+}

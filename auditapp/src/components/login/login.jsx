@@ -94,7 +94,7 @@ const Login = () => {
         <div className="form-group">
           <div className='espacio'>
             <img src={logo} alt="Logo Empresa" className="logo-empresa-login" />
-            <div className='tipo-usuario'>Auditorías</div>
+            <div className='tipo-usuario'>Auditapp</div>
           </div>
         </div>
         {error && <p className="error-message">{error}</p>}
@@ -131,7 +131,7 @@ const Login = () => {
             onClick={handleOpenModal}
           >
             <br />
-            v2.0(Beta)
+            v2.1.0(Beta)
           </span>
         </div>
 

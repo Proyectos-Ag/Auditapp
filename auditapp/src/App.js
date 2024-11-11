@@ -1,11 +1,16 @@
-import React, { createContext, Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
+import React, { createContext, Suspense, lazy, useState, useEffect} from 'react';
+import { BrowserRouter as Router, Route, Routes, useLocation} from "react-router-dom";
 import Login from './components/login/login.jsx';
 import AuthProvider from './AuthProvider';
 import ProtectedRoute from './ProtectedRoute';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { checkForUpdate } from './utils/checkForUpdate.js';
+import DatosV from './components/login/DatosV.jsx';
 //componentes
 import MigasPan from './administrador/Components/Home/migas-pan.jsx';
 import IconMenu from './administrador/Components/Home/icon-menu.jsx';
+import Navbar from './components/navbar/navbar.jsx';
 
 //Administrador
 import Usuarios from "./administrador/Components/RegistroUsuarios/Usuarios";
@@ -28,6 +33,7 @@ import Evaluacion from './administrador/Components/Evaluacion/Evaluacion';
 import Verevaluaciones from './administrador/Components/Evaluacion/VerEvaluacion';
 import VistaFinalizadas from './administrador/Components/Finalizada/VistaFinalizadas';
 import VistaIshikawas from './administrador/Components/DiagramaRe/VistaIshikawas';
+import ProgramarAuditoria from './administrador/Components/ProgramarAuditoria/AuditTable.jsx'
 
 //Auditor
 import PendienteAuditor from './auditor/components/Pendientes/Pendiente';
@@ -40,6 +46,12 @@ import IshikawaAuditado from './auditado/Components/Ishikawa/Ishikawa';
 import DiagramaAuditado from './auditado/Components/DiagramaRe/Diagrama';
 import InformacionAuditado from './auditado/Components/Informacion/Informacion';
 import VistaReportesAuditado from './auditado/Components/ReporteF/VistaReportes';
+
+//Ishikawas Vacios
+
+import DiagramaIshVac from './ishikawa-vacio/components/DiagramaRe/Diagrama.jsx';
+import IshikawaVac from './ishikawa-vacio/components/Ishikawa/Ishikawa.jsx';
+
 
 // Cargar componentes según el rol correspondiente
 const Administrador = lazy(() => import('./administrador/Components/Home/inicio.jsx'));
@@ -58,6 +70,7 @@ export const UserContext = createContext(null);
   
     return (
       <>
+        {!excludedRoutes.includes(location.pathname) && <Navbar />}
         {!excludedRoutes.includes(location.pathname) && <MigasPan />}
         {!excludedRoutes.includes(location.pathname) && <IconMenu />}
         <Suspense fallback={<div>Loading...</div>}>
@@ -91,6 +104,7 @@ export const UserContext = createContext(null);
               <Route path="/evuaauditor" element={<ProtectedRoute allowedRoles={['administrador']}><Evaluacion /></ProtectedRoute>} />
               <Route path="/vereva" element={<ProtectedRoute allowedRoles={['administrador']}><Verevaluaciones/></ProtectedRoute>}/>
               <Route path="/ishikawasesp" element={<ProtectedRoute allowedRoles={['administrador']}><VistaIshikawas/></ProtectedRoute>}/>
+              <Route path="/prog-audi" element={<ProtectedRoute allowedRoles={['administrador']}><ProgramarAuditoria/></ProtectedRoute>}/>
 
               {/*Auditor*/}
 
@@ -106,6 +120,12 @@ export const UserContext = createContext(null);
               <Route path="/auditado/informacion" element={<ProtectedRoute><InformacionAuditado/></ProtectedRoute>}/>
               <Route path="/auditado/vistarep" element={<ProtectedRoute><VistaReportesAuditado/></ProtectedRoute>}/>
 
+              {/*Ishikawas vacios*/}
+
+              <Route path="/ishikawavacio" element={<ProtectedRoute><DiagramaIshVac/></ProtectedRoute>}/>
+              <Route path="/diagramas" element={<ProtectedRoute><IshikawaVac/></ProtectedRoute>}/>
+
+
           </Routes>
         </Suspense>
       </>
@@ -113,14 +133,68 @@ export const UserContext = createContext(null);
   };
 
 function App() {
+  const [appVersion] = useState('2.1.0');
+  const [showModal, setShowModal] = useState(false);
+
+  const handleOpenModal = () => {
+    setShowModal(true); // Mostrar modal
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false); // Ocultar modal
+  };
+
+  const handleOverlayClick = (e) => {
+    if (e.target.classList.contains('modal-overlay')) {
+      handleCloseModal();
+    }
+  };
+
+  useEffect(() => {
+    const showUpdateNotification = async () => {
+      const hasUpdate = await checkForUpdate(appVersion);
+      const updateShown = localStorage.getItem('updateShown');
+
+      if (hasUpdate && !updateShown) {
+        toast.info(
+          <div>
+            ¡Nueva actualización disponible! Recarge la página para obtener la última versión.'
+            <span onClick={handleOpenModal} style={{ color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}>
+              Ver Novedades
+            </span>
+          </div>,
+          {
+            position: 'top-right',
+            autoClose: false,
+            closeOnClick: true,
+            draggable: true
+          }
+        );
+        localStorage.setItem('updateShown', 'true'); // Evita que se muestre de nuevo
+      }
+    };
+
+    const interval = setInterval(showUpdateNotification, 60000); // Verifica cada minuto
+    return () => clearInterval(interval);
+  }, [appVersion]);
+
   return (
     <>
     <AuthProvider>
+    <ToastContainer />
       <div className="App">
         <Router>
           <MainContent />
         </Router>
       </div>
+      {showModal && (
+          <div className="modal-overlay" onClick={handleOverlayClick}>
+            <div onClick={(e) => e.stopPropagation()}>
+              {/* El clic dentro del modal no lo cierra */}
+              <DatosV />
+            </div>
+          </div>
+        )}
     </AuthProvider>
     </>
   );

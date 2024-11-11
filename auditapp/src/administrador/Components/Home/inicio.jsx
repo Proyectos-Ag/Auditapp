@@ -49,7 +49,7 @@ const Inicio = () => {
         muted 
       />
       <div className="inicio-content">
-        <h1>Bienvenido</h1>
+        <h1>Bienvenidos a Auditapp</h1>
         {userData && (
           <div className="user-info">
             <p className="user-name">{userData.Nombre}</p>
@@ -110,7 +110,7 @@ const Inicio = () => {
     <h1>Administración</h1>
     <div className="contenedor-home">
       <div className="card-home" onClick={() => navigate("/evuaauditor")}>
-        Realizar Evaluacion
+        Realizar Evaluación
         <br /><br />
         <img src={evaluacion} alt="evaluacion" className='imagen-mini' />
       </div>
@@ -119,8 +119,13 @@ const Inicio = () => {
         <br /><br />
         <img src={verevaluacion} alt="ver-evaluacion" className='imagen-mini' />
       </div>
+      <div className="card-home" onClick={() => navigate("/prog-audi")}>
+        Programar Auditoría
+        <br /><br />
+        <img src={calendario} alt="programar" className='imagen-mini' style={{width:'80%'}} />
+      </div>
       <div className="card-home" onClick={() => navigate("/auditcalendar")}>
-        Calendario de Auditorias
+        Calendario de Auditorías
         <br /><br />
         <img src={calendario} alt="calendario" className='imagen-mini' style={{width:'80%'}} />
       </div>
@@ -128,7 +133,7 @@ const Inicio = () => {
     </div>
 
     <div className="conten-funcion" style={{marginTop:'-18%'}}>
-    <h1>Gestion</h1>
+    <h1>Gestión</h1>
     <div className="contenedor-home">
       <div className="card-home" onClick={() => navigate("/usuariosRegistrados")}>
         Usuarios
@@ -149,15 +154,15 @@ const Inicio = () => {
     </div>
 
     <div className="conten-funcion" style={{marginTop:'-18%'}}>
-    <h1>Carga y Graficas</h1>
+    <h1>Carga y Gráficas</h1>
     <div className="contenedor-home">
       <div className="card-home" onClick={() => navigate("/carga")}>
-        Carga de Auditorias
+        Carga de Auditorías
         <br/><br/>
         <img src={subirxls} alt="subir xls" className='imagen-mini' style={{width:'75%'}} />
       </div>
       <div className="card-home" onClick={() => navigate("/estadisticas")}>
-        Estadisticas
+        Estadísticas
         <br/><br/>
         <img src={estadisticas} alt="estadisticas" className='imagen-mini' style={{width:'75%'}} />
       </div>

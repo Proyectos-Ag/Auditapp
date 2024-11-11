@@ -14,7 +14,7 @@ import DatosV from './components/Login/DatosV';
 export const UserContext = createContext(null);
 
 function App() {
-  const [appVersion] = useState('2.4.0');
+  const [appVersion] = useState('2.3.0');
 
 useEffect(() => {
   const showUpdateNotification = async () => {

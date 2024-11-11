@@ -561,7 +561,7 @@ const Diagrama = () => {
                         <div id='pdf-content-part1' className="image-container-dia" >
 
                         {showNotaRechazo && (
-                                <div className="nota-rechazo-container">
+                                <div className="nota-rechazo-container-dia">
                                     <textarea
                                         value={notaRechazo}
                                         onChange={(e) => setNotaRechazo(e.target.value)}

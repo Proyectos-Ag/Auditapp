@@ -17,17 +17,19 @@ const Estadisticas = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
-        setAudits(response.data.filter(audit => audit.Estado === 'Finalizado' || audit.Estado === 'Terminada' || audit.Estado === 'Devuelto' || audit.Estado === 'Realizada'));
+        setAudits(response.data.filter(audit => audit.Estado === 'Finalizado' || audit.Estado === 'Terminada' || audit.Estado === 'Realizada' || audit.Estado === 'Devuelto'));
         const observationsData = response.data.flatMap(audit =>
           audit.Programa.flatMap(program =>
-            program.Descripcion.filter(desc => desc.Observacion && desc.Observacion.trim() !== '')
-          )
+            program.Descripcion.filter(desc => (desc.Criterio === 'M'|| desc.Criterio === 'C' || desc.Criterio === 'm')
+          ))
         );
         setObservations(observationsData);
 
         const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-        const reviewedObservationsData = ishikawaResponse.data.filter(ishikawa => ishikawa.estado === 'Revisado');
-        setReviewedObservations(reviewedObservationsData);
+        const reviewedObservationsData = ishikawaResponse.data.filter(
+            ishikawa => (ishikawa.estado === 'Revisado' || ishikawa.estado === 'Aprobado' || ishikawa.estado === 'Rechazados' || ishikawa.estado === 'Pendiente' || ishikawa.estado === 'Rechazados')
+        );
+        setReviewedObservations(reviewedObservationsData);        
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -285,23 +287,23 @@ const Estadisticas = () => {
                   </div>
               <div className="section">
               <h4>Cantidad de Auditorías por Tipo</h4>
-  <table>
-    <thead>
-      <tr>
-        <th>Tipo</th>
-        <th>Cantidad</th>
-        <th>Estatus</th>
-      </tr>
-    </thead>
-    <tbody>
-  {filteredAuditsByYear[year].map((audit, index) => (
-    <tr key={index}>
-      <td>{audit.TipoAuditoria}</td>
-      <td>{auditTypeCountByYear[year].auditTypeCount[audit.TipoAuditoria]}</td>
-      <td>{audit.Estado}</td> {/* Aquí se muestra el Estatus de cada auditoría */}
-    </tr>
-  ))}
-</tbody>
+            <table>
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Cantidad</th>
+                  <th>Estatus</th>
+                </tr>
+              </thead>
+              <tbody>
+            {filteredAuditsByYear[year].map((audit, index) => (
+              <tr key={index}>
+                <td>{audit.TipoAuditoria}</td>
+                <td>{auditTypeCountByYear[year].auditTypeCount[audit.TipoAuditoria]}</td>
+                <td>{audit.Estado}</td> {/* Aquí se muestra el Estatus de cada auditoría */}
+              </tr>
+            ))}
+          </tbody>
                 </table>
                 <div className="chart-container-audits">
                   <Bar

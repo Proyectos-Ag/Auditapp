@@ -1,60 +1,113 @@
 import React, { useState, useContext, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import Box from "@mui/material/Box";
 import { UserContext } from '../../../App';
 
 const BotonesRol = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // Obtener la ruta actual
+  const location = useLocation();
   const { userData } = useContext(UserContext);
 
-  const [alignment, setAlignment] = useState(location.pathname);
+  // Mantener la ruta actual como valor seleccionado
+  const [value, setValue] = useState(location.pathname);
 
   useEffect(() => {
-    setAlignment(location.pathname);
+    setValue(location.pathname);
   }, [location.pathname]);
 
-  const handleChange = (event, newAlignment) => {
-    if (newAlignment !== null) {
-      setAlignment(newAlignment);
-      navigate(newAlignment);  // Navegar a la ruta seleccionada
-    }
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+    navigate(newValue);  // Navegar a la ruta seleccionada
   };
 
   return (
-    <div className="botones-rol">
+    <Box sx={{ maxWidth: { xs: 320, sm: 780 }, bgcolor: 'background.paper', margin: '0 auto' }}>
       {userData && userData.TipoUsuario === 'administrador' && (
-        <ToggleButtonGroup
-          sx={{backgroundColor:'#1b70df'}}
-          value={alignment}
-          exclusive
+        <Tabs
+          value={value}
           onChange={handleChange}
-          aria-label="Navigation"
+          variant="scrollable"
+          scrollButtons="auto"
+          aria-label="Tabs de navegación para administrador"
+          sx={{
+            "& .MuiTab-root": { // Estilos para cada Tab
+              fontSize: '1em', // Tamaño de la fuente de las pestañas
+              padding: '12px 24px', // Espaciado interno de cada pestaña
+              minWidth: '160px', // Ancho mínimo de cada pestaña
+            },
+            "& .Mui-selected": { // Estilos para la pestaña seleccionada
+              color: '#1b70df', // Color del texto para la pestaña seleccionada
+              fontWeight: 'bold',
+            },
+            "& .MuiTabs-flexContainer": { // Contenedor de pestañas para alinear
+              justifyContent: 'center',
+            },
+          }}
         >
-          <ToggleButton value="/admin">Administrador</ToggleButton>
-          <ToggleButton value="/auditor">Auditor</ToggleButton>
-          <ToggleButton value="/auditado">Auditado</ToggleButton>
-        </ToggleButtonGroup>
+          <Tab label="Administrador" value="/admin" />
+          <Tab label="Auditor" value="/auditor" />
+          <Tab label="Auditado" value="/auditado" />
+          <Tab label="Ishikawas" value="/diagramas" />
+        </Tabs>
       )}
       
       {userData && userData.TipoUsuario === 'auditor' && (
-        <ToggleButtonGroup
-          sx={{backgroundColor:'#1b70df'}}
-          value={alignment}
-          exclusive
+        <Tabs
+          value={value}
           onChange={handleChange}
-          aria-label="Navigation"
+          variant="scrollable"
+          scrollButtons="auto"
+          aria-label="Tabs de navegación para auditor"
+          sx={{
+            "& .MuiTab-root": { // Estilos para cada Tab
+              fontSize: '1em', // Tamaño de la fuente de las pestañas
+              padding: '12px 24px', // Espaciado interno de cada pestaña
+              minWidth: '160px', // Ancho mínimo de cada pestaña
+            },
+            "& .Mui-selected": { // Estilos para la pestaña seleccionada
+              color: '#1b70df', // Color del texto para la pestaña seleccionada
+              fontWeight: 'bold',
+            },
+            "& .MuiTabs-flexContainer": { // Contenedor de pestañas para alinear
+              justifyContent: 'center',
+            },
+          }}
         >
-          <ToggleButton value="/auditor">Auditor</ToggleButton>
-          <ToggleButton value="/auditado">Auditado</ToggleButton>
-        </ToggleButtonGroup>
+          <Tab label="Auditor" value="/auditor" />
+          <Tab label="Auditado" value="/auditado" />
+          <Tab label="Ishikawas" value="/diagramas" />
+        </Tabs>
       )}
 
       {userData && userData.TipoUsuario === 'auditado' && (
-        <button onClick={() => navigate("/auditado")}>Auditado</button>
+        <Tabs
+          value={value}
+          onChange={handleChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          aria-label="Tabs de navegación para auditado"
+          sx={{
+            "& .MuiTab-root": { // Estilos para cada Tab
+              fontSize: '1em', // Tamaño de la fuente de las pestañas
+              padding: '12px 24px', // Espaciado interno de cada pestaña
+              minWidth: '160px', // Ancho mínimo de cada pestaña
+            },
+            "& .Mui-selected": { // Estilos para la pestaña seleccionada
+              color: '#1b70df', // Color del texto para la pestaña seleccionada
+              fontWeight: 'bold',
+            },
+            "& .MuiTabs-flexContainer": { // Contenedor de pestañas para alinear
+              justifyContent: 'center',
+            },
+          }}
+        >
+          <Tab label="Auditado" value="/auditado" />
+          <Tab label="Ishikawas" value="/diagramas" />
+        </Tabs>
       )}
-    </div>
+    </Box>
   );
 };
 

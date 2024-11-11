@@ -9,7 +9,6 @@
   }
 
   .inicio-container h1 {
-    margin-top: 5rem; 
     color: white;
     font-size: 6em;
     text-shadow: 
@@ -20,15 +19,41 @@
    
   }
 
-  @media (max-width: 600px) {
+  .video{
+    width: 100%;
+    height: 60vh;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+  }
+
+  @media (max-width: 1106px) {
     .inicio-container h1 {
+      margin-top: 5rem;
+      font-size: 5em;
+    }
+  }
+
+  @media (max-width: 925px) {
+    .inicio-container h1 {
+      margin-top: 17rem;
       font-size: 4em;
     }
   }
 
-  @media (max-width: 400px) {
+  @media (max-width: 768px) {
     .inicio-container h1 {
-      font-size: 3.5em;
+      margin-top: 15rem;
+      font-size: 3em;
+    }
+  }
+
+  @media (max-width: 586px) {
+    .inicio-container h1 {
+      margin-top: 9rem;
+      font-size: 2.5em;
     }
   }
 
@@ -54,20 +79,10 @@
     padding: 2vh; 
     border-radius: 1vw; 
     margin-top: 5vh; 
-    border: 3px solid #ffffff;
-    background-color: #FFFFB4;
-    margin-top: 50vh;
+    border: 3px solid #b8b8b8;
+    background-color: #ffffff;
+    margin-top: 20em;
     margin-bottom: 15vh;
-}
-
-.video{
-  width: 100%;
-  height: 60vh;
-  object-fit: cover;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: -1;
 }
 
 .inicio-container {
@@ -124,22 +139,10 @@
 }
 
 .fondo-home{
-  margin: 6rem auto 0;
+  margin: 20vh auto 0;
 }
 
-.fondo-home button{
-  background-color: #00268f ;
-  color: #ffffff;
-  width: 20em;
-  border: none;
-  border-radius: 8px;
-  padding: 10px;
-}
 
-.fondo-home button:hover{
-  background-color: #1b70df;
-  cursor: pointer;
-}
 
 .superposicion{
   z-index: 3;
@@ -162,5 +165,6 @@
 
 .botones-rol{
   display: flex;
+  margin-top: 10vh;
   justify-content: center;
 }
