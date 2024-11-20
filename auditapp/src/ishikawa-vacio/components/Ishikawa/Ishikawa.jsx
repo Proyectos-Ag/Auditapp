@@ -231,7 +231,8 @@ const CreacionIshikawa = () => {
         Swal.fire('Cambios Actualizados', 'El registro ha sido actualizado.', 'success');
       } else {
         // Si es un nuevo registro
-        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+        setSelectedRecordId(response.data._id);
         Swal.fire('Registro Guardado', 'El nuevo registro ha sido creado.', 'success');
       }
     } catch (error) {
