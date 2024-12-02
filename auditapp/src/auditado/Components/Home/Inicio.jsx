@@ -1,23 +1,15 @@
-import React, { useContext, useEffect, useRef } from "react";
-import BotonesRol from "../../../administrador/Components/Home/botones-rol";
+import React, { useEffect, useRef } from "react";
+import BotonesRol from "../../../resources/botones-rol";
 import './css/Inicio.css';
 import videoFile from '../assets/img/UpscaleVideo_1_20240628.mp4';
 import pez from "../assets/img/Ishikawa-mini.png";
 import usuario from "../assets/img/usuario.png";
-import { UserContext } from '../../../App';
+import finalizado from "../assets/img/finalizado.png"
 import { useNavigate } from "react-router-dom";
 
 const Inicio = () => {
-  const { userData, setUserData } = useContext(UserContext);
   const videoRef = useRef(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const storedUserData = localStorage.getItem('userData');
-    if (storedUserData) {
-      setUserData(JSON.parse(storedUserData));
-    }
-  }, [setUserData]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -39,11 +31,6 @@ const Inicio = () => {
       />
       <div className="inicio-content">
         <h1>Bienvenidos a Auditapp</h1>
-        {userData && (
-          <div className="user-info">
-            <p className="user-name">{userData.Nombre}</p>
-          </div>
-        )}
       </div>
     </div>
 
@@ -59,8 +46,10 @@ const Inicio = () => {
         <br/><br/>
         <img src={pez} alt="pez" className='imagen-mini' />
       </div>
-      <div className="card-home" >
+      <div className="card-home" onClick={() => navigate("/reportes-auditado")}>
        Auditorías Terminadas
+       <br/><br/>
+        <img src={finalizado} alt="finalizado" style={{width:'80%'}} className='imagen-mini' />
       </div>
       <div className="card-home" onClick={() => navigate("/auditado/informacion")}>
         Usuario
@@ -70,7 +59,6 @@ const Inicio = () => {
       </div>
     </div>
     </div>
-
     </div>
     </div>
   );

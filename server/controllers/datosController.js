@@ -54,7 +54,7 @@ const nuevoAuditoria = async (req, res) => {
 
     // Enviar correo electrónico al Auditor Líder
     const mailOptionsAuditorLider = {
-      from: process.env.EMAIL_USER,
+      from: process.env.EMAIL_USERNAME,
       to: AuditorLiderEmail,
       subject: 'Tienes una nueva auditoría',
       text: `Hola ${AuditorLider},\n\nSe te ha asignado como auditor líder para una nueva auditoría programada ${Duracion}.
@@ -80,7 +80,7 @@ const nuevoAuditoria = async (req, res) => {
       equipoAuditor.forEach((miembro, index) => {
         setTimeout(() => {
           const mailOptionsMiembro = {
-            from: process.env.EMAIL_USER,
+            from: process.env.EMAIL_USERNAME,
             to: miembro.Correo,
             subject: 'Tienes una nueva auditoría',
             text: `Hola ${miembro.Nombre},\n\nSe te ha asignado como miembro del equipo auditor liderado por ${AuditorLider} para una nueva auditoría programada para ${Duracion}.\n\nSaludos,\nEl equipo de la empresa`,
@@ -109,7 +109,7 @@ const nuevoAuditoria = async (req, res) => {
       Auditados.forEach((aud, index) => {
         setTimeout(() => {
           const mailOptionsAuditado = {
-            from: process.env.EMAIL_USER,
+            from: process.env.EMAIL_USERNAME,
             to: aud.Correo,
             subject: 'Tienes una nueva auditoría',
             text: `Hola ${aud.Nombre},\n\nSe te ha programado una auditoría liderada por ${AuditorLider} que se llevará a cabo ${Duracion}.\n\nSaludos,\nEl equipo de la empresa`,
@@ -194,8 +194,8 @@ const actualizarEstado = async (req, res)=> {
 
         // Enviar correo electrónico al Auditor Líder
     const mailOptionsAuditor = {
-      from: process.env.EMAIL_USER,
-      to: 'soleje28062004@gmail.com',
+      from: process.env.EMAIL_USERNAME,
+      to: 'rcruces@aguida.com',
       subject: 'Se ha enviado una auditoria para revisión',
       text: `${usuario} ha enviado una auditoria para su revisión`,
     };
@@ -423,7 +423,7 @@ const datosEstado = async (req, res)=>{
 
          // Enviar correo electrónico al Auditor Líder
     const mailOptionsAdministrador = {
-      from: process.env.EMAIL_USER,
+      from: process.env.EMAIL_USERNAME,
       to: AuditorLiderEmail,
       subject: 'La auditoria se ha '+estadoEmail,
       text: `La auditoría se ha ${estadoEmail}\n${comentario}`,
@@ -444,6 +444,24 @@ const datosEstado = async (req, res)=>{
     }
 };
 
+const eliminarRegistro = async (req, res) => {
+  const { _id } = req.params;
+
+  try {
+    // Verificar si el registro existe
+    const registroEliminado = await Datos.findByIdAndDelete(_id);
+
+    if (!registroEliminado) {
+      return res.status(404).json({ error: 'Registro no encontrado' });
+    }
+
+    res.status(200).json({ message: 'Registro eliminado exitosamente', data: registroEliminado });
+  } catch (error) {
+    console.error('Error al eliminar el registro:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+};
+
 module.exports = {
   nuevoAuditoria,
   obtenerTodosDatos,
@@ -455,5 +473,6 @@ module.exports = {
   obtenerDatosFiltrados,
   obtenerDatosEspAud,
   obtenerDatosFiltradosAud,
-  obtenerDatosEspFinal
+  obtenerDatosEspFinal,
+  eliminarRegistro
 };

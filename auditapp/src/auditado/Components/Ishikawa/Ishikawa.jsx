@@ -245,13 +245,13 @@ const handleDoubleClick = (e) => {
 
   const Actualizar = async () => {
     Swal.fire({
-      title: '¿Está seguro de querer reenviar el diagrama?',
+      title: '¿Está seguro de querer enviar el diagrama?',
       text: '¡El diagrama sera mandado ha revisión!',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3ccc37',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, reenviar',
+      confirmButtonText: 'Sí, enviar',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {

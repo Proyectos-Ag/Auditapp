@@ -6,6 +6,7 @@ import './css/Terminada.css';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { useParams } from 'react-router-dom';
+import { eliminarRegistro } from '../../../resources/eliminar-audi';
 
 const Terminada = () => {
     const {_id} = useParams();
@@ -169,13 +170,12 @@ const Terminada = () => {
             cancelButtonText: 'Cancelar'
         }).then(async (result) => {
             if (result.isConfirmed) {
-                try {
-                    await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/datos/${id}`);
-                    obtenerDatos();
-                    Swal.fire('Eliminado', 'El reporte ha sido eliminado.', 'success');
-                } catch (error) {
-                    console.error('Error al eliminar el reporte:', error);
-                    Swal.fire('Error', 'No se pudo eliminar el reporte.', 'error');
+                const response = await eliminarRegistro(id);
+                if (response.success) {
+                    Swal.fire('Eliminado', response.message, 'success');
+                    navigate('/revish');
+                } else {
+                    Swal.fire('Error', response.message, 'error');
                 }
             }
         });
@@ -260,10 +260,11 @@ const Terminada = () => {
                                 <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
                                     <div className='contenedor-repo'>
                                     <div className='buttons-estado'>
-                                    <button onClick={() => Finalizar(dato._id, porcentaje)}>Finalizar</button>
-                                    <button onClick={() => eliminarReporte(dato._id)} className='btn-eliminar'>
+                                    <button onClick={() => eliminarReporte(dato._id)} style={{backgroundColor: 'red'}}>
                                     Eliminar Reporte
                                     </button>
+                                    <button onClick={() => Finalizar(dato._id, porcentaje)}>Finalizar</button>
+
                                     </div>
                                         <div className="header-container-datos-repo">
                                             <img src={logo} alt="Logo Empresa" className="logo-empresa-repo" />

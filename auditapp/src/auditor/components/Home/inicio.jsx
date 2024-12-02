@@ -1,24 +1,15 @@
-import React, { useContext, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import './css/inicio.css';
-import BotonesRol from "../../../administrador/Components/Home/botones-rol";
+import BotonesRol from "../../../resources/botones-rol";
 import videoFile from '../assets/img/UpscaleVideo_1_20240628.mp4';
 import revision from "../assets/img/revision.png";
 import finalizado from "../assets/img/finalizado.png";
 import usuario from "../assets/img/usuario.png";
-import { UserContext } from '../../../App';
 import { useNavigate } from "react-router-dom";
 
 const Inicio = () => {
-  const { userData, setUserData } = useContext(UserContext);
   const videoRef = useRef(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const storedUserData = localStorage.getItem('userData');
-    if (storedUserData) {
-      setUserData(JSON.parse(storedUserData));
-    }
-  }, [setUserData]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -39,11 +30,6 @@ const Inicio = () => {
       />
       <div className="inicio-content">
         <h1>Bienvenidos a Auditapp</h1>
-        {userData && (
-          <div className="user-info">
-            <p className="user-name">{userData.Nombre}</p>
-          </div>
-        )}
       </div>
     </div>
 

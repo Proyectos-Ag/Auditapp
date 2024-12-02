@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
-import { UserContext } from '../../../App';
+import { UserContext } from '../App';
 
 const BotonesRol = () => {
   const navigate = useNavigate();

@@ -23,6 +23,15 @@
     background-color: #0098b3;
 }
 
+.nota-rechazo-container{
+    top: 10rem;
+    position: absolute;
+}
+
+.textarea-ishi{
+    height: 10rem;
+}
+
 .buttons-g{
     position: absolute;
     top: 10rem;
@@ -64,17 +73,6 @@
     color: #ffffff;
     font-weight: bold;
     background-color: #00cc7e;
-}
-
-.nota-rechazo-container{
-    margin-left: 44rem;
-    top: 13rem;
-    z-index: 2;
-    position: absolute;
-}
-
-.textarea-ishi{
-    height: 10rem;
 }
 
 .no-border {

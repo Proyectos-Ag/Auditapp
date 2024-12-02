@@ -616,7 +616,7 @@ const Datos = () => {
         <label>Auditor Líder:</label>
         <select name="AuditorLider" value={formData.AuditorLider} onChange={handleAuditorLiderChange} required>
           <option value="">Seleccione...</option>
-          {usuarios && usuarios.filter(usuario => (usuario.TipoUsuario === 'auditor' || usuario.TipoUsuario === 'Administrador')).map(usuario => (
+          {usuarios && usuarios.filter(usuario => (usuario.TipoUsuario === 'auditor' || usuario.TipoUsuario === 'administrador')).map(usuario => (
             <option key={usuario._id} value={usuario.Nombre}>{usuario.Nombre}</option>
           ))}
         </select>
@@ -626,7 +626,7 @@ const Datos = () => {
         <select name="Equipo Auditor" value="" onChange={handleEquipChange} disabled={equipoAuditorDisabled}>
           <option value="">Seleccione...</option>
           <option value="No aplica">No aplica</option>
-          {usuarios && usuarios.filter(usuario => (usuario.TipoUsuario === 'auditor' || usuario.TipoUsuario === 'Administrador') && usuario.Nombre !== auditorLiderSeleccionado).map(usuario => (
+          {usuarios && usuarios.filter(usuario => (usuario.TipoUsuario === 'auditor' || usuario.TipoUsuario === 'administrador') && usuario.Nombre !== auditorLiderSeleccionado).map(usuario => (
             <option key={usuario._id} value={usuario.Nombre}>{usuario.Nombre}</option>
           ))}
         </select>
@@ -707,7 +707,7 @@ const Datos = () => {
   <div className="datos-container2">
     <form onSubmit={handleSubmit}>
       <div className="header-container-datos">
-        <img src={logo} alt="Logo Empresa" className="logo-empresa" />
+        <img src={logo} alt="Logo Empresa" className="logo-empresa-ad" />
         <div className="button-group-datos">
           <button type="button" className="btn-registrar-datos" onClick={handlePrevious}>Regresar</button>
           <button type="submit" className="btn-registrar-datos">Generar</button>

@@ -15,6 +15,7 @@ const authRoutes = require('./routes/authRoutes');
 const fotoRoutes = require('./routes/fotoRoutes');
 const ishikawa = require('./routes/ishikawaRoutes');
 const evaluacionRoutes = require('./routes/evaluacionRoutes');
+const programarRoutes = require('./routes/programar-audiRoutes');
 
 dotenv.config();
 
@@ -42,7 +43,7 @@ app.use((req, res, next) => {
 
 // Configura las rutas
 app.use('/usuarios', usuariosRouter);
-app.use('/', loginRoutes);  // <- Podría estar causando conflicto con la raíz
+app.use('/', loginRoutes); 
 app.use('/datos', datosRoutes);
 app.use('/programas', programasRoutes);
 app.use('/areas', areasRoutes);
@@ -50,6 +51,7 @@ app.use('/auth', authRoutes);
 app.use('/foto', fotoRoutes);
 app.use('/ishikawa', ishikawa);
 app.use('/evaluacion', evaluacionRoutes);
+app.use('/programas-anuales', programarRoutes);
 
 // Manejar la ruta raíz
 app.get('/', (req, res) => {

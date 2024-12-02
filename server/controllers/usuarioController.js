@@ -12,7 +12,7 @@ const registroUsuario = async (req, res) => {
     // Enviar correo electrónico si el nuevo usuario es un auditor
     if (nuevoUsuario.TipoUsuario === 'auditor') {
       const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: process.env.EMAIL_USERNAME,
         to: nuevoUsuario.Correo,
         subject: 'Bienvenido al equipo de auditores',
         text: `Hola ${nuevoUsuario.Nombre},\n\nBienvenido al equipo de auditores. Nos alegra tenerte con nosotros.\n\nSaludos,\nEl equipo de la empresa`,

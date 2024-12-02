@@ -27,7 +27,7 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.logo-empresa {
+.logo-empresa-ad {
   height: 20%;
   width: 30vh;
   display: block;
@@ -182,11 +182,6 @@ th.conformity-header {
     background-color: #ffffff;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  }
-
-  .logo-empresa {
-    height: 10%;
-    width: 25vh;
   }
 
   table {

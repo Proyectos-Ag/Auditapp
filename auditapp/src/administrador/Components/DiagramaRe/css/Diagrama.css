@@ -105,6 +105,6 @@
 .nota-rechazo-container-dia{
     margin-left: 30rem;
     top: 4.5rem;
-    z-index: 2;
     position: absolute;
+    z-index: 3;
 }

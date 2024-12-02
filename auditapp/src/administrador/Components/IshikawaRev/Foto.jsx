@@ -2,58 +2,28 @@ import { useEffect, useRef, useState } from 'react';
 import './css/Camara.css';
 
 function Fotos({ open, onClose, onCapture }) {
-  const [hayFoto, setHayFoto] = useState(false);
-  const inputRef = useRef(null);  
+  const [previewUrl, setPreviewUrl] = useState(null); // URL para vista previa
+  const inputRef = useRef(null); // Referencia al input de archivo
 
   const handleCapture = (event) => {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const imageData = reader.result; 
+      // Generar URL temporal para vista previa
+      const preview = URL.createObjectURL(file);
+      setPreviewUrl(preview);
 
-        // Generar un identificador único para cada imagen
-        const imageId = `capturedImage_${new Date().getTime()}`;
-
-        // Almacenar cada imagen con una clave única
-        localStorage.setItem(imageId, imageData);
-
-        setHayFoto(true);
-        onCapture(imageData); 
-      };
-      reader.readAsDataURL(file);  
+      // Pasar el archivo directamente al padre
+      onCapture(file);
     }
   };
-
-  // Limpiar el localStorage cuando la página se refresque o cierre
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      // Recorre todas las claves en el localStorage
-      Object.keys(localStorage).forEach((key) => {
-        // Elimina solo las claves que empiezan con 'capturedImage_'
-        if (key.startsWith('capturedImage_')) {
-          localStorage.removeItem(key);
-        }
-      });
-    };
-  
-    window.addEventListener('beforeunload', handleBeforeUnload);
-  
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
-  
 
   useEffect(() => {
     if (open) {
-      inputRef.current.click();  
+      inputRef.current.click(); // Simula clic en el input al abrir
+    } else {
+      setPreviewUrl(null); // Limpiar vista previa al cerrar
     }
   }, [open]);
-
-  const cerrarFoto = () => {
-    setHayFoto(false);
-  };
 
   if (!open) return null;
 
@@ -62,20 +32,27 @@ function Fotos({ open, onClose, onCapture }) {
       <div className="fixed-modal">
         <div className="camera-container">
           <input
-            ref={inputRef}  
+            ref={inputRef}
             type="file"
             accept="image/*"
-            capture="environment" 
+            capture="environment"
             onChange={handleCapture}
-            style={{ display: 'none' }} 
-            id="cameraInput"
+            style={{ display: 'none' }}
           />
-          
+
           <h1 style={{ textAlign: 'center', color: '#fff' }}>Accediendo a la cámara</h1>
 
-          {hayFoto && (
+          {previewUrl && (
             <div className="preview-container">
-              <button className="close-photo-button" onClick={cerrarFoto}>
+              <img
+                src={previewUrl}
+                alt="Vista previa"
+                style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
+              />
+              <button
+                className="close-photo-button"
+                onClick={() => setPreviewUrl(null)}
+              >
                 <span className="material-symbols-outlined">close</span> Cerrar Foto
               </button>
             </div>

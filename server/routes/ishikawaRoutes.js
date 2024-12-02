@@ -15,6 +15,8 @@ router.put('/:id', ishikawaController.actualizarIshikawa);
 router.put('/completo/:id', ishikawaController.actualizarIshikawaCompleto);
 router.put('/estado/:id', ishikawaController.actualizarEstado);
 router.put('/eliminar-evidencia/:index/:idIsh/:idCorr', ishikawaController.eliminarEvidencia);
+router.delete('/eliminar/:idRep', ishikawaController.eliminarIshikawasPorIdRep);
+
 
 
 module.exports = router;

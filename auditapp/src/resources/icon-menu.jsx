@@ -1,5 +1,5 @@
 import React, { useContext} from "react";
-import './css/inicio.css';
+import './css/estilos.css';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Grow from '@mui/material/Grow';
 import Paper from '@mui/material/Paper';
@@ -9,7 +9,7 @@ import MenuList from '@mui/material/MenuList';
 import Stack from '@mui/material/Stack';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Swal from "sweetalert2";
-import { UserContext } from '../../../App';
+import { UserContext } from '../App';
 import { useNavigate } from "react-router-dom";
 
 const IconMenu = () => {

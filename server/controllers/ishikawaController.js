@@ -1,10 +1,4 @@
-const { upload } = require('../config/multer.js');
-
-const uploadFile = require('../util/uploadFile'); 
-
-// controllers/ishikawaController.js
 const Ishikawa = require('../models/ishikawaSchema');
-
 
 const crearIshikawa = async (req, res) => {
     try {
@@ -53,77 +47,6 @@ const obtenerIshikawasId = async (req, res) => {
       res.status(500).json({ error: error.message });
   }
 };
-
-const actualizarIshikawa = [
-  upload.fields([{ name: 'imageSub' }]), // Aceptamos un campo llamado imageSub para las imágenes
-  async (req, res) => { 
-    console.log('Datos recibidos', req.body);
-    try {
-      const { id } = req.params;
-      const evidencias = req.files.imageSub; // Accedemos a las imágenes que llegan bajo imageSub
-      console.log('Contenido de imageSub:', evidencias);
-
-      // Recuperar el documento actual de Ishikawa para preservar las imágenes existentes
-      const currentIshikawa = await Ishikawa.findById(id);
-      if (!currentIshikawa) {
-        return res.status(404).json({ error: 'Ishikawa no encontrado' });
-      }
-
-      // Reconstruimos las correcciones desde el formato plano de req.body
-      const correcciones = [];
-      Object.keys(req.body).forEach(key => {
-        const match = key.match(/correcciones\[(\d+)\]\.(\w+)/);
-        if (match) {
-          const index = parseInt(match[1], 10);
-          const field = match[2];
-          correcciones[index] = correcciones[index] || {};
-          correcciones[index][field] = req.body[key];
-        }
-      });
-
-      // Procesar imágenes si existen
-      if (evidencias && evidencias.length > 0) {
-        for (const [index, file] of evidencias.entries()) {
-          const uploadedFile = await uploadFile(file); // Función que sube la imagen
-          const downloadURL = uploadedFile.downloadURL; // URL devuelta de la imagen subida
-
-          // Aseguramos que asignamos la imagen solo al índice correspondiente
-          const match = file.originalname.match(/image_(\d+)\.png/); // Aseguramos que la imagen corresponde al índice correcto
-          if (match) {
-            const imageIndex = parseInt(match[1], 10);
-            if (correcciones[imageIndex]) {
-              correcciones[imageIndex].evidencia = downloadURL; // Asignamos la URL de la imagen
-            }
-          }
-        }
-      }
-
-      // Mantener las imágenes existentes si no se envían nuevas
-      currentIshikawa.correcciones.forEach((correccion, index) => {
-        if (correccion.evidencia && (!correcciones[index] || !correcciones[index].evidencia)) {
-          correcciones[index] = correcciones[index] || {};
-          correcciones[index].evidencia = correccion.evidencia; // Preservar la imagen existente si no se recibe una nueva
-        }
-      });
-
-      // Actualizar el documento Ishikawa
-      const updatedIshikawa = await Ishikawa.findByIdAndUpdate(
-        id,
-        { $set: { correcciones } },
-        { new: true }
-      );
-
-      if (!updatedIshikawa) {
-        return res.status(404).json({ error: 'Ishikawa no encontrado' });
-      }
-
-      res.status(200).json(updatedIshikawa);
-    } catch (error) {
-      console.error('Error al actualizar Ishikawa:', error);
-      res.status(400).json({ error: error.message });
-    }
-  }
-];
 
 const actualizarIshikawaCompleto = async (req, res) => {
   try {
@@ -291,6 +214,66 @@ const obtenerIshikawaPorId = async (req, res) => {
       res.status(500).json({ error: 'Error interno del servidor', details: error.message });
   }
 };
+
+//eliminar todos los ishikawas que correspondan a la auditoria
+const eliminarIshikawasPorIdRep = async (req, res) => {
+  try {
+    const { idRep } = req.params; // Obtiene el parámetro idRep de la URL
+
+    if (!idRep) {
+      return res.status(400).json({ error: 'El parámetro idRep es obligatorio' });
+    }
+
+    // Busca y elimina todos los registros que coincidan con idRep
+    const resultado = await Ishikawa.deleteMany({ idRep });
+
+    if (resultado.deletedCount === 0) {
+      return res.status(404).json({ message: 'No se encontraron registros con el idRep especificado' });
+    }
+
+    res.status(200).json({
+      message: 'Registros eliminados exitosamente',
+      eliminados: resultado.deletedCount,
+    });
+  } catch (error) {
+    console.error('Error al eliminar Ishikawas por idRep:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const actualizarIshikawa = async (req, res) => {
+  try {
+      const { id } = req.params; // Obtiene la ID desde los parámetros de la URL
+      const correcciones = req.body; // Los datos enviados desde el frontend
+
+      if (!Array.isArray(correcciones) || correcciones.length === 0) {
+          return res.status(400).json({ error: 'No se enviaron correcciones para actualizar' });
+      }
+
+      // Verifica que el Ishikawa exista antes de intentar actualizarlo
+      const existingIshikawa = await Ishikawa.findById(id);
+      if (!existingIshikawa) {
+          return res.status(404).json({ error: 'Ishikawa no encontrado' });
+      }
+
+      // Actualiza las correcciones en el modelo
+      existingIshikawa.correcciones = correcciones;
+
+      // Guarda los cambios
+      const updatedIshikawa = await existingIshikawa.save();
+
+      res.status(200).json({
+          message: 'Ishikawa actualizado exitosamente',
+          data: updatedIshikawa,
+      });
+  } catch (error) {
+      console.error('Error al actualizar Ishikawa:', error);
+      res.status(500).json({
+          error: 'Ocurrió un error al actualizar el Ishikawa',
+          details: error.message,
+      });
+  }
+};
   
   module.exports = {
     crearIshikawa,
@@ -304,5 +287,6 @@ const obtenerIshikawaPorId = async (req, res) => {
     obtenerIshikawaVista,
     actualizarEstado,
     obtenerIshikawaEsp,
-    obtenerIshikawaPorId
+    obtenerIshikawaPorId,
+    eliminarIshikawasPorIdRep
   };

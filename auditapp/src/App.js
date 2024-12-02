@@ -8,8 +8,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { checkForUpdate } from './utils/checkForUpdate.js';
 import DatosV from './components/login/DatosV.jsx';
 //componentes
-import MigasPan from './administrador/Components/Home/migas-pan.jsx';
-import IconMenu from './administrador/Components/Home/icon-menu.jsx';
+import MigasPan from './resources/migas-pan.jsx';
+import IconMenu from './resources/icon-menu.jsx';
 import Navbar from './components/navbar/navbar.jsx';
 
 //Administrador
@@ -33,7 +33,8 @@ import Evaluacion from './administrador/Components/Evaluacion/Evaluacion';
 import Verevaluaciones from './administrador/Components/Evaluacion/VerEvaluacion';
 import VistaFinalizadas from './administrador/Components/Finalizada/VistaFinalizadas';
 import VistaIshikawas from './administrador/Components/DiagramaRe/VistaIshikawas';
-import ProgramarAuditoria from './administrador/Components/ProgramarAuditoria/AuditTable.jsx'
+import ProgramarAuditoria from './administrador/Components/ProgramarAuditoria/AuditTable.jsx';
+import IshikawaDashboard from './administrador/Components/EstadisticasIsh/IshikawaDashboard.jsx';
 
 //Auditor
 import PendienteAuditor from './auditor/components/Pendientes/Pendiente';
@@ -46,6 +47,7 @@ import IshikawaAuditado from './auditado/Components/Ishikawa/Ishikawa';
 import DiagramaAuditado from './auditado/Components/DiagramaRe/Diagrama';
 import InformacionAuditado from './auditado/Components/Informacion/Informacion';
 import VistaReportesAuditado from './auditado/Components/ReporteF/VistaReportes';
+import Reporte from './auditado/Components/Reportes/Reporte.jsx';
 
 //Ishikawas Vacios
 
@@ -105,6 +107,7 @@ export const UserContext = createContext(null);
               <Route path="/vereva" element={<ProtectedRoute allowedRoles={['administrador']}><Verevaluaciones/></ProtectedRoute>}/>
               <Route path="/ishikawasesp" element={<ProtectedRoute allowedRoles={['administrador']}><VistaIshikawas/></ProtectedRoute>}/>
               <Route path="/prog-audi" element={<ProtectedRoute allowedRoles={['administrador']}><ProgramarAuditoria/></ProtectedRoute>}/>
+              <Route path="/ishikawas-estadisticas" element={<ProtectedRoute allowedRoles={['administrador']}><IshikawaDashboard/></ProtectedRoute>}/>
 
               {/*Auditor*/}
 
@@ -119,6 +122,7 @@ export const UserContext = createContext(null);
               <Route path="/auditado/diagrama" element={<ProtectedRoute><DiagramaAuditado/></ProtectedRoute>}/>
               <Route path="/auditado/informacion" element={<ProtectedRoute><InformacionAuditado/></ProtectedRoute>}/>
               <Route path="/auditado/vistarep" element={<ProtectedRoute><VistaReportesAuditado/></ProtectedRoute>}/>
+              <Route path="/reportes-auditado" element={<ProtectedRoute><Reporte/></ProtectedRoute>}/>
 
               {/*Ishikawas vacios*/}
 

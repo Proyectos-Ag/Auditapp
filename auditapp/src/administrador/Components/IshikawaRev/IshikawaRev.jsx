@@ -15,6 +15,12 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
+import { storage } from '../../../firebase';
+import {ref, uploadBytes, getDownloadURL} from 'firebase/storage';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 const IshikawaRev = () => {
     const { userData } = useContext(UserContext);
@@ -64,8 +70,14 @@ const IshikawaRev = () => {
         text15: ''
        }]);
 
-    console.log(id);
-    console.log(_id);
+    const [open, setOpen] = React.useState(false);
+        const handleClose = () => {
+    setOpen(false);
+  };
+
+    const handleOpen = () => {
+    setOpen(true);
+  };
 
     const fetchData = useCallback(async () => {
       try {
@@ -266,7 +278,7 @@ const handlePrintPDF = () => {
         }
 
         return yOffset;
-    };
+    }; 
 
     const processPart3WithTableRows = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
         convertTextAreasToDivs(element); // Convertir textareas a divs
@@ -352,110 +364,177 @@ const handleCorreccionChange = (index, field, value) => {
         setNuevaCorreccion({ actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
     };
 
-    const handleGuardarCambios2 = async (selectedIndex) => {
+    const handleGuardarCambios2 = async () => {
         try {
+            handleOpen();
             if (filteredIshikawas.length === 0) {
                 alert('No hay datos para actualizar');
                 return;
             }
     
-            const formData = new FormData();
+            const { _id } = filteredIshikawas[0]; // ID del registro a actualizar
     
-            // Agregamos todas las correcciones y asociamos las imágenes a sus índices
-            correcciones.forEach((correccion, index) => {
-                formData.append(`correcciones[${index}].actividad`, correccion.actividad || '');
-                formData.append(`correcciones[${index}].responsable`, correccion.responsable || '');
-                formData.append(`correcciones[${index}].fechaCompromiso`, correccion.fechaCompromiso || null);
-                formData.append(`correcciones[${index}].cerrada`, correccion.cerrada || '');
-            
-                // Genera una clave única para cada fila con el índice
-                const fieldKey = `${id}_${index}`;
-                const photo = capturedPhotos[fieldKey]; // Obtén la foto para este índice
-            
-                // Verifica si hay una foto válida y la añade
-                if (photo && typeof photo === 'string' && photo.startsWith('data:image')) {
-                    const blob = dataURLtoBlob(photo); // Convierte el data URL a Blob
-                    formData.append(`imageSub`, blob, `image_${index}.png`); // Asigna la imagen al índice correcto
-                }
-            });            
+            // Manejamos la subida de imágenes || pdf y la asignación de URLs
+            const correccionesActualizadas = await Promise.all(
+                correcciones.map(async (correccion, index) => {
+                    const updatedCorreccion = { ...correccion };
+                    console.log("Captured Files:", capturedPhotos);
+                    console.log("Index:", index);
     
-            const { _id } = filteredIshikawas[0]; // Usamos la ID del primer registro
+                    // Construir la clave dinámica
+                    const key = `${_id}_${index}`;
+                    console.log('a ver:', _id, index);
+                    const file = capturedPhotos[key]; // Acceder al archivo correspondiente
     
-            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, formData, {
+                    // Validar si existe el archivo
+                    if (!file) {
+                        console.warn(`No se encontró archivo para la clave: ${key}`);
+                        return updatedCorreccion; // Retorna sin modificar
+                    }
+    
+                    // Determinar el nombre del archivo según su tipo
+                    const fileType = file.type; // Obtener el tipo MIME del archivo
+                    const fileName = fileType === 'application/pdf' 
+                        ? `pdf_${_id}_${index}` 
+                        : `image_${_id}_${index}`;
+    
+                    // Subir el archivo a Firebase y obtener la URL
+                    const fileUrl = await uploadImageToFirebase(file, fileName);
+    
+                    // Concatenar el nombre del archivo si es PDF
+                    updatedCorreccion.evidencia = fileType === 'application/pdf' 
+                        ? `${fileUrl} || ${file.name}`
+                        : fileUrl;
+    
+                    return updatedCorreccion;
+                })
+            );
+    
+            // Filtra los campos vacíos o no modificados
+            const dataToSend = correccionesActualizadas.map((correccion) => ({
+                actividad: correccion.actividad || '',
+                responsable: correccion.responsable || '',
+                fechaCompromiso: correccion.fechaCompromiso || null,
+                cerrada: correccion.cerrada || '',
+                evidencia: correccion.evidencia || '', // Incluye la URL de la imagen
+            }));
+    
+            // Realiza la solicitud PUT al backend con los datos optimizados
+            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, dataToSend, {
                 headers: {
-                    // No es necesario establecer el content-type manualmente, axios lo hace automáticamente
+                    'Content-Type': 'application/json',
                 },
             });
+
+            handleClose();
     
             console.log('Respuesta del servidor:', response.data);
             Swal.fire({
-                title: 'Éxito!',
+                title: '¡Éxito!',
                 text: 'Información guardada correctamente.',
                 icon: 'success',
-                confirmButtonText: 'Aceptar'
+                confirmButtonText: 'Aceptar',
             });
         } catch (error) {
+            handleClose();
             console.error('Error al actualizar la información:', error);
             alert('Hubo un error al actualizar la información');
         }
-    };
+    };    
     
-    function dataURLtoBlob(dataURL) {
-        const arr = dataURL.split(',');
-        const mime = arr[0].match(/:(.*?);/)[1]; // Aquí se obtiene el tipo MIME
-        const bstr = atob(arr[1]); // Decodifica el Base64
-        const n = bstr.length;
-        const u8arr = new Uint8Array(n);
     
-        for (let i = 0; i < n; i++) {
-            u8arr[i] = bstr.charCodeAt(i);
-        }
-    
-        return new Blob([u8arr], { type: mime }); // Devuelve un Blob con el tipo MIME adecuado
-    }  
-            
-    const handleGuardarCambios = async (selectedIndex) => {
+    const uploadImageToFirebase = async (file, fileName) => {
         try {
+            if (!(file instanceof File)) {
+                throw new Error("El objeto recibido no es un archivo válido");
+            }
+    
+            const storageRef = ref(storage, `files/${fileName}`);
+            await uploadBytes(storageRef, file); // Sube el archivo al almacenamiento
+            return await getDownloadURL(storageRef); // Obtén la URL del archivo subido
+        } catch (error) {
+            console.error("Error al subir la imagen:", error);
+            throw new Error("No se pudo subir la imagen");
+        }
+    };      
+         
+    const handleGuardarCambios = async () => {
+        try {
+            handleOpen();
             if (filteredIshikawas.length === 0) {
                 alert('No hay datos para actualizar');
                 return;
             }
-
-            const correccionesActualizadas = correcciones.map((correccion, i) => {
-                const fieldKey = `${id}_${i}`;
-            
-                // Captura la imagen en base64 si existe en capturedPhotos, o usa la evidencia existente
-                let imagenBase64 = capturedPhotos[fieldKey] || correccion.evidencia;
-            
-            
-                return {
-                    ...correccion,
-                    evidencia: imagenBase64  // Asigna la imagen base64 con el prefijo adecuado
-                };
-            });            
     
-            const { _id } = filteredIshikawas[0];
-            const updatedIshikawa = {
-                correcciones: correccionesActualizadas
+            const { _id } = filteredIshikawas[0]; // ID del registro a actualizar
+    
+            // Manejamos la subida de imágenes || pdf y la asignación de URLs
+            const correccionesActualizadas = await Promise.all(
+                correcciones.map(async (correccion, index) => {
+                    const updatedCorreccion = { ...correccion };
+                    console.log("Captured Files:", capturedPhotos);
+                    console.log("Index:", index);
+    
+                    // Construir la clave dinámica
+                    const key = `${_id}_${index}`;
+                    console.log('a ver:', _id, index);
+                    const file = capturedPhotos[key]; // Acceder al archivo correspondiente
+    
+                    // Validar si existe el archivo
+                    if (!file) {
+                        console.warn(`No se encontró archivo para la clave: ${key}`);
+                        return updatedCorreccion; // Retorna sin modificar
+                    }
+    
+                    // Determinar el nombre del archivo según su tipo
+                    const fileType = file.type; // Obtener el tipo MIME del archivo
+                    const fileName = fileType === 'application/pdf' 
+                        ? `pdf_${_id}_${index}` 
+                        : `image_${_id}_${index}`;
+    
+                    // Subir el archivo a Firebase y obtener la URL
+                    const fileUrl = await uploadImageToFirebase(file, fileName);
+    
+                    // Concatenar el nombre del archivo si es PDF
+                    updatedCorreccion.evidencia = fileType === 'application/pdf' 
+                        ? `${fileUrl} || ${file.name}`
+                        : fileUrl;
+    
+                    return updatedCorreccion;
+                })
+            );
+    
+            // Filtra los campos vacíos o no modificados
+            const dataToSend = {
+                correcciones: correccionesActualizadas.map((correccion) => ({
+                    actividad: correccion.actividad || '',
+                    responsable: correccion.responsable || '',
+                    fechaCompromiso: correccion.fechaCompromiso || null,
+                    cerrada: correccion.cerrada || '',
+                    evidencia: correccion.evidencia || '',
+                })),
+                estado: 'Revisado', // Campo adicional
             };
     
-            console.log('Enviando datos a actualizar:', updatedIshikawa);
-    
-            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
-                estado: 'Revisado',
-                ...updatedIshikawa
+            // Realiza la solicitud PUT al backend con los datos optimizados
+            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, dataToSend, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             });
+
+            handleClose();
+    
             console.log('Respuesta del servidor:', response.data);
             Swal.fire({
-                title: 'Éxito!',
-                text: 'El diagrama se ha finalizado correctamente.',
+                title: '¡Éxito!',
+                text: 'Información guardada correctamente.',
                 icon: 'success',
-                confirmButtonText: 'Aceptar'
-            }).then(() => {
-                verificarRegistro();
+                confirmButtonText: 'Aceptar',
             });
         } catch (error) {
-            console.error('Error updating data:', error);
+            handleClose();
+            console.error('Error al actualizar la información:', error);
             alert('Hubo un error al actualizar la información');
         }
     }; 
@@ -756,18 +835,41 @@ const closeModal = () => {
     setSelectedImage(null);
 };
 
-const handleCapture = (dataUrl) => {
+const handleCapture = (file) => {
     if (selectedField) {
-        const prefijosBase64 = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
-
         setCapturedPhotos(prev => ({
             ...prev,
-            [selectedField]: prefijosBase64.some(prefijo => dataUrl.startsWith(prefijo))
-                ? dataUrl  // Si ya tiene un prefijo válido, usa el dataUrl tal como está
-                : `data:image/png;base64,${dataUrl}`  // Si no tiene prefijo, agrega uno por defecto (png)
+            [selectedField]: file
         }));
     }
     setModalOpen(false);
+};
+
+const handleUploadFile = (fieldKey) => {
+    // Crear un input temporal para seleccionar archivos
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf'; // Limitar a archivos PDF
+    input.style.display = 'none';
+
+    // Escuchar el cambio en el input (cuando se selecciona un archivo)
+    input.onchange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            handleCapture(file); // Llama a tu función `handleCapture` con el archivo
+            setCapturedPhotos((prev) => ({
+                ...prev,
+                [fieldKey]: file, // Actualiza el estado con el archivo seleccionado
+            }));
+        }
+    };
+
+    // Simula el clic en el input
+    document.body.appendChild(input);
+    input.click();
+
+    // Limpia el input después de usarlo
+    document.body.removeChild(input);
 };
 
 const handleEliminarEvidencia = async (index, idIsh, idCorr ) => {
@@ -829,6 +931,14 @@ const ocultarCargando = () => {
     return (
         <div>
             <div className='contenedor-ishikawa-vacio'>
+            {/*Carga*/}
+            <Backdrop
+                sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
+                open={open}
+                onClick={handleClose}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
 
             {/*Mensaje de generacion*/}
             <div id="loading-overlay" style={{display:'none'}}>
@@ -841,7 +951,7 @@ const ocultarCargando = () => {
                     {ishikawa.estado === 'En revisión' && (
                         <>
                             {showNotaRechazo && (
-                                <div className="nota-rechazo-container">
+                                <div className="nota-rechazo-container" style={{zIndex: "10"}}>
                                     <textarea
                                         value={notaRechazo}
                                         onChange={(e) => setNotaRechazo(e.target.value)}
@@ -1066,7 +1176,9 @@ const ocultarCargando = () => {
                         </thead>
                         <tbody>
                     {correcciones.map((correccion, index) => {
-                        const fieldKey = `${id}_${index}`;
+                        const fieldKey = `${ishikawa._id}_${index}`;
+
+                        console.log('error: ', ishikawa._id)
 
                         return (
                         <tr key={index} onClick={() => setSelectedIndex(index)}>
@@ -1113,32 +1225,64 @@ const ocultarCargando = () => {
                             <td>
                             <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
                             {aprobado && (
+                                <>
                                 <div className="button-foto" onClick={(e) => {
                                 e.preventDefault();
                                 handleOpenModal(fieldKey);
                                 }}>
                                 <span className="material-symbols-outlined">add_a_photo</span>
                                 </div>
-                            )}
-                            {correccion.evidencia && (
-                                <>
-                                <img
-                                    src={correccion.evidencia}  // Usa la imagen con el prefijo adecuado
-                                    alt="Evidencia"
-                                    style={{ width: '100%', height: 'auto' }}
-                                    className="hallazgo-imagen"
-                                    onClick={() => handleImageClick(correccion.evidencia)}
-                                />
+
+                                <div  className="button-foto" onClick={(e) => {
+                                    e.preventDefault();
+                                    handleUploadFile(fieldKey);
+                                    }}>
+                                
+                                    <UploadFileIcon/>
+                                </div>
                                 </>
                             )}
-                            {capturedPhotos[fieldKey] && (
-                                <img
-                                src={capturedPhotos[fieldKey]}
-                                alt="Captura"
-                                style={{ width: '100%', height: 'auto' }}
-                                onClick={() => handleImageClick(capturedPhotos[fieldKey])}
-                                />
+                            {correccion.evidencia && (
+                                correccion.evidencia.endsWith(".pdf") ? (
+                                    <a 
+                                        href={correccion.evidencia.split(" || ")[0]} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}
+                                    >
+                                        <PictureAsPdfIcon sx={{ color: 'red', fontSize: '40px', marginRight: '8px' }} />
+                                        {correccion.evidencia.split(" || ")[1].replace(/"/g, '')}
+                                    </a>
+                                ) : (
+                                    <img
+                                        src={correccion.evidencia}
+                                        alt="Evidencia"
+                                        style={{ width: '100%', height: 'auto' }}
+                                        className="hallazgo-imagen"
+                                        onClick={() => handleImageClick(correccion.evidencia)}
+                                    />
+                                )
                             )}
+
+                            {capturedPhotos[fieldKey] && (
+                                capturedPhotos[fieldKey].type === "application/pdf" ? (
+                                    <div>
+                                        <a href={URL.createObjectURL(capturedPhotos[fieldKey])} target="_blank" rel="noopener noreferrer">
+                                            {capturedPhotos[fieldKey].name || "Ver PDF"}
+                                        </a>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <img
+                                            src={URL.createObjectURL(capturedPhotos[fieldKey])} // Genera una URL temporal para vista previa
+                                            alt="Captura"
+                                            style={{ width: '100%', height: 'auto' }}
+                                            onClick={() => handleImageClick(URL.createObjectURL(capturedPhotos[fieldKey]))}
+                                        />
+                                    </div>
+                                )
+                            )}
+
                             </td>
                             <td className='cancel-acc'>
                             {aprobado && index > 0 && (

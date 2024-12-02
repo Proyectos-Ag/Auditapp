@@ -2,33 +2,28 @@ import { useEffect, useRef, useState } from 'react';
 import './css/Camara.css';
 
 function Fotos({ open, onClose, onCapture }) {
-  const [hayFoto, setHayFoto] = useState(false);
-  const inputRef = useRef(null);  // Referencia al input de archivo
+  const [previewUrl, setPreviewUrl] = useState(null); // URL para vista previa
+  const inputRef = useRef(null); // Referencia al input de archivo
 
   const handleCapture = (event) => {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const arrayBuffer = reader.result;
-        const blob = new Blob([arrayBuffer], { type: file.type });
-        
-        setHayFoto(true);
-        onCapture(blob); // Envía el BLOB capturado
-      };
-      reader.readAsArrayBuffer(file);  // Lee el archivo como ArrayBuffer
+      // Generar URL temporal para vista previa
+      const preview = URL.createObjectURL(file);
+      setPreviewUrl(preview);
+
+      // Pasar el archivo directamente al padre
+      onCapture(file);
     }
-  };  
+  };
 
   useEffect(() => {
     if (open) {
-      inputRef.current.click();  // Dispara automáticamente el clic en el input de archivo
+      inputRef.current.click(); // Simula clic en el input al abrir
+    } else {
+      setPreviewUrl(null); // Limpiar vista previa al cerrar
     }
-  }, [open]);  // Se ejecuta cuando el modal se abre
-
-  const cerrarFoto = () => {
-    setHayFoto(false);
-  };
+  }, [open]);
 
   if (!open) return null;
 
@@ -37,20 +32,27 @@ function Fotos({ open, onClose, onCapture }) {
       <div className="fixed-modal">
         <div className="camera-container">
           <input
-            ref={inputRef}  // Asigna la referencia al input de archivo
+            ref={inputRef}
             type="file"
             accept="image/*"
-            capture="environment" // "environment" para cámara trasera, "user" para la frontal
+            capture="environment"
             onChange={handleCapture}
-            style={{ display: 'none' }} // Oculta el input
-            id="cameraInput"
+            style={{ display: 'none' }}
           />
-          
+
           <h1 style={{ textAlign: 'center', color: '#fff' }}>Accediendo a la cámara</h1>
 
-          {hayFoto && (
+          {previewUrl && (
             <div className="preview-container">
-              <button className="close-photo-button" onClick={cerrarFoto}>
+              <img
+                src={previewUrl}
+                alt="Vista previa"
+                style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
+              />
+              <button
+                className="close-photo-button"
+                onClick={() => setPreviewUrl(null)}
+              >
                 <span className="material-symbols-outlined">close</span> Cerrar Foto
               </button>
             </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import './css/inicio.css';
+import './css/estilos.css';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import { emphasize, styled } from '@mui/material/styles';
 import Chip from '@mui/material/Chip';
@@ -55,7 +55,7 @@ const MigasPan = () => {
     '/revish': 'Revisión Ishikawa',
     '/evuaauditor': 'Evaluación de Auditores',
     '/vereva': 'Ver Evaluaciones',
-    '/ishikawasesp': 'Ishikawas Específicos',
+    '/ishikawasesp': 'Ishikawas',
     '/pendiente': 'Pendientes',
     '/reporte': 'Reporte Auditor',
     '/informacion': 'Información Auditor',
@@ -64,6 +64,25 @@ const MigasPan = () => {
     '/auditado/diagrama': 'Diagrama Auditado',
     '/auditado/informacion': 'Información Auditado',
     '/auditado/vistarep': 'Vista de Reportes',
+  };
+
+  const getDynamicBreadcrumbName = (path) => {
+    const dynamicRoutes = [
+      { pattern: /^\/ishikawa\/[\w-]+/, name: 'Ishikawa Auditoría' },
+      { pattern: /^\/auditado\/ishikawa\/[\w-]+/, name: 'Ishikawa Auditoría' },
+      { pattern: /^\/auditado\/reporte\/[\w-]+/, name: 'Reporte Auditoría' },
+      { pattern: /^\/terminada\/[\w-]+/, name: 'Reporte Auditoría' },
+      { pattern: /^\/diagrama\/[\w-]+/, name: 'Ishikawa Específico' }
+    ];
+  
+    // Busca si el path coincide con algún patrón
+    for (const route of dynamicRoutes) {
+      if (route.pattern.test(path)) {
+        return route.name;
+      }
+    }
+  
+    return null; // Si no coincide con ningún patrón
   };
 
   useEffect(() => {
@@ -82,7 +101,7 @@ const MigasPan = () => {
   }, [location.pathname]);
 
   const getBreadcrumbLabel = (path, isLast) => {
-    const customName = breadcrumbNameMap[path] || decodeURIComponent(path);
+    const customName = breadcrumbNameMap[path] || getDynamicBreadcrumbName(path) || decodeURIComponent(path);
     const showHomeIcon = ['/admin', '/auditor', '/auditado'].includes(path);
 
     return (
