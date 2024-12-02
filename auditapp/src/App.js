@@ -137,7 +137,7 @@ export const UserContext = createContext(null);
   };
 
 function App() {
-  const [appVersion] = useState('2.1.0');
+  const [appVersion] = useState('2.1.1');
   const [showModal, setShowModal] = useState(false);
 
   const handleOpenModal = () => {
