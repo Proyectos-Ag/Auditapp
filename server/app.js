@@ -58,6 +58,13 @@ app.get('/', (req, res) => {
   res.send('Bienvenido a la API de Aguida');
 });
 
+//cors
+const cors = require('cors');
+app.use(cors({
+  origin: 'https://auditapp-dqej.onrender.com'
+}));
+
+
 // Catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
