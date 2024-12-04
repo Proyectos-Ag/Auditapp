@@ -5,6 +5,8 @@ import logo from "../assets/img/logoAguida.png";
 import './css/Terminada.css'; 
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { useParams } from 'react-router-dom';
 import { eliminarRegistro } from '../../../resources/eliminar-audi';
 
@@ -181,6 +183,94 @@ const Terminada = () => {
         });
     };
 
+    const handlePrintPDF = () => {
+        const showLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        };
+    
+        const hideLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'none';
+        };
+    
+        showLoading();
+    
+        const part1 = document.getElementById('pdf-content-part1');
+        const part2 = document.getElementById('pdf-content-part2');
+    
+        const addPartAsImage = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            const canvas = await html2canvas(element, { scale: 2.5, useCORS: true });
+            const imgWidth = pageWidth - marginLeft - marginRight;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+            if (yOffset + imgHeight + bottomMargin > pageHeight) {
+                pdf.addPage();
+                yOffset = 0.5;
+            }
+    
+            const imgData = canvas.toDataURL('image/jpeg', 0.8);
+            pdf.addImage(imgData, 'JPEG', marginLeft, yOffset, imgWidth, imgHeight);
+            yOffset += imgHeight;
+    
+            return yOffset;
+        };
+    
+        const processElementRows = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            const rows = element.querySelectorAll('tr');
+            for (const row of rows) {
+                const rowCanvas = await html2canvas(row, { scale: 2.5, useCORS: true });
+                const rowHeight = (rowCanvas.height * (pageWidth - marginLeft - marginRight)) / rowCanvas.width;
+    
+                if (yOffset + rowHeight + bottomMargin > pageHeight) {
+                    pdf.addPage();
+                    yOffset = 0.5; // Reiniciar el offset en la nueva página
+                }
+    
+                const rowImgData = rowCanvas.toDataURL('image/jpeg', 0.8);
+                pdf.addImage(rowImgData, 'JPEG', marginLeft, yOffset, pageWidth - marginLeft - marginRight, rowHeight);
+                yOffset += rowHeight;
+            }
+    
+            return yOffset;
+        };
+    
+        const addPartWithRowControl = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            const tables = element.querySelectorAll('table');
+    
+            if (tables.length > 0) {
+                for (const table of tables) {
+                    yOffset = await processElementRows(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+                }
+            }
+    
+            return yOffset;
+        };
+    
+        const pdf = new jsPDF('portrait', 'cm', 'letter');
+    
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const marginLeftPart1 = 0.7;
+        const marginRightPart1 = 0.7;
+        const marginLeftPart2 = 1;
+        const marginRightPart2 = 1;
+        const bottomMargin = 1.0; // Margen inferior de 1 cm
+        let yOffset = 0.5;
+    
+        addPartAsImage(part1, pdf, yOffset, pageWidth, pageHeight, marginLeftPart1, marginRightPart1, bottomMargin)
+            .then((newYOffset) => {
+                yOffset = newYOffset;
+                return addPartWithRowControl(part2, pdf, yOffset, pageWidth, pageHeight, marginLeftPart2, marginRightPart2, bottomMargin);
+            })
+            .then(() => {
+                pdf.save("auditoría.pdf");
+                hideLoading();
+            })
+            .catch((error) => {
+                console.error('Error generating PDF:', error);
+                hideLoading();
+            });
+    };  
+
     const ishikawasMap = useMemo(() => {
         return ishikawas.reduce((acc, ish) => {
             acc[`${ish.idReq}-${ish.idRep}-${ish.proName}`] = ish;
@@ -201,6 +291,12 @@ const Terminada = () => {
 
     return (
         <div className='espacio-repo'>
+             {/*Mensaje de generacion*/}
+             <div id="loading-overlay" style={{display:'none'}}>
+            <div className="loading-content">
+                Generando archivo PDF...
+            </div>
+            </div>
            
             {!loading && !error && (
             <div className="datos-container-repo">
@@ -255,6 +351,7 @@ const Terminada = () => {
                                     <h2 onClick={() => toggleDuration(dato.Duracion)}>
                                         Fecha de Elaboración: {formatDate(dato.FechaElaboracion)}
                                     </h2>
+                                    <button onClick={handlePrintPDF}>Guardar como PDF</button>
                                 </div>
     
                                 <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
@@ -264,9 +361,11 @@ const Terminada = () => {
                                     Eliminar Reporte
                                     </button>
                                     <button onClick={() => Finalizar(dato._id, porcentaje)}>Finalizar</button>
-
                                     </div>
-                                        <div className="header-container-datos-repo">
+                                    </div>
+
+                                    <div id='pdf-content-part1' className='contenedor-repo-fin'>
+                                        <div className="header-container-datos-repo-fin">
                                             <img src={logo} alt="Logo Empresa" className="logo-empresa-repo" />
                                             <div className='encabezado'>
                                             <h1>REPORTE DE AUDITORÍA</h1>
@@ -399,7 +498,10 @@ const Terminada = () => {
                                                     </tr>
                                                 </tbody>
                                             </table>
+                                            </div>
+                                            </div>
                                             <div>
+                                            <div id='pdf-content-part2' className='contenedor-repo-fin-2'>
                                                 <table>
                                                     <thead>
                                                         <tr>
@@ -436,7 +538,7 @@ const Terminada = () => {
                                                                             <td className='alingR2'>{programa.Nombre}</td>
                                                                             <td className='alingR'>{desc.Requisito}</td>
                                                                             <td>{desc.Criterio}</td>
-                                                                            <td>{desc.Observacion}</td>
+                                                                            <td className='alingR'>{desc.Observacion}</td>
                                                                             <td key={descIdx} className='alingR'>
                                                                                 {desc.Hallazgo ? (
                                                                                     isBase64Image ? (
@@ -478,9 +580,8 @@ const Terminada = () => {
                                                         )}
                                                     </tbody>
                                                 </table>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         );

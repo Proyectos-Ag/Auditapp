@@ -59,7 +59,7 @@ const Inicio = () => {
         <br />  
         <img src={proceso} alt="proceso" className='imagen-mini' />
       </div>
-      <div className="card-home" onClick={() => navigate("/revicion")}>
+      <div className="card-home" onClick={() => navigate("/ver-reali")}>
         Revisión de Auditoría
         <img src={revision} alt="revision" className='imagen-mini' />
       </div>

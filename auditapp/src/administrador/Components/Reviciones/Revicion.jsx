@@ -2,19 +2,21 @@ import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { UserContext } from '../../../App';
 import logo from "../assets/img/logoAguida.png";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import './css/Revicion.css'; 
 import Swal from 'sweetalert2';
+import { useParams } from 'react-router-dom';
 
 const Reporte = () => {
     const { userData } = useContext(UserContext);
     const [datos, setDatos] = useState([]);
     const [hiddenDurations, setHiddenDurations] = useState([]);
-    const [, setCriteriosConteo] = useState({});
-    const [, setTotalCriterios] = useState(0);
     const [notas, setNotas] = useState({});
     const [visibleTextAreas, setVisibleTextAreas] = useState({});
     const [hiddenRows, setHiddenRows] = useState({}); 
     const [conteoCriteriosOcultos, setConteoCriteriosOcultos] = useState({});
+    const {_id} = useParams();
 
 
     console.log('Aquiiiiiiiii',conteoCriteriosOcultos);
@@ -34,49 +36,14 @@ const Reporte = () => {
     
     const obtenerDatos = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
-            if (userData && userData.Correo) {
-                const datosFiltrados = response.data.filter((dato) => 
-                    dato.Estado === "Realizada"
-                );
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/por/${_id}`);
+            const datosRecibidos = Array.isArray(response.data) ? response.data : [response.data];
     
-                // Ordenar por FechaElaboracion del más reciente al más antiguo
-                datosFiltrados.sort((a, b) => {
-                    const fechaElaboracionA = new Date(a.FechaElaboracion);
-                    const fechaElaboracionB = new Date(b.FechaElaboracion);
-                    return fechaElaboracionB - fechaElaboracionA;
-                });
-    
-                let conteo = {};
-                let total = 0;
-                datosFiltrados.forEach(dato => {
-                    dato.Programa.forEach(programa => {
-                        programa.Descripcion.forEach(desc => {
-                            if (desc.Criterio && desc.Criterio !== 'NA') {
-                                if (!conteo[desc.Criterio]) {
-                                    conteo[desc.Criterio] = 0;
-                                }
-                                conteo[desc.Criterio]++;
-                                total++;
-                            }
-                        });
-                    });
-                });
-    
-                setDatos(datosFiltrados);
-                setCriteriosConteo(conteo);
-                setTotalCriterios(total);
-    
-                // Ocultar todas las duraciones excepto la más reciente por defecto
-                const duracionesOcultas = datosFiltrados.slice(1).map(dato => dato.Duracion);
-                setHiddenDurations(duracionesOcultas);
-            } else {
-                console.log('userData o userData.Correo no definidos:', userData);
-            }
+            setDatos(datosRecibidos);
         } catch (error) {
             console.error('Error al obtener los datos:', error);
         }
-    }; 
+    };
 
     const toggleDuration = (duration) => {
         setHiddenDurations(hiddenDurations.includes(duration) ?
@@ -271,9 +238,107 @@ const Reporte = () => {
         });
     };
 
+    const handlePrintPDF = () => {
+        const showLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        };
+    
+        const hideLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'none';
+        };
+    
+        showLoading();
+    
+        const part1 = document.getElementById('pdf-content-part1');
+        const part2 = document.getElementById('pdf-content-part2');
+    
+        const addPartAsImage = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            const canvas = await html2canvas(element, { scale: 2.5, useCORS: true });
+            const imgWidth = pageWidth - marginLeft - marginRight;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+            if (yOffset + imgHeight + bottomMargin > pageHeight) {
+                pdf.addPage();
+                yOffset = 0.5;
+            }
+    
+            const imgData = canvas.toDataURL('image/jpeg', 0.8);
+            pdf.addImage(imgData, 'JPEG', marginLeft, yOffset, imgWidth, imgHeight);
+            yOffset += imgHeight;
+    
+            return yOffset;
+        };
+    
+        const processElementRows = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            const rows = Array.from(element.querySelectorAll('tr')).filter(row => {
+                // Filtra las filas visibles basándote en su estilo
+                return row.style.display !== "none" && row.offsetParent !== null;
+            });
+        
+            for (const row of rows) {
+                const rowCanvas = await html2canvas(row, { scale: 2.5, useCORS: true });
+                const rowHeight = (rowCanvas.height * (pageWidth - marginLeft - marginRight)) / rowCanvas.width;
+        
+                if (yOffset + rowHeight + bottomMargin > pageHeight) {
+                    pdf.addPage();
+                    yOffset = 0.5; // Reiniciar el offset en la nueva página
+                }
+        
+                const rowImgData = rowCanvas.toDataURL('image/jpeg', 0.8);
+                pdf.addImage(rowImgData, 'JPEG', marginLeft, yOffset, pageWidth - marginLeft - marginRight, rowHeight);
+                yOffset += rowHeight;
+            }
+        
+            return yOffset;
+        };        
+    
+        const addPartWithRowControl = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            const tables = element.querySelectorAll('table');
+    
+            if (tables.length > 0) {
+                for (const table of tables) {
+                    yOffset = await processElementRows(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+                }
+            }
+    
+            return yOffset;
+        };
+    
+        const pdf = new jsPDF('portrait', 'cm', 'letter');
+    
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const marginLeftPart1 = 0.7;
+        const marginRightPart1 = 0.7;
+        const marginLeftPart2 = 1;
+        const marginRightPart2 = 1;
+        const bottomMargin = 1.0; // Margen inferior de 1 cm
+        let yOffset = 0.5;
+    
+        addPartAsImage(part1, pdf, yOffset, pageWidth, pageHeight, marginLeftPart1, marginRightPart1, bottomMargin)
+            .then((newYOffset) => {
+                yOffset = newYOffset;
+                return addPartWithRowControl(part2, pdf, yOffset, pageWidth, pageHeight, marginLeftPart2, marginRightPart2, bottomMargin);
+            })
+            .then(() => {
+                pdf.save("auditoría.pdf");
+                hideLoading();
+            })
+            .catch((error) => {
+                console.error('Error generating PDF:', error);
+                hideLoading();
+            });
+    };
+
 
     return (
         <div className='espacio-repo'>
+            {/*Mensaje de generacion*/}
+            <div id="loading-overlay" style={{display:'none'}}>
+            <div className="loading-content">
+                Generando archivo PDF...
+            </div>
+            </div>
             
             <div className="datos-container-repo">
             <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Revisión de Reporte</h1>
@@ -321,6 +386,7 @@ const Reporte = () => {
                                     <h2 onClick={() => toggleDuration(dato.Duracion)}>
                                         Fecha de Elaboración: {formatDate(dato.FechaElaboracion)}
                                     </h2>
+                                    <button onClick={handlePrintPDF}>Guardar como PDF</button>
                                 </div>
 
                                 <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
@@ -334,7 +400,8 @@ const Reporte = () => {
                                         <button onClick={() => eliminarReporte(dato._id)} className='btn-eliminar'>
                                     Eliminar Reporte
                                     </button>
-                                    </div>     
+                                    </div> 
+                                    </div>    
                                     {visibleTextAreas[dato._id] && (
                                         <textarea
                                             className='textarea-mod'
@@ -342,7 +409,9 @@ const Reporte = () => {
                                             onChange={(e) => notaCorreccion(e, dato._id)}
                                          placeholder='Razón del rechazo. . .'></textarea>
                                     )}
-                                        <div className="header-container-datos-repo">
+
+                                    <div id='pdf-content-part1' className='contenedor-repo-fin'>
+                                        <div className="header-container-datos-repo-fin">
                                             <img src={logo} alt="Logo Empresa" className="logo-empresa-repo" />
                                             <div className='encabezado'>
                                             <h1>REPORTE DE AUDITORÍA</h1>
@@ -475,8 +544,11 @@ const Reporte = () => {
                                                 </tr>
                                             </thead>
                                         </table>
+                                        </div>
+                                        </div>
 
                                         <div>
+                                        <div id='pdf-content-part2' className='contenedor-repo-fin-2'>
                                             <table>
                                                 <thead>
                                                     <tr>
@@ -546,10 +618,9 @@ const Reporte = () => {
 
                                             </table>
                                             </div>
-                                        </div>
+                                            </div>
                                     </div>
                                 </div>
-                            </div>
                         );
                     })}
                 </div>

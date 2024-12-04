@@ -72,6 +72,7 @@ const MigasPan = () => {
       { pattern: /^\/auditado\/ishikawa\/[\w-]+/, name: 'Ishikawa Auditoría' },
       { pattern: /^\/auditado\/reporte\/[\w-]+/, name: 'Reporte Auditoría' },
       { pattern: /^\/terminada\/[\w-]+/, name: 'Reporte Auditoría' },
+      { pattern: /^\/finalizadas\/[\w-]+/, name: 'Reporte Finalizado' },
       { pattern: /^\/diagrama\/[\w-]+/, name: 'Ishikawa Específico' }
     ];
   

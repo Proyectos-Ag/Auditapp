@@ -52,7 +52,7 @@ th.conformity-header-repo {
     max-width: 100rem;
     padding: 20px;
     background-color: #ffffff;
-    border-radius: 8px;
+    border-radius: 8px 8px 0 0;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     margin-top: -10px;
     margin-bottom: 10px;

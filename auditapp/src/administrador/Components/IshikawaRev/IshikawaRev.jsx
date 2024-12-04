@@ -942,7 +942,7 @@ const ocultarCargando = () => {
 
             {/*Mensaje de generacion*/}
             <div id="loading-overlay" style={{display:'none'}}>
-            <div class="loading-content">
+            <div className="loading-content">
                 Generando archivo PDF...
             </div>
             </div>

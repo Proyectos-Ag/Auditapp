@@ -35,6 +35,7 @@ import VistaFinalizadas from './administrador/Components/Finalizada/VistaFinaliz
 import VistaIshikawas from './administrador/Components/DiagramaRe/VistaIshikawas';
 import ProgramarAuditoria from './administrador/Components/ProgramarAuditoria/AuditTable.jsx';
 import IshikawaDashboard from './administrador/Components/EstadisticasIsh/IshikawaDashboard.jsx';
+import VistaRevicion from './administrador/Components/Reviciones/VistaRevicion.jsx';
 
 //Auditor
 import PendienteAuditor from './auditor/components/Pendientes/Pendiente';
@@ -88,7 +89,7 @@ export const UserContext = createContext(null);
               <Route path="/programa" element={<ProtectedRoute allowedRoles={['administrador']}><Programas/></ProtectedRoute>}/>
               <Route path="/usuarios" element={<ProtectedRoute allowedRoles={['administrador']}><Usuarios /></ProtectedRoute>} />
               <Route path="/usuariosRegistrados" element={<ProtectedRoute allowedRoles={['administrador']}><UsuariosRegis /></ProtectedRoute>} /> 
-              <Route path="/revicion" element={<ProtectedRoute allowedRoles={['administrador']}><Revicion /></ProtectedRoute>} />
+              <Route path="/revicion/:_id" element={<ProtectedRoute allowedRoles={['administrador']}><Revicion /></ProtectedRoute>} />
               <Route path="/terminada/:_id" element={<ProtectedRoute allowedRoles={['administrador']}><Terminada /></ProtectedRoute>} />
               <Route path="/finalizadas/:_id" element={<ProtectedRoute allowedRoles={['administrador']}><Finalizada/></ProtectedRoute>}/>
               <Route path="/ishikawa" element={<ProtectedRoute allowedRoles={['administrador']}><Ishikawa/></ProtectedRoute>} />
@@ -108,6 +109,7 @@ export const UserContext = createContext(null);
               <Route path="/ishikawasesp" element={<ProtectedRoute allowedRoles={['administrador']}><VistaIshikawas/></ProtectedRoute>}/>
               <Route path="/prog-audi" element={<ProtectedRoute allowedRoles={['administrador']}><ProgramarAuditoria/></ProtectedRoute>}/>
               <Route path="/ishikawas-estadisticas" element={<ProtectedRoute allowedRoles={['administrador']}><IshikawaDashboard/></ProtectedRoute>}/>
+              <Route path="/ver-reali" element={<ProtectedRoute allowedRoles={['administrador']}><VistaRevicion/></ProtectedRoute>}/>
 
               {/*Auditor*/}
 

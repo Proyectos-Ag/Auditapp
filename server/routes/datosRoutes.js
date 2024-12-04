@@ -8,6 +8,7 @@ router.post('/', datosController.nuevoAuditoria);
 router.get('/', datosController.obtenerTodosDatos);
 router.get('/esp', datosController.obtenerDatosEsp);
 router.get('/espfin', datosController.obtenerDatosEspFinal);
+router.get('/espreal', datosController.obtenerDatosEspRealiz);
 router.get('/esp/aud', datosController.obtenerDatosEspAud);
 router.get('/por/:_id', datosController.obtenerDatoPorId);
 router.get('/datos-filtrados', datosController.obtenerDatosFiltrados);

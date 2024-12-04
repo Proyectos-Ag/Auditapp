@@ -112,86 +112,79 @@ const Finalizada = () => {
         const part1 = document.getElementById('pdf-content-part1');
         const part2 = document.getElementById('pdf-content-part2');
     
-        const addPartToPDF = (element, pdf, isLastPage, pageNumber) => {
+        const addPartAsImage = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            const canvas = await html2canvas(element, { scale: 2.5, useCORS: true });
+            const imgWidth = pageWidth - marginLeft - marginRight;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
-            return html2canvas(element, {
-                scale: 2.5,
-                useCORS: true,
-            }).then((canvas) => {
-                const imgData = canvas.toDataURL('image/jpeg', 0.8);
-                const imgWidth = pdf.internal.pageSize.getWidth();
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            if (yOffset + imgHeight + bottomMargin > pageHeight) {
+                pdf.addPage();
+                yOffset = 0.5;
+            }
     
-                const marginX = (pdf.internal.pageSize.getWidth() - imgWidth) / 2;
-                const pageHeight = pdf.internal.pageSize.getHeight();
-                const availableHeight = pageHeight - 3;
-                
-                // Definir margen superior dinámico según el número de página
-                const marginY = 1.5;
+            const imgData = canvas.toDataURL('image/jpeg', 0.8);
+            pdf.addImage(imgData, 'JPEG', marginLeft, yOffset, imgWidth, imgHeight);
+            yOffset += imgHeight;
     
-                let currentHeight = imgHeight;
-                let currentPage = pageNumber;
+            return yOffset;
+        };
     
-                if (currentHeight <= availableHeight) {
-                    pdf.addImage(imgData, 'JPEG', marginX, marginY, imgWidth, currentHeight, undefined, 'FAST');
-                } else {
-                    let yOffset = 0;
-                    while (currentHeight > availableHeight) {
-                        const croppedCanvas = document.createElement('canvas');
-                        croppedCanvas.width = canvas.width;
-                        croppedCanvas.height = availableHeight * (canvas.width / imgWidth);
+        const processElementRows = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            const rows = element.querySelectorAll('tr');
+            for (const row of rows) {
+                const rowCanvas = await html2canvas(row, { scale: 2.5, useCORS: true });
+                const rowHeight = (rowCanvas.height * (pageWidth - marginLeft - marginRight)) / rowCanvas.width;
     
-                        const ctx = croppedCanvas.getContext('2d');
-                        ctx.drawImage(canvas, 0, yOffset, canvas.width, croppedCanvas.height, 0, 0, croppedCanvas.width, croppedCanvas.height);
-    
-                        const croppedImgData = croppedCanvas.toDataURL('image/jpeg', 0.8);
-                        pdf.addImage(croppedImgData, 'JPEG', marginX, marginY, imgWidth, availableHeight, undefined, 'FAST');
-    
-                        currentHeight -= availableHeight;
-                        yOffset += croppedCanvas.height;
-                        currentPage++;
-                        pdf.addPage();
-                    }
-    
-                    if (currentHeight > 0) {
-                        const finalCanvas = document.createElement('canvas');
-                        finalCanvas.width = canvas.width;
-                        finalCanvas.height = currentHeight * (canvas.width / imgWidth);
-    
-                        const finalCtx = finalCanvas.getContext('2d');
-                        finalCtx.drawImage(canvas, 0, yOffset, canvas.width, finalCanvas.height, 0, 0, finalCanvas.width, finalCanvas.height);
-    
-                        const finalImgData = finalCanvas.toDataURL('image/jpeg', 0.8);
-                        pdf.addImage(finalImgData, 'JPEG', marginX, marginY, imgWidth, currentHeight, undefined, 'FAST');
-                    }
-                }
-    
-                if (!isLastPage) {
+                if (yOffset + rowHeight + bottomMargin > pageHeight) {
                     pdf.addPage();
+                    yOffset = 0.5; // Reiniciar el offset en la nueva página
                 }
     
-                return currentPage;
-            });
+                const rowImgData = rowCanvas.toDataURL('image/jpeg', 0.8);
+                pdf.addImage(rowImgData, 'JPEG', marginLeft, yOffset, pageWidth - marginLeft - marginRight, rowHeight);
+                yOffset += rowHeight;
+            }
+    
+            return yOffset;
+        };
+    
+        const addPartWithRowControl = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            const tables = element.querySelectorAll('table');
+    
+            if (tables.length > 0) {
+                for (const table of tables) {
+                    yOffset = await processElementRows(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+                }
+            }
+    
+            return yOffset;
         };
     
         const pdf = new jsPDF('portrait', 'cm', 'letter');
     
-        let currentPage = 1;
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const marginLeftPart1 = 0.7;
+        const marginRightPart1 = 0.7;
+        const marginLeftPart2 = 1;
+        const marginRightPart2 = 1;
+        const bottomMargin = 1.0; // Margen inferior de 1 cm
+        let yOffset = 0.5;
     
-        addPartToPDF(part1, pdf, false, currentPage)
-            .then((newPageNumber) => {
-                currentPage = newPageNumber;
-                return addPartToPDF(part2, pdf, true, currentPage);
+        addPartAsImage(part1, pdf, yOffset, pageWidth, pageHeight, marginLeftPart1, marginRightPart1, bottomMargin)
+            .then((newYOffset) => {
+                yOffset = newYOffset;
+                return addPartWithRowControl(part2, pdf, yOffset, pageWidth, pageHeight, marginLeftPart2, marginRightPart2, bottomMargin);
             })
             .then(() => {
-                pdf.save("diagrama_ishikawa.pdf");
+                pdf.save("auditoría.pdf");
                 hideLoading();
             })
             .catch((error) => {
                 console.error('Error generating PDF:', error);
                 hideLoading();
             });
-    }; 
+    };    
     
     const getButtonBackgroundColor = (estado) => {
         let backgroundColor;
@@ -215,7 +208,7 @@ const Finalizada = () => {
         <div className='espacio-repo'>
             {/*Mensaje de generacion*/}
             <div id="loading-overlay" style={{display:'none'}}>
-            <div class="loading-content">
+            <div className="loading-content">
                 Generando archivo PDF...
             </div>
             </div>
@@ -257,7 +250,7 @@ const Finalizada = () => {
 
                                 <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
                                     <div id='pdf-content-part1' className='contenedor-repo-fin'>
-                                        <div className="header-container-datos-repo">
+                                        <div className="header-container-datos-repo-fin">
                                             <img src={logo} alt="Logo Empresa" className="logo-empresa-repo" />
                                             <div className='encabezado'>
                                             <h1>REPORTE DE AUDITORÍA</h1>
@@ -440,8 +433,8 @@ const Finalizada = () => {
                                                                             <td className='alingR2'>{programa.Nombre}</td>
                                                                             <td className='alingR'>{desc.Requisito}</td>
                                                                             <td>{desc.Criterio}</td>
-                                                                            <td>{desc.Observacion}</td>
-                                                                            <td key={descIdx}>
+                                                                            <td className='alingR'>{desc.Observacion}</td>
+                                                                            <td className='alingR' key={descIdx}>
                                                                             {desc.Hallazgo ? (
                                                                                 isBase64Image ? (
                                                                                     <img
