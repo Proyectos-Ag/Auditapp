@@ -30,7 +30,9 @@ const mongo = require('./config/dbconfig');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://auditapp-dqej.onrender.com'
+}));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -57,13 +59,6 @@ app.use('/programas-anuales', programarRoutes);
 app.get('/', (req, res) => {
   res.send('Bienvenido a la API de Aguida');
 });
-
-//cors
-const cors = require('cors');
-app.use(cors({
-  origin: 'https://auditapp-dqej.onrender.com'
-}));
-
 
 // Catch 404 and forward to error handler
 app.use(function(req, res, next) {
