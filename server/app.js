@@ -27,12 +27,17 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 const mongo = require('./config/dbconfig');
 
+const corsOptions = {
+  origin: ['http://localhost:3000', 'https://auditapp-dqej.onrender.com'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true, // Permitir cookies si son necesarias
+}
+
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-app.use(cors({
-  origin: 'https://auditapp-dqej.onrender.com'
-}));
+app.use(cors(corsOptions));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

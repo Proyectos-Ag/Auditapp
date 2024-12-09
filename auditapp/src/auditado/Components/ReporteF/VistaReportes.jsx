@@ -12,10 +12,10 @@ const VistaReportes = () => {
 
   useEffect(() => {
     const fetchDatos = async () => {
-      const nombre = userData.Nombre;
       try {
         // Hacer la petición para obtener los datos de Ishikawa
-        const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/por/vista/${nombre}`);
+        const encodedNombre = encodeURIComponent(userData.Nombre);
+        const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/por/vista/${encodedNombre}`);
         console.log("aquiiiii", responseIshikawa);
   
         // Verificar que la respuesta tenga datos

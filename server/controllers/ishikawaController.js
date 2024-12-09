@@ -139,7 +139,7 @@ const actualizarFechaCompromiso = async (req, res) => {
 
   const obtenerIshikawaVista = async (req, res) => {
     try {
-        const { nombre } = req.params;
+      const nombre = decodeURIComponent(req.params.nombre);
         
         const ishikawas = await Ishikawa.find({ auditado: nombre}, 
           'idRep');
