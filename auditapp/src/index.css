@@ -15,3 +15,10 @@ code {
 textarea {
   font-family: 'Roboto', sans-serif;
 }
+
+@font-face {
+  font-family: 'Christmas Baliana';
+  src: url('./assets/fonts/Baliana.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}

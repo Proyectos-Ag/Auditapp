@@ -264,6 +264,28 @@ const obtenerDatosEsp = async (req, res) => {
   }
 };
 
+const obtenerDatosHistorial = async (req, res) => {
+  try {
+    // Filtrar registros que no tengan el campo PuntuacionMaxima y Estado sea 'Terminada'
+    const datos = await Datos.find(
+      { PuntuacionMaxima: { $exists: false } }, // Filtrar por ausencia del campo
+      'AuditorLider FechaFin Programa.Nombre' // Seleccionar solo los campos necesarios
+    );
+
+    // Estructurar los datos para devolver un formato limpio
+    const datosFiltrados = datos.map((dato) => ({
+      AuditorLider: dato.AuditorLider,
+      FechaFin: dato.FechaFin,
+      Programa: dato.Programa.map((programa) => programa.Nombre), // Extraer nombres de Programa
+    }));
+
+    res.status(200).json(datosFiltrados); // Enviar los datos filtrados al cliente
+  } catch (error) {
+    console.error('Error al obtener los datos sin PuntuacionMaxima:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+};
+
 const obtenerDatosEspFinal = async (req, res) => {
   try {
     // Selecciona solo los campos que deseas incluir en la respuesta
@@ -487,5 +509,6 @@ module.exports = {
   obtenerDatosFiltradosAud,
   obtenerDatosEspFinal,
   eliminarRegistro,
-  obtenerDatosEspRealiz
+  obtenerDatosEspRealiz,
+  obtenerDatosHistorial
 };

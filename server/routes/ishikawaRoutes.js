@@ -12,6 +12,7 @@ router.get('/por/vista/:nombre', ishikawaController.obtenerIshikawaVista);
 router.get('/pordato/:_id', ishikawaController.obtenerIshikawaPorDato);
 router.put('/fecha/:id', ishikawaController.actualizarFechaCompromiso);
 router.put('/:id', ishikawaController.actualizarIshikawa);
+router.put('/fin/:id', ishikawaController.ishikawaFinalizado);
 router.put('/completo/:id', ishikawaController.actualizarIshikawaCompleto);
 router.put('/estado/:id', ishikawaController.actualizarEstado);
 router.put('/eliminar-evidencia/:index/:idIsh/:idCorr', ishikawaController.eliminarEvidencia);

@@ -524,8 +524,8 @@ const Terminada = () => {
                                                     <tbody>
                                                         {dato.Programa.map((programa, programIdx) =>
                                                             programa.Descripcion.map((desc, descIdx) => {
-                                                                const base64Prefix = 'data:image/png;base64,';
-                                                                const isBase64Image = desc.Hallazgo.includes(base64Prefix);
+                                                                const firePrefix = 'https://firebasestorage';
+                                                                const isFireImage = desc.Hallazgo.includes(firePrefix);
                                                                 
                                                                 // Evita renderizar filas no necesarias
                                                                 if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
@@ -538,10 +538,19 @@ const Terminada = () => {
                                                                             <td className='alingR2'>{programa.Nombre}</td>
                                                                             <td className='alingR'>{desc.Requisito}</td>
                                                                             <td>{desc.Criterio}</td>
-                                                                            <td className='alingR'>{desc.Observacion}</td>
-                                                                            <td key={descIdx} className='alingR'>
+                                                                            <td className='alingR' >
+                                                                            {desc.Problema && (
+                                                                                <>
+                                                                                Problema: {desc.Problema}
+                                                                                <br />
+                                                                                <br />
+                                                                                </>
+                                                                            )}
+                                                                            {desc.Observacion}
+                                                                            </td>
+                                                                            <td className='alingR' key={descIdx}>
                                                                                 {desc.Hallazgo ? (
-                                                                                    isBase64Image ? (
+                                                                                    isFireImage ? (
                                                                                         <img
                                                                                             src={desc.Hallazgo}
                                                                                             alt="Evidencia"

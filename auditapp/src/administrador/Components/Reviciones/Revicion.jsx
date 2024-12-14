@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import './css/Revicion.css'; 
 import Swal from 'sweetalert2';
+import CircularProgress from '@mui/material/CircularProgress';
 import { useParams } from 'react-router-dom';
 
 const Reporte = () => {
@@ -17,6 +18,8 @@ const Reporte = () => {
     const [hiddenRows, setHiddenRows] = useState({}); 
     const [conteoCriteriosOcultos, setConteoCriteriosOcultos] = useState({});
     const {_id} = useParams();
+    const [isLoading, setIsLoading] = useState(false);
+    const [progress, setProgress] = useState(0);
 
 
     console.log('Aquiiiiiiiii',conteoCriteriosOcultos);
@@ -239,15 +242,12 @@ const Reporte = () => {
     };
 
     const handlePrintPDF = () => {
-        const showLoading = () => {
-            document.getElementById('loading-overlay').style.display = 'flex';
-        };
+        setIsLoading(true);
+        setProgress(0);
     
-        const hideLoading = () => {
-            document.getElementById('loading-overlay').style.display = 'none';
+        const updateProgress = (increment) => {
+            setProgress((prevProgress) => Math.min(Math.ceil(prevProgress + increment), 100));
         };
-    
-        showLoading();
     
         const part1 = document.getElementById('pdf-content-part1');
         const part2 = document.getElementById('pdf-content-part2');
@@ -266,53 +266,56 @@ const Reporte = () => {
             pdf.addImage(imgData, 'JPEG', marginLeft, yOffset, imgWidth, imgHeight);
             yOffset += imgHeight;
     
+            updateProgress(20); // Incrementa el progreso de forma proporcional
             return yOffset;
         };
     
         const processElementRows = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
             const rows = Array.from(element.querySelectorAll('tr')).filter(row => {
-                // Filtra las filas visibles basándote en su estilo
                 return row.style.display !== "none" && row.offsetParent !== null;
             });
-        
+    
+            const progressIncrement = 30 / rows.length; // Progreso proporcional por fila
+    
             for (const row of rows) {
                 const rowCanvas = await html2canvas(row, { scale: 2.5, useCORS: true });
                 const rowHeight = (rowCanvas.height * (pageWidth - marginLeft - marginRight)) / rowCanvas.width;
-        
+    
                 if (yOffset + rowHeight + bottomMargin > pageHeight) {
                     pdf.addPage();
-                    yOffset = 0.5; // Reiniciar el offset en la nueva página
+                    yOffset = 0.5;
                 }
-        
+    
                 const rowImgData = rowCanvas.toDataURL('image/jpeg', 0.8);
                 pdf.addImage(rowImgData, 'JPEG', marginLeft, yOffset, pageWidth - marginLeft - marginRight, rowHeight);
                 yOffset += rowHeight;
+    
+                updateProgress(progressIncrement); // Incrementa el progreso por cada fila
             }
-        
+    
             return yOffset;
-        };        
+        };
     
         const addPartWithRowControl = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
             const tables = element.querySelectorAll('table');
+            const progressIncrement = tables.length > 0 ? 20 / tables.length : 0; // Progreso proporcional por tabla
     
-            if (tables.length > 0) {
-                for (const table of tables) {
-                    yOffset = await processElementRows(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
-                }
+            for (const table of tables) {
+                yOffset = await processElementRows(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+                updateProgress(progressIncrement); // Incrementa el progreso por cada tabla
             }
     
             return yOffset;
         };
     
         const pdf = new jsPDF('portrait', 'cm', 'letter');
-    
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
         const marginLeftPart1 = 0.7;
         const marginRightPart1 = 0.7;
         const marginLeftPart2 = 1;
         const marginRightPart2 = 1;
-        const bottomMargin = 1.0; // Margen inferior de 1 cm
+        const bottomMargin = 1.0;
         let yOffset = 0.5;
     
         addPartAsImage(part1, pdf, yOffset, pageWidth, pageHeight, marginLeftPart1, marginRightPart1, bottomMargin)
@@ -322,23 +325,28 @@ const Reporte = () => {
             })
             .then(() => {
                 pdf.save("auditoría.pdf");
-                hideLoading();
+                setProgress(100);
+                setTimeout(() => setIsLoading(false), 500);
             })
             .catch((error) => {
                 console.error('Error generating PDF:', error);
-                hideLoading();
+                setIsLoading(false);
             });
-    };
+    };    
 
 
     return (
         <div className='espacio-repo'>
             {/*Mensaje de generacion*/}
-            <div id="loading-overlay" style={{display:'none'}}>
-            <div className="loading-content">
-                Generando archivo PDF...
-            </div>
-            </div>
+            {isLoading && (
+                <div className="loading-overlay">
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <CircularProgress variant="determinate" value={progress} />
+                        <p>{progress}%</p> {/* Muestra el porcentaje debajo del spinner */}
+                    </div>
+                </div>
+            )}
+
             
             <div className="datos-container-repo">
             <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Revisión de Reporte</h1>
@@ -570,8 +578,8 @@ const Reporte = () => {
                                                 <tbody>
                                                 {dato.Programa.map((programa, programIdx) => (
                                                     programa.Descripcion.map((desc, descIdx) => {
-                                                        const base64Prefix = 'data:image/png;base64,';
-                                                        const isBase64Image = desc.Hallazgo.includes(base64Prefix);
+                                                        const firePrefix = 'https://firebasestorage';
+                                                        const isFireImage = desc.Hallazgo.includes(firePrefix);
 
                                                         const rowId = `${periodIdx}-${programIdx}-${descIdx}`;
                                                         const isHidden = hiddenRows[rowId];
@@ -584,10 +592,19 @@ const Reporte = () => {
                                                                         <td className='alingR2'>{programa.Nombre}</td>
                                                                         <td className='alingR'>{desc.Requisito}</td>
                                                                         <td>{desc.Criterio}</td>
-                                                                        <td style={{textAlign:'initial'}}>{desc.Observacion}</td>
+                                                                        <td style={{ textAlign: 'initial' }}>
+                                                                        {desc.Problema && (
+                                                                            <>
+                                                                            Problema: {desc.Problema}
+                                                                            <br />
+                                                                            <br />
+                                                                            </>
+                                                                        )}
+                                                                        {desc.Observacion}
+                                                                        </td>
                                                                         <td className='alingR' key={descIdx}>
                                                                             {desc.Hallazgo ? (
-                                                                                isBase64Image ? (
+                                                                                isFireImage ? (
                                                                                     <img
                                                                                         src={desc.Hallazgo}
                                                                                         alt="Evidencia"

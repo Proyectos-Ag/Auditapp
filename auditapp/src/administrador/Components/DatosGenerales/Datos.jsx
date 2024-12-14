@@ -3,6 +3,7 @@ import axios from 'axios';
 import './css/Datos.css';
 import logo from "../assets/img/logoAguida.png";
 import Swal from 'sweetalert2';
+import Historial from './HistorialAuditorias';
 
 const Datos = () => {
   const [formData, setFormData] = useState({
@@ -500,6 +501,9 @@ const Datos = () => {
   return (
       <div>
         <div className="centrado">
+        <div>
+          <Historial />
+        </div>
         <div className="navigation-buttons">
       {formStep !== 4 && (
         <>

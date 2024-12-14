@@ -2,7 +2,7 @@ import React, { useEffect, useState,useCallback,useContext } from 'react';
 import Logo from "../assets/img/logoAguida.png";
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import IshikawaImg from '../assets/img/Ishikawa-transformed.png';
+import IshikawaImg from '../assets/img/Ishikawa-transformed.webp';
 import { UserContext } from '../../../App';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
@@ -71,7 +71,7 @@ const IshikawaRev = () => {
        }]);
 
     const [open, setOpen] = React.useState(false);
-        const handleClose = () => {
+    const handleClose = () => {
     setOpen(false);
   };
 
@@ -357,7 +357,7 @@ const handleCorreccionChange = (index, field, value) => {
         }
     
         setCorrecciones(nuevasCorrecciones);
-    };   
+    };    
     
     const handleAgregarFila = () => {
         setCorrecciones([...correcciones, nuevaCorreccion]);
@@ -464,7 +464,7 @@ const handleCorreccionChange = (index, field, value) => {
             if (filteredIshikawas.length === 0) {
                 alert('No hay datos para actualizar');
                 return;
-            }
+            } 
     
             const { _id } = filteredIshikawas[0]; // ID del registro a actualizar
     
@@ -513,11 +513,11 @@ const handleCorreccionChange = (index, field, value) => {
                     cerrada: correccion.cerrada || '',
                     evidencia: correccion.evidencia || '',
                 })),
-                estado: 'Revisado', // Campo adicional
+                estado: 'Revisado',
             };
     
             // Realiza la solicitud PUT al backend con los datos optimizados
-            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, dataToSend, {
+            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/fin/${_id}`, dataToSend, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -531,12 +531,13 @@ const handleCorreccionChange = (index, field, value) => {
                 text: 'Información guardada correctamente.',
                 icon: 'success',
                 confirmButtonText: 'Aceptar',
-            });
-        } catch (error) {
-            handleClose();
-            console.error('Error al actualizar la información:', error);
-            alert('Hubo un error al actualizar la información');
-        }
+            }).then(() => {
+                verificarRegistro();
+              });
+            } catch (error) {
+              console.error('Error al actualizar:', error);
+              alert('Hubo un error al actualizar la información');
+            }
     }; 
 
 
@@ -948,6 +949,12 @@ const ocultarCargando = () => {
             </div>
                 {filteredIshikawas.map((ishikawa, index) => (
                 <div key={index}>
+                     {ishikawa.estado === 'Asignado' && (
+                            <div className="en-proceso">
+                                En proceso.....
+                            </div>
+                        )}
+
                     {ishikawa.estado === 'En revisión' && (
                         <>
                             {showNotaRechazo && (

@@ -223,10 +223,10 @@ table, th, td {
 
 .textarea-mod{
     position: absolute;
-    margin-top: 2.5rem;
+    margin-top: 4rem;
     width: 25.5rem;
     height: 30%;
-    margin-left: 44.5rem;
+    margin-left: 20rem;
 }
 
 .button-oculto{

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import './css/Ishikawa.css';
-import ishikawa from '../assets/img/Ishikawa-transformed.png';
+import ishikawa from '../assets/img/Ishikawa-transformed.webp';
 import Logo from "../assets/img/logoAguida.png";
 import { useParams } from 'react-router-dom';
 import axios from 'axios';

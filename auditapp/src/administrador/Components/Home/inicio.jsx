@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import './css/inicio.css';
 import BotonesRol from "../../../resources/botones-rol";
-import videoFile from '../assets/img/UpscaleVideo_1_20240628.mp4';
+import videoFile from '../assets/img/UpscaleVideo_1_20240628.webm';
 import pez from "../assets/img/Ishikawa-mini.png";
 import revision from "../assets/img/revision.png";
 import proceso from "../assets/img/proceso.png";
@@ -15,6 +15,7 @@ import calendario from "../assets/img/calendario.png"
 import estadisticas from "../assets/img/estadisticas.png"
 import subirxls from "../assets/img/subir-xls.png"
 import programas from "../assets/img/programas.png"
+import Nieve from "../../../resources/nieve";
 
 import { useNavigate } from "react-router-dom";
 
@@ -39,10 +40,13 @@ const Inicio = () => {
         loop 
         muted 
       />
+
+      
       <div className="inicio-content">
         <h1>Bienvenidos a Auditapp</h1>
       </div>
     </div>
+    <Nieve/>
 
     <div className="fondo-home">
       <BotonesRol/>

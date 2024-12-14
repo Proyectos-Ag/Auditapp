@@ -258,7 +258,23 @@ th.conformity-header {
 }
 
 .textarea-custom {
-    margin-bottom: 10px;  /* Añade espacio entre los textarea */
-    width: 100%;          /* Asegúrate de que ocupen todo el ancho disponible */
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #a5a5a5;
+    border-radius: 5px;
+    font-size: 1em;
+    color: #333;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
+.textarea-custom:focus {
+    border-color: #0056b3;
+    box-shadow: 0 4px 12px rgba(0, 91, 187, 0.2);
+    outline: none;
+}
+
+.textarea-custom::placeholder {
+    color: #999;
+    font-style: italic;
+}

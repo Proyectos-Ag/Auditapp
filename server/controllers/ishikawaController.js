@@ -274,6 +274,58 @@ const actualizarIshikawa = async (req, res) => {
       });
   }
 };
+
+const ishikawaFinalizado = async (req, res) => {
+  try {
+      const { id } = req.params;
+      const { correcciones, estado } = req.body;
+
+      if (!Array.isArray(correcciones) || correcciones.length === 0) {
+          return res.status(400).json({ error: 'No se enviaron correcciones para actualizar' });
+      }
+
+      const isCorreccionValid = correcciones.every(correccion => 
+          correccion.actividad && 
+          correccion.responsable && 
+          correccion.fechaCompromiso && 
+          correccion.cerrada !== undefined && 
+          correccion.evidencia
+      );
+
+      if (!isCorreccionValid) {
+          return res.status(400).json({ error: 'Las correcciones contienen datos inválidos' });
+      }
+
+      const updatedIshikawa = await Ishikawa.findByIdAndUpdate(
+          id,
+          { 
+              $set: { 
+                  correcciones, 
+                  ...(estado && { estado }) 
+              }
+          },
+          { new: true }
+      );
+
+      if (!updatedIshikawa) {
+          return res.status(404).json({ error: 'Ishikawa no encontrado' });
+      }
+
+      res.status(200).json({
+          message: 'Ishikawa actualizado exitosamente',
+          data: updatedIshikawa,
+      });
+  } catch (error) {
+      if (error.name === 'CastError') {
+          return res.status(400).json({ error: 'ID inválido' });
+      }
+      console.error('Error al actualizar Ishikawa:', error);
+      res.status(500).json({
+          error: 'Ocurrió un error al actualizar el Ishikawa',
+          details: error.message,
+      });
+  }
+};
   
   module.exports = {
     crearIshikawa,
@@ -288,5 +340,6 @@ const actualizarIshikawa = async (req, res) => {
     actualizarEstado,
     obtenerIshikawaEsp,
     obtenerIshikawaPorId,
-    eliminarIshikawasPorIdRep
+    eliminarIshikawasPorIdRep,
+    ishikawaFinalizado
   };

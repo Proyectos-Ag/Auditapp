@@ -5,6 +5,29 @@ const DatosV = () => {
   return (
     <div className="modal-body">
 
+    <h1>Versión 2.1.2</h1>
+
+    <ul>
+      <h3 className="modal-title">Historial</h3>
+      <li>Se agregó un historial en el apartado de generar auditoría que contiene la información del auditor, la fecha en que se realizó y el programa realizado.</li>
+    </ul>
+
+    <ul>
+      <h3 className="modal-title">Solución de errores</h3>
+      <li>Se solucionó el error al momento de finalizar el diagrama.</li>
+      <li>Se solucionaron errores al generar auditorías.</li>
+    </ul>
+
+    <ul>
+      <h3 className="modal-title">Nuevos estilos</h3>
+      <li>Se modificaron estilos en general en la aplicación.</li>
+    </ul>
+
+    <ul>
+      <h3 className="modal-title">Aviso de proceso</h3>
+      <li>Se agregó un aviso en los Ishikawas asignados para dar a conocer que el diagrama está en proceso.</li>
+    </ul>
+
     <h1>Versión 2.1.1 (Beta)</h1>
         
         <ul>

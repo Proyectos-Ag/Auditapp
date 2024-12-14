@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './css/Ishikawa.css'
 import Logo from "../assets/img/logoAguida.png";
-import Ishikawa from '../assets/img/Ishikawa-transformed.png';
+import Ishikawa from '../assets/img/Ishikawa-transformed.webp';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 

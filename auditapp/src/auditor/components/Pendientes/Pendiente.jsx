@@ -6,7 +6,11 @@ import './css/pendiente.css';
 import './css/Modal.css';
 import Fotos from './Foto'; 
 import Swal from 'sweetalert2';
+import { storage } from '../../../firebase';
+import {ref, uploadBytes, getDownloadURL} from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const Pendientes = () => {
     const { userData } = useContext(UserContext);
@@ -19,6 +23,15 @@ const Pendientes = () => {
     const [capturedPhotos, setCapturedPhotos] = useState({}); 
     const [imageModalOpen, setImageModalOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
+    const [open, setOpen] = React.useState(false);
+
+    const handleClose = () => {
+        setOpen(false);
+      };
+    
+        const handleOpen = () => {
+        setOpen(true);
+      };
 
     const checkboxValues = {
         'Conforme': 1,
@@ -180,22 +193,19 @@ setPercentages(initialPercentages);
         setModalOpen(true);
     };
 
-    const handleCapture = (blob) => {
+    const handleCapture = (file) => {
         if (selectedField) {
-            // Convierte el BLOB en una URL temporal que pueda ser usada para previsualizar la imagen
-            const blobUrl = URL.createObjectURL(blob);
-            
             setCapturedPhotos(prev => ({
                 ...prev,
-                [selectedField]: blobUrl  // Almacena la URL del BLOB en lugar de Base64
+                [selectedField]: file
             }));
         }
         setModalOpen(false);
-    };      
+    };     
 
     const navigate = useNavigate();
 
-    const handleUpdatePeriod = async (periodIdx) => {
+    const handleUpdatePeriod = async (periodIdx, id) => {
         if (!areAllCheckboxesFilled(periodIdx)) {
             Swal.fire({
                 icon: 'warning',
@@ -204,58 +214,82 @@ setPercentages(initialPercentages);
             });
             return;
         }
+
+        const showLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        };
+    
+        const hideLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'none';
+        };
+    
+        showLoading();
     
         try {
-            let totalValueSum = 0;
-            let validProgramsSum = 0;
+            let totalPorcentage = 0;
             const numPrograms = datos[periodIdx].Programa.length;
     
             for (let programIdx = 0; programIdx < numPrograms; programIdx++) {
                 const programa = datos[periodIdx].Programa[programIdx];
-                const observaciones = programa.Descripcion.map((desc, descIdx) => {
-                    const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
-                    return {
-                        ID: desc.ID,
-                        Criterio: selectedCheckboxes[fieldKey] || '',
-                        Observacion: document.querySelector(`textarea[name=Observaciones_${periodIdx}_${programIdx}_${descIdx}]`).value,
-                        Problema: document.querySelector(`textarea[name=Problemas_${periodIdx}_${programIdx}_${descIdx}]`).value || desc.Problema,
-                        Hallazgo: capturedPhotos[fieldKey] || desc.Hallazgo || ''
-                    };
-                });
+    
+                const observaciones = await Promise.all(
+                    programa.Descripcion.map(async (desc, descIdx) => {
+                        const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+                        const updatedObservation = { ...desc };
+    
+                        // Verificar si hay una imagen nueva capturada para este fieldKey
+                        const file = capturedPhotos[fieldKey];
+                        if (file) {
+                            try {
+                                const fileName = `evidencia_${id}_${periodIdx}_${programIdx}_${descIdx}`;
+                                const fileUrl = await uploadImageToFirebase(file, fileName);
+    
+                                // Asignar la URL al campo Hallazgo
+                                updatedObservation.Hallazgo = fileUrl;
+                            } catch (error) {
+                                console.error(`Error al subir la imagen para ${fieldKey}:`, error);
+                            }
+                        } else {
+                            // Mantener el hallazgo existente si no hay una imagen nueva
+                            updatedObservation.Hallazgo = desc.Hallazgo || '';
+                        }
+    
+                        return {
+                            ID: desc.ID,
+                            Criterio: selectedCheckboxes[fieldKey] || '',
+                            Observacion: document.querySelector(`textarea[name=Observaciones_${periodIdx}_${programIdx}_${descIdx}]`).value,
+                            Problema: document.querySelector(`textarea[name=Problemas_${periodIdx}_${programIdx}_${descIdx}]`).value || desc.Problema,
+                            Hallazgo: updatedObservation.Hallazgo,
+                        };
+                    })
+                );
     
                 const percentage = percentages[`${periodIdx}_${programIdx}`] || 0;
-                const validPrograms = programa.Descripcion.reduce((acc, desc, descIdx) => {
-                    const value = checkboxValues[selectedCheckboxes[`${periodIdx}_${programIdx}_${descIdx}`]];
-                    return value !== null ? acc + 1 : acc;
-                }, 0);
-                const totalValue = programa.Descripcion.reduce((acc, desc, descIdx) => {
-                    const value = checkboxValues[selectedCheckboxes[`${periodIdx}_${programIdx}_${descIdx}`]];
-                    return value !== null ? acc + value : acc;
-                }, 0);
-    
-                validProgramsSum += validPrograms;
-                totalValueSum += totalValue;
+                totalPorcentage += percentage;
     
                 try {
+                    // Enviar los datos actualizados para el programa específico
                     await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
                         programIdx,
                         observaciones,
                         percentage,
-                        usuario: userData.Nombre,
                     });
                 } catch (error) {
                     console.error('Error al actualizar los datos:', error);
                     alert('Error al actualizar los datos');
+                    hideLoading();
                     return;
                 }
             }
     
-            const totalPorcentage = (totalValueSum / validProgramsSum) * 100;
+            const totalPorcentageAvg = (totalPorcentage / numPrograms).toFixed(2);
             try {
+                // Actualizar porcentaje total
                 await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
-                    PorcentajeTotal: totalPorcentage.toFixed(2),
-                    Estado: 'Realizada'
+                    PorcentajeTotal: totalPorcentageAvg,
+                    Estado: 'Realizada',
                 });
+                hideLoading();
                 Swal.fire({
                     icon: 'success',
                     title: 'Reporte generado',
@@ -271,59 +305,110 @@ setPercentages(initialPercentages);
         }
     };      
     
-    const handleGuardarCamb = async (periodIdx) => {
+    const handleGuardarCamb = async (periodIdx, id) => {
+        const showLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        };
+    
+        const hideLoading = () => {
+            document.getElementById('loading-overlay').style.display = 'none';
+        };
+    
+        showLoading();
         try {
             let totalPorcentage = 0;
             const numPrograms = datos[periodIdx].Programa.length;
     
             for (let programIdx = 0; programIdx < numPrograms; programIdx++) {
                 const programa = datos[periodIdx].Programa[programIdx];
-                const observaciones = programa.Descripcion.map((desc, descIdx) => {
-                    const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
-                    return {
-                        ID: desc.ID,
-                        Criterio: selectedCheckboxes[fieldKey] || '',
-                        Observacion: document.querySelector(`textarea[name=Observaciones_${periodIdx}_${programIdx}_${descIdx}]`).value,
-                        Problema: document.querySelector(`textarea[name=Problemas_${periodIdx}_${programIdx}_${descIdx}]`).value || desc.Problema,
-                        Hallazgo: capturedPhotos[fieldKey] || desc.Hallazgo || ''
-                    };
-                });
+    
+                const observaciones = await Promise.all(
+                    programa.Descripcion.map(async (desc, descIdx) => {
+                        const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+                        const updatedObservation = { ...desc };
+    
+                        // Verificar si hay una imagen nueva capturada para este fieldKey
+                        const file = capturedPhotos[fieldKey];
+                        if (file) {
+                            try {
+                                const fileName = `evidencia_${id}_${periodIdx}_${programIdx}_${descIdx}`;
+                                const fileUrl = await uploadImageToFirebase(file, fileName);
+    
+                                // Asignar la URL al campo Hallazgo
+                                updatedObservation.Hallazgo = fileUrl;
+                            } catch (error) {
+                                console.error(`Error al subir la imagen para ${fieldKey}:`, error);
+                            }
+                        } else {
+                            // Mantener el hallazgo existente si no hay una imagen nueva
+                            updatedObservation.Hallazgo = desc.Hallazgo || '';
+                        }
+    
+                        return {
+                            ID: desc.ID,
+                            Criterio: selectedCheckboxes[fieldKey] || '',
+                            Observacion: document.querySelector(`textarea[name=Observaciones_${periodIdx}_${programIdx}_${descIdx}]`).value,
+                            Problema: document.querySelector(`textarea[name=Problemas_${periodIdx}_${programIdx}_${descIdx}]`).value || desc.Problema,
+                            Hallazgo: updatedObservation.Hallazgo,
+                        };
+                    })
+                );
     
                 const percentage = percentages[`${periodIdx}_${programIdx}`] || 0;
                 totalPorcentage += percentage;
     
                 try {
+                    // Enviar los datos actualizados para el programa específico
                     await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
                         programIdx,
                         observaciones,
-                        percentage
+                        percentage,
                     });
                 } catch (error) {
                     console.error('Error al actualizar los datos:', error);
                     alert('Error al actualizar los datos');
+                    hideLoading();
                     return;
                 }
             }
     
-        const totalPorcentageAvg = (totalPorcentage / numPrograms).toFixed(2);
+            const totalPorcentageAvg = (totalPorcentage / numPrograms).toFixed(2);
             try {
+                // Actualizar porcentaje total
                 await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
                     PorcentajeTotal: totalPorcentageAvg,
-                    Estado: 'Devuelto'
+                    Estado: 'Devuelto',
                 });
+                hideLoading();
                 Swal.fire({
                     icon: 'success',
                     title: 'Cambios Guardados',
-                    text: 'El checklist se a guardado',
+                    text: 'El checklist se ha guardado',
                 });
             } catch (error) {
                 console.error('Error al actualizar el porcentaje total:', error);
                 alert('Error al actualizar el porcentaje total');
             }
         } catch (error) {
-            console.error('Error en handleUpdatePeriod:', error);
+            console.error('Error en handleGuardarCamb:', error);
         }
-    };  
+    };
+    
+    // Función para subir imágenes a Firebase
+    const uploadImageToFirebase = async (file, fileName) => {
+        try {
+            if (!(file instanceof File)) {
+                throw new Error('El objeto recibido no es un archivo válido');
+            }
+    
+            const storageRef = ref(storage, `files/${fileName}`);
+            await uploadBytes(storageRef, file); // Subir archivo
+            return await getDownloadURL(storageRef); // Obtener URL
+        } catch (error) {
+            console.error('Error al subir la imagen:', error);
+            throw new Error('No se pudo subir la imagen');
+        }
+    };     
     
     const areAllCheckboxesFilled = (periodIdx) => {
         const numPrograms = datos[periodIdx].Programa.length;
@@ -385,10 +470,18 @@ setPercentages(initialPercentages);
 };
 
 
-    return (
+return (
         <div>
             <div className="datos-container2">
-                <div className="form-group-datos">
+                {/*Carga*/}
+                <Backdrop
+                    sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
+                    open={open}
+                    onClick={handleClose}
+                >
+                    <CircularProgress color="inherit" />
+                </Backdrop>
+                    <div className="form-group-datos">
                     {datos.length === 0 ? (
                         <p>Sin auditorías pendientes</p>
                     ) : (   
@@ -403,11 +496,11 @@ setPercentages(initialPercentages);
                                     <div className="header-container-datos">
                                         <img src={logo} alt="Logo Empresa" className="logo-empresa" />
                                         <div className='posicion-button'>
-                                        <button className="update-button-camb" onClick={() => handleGuardarCamb(periodIdx)}>
+                                        <button className="update-button-camb" onClick={() => handleGuardarCamb(periodIdx, dato._id)}>
                                             Guardar Cambios
                                         </button>
                                         </div>
-                                        <button className="update-button" onClick={() => handleUpdatePeriod(periodIdx)}>
+                                        <button className="update-button" onClick={() => handleUpdatePeriod(periodIdx, dato._id)}>
                                             Generar Reporte
                                         </button>
                                     </div>
@@ -441,63 +534,62 @@ setPercentages(initialPercentages);
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-  {programa.Descripcion.map((desc, descIdx) => {
-    const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
-    
-    // Aquí no necesitas manejar prefijos Base64, solo te preocupas de que sea un BLOB o base64
-    const imageSrc = capturedPhotos[fieldKey] || desc.Hallazgo || '';
+                                                    {programa.Descripcion.map((desc, descIdx) => {
+                                                        const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+                                                        
+                                                        // Aquí no necesitas manejar prefijos Base64, solo te preocupas de que sea un BLOB o base64
+                                                        const imageSrc = capturedPhotos[fieldKey] || desc.Hallazgo || '';
 
-    return (
-      <tr key={descIdx}>
-        <td>{desc.ID}</td>
-        <td className='alingR'>{desc.Requisito}</td>
-        {['Conforme', 'm', 'M', 'C', 'NA'].map((checkboxName) => (
-          <td key={checkboxName} className={getTdClass(periodIdx, programIdx, descIdx, checkboxName)}>
-            <input
-              type="checkbox"
-              name={`${checkboxName}_${periodIdx}_${programIdx}_${descIdx}`}
-              checked={selectedCheckboxes[fieldKey] === checkboxName}
-              onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, checkboxName)}
-            />
-          </td>
-        ))}
-        <td className='espacio-test flex-column'>
-          <textarea 
-            name={`Problemas_${periodIdx}_${programIdx}_${descIdx}`} 
-            defaultValue={desc.Problema}
-            className="textarea-custom"
-            style={{height:"20px"}}
-            placeholder='Problema...'
-          ></textarea>
-          <textarea
-            name={`Observaciones_${periodIdx}_${programIdx}_${descIdx}`}
-            defaultValue={desc.Observacion}
-            className="textarea-custom"
-            placeholder='Hallazgo...'
-          ></textarea>
-        </td>
-        <td>
-          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-          <div className="button-foto" onClick={() => handleOpenModal(fieldKey)}>
-            <span className="material-symbols-outlined">
-              add_a_photo
-            </span>
-          </div>
-          
-          {imageSrc && (
-            <img
-              src={typeof imageSrc === 'string' ? imageSrc : URL.createObjectURL(imageSrc)} // Si es string (base64), úsalo directamente, si es Blob, usa createObjectURL
-              alt="Evidencia"
-              className="hallazgo-imagen"
-              onClick={() => handleImageClick(imageSrc)}
-            />
-          )}
-        </td>
-      </tr>
-    );
-  })}
-</tbody>
-
+                                                        return (
+                                                        <tr key={descIdx}>
+                                                            <td>{desc.ID}</td>
+                                                            <td className='alingR'>{desc.Requisito}</td>
+                                                            {['Conforme', 'm', 'M', 'C', 'NA'].map((checkboxName) => (
+                                                            <td key={checkboxName} className={getTdClass(periodIdx, programIdx, descIdx, checkboxName)}>
+                                                                <input
+                                                                type="checkbox"
+                                                                name={`${checkboxName}_${periodIdx}_${programIdx}_${descIdx}`}
+                                                                checked={selectedCheckboxes[fieldKey] === checkboxName}
+                                                                onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, checkboxName)}
+                                                                />
+                                                            </td>
+                                                            ))}
+                                                            <td className='espacio-test flex-column'>
+                                                            <textarea 
+                                                                name={`Problemas_${periodIdx}_${programIdx}_${descIdx}`} 
+                                                                defaultValue={desc.Problema}
+                                                                className="textarea-custom"
+                                                                style={{height:"40px", marginBottom: "10px"}}
+                                                                placeholder='Problema...'
+                                                            ></textarea>
+                                                            <textarea
+                                                                name={`Observaciones_${periodIdx}_${programIdx}_${descIdx}`}
+                                                                defaultValue={desc.Observacion}
+                                                                className="textarea-custom"
+                                                                placeholder='Hallazgo...'
+                                                            ></textarea>
+                                                            </td>
+                                                            <td>
+                                                            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+                                                            <div className="button-foto" onClick={() => handleOpenModal(fieldKey)}>
+                                                                <span className="material-symbols-outlined">
+                                                                add_a_photo
+                                                                </span>
+                                                            </div>
+                                                            
+                                                            {imageSrc && (
+                                                                <img
+                                                                src={typeof imageSrc === 'string' ? imageSrc : URL.createObjectURL(imageSrc)} // Si es string (base64), úsalo directamente, si es Blob, usa createObjectURL
+                                                                alt="Evidencia"
+                                                                className="hallazgo-imagen"
+                                                                onClick={() => handleImageClick(imageSrc)}
+                                                                />
+                                                            )}
+                                                            </td>
+                                                        </tr>
+                                                        );
+                                                    })}
+                                                    </tbody>
                                                 </table>
                                             </div>
                                         ))

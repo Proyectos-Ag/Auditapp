@@ -64,6 +64,7 @@ const MigasPan = () => {
     '/auditado/diagrama': 'Diagrama Auditado',
     '/auditado/informacion': 'Información Auditado',
     '/auditado/vistarep': 'Vista de Reportes',
+    '/ver-reali':'Reportes en Revisión'
   };
 
   const getDynamicBreadcrumbName = (path) => {
@@ -72,6 +73,7 @@ const MigasPan = () => {
       { pattern: /^\/auditado\/ishikawa\/[\w-]+/, name: 'Ishikawa Auditoría' },
       { pattern: /^\/auditado\/reporte\/[\w-]+/, name: 'Reporte Auditoría' },
       { pattern: /^\/terminada\/[\w-]+/, name: 'Reporte Auditoría' },
+      { pattern: /^\/revicion\/[\w-]+/, name: 'Reporte' },
       { pattern: /^\/finalizadas\/[\w-]+/, name: 'Reporte Finalizado' },
       { pattern: /^\/diagrama\/[\w-]+/, name: 'Ishikawa Específico' }
     ];

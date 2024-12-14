@@ -287,8 +287,8 @@ const Reporte = () => {
                                                 <tbody>
                                                     {dato.Programa.map((programa, programIdx) => (
                                                         programa.Descripcion.map((desc, descIdx) => {
-                                                            const base64Prefix = 'data:image/png;base64,';
-                                                             const isBase64Image = desc.Hallazgo.includes(base64Prefix);
+                                                            const firePrefix = 'https://firebasestorage';
+                                                             const isBase64Image = desc.Hallazgo.includes(firePrefix);
                                                             if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
                                                                 return (
                                                                     <tr key={descIdx}>

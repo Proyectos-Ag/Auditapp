@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from "react";
 import './css/inicio.css';
 import BotonesRol from "../../../resources/botones-rol";
-import videoFile from '../assets/img/UpscaleVideo_1_20240628.mp4';
+import videoFile from '../assets/img/UpscaleVideo_1_20240628.webm';
 import revision from "../assets/img/revision.png";
 import finalizado from "../assets/img/finalizado.png";
 import usuario from "../assets/img/usuario.png";
 import { useNavigate } from "react-router-dom";
+import Nieve from "../../../resources/nieve";
 
 const Inicio = () => {
   const videoRef = useRef(null);
@@ -32,6 +33,7 @@ const Inicio = () => {
         <h1>Bienvenidos a Auditapp</h1>
       </div>
     </div>
+    <Nieve/>
 
     <div className="fondo-home">
     <BotonesRol/>

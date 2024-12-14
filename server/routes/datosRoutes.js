@@ -7,6 +7,7 @@ const datosController = require('../controllers/datosController');
 router.post('/', datosController.nuevoAuditoria);
 router.get('/', datosController.obtenerTodosDatos);
 router.get('/esp', datosController.obtenerDatosEsp);
+router.get('/esp-historial', datosController.obtenerDatosHistorial);
 router.get('/espfin', datosController.obtenerDatosEspFinal);
 router.get('/espreal', datosController.obtenerDatosEspRealiz);
 router.get('/esp/aud', datosController.obtenerDatosEspAud);
