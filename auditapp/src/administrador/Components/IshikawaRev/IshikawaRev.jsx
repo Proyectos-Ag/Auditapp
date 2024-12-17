@@ -673,6 +673,7 @@ const verificarRegistro = async () => {
                     proName: nombre
                 }
             });
+            console.log('respuesta: ', response.data);
           const dataFiltrada = response.data.filter(item => item.idRep === _id && item.idReq === id && item.proName === nombre && 
             (item.estado === 'Rechazado' || item.estado === 'Revisado' || item.estado === 'Aprobado'|| item.estado === 'Asignado'));
           const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre && item.estado === 'Aprobado');
@@ -1359,7 +1360,7 @@ const ocultarCargando = () => {
                 ))}
             </div>
             {(ishikawas.length === 0 || mensaje) && <div className="mensaje-error">
-                <div className='select-ish'>
+                <div className='select-ish-rev'>
                 {rechazo.map((ishikawa, asig) => (
                     <div key={asig}>
                          <div className='asignado-ishi'>Asignado: {ishikawa.auditado}</div>

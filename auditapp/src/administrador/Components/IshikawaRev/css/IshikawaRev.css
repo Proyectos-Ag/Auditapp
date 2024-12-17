@@ -333,10 +333,10 @@
     cursor: pointer; 
 }
   
-.select-ish{
+.select-ish-rev{
     position: absolute;
     display: block;
-    margin-top: -14%;
+    margin-top: -5%;
     margin-left: 25%;
     padding: 30px;
     width: 50%;
@@ -347,7 +347,7 @@
     background-color: aliceblue;
 }
 
-.select-ish select{
+.select-ish-rev select{
     display: flex;
     margin-left: 25%;
     margin-bottom: 10px;
@@ -355,7 +355,7 @@
     width: 50%;
 }
 
-  .select-ish button{
+  .select-ish-rev button{
     display: block;
     margin-left: 25%;
     height: 35px;
@@ -367,7 +367,7 @@
     cursor: pointer;
   }
 
-  .select-ish button:hover{
+  .select-ish-rev button:hover{
     background-color: #114f72;
   }
 

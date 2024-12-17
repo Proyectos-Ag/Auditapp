@@ -89,8 +89,9 @@ const ReporteF = () => {
     };
 
     const navIshikawa = (_id, id, nombre) => {
-        navigate(`/auditado/ishikawa/${_id}/${id}/${nombre}`);
-    };  
+        const nombreCodificado = encodeURIComponent(nombre);
+        navigate(`/auditado/ishikawa/${_id}/${id}/${nombreCodificado}`);
+    };
     
     const ishikawasMap = useMemo(() => {
         return ishikawas.reduce((acc, ish) => {

@@ -286,8 +286,9 @@ const Terminada = () => {
     };
 
     const navIshikawa = (_id, id, nombre) => {
-        navigate(`/ishikawa/${_id}/${id}/${nombre}`);
-    };
+        const nombreCodificado = encodeURIComponent(nombre);
+        navigate(`/ishikawa/${_id}/${id}/${nombreCodificado}`);
+    };    
 
     return (
         <div className='espacio-repo'>

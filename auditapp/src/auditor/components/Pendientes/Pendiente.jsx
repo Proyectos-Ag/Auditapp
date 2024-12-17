@@ -306,15 +306,7 @@ setPercentages(initialPercentages);
     };      
     
     const handleGuardarCamb = async (periodIdx, id) => {
-        const showLoading = () => {
-            document.getElementById('loading-overlay').style.display = 'flex';
-        };
-    
-        const hideLoading = () => {
-            document.getElementById('loading-overlay').style.display = 'none';
-        };
-    
-        showLoading();
+        handleOpen();
         try {
             let totalPorcentage = 0;
             const numPrograms = datos[periodIdx].Programa.length;
@@ -367,7 +359,7 @@ setPercentages(initialPercentages);
                 } catch (error) {
                     console.error('Error al actualizar los datos:', error);
                     alert('Error al actualizar los datos');
-                    hideLoading();
+                    handleClose();
                     return;
                 }
             }
@@ -379,13 +371,14 @@ setPercentages(initialPercentages);
                     PorcentajeTotal: totalPorcentageAvg,
                     Estado: 'Devuelto',
                 });
-                hideLoading();
+                handleClose();
                 Swal.fire({
                     icon: 'success',
                     title: 'Cambios Guardados',
                     text: 'El checklist se ha guardado',
                 });
             } catch (error) {
+                handleClose();
                 console.error('Error al actualizar el porcentaje total:', error);
                 alert('Error al actualizar el porcentaje total');
             }
@@ -475,11 +468,11 @@ return (
             <div className="datos-container2">
                 {/*Carga*/}
                 <Backdrop
-                    sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
-                    open={open}
-                    onClick={handleClose}
+                sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
+                open={open}
+                onClick={handleClose}
                 >
-                    <CircularProgress color="inherit" />
+                <CircularProgress color="inherit" />
                 </Backdrop>
                     <div className="form-group-datos">
                     {datos.length === 0 ? (

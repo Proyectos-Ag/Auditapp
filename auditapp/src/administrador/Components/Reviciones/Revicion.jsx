@@ -7,6 +7,7 @@ import html2canvas from 'html2canvas';
 import './css/Revicion.css'; 
 import Swal from 'sweetalert2';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 
 const Reporte = () => {
@@ -20,6 +21,7 @@ const Reporte = () => {
     const {_id} = useParams();
     const [isLoading, setIsLoading] = useState(false);
     const [progress, setProgress] = useState(0);
+    const navigate = useNavigate();
 
 
     console.log('Aquiiiiiiiii',conteoCriteriosOcultos);
@@ -148,6 +150,7 @@ const Reporte = () => {
     };
 
     const actualizarEstadoTerminada = async (id, puntuacionObtenida, confExternas, estatus, porcentajeTotal, AuditorLiderEmail) => {
+        
         try {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
                 Estado: 'Terminada',
@@ -157,7 +160,16 @@ const Reporte = () => {
                 PorcentajeTotal: porcentajeTotal,
                 AuditorLiderEmail
             });
-            obtenerDatos();
+
+            Swal.fire({
+                title: '¡Operación Exitosa!',
+                text: 'El estado se actualizó correctamente.',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            }).then(() => {
+                // Redirige después de aceptar la alerta
+                navigate('/revish');
+            });
         } catch (error) {
             console.error('Error al actualizar el estado:', error);
         }

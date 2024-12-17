@@ -53,7 +53,7 @@ const VistaRevicion = () => {
         ))}
       </div>
       ) : (
-        <h2 className='cont-card-repo'>No hay auditorías finalizadas</h2>
+        <h2 className='cont-card-repo'>No hay auditorías por revisar</h2>
       )}
     </div>
   );
