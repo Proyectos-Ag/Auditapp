@@ -123,21 +123,10 @@ const IshikawaRev = () => {
 }, [userData, _id, id, nombre]);
 
 useEffect(() => {
-        const simulateInputChange = () => {
-          const textareas = document.querySelectorAll('textarea');
-          textareas.forEach((textarea) => {
-            const event = {
-              target: textarea,
-              name: textarea.name,
-              value: textarea.value
-            };
-            handleInputChange(event);
-          });
-        };
-    
-        simulateInputChange(); // Ejecutar la función al cargar el componente
-    
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach((textarea) => ajustarTamanoFuente(textarea));
 }, [filteredIshikawas]);
+
 
     useEffect(() => {
         if (filteredIshikawas.length > 0) {
@@ -774,26 +763,23 @@ const handleUpdateFechaCompromiso = async (index) => {
         }
 };
 
-const handleInputChange = (e) => {
-        const { value } = e.target;
-      
-        // Define el tamaño de fuente según el rango de caracteres
-        let fontSize;
-        if (value.length > 125) {
-          fontSize = '10.3px';
-        } else if (value.length > 100) {
-          fontSize = '11px'; 
-        } else if (value.length > 88) {
-          fontSize = '12px'; 
-        } else if (value.length > 78) {
-          fontSize = '13px'; 
-        } else if (value.length > 65) {
-          fontSize = '14px';
-        } else {
-          fontSize = '15px'; // Por defecto
-        }
+const ajustarTamanoFuente = (textarea) => {
+    const maxFontSize = 15; // Tamaño máximo de fuente
+    const minFontSize = 10; // Tamaño mínimo de fuente
+    const lineHeight = 1.2; // Ajusta según el diseño
 
-        e.target.style.fontSize = fontSize;
+    let fontSize = maxFontSize;
+    textarea.style.fontSize = `${fontSize}px`;
+
+    while (
+        (textarea.scrollHeight > textarea.offsetHeight ||
+        textarea.scrollWidth > textarea.offsetWidth) &&
+        fontSize > minFontSize
+    ) {
+        fontSize -= 0.5; // Reduce el tamaño en pequeños pasos
+        textarea.style.fontSize = `${fontSize}px`;
+        textarea.style.lineHeight = `${lineHeight}em`;
+    }
 };
     
 const colores = ['black', 'blue', 'green', 'yellow','orange', 'red'];

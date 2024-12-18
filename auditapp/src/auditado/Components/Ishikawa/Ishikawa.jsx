@@ -565,8 +565,6 @@ const mostrarCargando = () => {
   });
 };
 
-
-
 const ocultarCargando = () => {
   Swal.close();
 };
