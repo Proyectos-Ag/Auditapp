@@ -214,16 +214,6 @@ setPercentages(initialPercentages);
             });
             return;
         }
-
-        const showLoading = () => {
-            document.getElementById('loading-overlay').style.display = 'flex';
-        };
-    
-        const hideLoading = () => {
-            document.getElementById('loading-overlay').style.display = 'none';
-        };
-    
-        showLoading();
     
         try {
             let totalPorcentage = 0;
@@ -277,7 +267,7 @@ setPercentages(initialPercentages);
                 } catch (error) {
                     console.error('Error al actualizar los datos:', error);
                     alert('Error al actualizar los datos');
-                    hideLoading();
+                    
                     return;
                 }
             }
@@ -288,8 +278,9 @@ setPercentages(initialPercentages);
                 await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
                     PorcentajeTotal: totalPorcentageAvg,
                     Estado: 'Realizada',
+                    usuario: userData.Nombre
                 });
-                hideLoading();
+                
                 Swal.fire({
                     icon: 'success',
                     title: 'Reporte generado',

@@ -94,7 +94,7 @@ const Inicio = () => {
         <img src={aprobado} alt="aprobado" className='imagen-mini' style={{width: '40%',marginTop:'-1.5em'}}/>
       </div>
       <div className="card-home" onClick={() => navigate("/ishikawas-estadisticas")}>
-        Estadisticas de Ishikawas
+        Estadísticas de Ishikawas
         <img src={pez} alt="pez" className='imagen-mini' />
         <img src={estadisticas} alt="estadisticas" className='imagen-mini' style={{width: '40%',marginTop:'-1.5em'}}/>
       </div>

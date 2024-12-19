@@ -1,5 +1,7 @@
 const Datos = require('../models/datosSchema');
 const transporter = require('../emailconfig');
+const path = require('path');
+const fs = require('fs');
 
 const nuevoAuditoria = async (req, res) => {
   try {
@@ -192,27 +194,32 @@ const actualizarEstado = async (req, res)=> {
         }
         await datos.save();
 
-        // Enviar correo electrónico al Auditor Líder
+        // Leer y personalizar la plantilla
+    const templatePath = path.join(__dirname, 'templates', 'revision-auditoria.html');
+    const emailTemplate = fs.readFileSync(templatePath, 'utf8');
+    const customizedTemplate = emailTemplate.replace('{{usuario}}', usuario);
+
+    // Configuración del correo
     const mailOptionsAuditor = {
       from: process.env.EMAIL_USERNAME,
-      to: 'rcruces@aguida.com',
-      subject: 'Se ha enviado una auditoria para revisión',
-      text: `${usuario} ha enviado una auditoria para su revisión`,
+      to: 'soleje2862004@gmail.com',
+      subject: 'Se ha enviado una auditoría para revisión',
+      html: customizedTemplate,
     };
 
     transporter.sendMail(mailOptionsAuditor, (error, info) => {
       if (error) {
-        console.error('Error al enviar el correo electrónico al Audministrador:', error);
+        console.error('Error al enviar el correo electrónico:', error);
       } else {
-        console.log('Correo electrónico enviado al Administrador:', info.response);
+        console.log('Correo electrónico enviado:', info.response);
       }
     });
 
-        res.status(200).json({ message: 'Datos actualizados correctamente' });
-    } catch (error) {
-        console.error('Error al actualizar los datos:', error);
-        res.status(500).json({ error: 'Error interno del servidor', details: error.message });
-    }
+    res.status(200).json({ message: 'Datos actualizados correctamente' });
+  } catch (error) {
+    console.error('Error al actualizar los datos:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
 };
 
 const obtenerTodosDatos = async (req, res) => {

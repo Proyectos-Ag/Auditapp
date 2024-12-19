@@ -1,37 +1,73 @@
 import React, { useState, useEffect } from 'react';
-import { Button, FormControl, Form, Modal, Table } from 'react-bootstrap';
+import {
+  Modal,
+  Box,
+  Typography,
+  Button,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import Swal from 'sweetalert2';
 import './css/Departaments.css';
 import './css/areaModals.css'; // Nueva hoja de estilos para los modales
 
 const AreaForm = ({ nuevaArea, handleInputChange, handleAreaChange, areasInput, agregarAreaInput, eliminarAreaInput }) => (
-  <Form>
-    <Form.Group controlId="formDepartamento">
-      <Form.Label>Departamento</Form.Label>
-      <FormControl
-        type="text"
-        name="departamento"
-        value={nuevaArea.departamento}
-        onChange={handleInputChange}
-      />
-    </Form.Group>
-    <Form.Group controlId="formAreas">
-      <Form.Label>Áreas</Form.Label>
+  <form>
+    <TextField
+      fullWidth
+      label="Departamento"
+      name="departamento"
+      value={nuevaArea.departamento}
+      onChange={handleInputChange}
+      margin="normal"
+      variant="outlined"
+    />
+    <div>
       {areasInput.map((area, index) => (
         <div key={index} className="area-input-group">
-          <FormControl
-            type="text"
-            name={`area-${index}`}
+          <TextField
+            fullWidth
+            label={`Área ${index + 1}`}
             value={area}
             onChange={(e) => handleAreaChange(e, index)}
-            placeholder={`Área ${index + 1}`}
-            className="mb-2"
+            margin="normal"
+            variant="outlined"
           />
-          <Button variant="danger" onClick={() => eliminarAreaInput(index)}>Eliminar Área</Button>
+          <IconButton
+            color="error"
+            onClick={() => eliminarAreaInput(index)}
+            size="small"
+            style={{ marginLeft: '10px' }}
+          >
+            <DeleteIcon />
+          </IconButton>
         </div>
       ))}
-      <Button variant="secondary" onClick={agregarAreaInput}>Agregar otra área</Button>
-    </Form.Group>
-  </Form>
+      <Button
+        onClick={agregarAreaInput}
+        variant="contained"
+        startIcon={<AddCircleIcon />}
+        style={{ marginTop: '10px' }}
+      >
+        Agregar otra área
+      </Button>
+    </div>
+  </form>
 );
 
 const Departaments = () => {
@@ -55,6 +91,7 @@ const Departaments = () => {
         setAreas(data);
       } catch (error) {
         console.error(error);
+        Swal.fire('Error', 'No se pudo obtener la lista de áreas', 'error');
       }
     };
 
@@ -107,8 +144,10 @@ const Departaments = () => {
       setNuevaArea({ departamento: '', areas: [] });
       setAreasInput(['']); // Reinicia el área input
       setMostrarFormularioArea(false);
+      Swal.fire('Éxito', 'Área agregada correctamente', 'success');
     } catch (error) {
       console.error('Error al agregar el área:', error);
+      Swal.fire('Error', 'No se pudo agregar el área', 'error');
     }
   };
 
@@ -122,8 +161,10 @@ const Departaments = () => {
       }
       const nuevasAreas = areas.filter((area) => area._id !== areaId);
       setAreas(nuevasAreas);
+      Swal.fire('Éxito', 'Departamento eliminado correctamente', 'success');
     } catch (error) {
       console.error(error);
+      Swal.fire('Error', 'No se pudo eliminar el área', 'error');
     }
   };
 
@@ -162,166 +203,198 @@ const Departaments = () => {
       nuevasAreas[index] = data;
       setAreas(nuevasAreas);
       cerrarModalActualizar();
+      Swal.fire('Éxito', 'Área actualizada correctamente', 'success');
     } catch (error) {
       console.error(error);
+      Swal.fire('Error', 'No se pudo actualizar el área', 'error');
     }
   };
 
   return (
-    <div>
-      <h2 className="titulo">Gestión de Departamentos y Áreas</h2>
-      <div className="contenedor">
-        <div className="boton-container">
-          <Button
-            variant="success"
-            className="boton-verde"
-            onClick={() => setMostrarFormularioArea(true)}
-          >
-            Agregar Departamento
-          </Button>{' '}
-          <FormControl
-            type="text"
-            placeholder="Filtrar Departamentos"
-            value={filtroArea}
-            onChange={(e) => setFiltroArea(e.target.value)}
-            className="filtro"
-          />
-        </div>
-        <Table striped bordered hover responsive>
-          <thead>
-            <tr>
-              <th>Departamento</th>
-              <th>Áreas</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {areas
-              .filter((area) =>
-                area.departamento.toLowerCase().includes(filtroArea.toLowerCase())
-              )
-              .map((area) => (
-                <tr key={area._id}>
-                  <td>{area.departamento}</td>
-                  <td>{area.areas.join(', ')}</td>
-                  <td>
-                    <button
-                      variant="warning"
-                      onClick={() => abrirModalActualizar(area._id)}
-                      className="button-edit-dep"
-                    >
-                      Actualizar
-                    </button>
-                    <Button
-                      variant="danger"
-                      onClick={() => eliminarArea(area._id)}
-                      className="button-eli-dep"
-                    >
-                      Eliminar
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </Table>
+    <div style={{ padding: '20px' }}>
+      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Gestión de Departamentos y Áreas</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => setMostrarFormularioArea(true)}
+          startIcon={<AddCircleIcon />}
+        >
+          Agregar Departamento
+        </Button>
+        <TextField
+          label="Filtrar Departamentos"
+          variant="outlined"
+          value={filtroArea}
+          onChange={(e) => setFiltroArea(e.target.value)}
+          size="small"
+        />
       </div>
-      <Modal show={mostrarFormularioArea} onHide={() => setMostrarFormularioArea(false)} className="custom-modal">
-        <Modal.Header closeButton className="custom-modal-header">
-          <Modal.Title className="custom-modal-title">Agregar Departamento</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="custom-modal-body">
+
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Departamento</TableCell>
+              <TableCell>Áreas</TableCell>
+              <TableCell>Acciones</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {areas
+              .filter((area) => area.departamento.toLowerCase().includes(filtroArea.toLowerCase()))
+              .map((area) => (
+                <TableRow key={area._id}>
+                  <TableCell>{area.departamento}</TableCell>
+                  <TableCell>{area.areas.join(', ')}</TableCell>
+                  <TableCell>
+                    <IconButton
+                      color="primary"
+                      onClick={() => abrirModalActualizar(area._id)}
+                      size="small"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      color="error"
+                      onClick={() => eliminarArea(area._id)}
+                      size="small"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Modal para agregar área */}
+      <Dialog open={mostrarFormularioArea} onClose={() => setMostrarFormularioArea(false)}>
+        <DialogTitle>Agregar Departamento</DialogTitle>
+        <DialogContent>
           <AreaForm
             nuevaArea={nuevaArea}
             handleInputChange={handleInputChange}
-            agregarArea={agregarArea}
-            handleAreaChange={handleAreaChange}
             areasInput={areasInput}
-            agregarAreaInput={agregarAreaInput} // Pasar la función aquí
-            eliminarAreaInput={eliminarAreaInput} // Pasar la función aquí
+            handleAreaChange={handleAreaChange}
+            agregarAreaInput={agregarAreaInput}
+            eliminarAreaInput={eliminarAreaInput}
           />
-        </Modal.Body>
-        <Modal.Footer className="custom-modal-footer">
-          <Button variant="secondary" onClick={() => setMostrarFormularioArea(false)}>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMostrarFormularioArea(false)} color="secondary">
             Cancelar
           </Button>
-          <Button variant="primary" onClick={agregarArea}>
+          <Button onClick={agregarArea} variant="contained" color="primary">
             Guardar
           </Button>
-        </Modal.Footer>
-      </Modal>
+        </DialogActions>
+      </Dialog>
 
-      <Modal show={mostrarModalActualizar} onHide={cerrarModalActualizar} className="custom-modal">
-        <Modal.Header closeButton className="custom-modal-header">
-          <Modal.Title className="custom-modal-title">Actualizar Departamento</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="custom-modal-body">
-          <Form>
-            <Form.Group controlId="formActualizarDepartamento">
-              <Form.Label>Departamento</Form.Label>
-              <FormControl
-                type="text"
-                name="departamento"
-                value={valoresAreaSeleccionada.departamento}
-                onChange={(e) =>
+      {/*Actualizar Area*/}
+      <Modal
+      open={mostrarModalActualizar}
+      onClose={cerrarModalActualizar}
+      aria-labelledby="modal-title"
+      aria-describedby="modal-description"
+    >
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 400,
+          bgcolor: 'background.paper',
+          boxShadow: 24,
+          p: 4,
+          borderRadius: 2,
+        }}
+      >
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography id="modal-title" variant="h6" component="h2">
+            Actualizar Departamento
+          </Typography>
+          <IconButton onClick={cerrarModalActualizar}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <Box component="form" mt={2}>
+          <Typography variant="subtitle1" mb={1}>
+            Departamento
+          </Typography>
+          <TextField
+            fullWidth
+            variant="outlined"
+            name="departamento"
+            value={valoresAreaSeleccionada.departamento}
+            onChange={(e) =>
+              setValoresAreaSeleccionada({
+                ...valoresAreaSeleccionada,
+                departamento: e.target.value,
+              })
+            }
+          />
+          <Typography variant="subtitle1" mt={2} mb={1}>
+            Áreas
+          </Typography>
+          {valoresAreaSeleccionada.areas.map((area, index) => (
+            <Box display="flex" alignItems="center" mb={2} key={index}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                name={`area-${index}`}
+                value={area}
+                onChange={(e) => {
+                  const newAreas = [...valoresAreaSeleccionada.areas];
+                  newAreas[index] = e.target.value;
                   setValoresAreaSeleccionada({
                     ...valoresAreaSeleccionada,
-                    departamento: e.target.value,
-                  })
-                }
+                    areas: newAreas,
+                  });
+                }}
+                placeholder={`Área ${index + 1}`}
               />
-            </Form.Group>
-            <Form.Group controlId="formActualizarAreas">
-              <Form.Label>Áreas</Form.Label>
-              {valoresAreaSeleccionada.areas.map((area, index) => (
-                <div key={index} className="area-input-group">
-                  <FormControl
-                    type="text"
-                    name={`area-${index}`}
-                    value={area}
-                    onChange={(e) => {
-                      const newAreas = [...valoresAreaSeleccionada.areas];
-                      newAreas[index] = e.target.value;
-                      setValoresAreaSeleccionada({
-                        ...valoresAreaSeleccionada,
-                        areas: newAreas,
-                      });
-                    }}
-                    placeholder={`Área ${index + 1}`}
-                    className="mb-2"
-                  />
-                  <Button variant="danger" onClick={() => {
-                    const newAreas = [...valoresAreaSeleccionada.areas];
-                    newAreas.splice(index, 1);
-                    setValoresAreaSeleccionada({
-                      ...valoresAreaSeleccionada,
-                      areas: newAreas,
-                    });
-                  }}>Eliminar Área</Button>
-                </div>
-              ))}
               <Button
-                variant="secondary"
-                onClick={() =>
+                color="error"
+                onClick={() => {
+                  const newAreas = [...valoresAreaSeleccionada.areas];
+                  newAreas.splice(index, 1);
                   setValoresAreaSeleccionada({
                     ...valoresAreaSeleccionada,
-                    areas: [...valoresAreaSeleccionada.areas, ''],
-                  })
-                }
+                    areas: newAreas,
+                  });
+                }}
+                sx={{ ml: 2 }}
               >
-                Agregar otra área
+                Eliminar
               </Button>
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer className="custom-modal-footer">
-          <Button variant="secondary" onClick={cerrarModalActualizar}>
+            </Box>
+          ))}
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() =>
+              setValoresAreaSeleccionada({
+                ...valoresAreaSeleccionada,
+                areas: [...valoresAreaSeleccionada.areas, ''],
+              })
+            }
+          >
+            Agregar otra área
+          </Button>
+        </Box>
+        <Box display="flex" justifyContent="flex-end" mt={3}>
+          <Button onClick={cerrarModalActualizar} color="secondary" sx={{ mr: 2 }}>
             Cancelar
           </Button>
-          <Button variant="primary" onClick={actualizarArea}>
+          <Button variant="contained" color="primary" onClick={actualizarArea}>
             Actualizar
           </Button>
-        </Modal.Footer>
-      </Modal>
+        </Box>
+      </Box>
+    </Modal>
     </div>
   );
 };

@@ -29,7 +29,7 @@ const mongo = require('./config/dbconfig');
 
 const corsOptions = {
   origin: ['http://localhost:3000', 'https://auditapp-dqej.onrender.com'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, // Permitir cookies si son necesarias
 }
