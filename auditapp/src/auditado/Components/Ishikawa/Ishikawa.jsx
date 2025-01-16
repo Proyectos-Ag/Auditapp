@@ -84,7 +84,8 @@ const Ishikawa = () => {
               setDescripcion(descripcionEncontrada);
               setRequisito(descripcionEncontrada.Requisito);
               setHallazgo(descripcionEncontrada.Hallazgo);
-              setProblema(descripcionEncontrada.Observacion);
+              setProblema((descripcionEncontrada?.Observacion && descripcionEncontrada?.PuntuacionMaxima) ?
+                          descripcionEncontrada.Observacion : descripcionEncontrada.Problema);
               setAuditados(descripcionEncontrada.Auditados);
             }
           }
@@ -226,7 +227,8 @@ const handleDoubleClick = (e) => {
         participantes: formData.participantes,
         afectacion: formData.afectacion,
         actividades,
-        estado: 'En revisión'
+        estado: 'En revisión',
+        usuario: userData.Nombre
       };
   
       const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, data);
@@ -491,7 +493,7 @@ const handleInputChange = (e) => {
 
   // Aplica el nuevo tamaño de fuente al textarea específico
   if (['text1', 'text2', 'text3', 'text4', 'text5', 'text6', 'text7', 'text8', 'text9', 
-    'text10', 'text11', 'text12', 'text13', 'text14', 'text15'].includes(name)) {
+    'text10', 'text11', 'text12', 'text13', 'text14', 'text15', 'problema'].includes(name)) {
     e.target.style.fontSize = fontSize;
   }
 };
@@ -641,12 +643,22 @@ useEffect(() => {
             .filter(desc => desc.ID === id && programa.Nombre === nombre)
             .map((desc, index) => {
               return(
-            <h2 key={index}>Problema:
-              <textarea type="text" className="problema-input" name='problema' 
-              value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : `${descripcion.Hallazgo}`}
-              style={{fontSize:'20px'}} placeholder="Agregar problema. . ." required disabled={revisado}>
-              </textarea>
-            </h2>
+                <h2 key={index} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                Problema:
+                <div 
+                  className="problema-input" 
+                  style={{
+                    marginLeft:'6em',
+                    padding: '8px', 
+                    borderRadius: '4px',
+                    backgroundColor: revisado ? '#f5f5f5' : 'transparent',
+                    display: 'inline-block'
+                  }}
+                >
+                  {(descripcion?.Observacion && datos?.PuntuacionMaxima) ? descripcion.Observacion : descripcion.Problema}
+                </div>
+              </h2>
+              
             )})}
             <div style={{ display: 'flex', position:'absolute' }}>
               <h2>Afectación: </h2> 

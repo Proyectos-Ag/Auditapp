@@ -308,19 +308,19 @@ const ReporteF = () => {
                                                     <tbody>
                                                     {dato.Programa.map((programa, programIdx) =>
                                                         programa.Descripcion.map((desc, descIdx) => {
-                                                        const base64Prefix = 'data:image/png;base64,';
-                                                        const isBase64Image = desc.Hallazgo.includes(base64Prefix);
+                                                            const firePrefix = 'https://firebasestorage';
+                                                            const isFireImage = desc.Hallazgo.includes(firePrefix);
+                                                            
+                                                            // Evita renderizar filas no necesarias
+                                                            if ((desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') || desc.Observacion.length !== 0) {
+                                                                const ishikawaKey = `${desc.ID}-${dato._id}-${programa.Nombre}`;
+                                                                const ishikawa = ishikawasMap[ishikawaKey]; 
 
                                                         const ajustarFecha = (fechaString) => {
                                                             const fecha = new Date(fechaString);
                                                             fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset());
                                                             return fecha.toLocaleDateString('es-ES');
                                                         };
-
-                                                        // Evita renderizar filas no necesarias
-                                                        if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
-                                                            const ishikawaKey = `${desc.ID}-${dato._id}-${programa.Nombre}`; 
-                                                            const ishikawa = ishikawasMap[ishikawaKey];
 
                                                         if (!ishikawa || ishikawa.length === 0) {
                                                             return null;
@@ -332,18 +332,27 @@ const ReporteF = () => {
                                                             <td className='alingR2'>{programa.Nombre}</td>
                                                             <td className='alingR'>{desc.Requisito}</td>
                                                             <td>{desc.Criterio}</td>
-                                                            <td>{desc.Observacion}</td>
-                                                            <td key={descIdx} className='alingR'>
+                                                            <td className='alingR' >
+                                                            {desc.Problema && (
+                                                                <>
+                                                                Problema: {desc.Problema}
+                                                                <br />
+                                                                <br />
+                                                                </>
+                                                            )}
+                                                            {desc.Observacion}
+                                                            </td>
+                                                            <td className='alingR' key={descIdx}>
                                                                 {desc.Hallazgo ? (
-                                                                isBase64Image ? (
-                                                                    <img
-                                                                    src={desc.Hallazgo}
-                                                                    alt="Evidencia"
-                                                                    className="hallazgo-imagen"
-                                                                    />
-                                                                ) : (
-                                                                    <span>{desc.Hallazgo}</span>
-                                                                )
+                                                                    isFireImage ? (
+                                                                        <img
+                                                                            src={desc.Hallazgo}
+                                                                            alt="Evidencia"
+                                                                            className="hallazgo-imagen"
+                                                                        />
+                                                                    ) : (
+                                                                        <span>{desc.Hallazgo}</span>
+                                                                    )
                                                                 ) : null}
                                                             </td>
                                                             <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].actividad : '') : ''}</td>
