@@ -29,6 +29,7 @@ const IshikawaRev = () => {
     const [filteredIshikawas, setFilteredIshikawas] = useState([]);
     const { _id, id, nombre} = useParams();
     const [valorSeleccionado, setValorSeleccionado] = useState('');
+    const [CorreoSeleccionado, setCorreoSeleccionado] = useState('');
     const [, setDatos] = useState(null);
     const [selectedOption, setSelectedOption] = useState('');
     const [selectedField, setSelectedField] = useState(null); 
@@ -87,7 +88,9 @@ const IshikawaRev = () => {
                 idReq: id,
                 proName: nombre
             }
-        });        
+        });  
+        
+        console.log('Aver 2:',response.data)
 
           setIshikawas(response.data);
       } catch (error) {
@@ -584,7 +587,10 @@ const handleCorreccionChange = (index, field, value) => {
         try {
             const { _id } = filteredIshikawas[0];
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
-                estado: 'Aprobado'
+                estado: 'Aprobado',
+                usuario: ishikawas[0].auditado,
+                programa: ishikawas[0].proName,
+                correo: ishikawas[0].correo
             });
             fetchData();
         } catch (error) {
@@ -613,9 +619,13 @@ const handleCorreccionChange = (index, field, value) => {
     const handleGuardarRechazo = async () => {
     try {
         const { _id } = filteredIshikawas[0];
+        console.log('Aver :',ishikawas[0].auditado,ishikawas[0].proName);
         await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
             estado: 'Rechazado',
-            notaRechazo 
+            notaRechazo,
+            usuario: ishikawas[0].auditado,
+            programa: ishikawas[0].proName,
+            correo: ishikawas[0].correo
         });
         fetchData();
     } catch (error) {
@@ -687,6 +697,7 @@ const handleSave = async () => {
                 proName: nombre,
                 fecha: '',
                 auditado: valorSeleccionado,
+                correo: CorreoSeleccionado,
                 problema: '',
                 requisito:'',
                 hallazgo:'',
@@ -789,8 +800,17 @@ const handleSelectChange = (event, index) => {
 };
 
 const handleSelectChangeAud = (event) => {
-    setValorSeleccionado(event.target.value);
-};
+    const { value } = event.target;
+  
+    if (value) {
+      const { nombre, correo } = JSON.parse(value); // Extrae nombre y correo
+      setValorSeleccionado(nombre); // Guarda el nombre en un estado
+      setCorreoSeleccionado(correo); // Guarda el correo en otro estado
+    } else {
+      setValorSeleccionado('');
+      setCorreoSeleccionado('');
+    }
+  };  
 
     function verificarCoincidencia(textAreaValue, causa) {
   // Verificar que los valores no sean undefined o null
@@ -1355,9 +1375,16 @@ const ocultarCargando = () => {
                 <select onChange={handleSelectChangeAud} value={valorSeleccionado}>
                 <option value="">Seleccione...</option>
                 {usuarios && usuarios.map(usuario => (
-            <option key={usuario._id} value={usuario.Nombre}>{usuario.Nombre}</option>
-                ))}
+                <option key={usuario._id}
+                value={JSON.stringify({ nombre: usuario.Nombre, correo: usuario.Correo })}>{usuario.Nombre}</option>
+                    ))}
                 </select>
+                {valorSeleccionado && (
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}>
+                        <h6>{valorSeleccionado}</h6>
+                    </div>
+                )}
+
                 <button onClick={Asignar}>Asignar</button>
             </div>
                 <div className='mens-error'>

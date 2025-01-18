@@ -1,10 +1,13 @@
 const mongoose = require("mongoose");
 
 const EvaluacionesSchema = new mongoose.Schema({
+  folio: {type: String},
+  auditoriaId: {type: String},
   auditorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Usuarios"
   },
+  nombre: {type: String},
   cursos: [
     {
       nombreCurso: { type: String},
@@ -36,7 +39,7 @@ const EvaluacionesSchema = new mongoose.Schema({
     comentarios: { type: String }
   },
   porcentajeTotal: { type: Number, default: 0 },
-  estado: { type: String}
+  estado: {type: String}
 });
 
 module.exports = mongoose.model("Evaluaciones", EvaluacionesSchema);

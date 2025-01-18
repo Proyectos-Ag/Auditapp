@@ -596,7 +596,7 @@ const Reporte = () => {
                                                         const rowId = `${periodIdx}-${programIdx}-${descIdx}`;
                                                         const isHidden = hiddenRows[rowId];
 
-                                                        if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
+                                                        if ((desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') || desc.Observacion.length !== 0) {
                                                             return (
                                                                 <React.Fragment key={descIdx}>
                                                                     <tr style={{ display: isHidden ? 'none' : 'table-row' }}>

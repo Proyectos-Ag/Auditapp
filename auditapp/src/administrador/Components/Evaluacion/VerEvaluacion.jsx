@@ -1,20 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import styles from './css/AuditorEv.module.css';
-
+import { 
+  Typography, 
+  Button, 
+  Card, 
+  CardContent, 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableContainer, 
+  TableHead, 
+  TableRow,
+  Grid, 
+  Box 
+} from '@mui/material';
 
 const AuditorEvaluaciones = () => {
-  const [auditores, setAuditores] = useState([]);
-  const [selectedAuditor, setSelectedAuditor] = useState('');
+  const [selectedFolio, setSelectedFolio] = useState('');
+  const [evaluacionesDisp, setEvaluacionesDisp] = useState([]);
   const [evaluaciones, setEvaluaciones] = useState([]);
-  const [noEvaluaciones, setNoEvaluaciones] = useState(false); // Nuevo estado para manejar cuando no hay evaluaciones
 
   useEffect(() => {
     const obtenerAuditores = async () => {
       try {
-        const respuesta = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
-        const auditoresFiltrados = respuesta.data.filter(usuario => usuario.TipoUsuario === 'auditor');
-        setAuditores(auditoresFiltrados);
+        const responseEvaluaciones = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/eva-esp`);
+        setEvaluacionesDisp(responseEvaluaciones.data);
       } catch (error) {
         console.error('Error al obtener auditores:', error);
       }
@@ -24,222 +34,260 @@ const AuditorEvaluaciones = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedAuditor) {
-      const obtenerEvaluaciones = async (auditorId) => {
+    const fetchEvaluaciones = async () => {
+      if (selectedFolio) {
         try {
-          console.log(`Llamando a la API con auditorId: ${auditorId}`);
-          const respuesta = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/${auditorId}`);
-          console.log('Respuesta de la API:', respuesta.data);
-          if (respuesta.data.length === 0) {
-            setNoEvaluaciones(true);
-            setEvaluaciones([]);
-          } else {
-            setNoEvaluaciones(false);
-            setEvaluaciones(respuesta.data);
-          }
+          const responseEvaluacion = await axios.get(
+            `${process.env.REACT_APP_BACKEND_URL}/evaluacion/${selectedFolio}`
+          );
+          setEvaluaciones(responseEvaluacion.data);
         } catch (error) {
-          console.error('Error al obtener evaluaciones:', error.response ? error.response.data : error.message);
-          setNoEvaluaciones(true); // Si hay un error, consideramos que no hay evaluaciones
+          console.error("Error al obtener las evaluaciones:", error);
         }
-      };
-  
-      obtenerEvaluaciones(selectedAuditor);
-    }
-  }, [selectedAuditor]);
+      }
+    };
 
-  const handleEvaluar = () => {
-    window.location.href = '/evuaauditor'; // Redirige a la ruta para evaluar
-  };
+    fetchEvaluaciones();
+  }, [selectedFolio]);
 
-  const handleCancelar = () => {
-    setSelectedAuditor('');
+  const handleFolioSelect = () => {
+    setSelectedFolio(null);
     setEvaluaciones([]);
-    setNoEvaluaciones(false);
   };
 
+  const handleAuditorSelect = (folio) => {
+    setSelectedFolio(selectedFolio === folio ? null : folio);
+  };
 
   return (
-  <div>
-    <div className={styles.auditorEvaluacionesContainer}>
-      <h1>Vista para Evaluaciones</h1>
-      <div className={styles.auditorSelect}>
-        <label htmlFor="auditor">Selecciona un auditor:</label>
-        <select onChange={(e) => setSelectedAuditor(e.target.value)} value={selectedAuditor}>
-          <option value="">Selecciona un auditor</option>
-          {auditores.map(auditor => (
-            <option key={auditor._id} value={auditor._id}>{auditor.Nombre}</option>
+    <Box sx={{ padding: '20px', marginTop: '50px' }}>
+      <Typography variant="h4" gutterBottom>
+        Vista para Evaluaciones
+      </Typography>
+
+      <Typography variant="h5" gutterBottom>
+        Seleccione un Auditor
+      </Typography>
+      
+      <Grid container spacing={2}>
+        {Array.isArray(evaluacionesDisp) &&
+          evaluacionesDisp.map((auditor) => (
+            <Grid item xs={12} sm={6} md={4} key={auditor.folio}>
+              <Card
+                onClick={() => handleAuditorSelect(auditor.folio)}
+                sx={{
+                  cursor: 'pointer',
+                  backgroundColor: selectedFolio === auditor.folio ? '#f0f8ff' : '#fff',
+                  border: selectedFolio === auditor.folio ? '2px solid #007bff' : '1px solid #ccc',
+                  boxShadow: selectedFolio === auditor.folio ? '0px 0px 8px rgba(0, 123, 255, 0.5)' : 'none',
+                  display: selectedFolio && selectedFolio !== auditor.folio ? 'none' : 'block',
+                }}
+              >
+                <CardContent>
+                  <Typography variant="h6">{auditor.nombre}</Typography>
+                  <Typography variant="body2" color="textSecondary">{auditor.folio}</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
           ))}
-        </select>
-      </div>
+      </Grid>
 
-      {noEvaluaciones && (
-        <div className={styles.no-evaluaciones}>
-          <p>Este usuario no cuenta con evaluaciones.</p>
-          <button onClick={handleEvaluar}>Evaluar</button>
-          <button onClick={handleCancelar}>Cancelar</button>
-        </div>
+      {selectedFolio && (
+        <Button
+          onClick={handleFolioSelect}
+          variant="contained"
+          color="primary"
+          sx={{ marginTop: '20px' }}
+        >
+          Mostrar todos
+        </Button>
       )}
 
-      {evaluaciones.length > 0 && !noEvaluaciones && (
-        <div className={styles.evaluaciones}>
-          <h2>Evaluaciones de {auditores.find(a => a._id === selectedAuditor)?.Nombre}</h2>
+
+      {evaluaciones.length > 0 && (
+        <Box sx={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+          <Typography variant="h6" gutterBottom>
+            Evaluación de {evaluacionesDisp.find(a => a.folio === selectedFolio)?.nombre}
+          </Typography>
+
+          <Box sx={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f0f4ff', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+            <Typography variant="h6" align="center">
+              Porcentaje Obtenido: {evaluaciones[0]?.porcentajeTotal}%
+            </Typography>
+          </Box>
+
+          <Typography variant="h6" gutterBottom>
+            Folio: {evaluacionesDisp.find(a => a.folio === selectedFolio)?.folio}
+          </Typography>
+
+          {/* Indicadores de evaluación */}
+          <TableContainer sx={{ marginTop: '20px' }}>
+            <Table sx={{backgroundColor: '#ffff'}}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Indicador</TableCell>
+                  <TableCell>Puntuación Máxima</TableCell>
+                  <TableCell>Valor en %</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Experiencia</TableCell>
+                  <TableCell>10</TableCell>
+                  <TableCell>10%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Capacitación</TableCell>
+                  <TableCell>5</TableCell>
+                  <TableCell>30%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Conocimiento y habilidades</TableCell>
+                  <TableCell>25</TableCell>
+                  <TableCell>30%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Formación profesional</TableCell>
+                  <TableCell>3</TableCell>
+                  <TableCell>10%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Atributos y cualidades personales</TableCell>
+                  <TableCell>40</TableCell>
+                  <TableCell>20%</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Tablas dinámicas */}
+          {evaluaciones[0]?.cursos && (
+            <Box sx={{ marginTop: '20px' }}>
+              <Typography variant="h6">Cursos:</Typography>
+              <TableContainer>
+                <Table sx={{backgroundColor: '#ffff'}}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Nombre del curso</TableCell>
+                      <TableCell>Calificación</TableCell>
+                      <TableCell>Aprobado</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {evaluaciones[0]?.cursos.map((curso, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{curso.nombreCurso}</TableCell>
+                        <TableCell>{curso.calificacion}</TableCell>
+                        <TableCell>{curso.aprobado ? 'Sí' : 'No'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                </TableContainer>
+            </Box>
+          )}
+
+          {evaluaciones[0]?.conocimientosHabilidades && (
+            <Box sx={{ marginTop: '20px' }}>
+              <Typography variant="h6">Conocimientos y Habilidades:</Typography>
+                <Table sx={{backgroundColor: '#ffff'}}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Conocimiento</TableCell>
+                      <TableCell>Puntuación</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {evaluaciones[0]?.conocimientosHabilidades.map((conocimiento, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{conocimiento.conocimiento}</TableCell>
+                        <TableCell>{conocimiento.puntuacion}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+            </Box>
+          )}
+
+          {evaluaciones[0]?.atributosCualidadesPersonales && (
+            <Box sx={{ marginTop: '20px' }}>
+              <Typography variant="h6">Atributos y Cualidades Personales:</Typography>
+             
+                <Table sx={{backgroundColor: '#ffff'}}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Atributo</TableCell>
+                      <TableCell>Puntuación</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {evaluaciones[0]?.atributosCualidadesPersonales.map((atributo, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{atributo.atributo}</TableCell>
+                        <TableCell>{atributo.puntuacion}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              
+            </Box>
+          )}
+
           
-          {/* Aquí van las tablas informativas */}
-          <div className={styles.informativas}>
-            <h3>INDICADORES DE EVALUACIÓN</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Indicador</th>
-                  <th>Puntuación Máxima</th>
-                  <th>Valor en %</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Experiencia</td>
-                  <td>10</td>
-                  <td>10%</td>
-                </tr>
-                <tr>
-                  <td>Capacitación</td>
-                  <td>5</td>
-                  <td>30%</td>
-                </tr>
-                <tr>
-                  <td>Conocimiento y habilidades</td>
-                  <td>25</td>
-                  <td>30%</td>
-                </tr>
-                <tr>
-                  <td>Formación profesional</td>
-                  <td>3</td>
-                  <td>10%</td>
-                </tr>
-                <tr>
-                  <td>Atributos y cualidades personales</td>
-                  <td>40</td>
-                  <td>20%</td>
-                </tr>
-              </tbody>
-            </table>
+            <Box sx={{ marginTop: '20px'}}>
+              <Typography variant="h6" gutterBottom>
+                Experiencia
+              </Typography>
+              <Table sx={{ minWidth: 300, backgroundColor: '#ffff' }} aria-label="table-experiencia">
+                <TableBody>
+                  <TableRow>
+                    <TableCell><strong>Tiempo laborando</strong></TableCell>
+                    <TableCell>{evaluaciones[0]?.experiencia.tiempoLaborando}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><strong>Miembro del equipo de inocuidad</strong></TableCell>
+                    <TableCell>{evaluaciones[0]?.experiencia.equipoInocuidad ? 'Sí' : 'No'}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><strong>Auditorías internas</strong></TableCell>
+                    <TableCell>{evaluaciones[0]?.experiencia.auditoriasInternas}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </Box>
 
-            <h3>CALIFICACIÓN TOTAL OBTENIDA</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Rango de %</th>
-                  <th>Descripción</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>80-100%</td>
-                  <td>Competente y candidato a ser audítor líder (evaluación anual)</td>
-                </tr>
-                <tr>
-                  <td>80-84%</td>
-                  <td>Competente y es candidato a formar parte del equipo de inocuidad (evaluación semestral)</td>
-                </tr>
-                <tr>
-                  <td>60-79%</td>
-                  <td>Se puede considerar audítor de entrenamiento (evaluación trimestral)</td>
-                </tr>
-                <tr>
-                  <td>Menor a 59%</td>
-                  <td>Se considera no competente y fuera del equipo auditor</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          {/* Tablas de evaluaciones */}
-          <div className={styles.evaluacionCursos}>
-            <h3>Cursos:</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Nombre del curso</th>
-                  <th>Calificación</th>
-                  <th>Aprobado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {evaluaciones[0]?.cursos.map((curso, index) => (
-                  <tr key={index}>
-                    <td>{curso.nombreCurso}</td>
-                    <td>{curso.calificacion}</td>
-                    <td>{curso.aprobado ? 'Sí' : 'No'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+            <Box sx={{ marginTop: '20px'}}>
+              <Typography variant="h6" gutterBottom>
+                Formación Profesional
+              </Typography>
+              <Table sx={{ minWidth: 300, backgroundColor: '#ffff' }} aria-label="table-formacion">
+                <TableBody>
+                  <TableRow>
+                    <TableCell><strong>Nivel de estudios</strong></TableCell>
+                    <TableCell>{evaluaciones[0]?.formacionProfesional.nivelEstudios}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><strong>Especialidad</strong></TableCell>
+                    <TableCell>{evaluaciones[0]?.formacionProfesional.especialidad}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><strong>Puntuación</strong></TableCell>
+                    <TableCell>{evaluaciones[0]?.formacionProfesional.puntuacion}</TableCell>
+                  </TableRow>
+                  {evaluaciones[0]?.formacionProfesional.comentarios && (
+                    <TableRow>
+                      <TableCell><strong>Comentarios</strong></TableCell>
+                      <TableCell>{evaluaciones[0]?.formacionProfesional.comentarios}</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Box>
 
-          <div className={styles.evaluacionConocimientos}>
-            <h3>Conocimientos y Habilidades:</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Conocimiento</th>
-                  <th>Puntuación</th>
-                </tr>
-              </thead>
-              <tbody>
-                {evaluaciones[0]?.conocimientosHabilidades.map((conocimiento, index) => (
-                  <tr key={index}>
-                    <td>{conocimiento.conocimiento}</td>
-                    <td>{conocimiento.puntuacion}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className={styles.evaluacionAtributos}>
-            <h3>Atributos y Cualidades Personales:</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Atributo</th>
-                  <th>Puntuación</th>
-                </tr>
-              </thead>
-              <tbody>
-                {evaluaciones[0]?.atributosCualidadesPersonales.map((atributo, index) => (
-                  <tr key={index}>
-                    <td>{atributo.atributo}</td>
-                    <td>{atributo.puntuacion}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className={styles.evaluacionExperiencia}>
-            <h3>Experiencia:</h3>
-            <p><strong>Tiempo laborando:</strong> {evaluaciones[0]?.experiencia.tiempoLaborando}</p>
-            <p><strong>Miembro del equipo de inocuidad:</strong> {evaluaciones[0]?.experiencia.equipoInocuidad ? 'Sí' : 'No'}</p>
-            <p><strong>Auditorías internas:</strong> {evaluaciones[0]?.experiencia.auditoriasInternas}</p>
-          </div>
-
-          <div className={styles.evaluacionFormacion}>
-            <h3>Formación Profesional:</h3>
-            <p><strong>Nivel de estudios:</strong> {evaluaciones[0]?.formacionProfesional.nivelEstudios}</p>
-            <p><strong>Especialidad:</strong> {evaluaciones[0]?.formacionProfesional.especialidad}</p>
-            <p><strong>Puntuación:</strong> {evaluaciones[0]?.formacionProfesional.puntuacion}</p>
-            {evaluaciones[0]?.formacionProfesional.comentarios && (
-              <p><strong>Comentarios:</strong> {evaluaciones[0]?.formacionProfesional.comentarios}</p>
-            )}
-          </div>
-
-          <div className={styles.evaluacionPorcentaje}>
-            <h3>Porcentaje Total: {evaluaciones[0]?.porcentajeTotal}%</h3>
-          </div>
-        </div>
+          {/* Similar lógica para conocimientos, atributos y demás secciones */}
+        </Box>
       )}
-    </div>
-    </div>
+    </Box>
   );
 };
 

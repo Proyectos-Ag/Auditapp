@@ -54,13 +54,20 @@ const nuevoAuditoria = async (req, res) => {
 
     const nombresEquipoAuditor = EquipoAuditor.map(auditor => auditor.Nombre).join(', ');
 
+    const templatePathLider = path.join(__dirname, 'templates', 'lider-asignado.html');
+    const emailTemplateLider = fs.readFileSync(templatePathLider, 'utf8');
+    const customizedTemplateLider = emailTemplateLider
+    .replace('{{usuario}}', AuditorLider)
+    .replace('{{Duracion}}', Duracion)
+    .replace('{{nombresEquipoAuditor}}', nombresEquipoAuditor);
+
+
     // Enviar correo electrónico al Auditor Líder
     const mailOptionsAuditorLider = {
       from: process.env.EMAIL_USERNAME,
       to: AuditorLiderEmail,
       subject: 'Tienes una nueva auditoría',
-      text: `Hola ${AuditorLider},\n\nSe te ha asignado como auditor líder para una nueva auditoría programada ${Duracion}.
-      \nLos miembros del equipo auditor son: ${nombresEquipoAuditor}\n\nSaludos,\nEl equipo de la empresa`,
+      html: customizedTemplateLider,
     };
 
     transporter.sendMail(mailOptionsAuditorLider, (error, info) => {
@@ -81,11 +88,19 @@ const nuevoAuditoria = async (req, res) => {
       let correosEnviados = 0;
       equipoAuditor.forEach((miembro, index) => {
         setTimeout(() => {
+
+          const templatePathMiembro = path.join(__dirname, 'templates', 'miembro-asignado.html');
+          const emailTemplateMiembro = fs.readFileSync(templatePathMiembro, 'utf8');
+          const customizedTemplateMiembro = emailTemplateMiembro
+          .replace('{{usuario}}', miembro.Nombre)
+          .replace('{{Duracion}}', Duracion)
+          .replace('{{AuditorLider}}', AuditorLider);
+
           const mailOptionsMiembro = {
             from: process.env.EMAIL_USERNAME,
             to: miembro.Correo,
             subject: 'Tienes una nueva auditoría',
-            text: `Hola ${miembro.Nombre},\n\nSe te ha asignado como miembro del equipo auditor liderado por ${AuditorLider} para una nueva auditoría programada para ${Duracion}.\n\nSaludos,\nEl equipo de la empresa`,
+            html: customizedTemplateMiembro,
           };
 
           transporter.sendMail(mailOptionsMiembro, (error, info) => {
@@ -110,11 +125,19 @@ const nuevoAuditoria = async (req, res) => {
     const enviarCorreosAuditados = (Auditados) => {
       Auditados.forEach((aud, index) => {
         setTimeout(() => {
+
+          const templatePathAuditado = path.join(__dirname, 'templates', 'auditado-asignado.html');
+          const emailTemplateAuditado = fs.readFileSync(templatePathAuditado, 'utf8');
+          const customizedTemplateAuditado = emailTemplateAuditado
+          .replace('{{usuario}}', aud.Nombre)
+          .replace('{{Duracion}}', Duracion)
+          .replace('{{AuditorLider}}', AuditorLider);
+
           const mailOptionsAuditado = {
             from: process.env.EMAIL_USERNAME,
             to: aud.Correo,
             subject: 'Tienes una nueva auditoría',
-            text: `Hola ${aud.Nombre},\n\nSe te ha programado una auditoría liderada por ${AuditorLider} que se llevará a cabo ${Duracion}.\n\nSaludos,\nEl equipo de la empresa`,
+            html: customizedTemplateAuditado
           };
 
           transporter.sendMail(mailOptionsAuditado, (error, info) => {
@@ -194,26 +217,29 @@ const actualizarEstado = async (req, res)=> {
         }
         await datos.save();
 
-        // Leer y personalizar la plantilla
-    const templatePath = path.join(__dirname, 'templates', 'revision-auditoria.html');
-    const emailTemplate = fs.readFileSync(templatePath, 'utf8');
-    const customizedTemplate = emailTemplate.replace('{{usuario}}', usuario);
+        // Enviar correo solo si Estado es "Realizada"
+    if (Estado === 'Realizada') {
+      // Leer y personalizar la plantilla
+      const templatePath = path.join(__dirname, 'templates', 'revision-auditoria.html');
+      const emailTemplate = fs.readFileSync(templatePath, 'utf8');
+      const customizedTemplate = emailTemplate.replace('{{usuario}}', usuario);
 
-    // Configuración del correo
-    const mailOptionsAuditor = {
-      from: process.env.EMAIL_USERNAME,
-      to: 'soleje2862004@gmail.com',
-      subject: 'Se ha enviado una auditoría para revisión',
-      html: customizedTemplate,
-    };
+      // Configuración del correo
+      const mailOptionsAuditor = {
+        from: process.env.EMAIL_USERNAME,
+        to: 'rcruces@aguida.com',
+        subject: 'Se ha enviado una auditoría para revisión',
+        html: customizedTemplate,
+      };
 
-    transporter.sendMail(mailOptionsAuditor, (error, info) => {
-      if (error) {
-        console.error('Error al enviar el correo electrónico:', error);
-      } else {
-        console.log('Correo electrónico enviado:', info.response);
-      }
-    });
+      transporter.sendMail(mailOptionsAuditor, (error, info) => {
+        if (error) {
+          console.error('Error al enviar el correo electrónico:', error);
+        } else {
+          console.log('Correo electrónico enviado:', info.response);
+        }
+      });
+    }
 
     res.status(200).json({ message: 'Datos actualizados correctamente' });
   } catch (error) {
@@ -308,7 +334,19 @@ const obtenerDatosEspFinal = async (req, res) => {
 const obtenerDatosEspRealiz = async (req, res) => {
   try {
     // Selecciona solo los campos que deseas incluir en la respuesta
-    const datos = await Datos.find({ Estado: 'Realizada' },'_id FechaElaboracion TipoAuditoria Duracion Estado'); 
+    const datos = await Datos.find({ Estado: 'Realizada' },'_id AuditorLider FechaElaboracion TipoAuditoria Duracion Estado'); 
+
+    res.status(200).json(datos);
+  } catch (error) {
+    console.error('Error al obtener los datos:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+};
+
+const obtenerDatosAudLid = async (req, res) => {
+  try {
+    // Selecciona solo los campos que deseas incluir en la respuesta
+    const datos = await Datos.find({ },'_id AuditorLider FechaElaboracion TipoAuditoria Duracion Estado'); 
 
     res.status(200).json(datos);
   } catch (error) {
@@ -455,19 +493,25 @@ const datosEstado = async (req, res)=>{
         let comentario = Comentario;
 
         if (Estado === 'Devuelto') {
-              estadoEmail = 'rechazado';
+              estadoEmail = 'rechazada';
         }
         if (Estado === 'Terminada') {
-          estadoEmail = 'aprobado';
+          estadoEmail = 'aprobada';
           comentario = '';
         }
+
+      const templatePathEstado = path.join(__dirname, 'templates', 'auditoria-estado.html');
+      const emailTemplateEstado = fs.readFileSync(templatePathEstado, 'utf8');
+      const customizedTemplateEstado = emailTemplateEstado
+      .replace(/{{Estado}}/g, estadoEmail)
+      .replace('{{Comentario}}', comentario);
 
          // Enviar correo electrónico al Auditor Líder
     const mailOptionsAdministrador = {
       from: process.env.EMAIL_USERNAME,
       to: AuditorLiderEmail,
-      subject: 'La auditoria se ha '+estadoEmail,
-      text: `La auditoría se ha ${estadoEmail}\n${comentario}`,
+      subject: 'Auditoría '+estadoEmail,
+      html: customizedTemplateEstado
     };
 
     transporter.sendMail(mailOptionsAdministrador, (error, info) => {
@@ -517,5 +561,6 @@ module.exports = {
   obtenerDatosEspFinal,
   eliminarRegistro,
   obtenerDatosEspRealiz,
-  obtenerDatosHistorial
+  obtenerDatosHistorial,
+  obtenerDatosAudLid
 };

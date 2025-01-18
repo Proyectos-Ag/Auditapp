@@ -27,6 +27,7 @@
     "nodemailer": "^6.9.13",
     "nodemon": "^3.1.0",
     "pug": "^3.0.3",
+    "puppeteer": "^23.11.1",
     "semantic-ui-react": "^2.1.5",
     "sharp": "^0.33.5",
     "sweetalert2": "^11.11.0",

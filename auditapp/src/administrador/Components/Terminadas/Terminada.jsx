@@ -529,7 +529,7 @@ const Terminada = () => {
                                                                 const isFireImage = desc.Hallazgo.includes(firePrefix);
                                                                 
                                                                 // Evita renderizar filas no necesarias
-                                                                if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
+                                                                if ((desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') || desc.Observacion.length !== 0) {
                                                                     const ishikawaKey = `${desc.ID}-${dato._id}-${programa.Nombre}`;
                                                                     const ishikawa = ishikawasMap[ishikawaKey]; 
                                                                     

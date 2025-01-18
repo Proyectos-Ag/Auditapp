@@ -5,6 +5,33 @@ const DatosV = () => {
   return (
     <div className="modal-body">
 
+    <h1>Versión 2.1.3 (Beta)</h1>
+
+    <ul>
+      <h3 className="modal-title">Programa Anual de Auditorías</h3>
+      <li>Se generó un filtro para seleccionar el año actual y comprimir los registros del año anterior, manteniendo la opción de revisar auditorías pasadas.</li>
+      <li>Se completó la funcionalidad de envío de correos al agregar una nueva auditoría, notificando automáticamente a los usuarios asignados.</li>
+      <li>Se optimizó la carga de auditorías y se añadió una pantalla de carga para informar el progreso del sistema.</li>
+      <li>Se mejoró el diseño general de la aplicación.</li>
+      <li>Se agregó un menú de acciones para editar el estado de las auditorías.</li>
+    </ul>
+
+    <ul>
+      <h3 className="modal-title">Correos Electrónicos</h3>
+      <li>Se mejoró el envío de correos electrónicos mediante una lógica optimizada y nuevas plantillas.</li>
+    </ul>
+
+    <ul>
+      <h3 className="modal-title">Mejoras en Evaluaciones</h3>
+      <li>Se actualizó el sistema de evaluaciones para que estas solo se realicen si existe una auditoría previa.</li>
+    </ul>
+
+    <ul>
+      <h3 className="modal-title">Corrección de Errores</h3>
+      <li>Se solucionó un error en auditorías internas que impedía mostrar imágenes correctamente.</li>
+      <li>Se corrigió un problema al cambiar contraseñas en los módulos de auditor y auditado.</li>
+    </ul>
+
     <h1>Versión 2.1.2</h1>
 
     <ul>

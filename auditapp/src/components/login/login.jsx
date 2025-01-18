@@ -3,12 +3,13 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../App';
 import './css/Login.css';
-import logo from '../../assets/img/logoAguida.png'
+import logo from '../../assets/img/logoAguida.png';
 import Swal from 'sweetalert2';
 import DatosV from './DatosV';
 
 const Login = () => {
   const [formData, setFormData] = useState({ Correo: '', Contraseña: '' });
+  const [mostrarContrasena, setMostrarContrasena] = useState(false); // Estado para mostrar u ocultar la contraseña
   const [error] = useState('');
   const { setUserData } = useContext(UserContext);
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const Login = () => {
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
-      }
+      },
     });
   };
 
@@ -42,12 +43,10 @@ const Login = () => {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, formData);
       const { token, usuario } = response.data;
 
-      // Guardar el token y los datos del usuario en el almacenamiento local
       localStorage.setItem('token', token);
       setUserData(usuario);
       console.log(usuario);
 
-      // Redirigir al usuario según su rol
       if (usuario.TipoUsuario === 'administrador') {
         navigate('/admin');
       } else if (usuario.TipoUsuario === 'auditado') {
@@ -61,28 +60,28 @@ const Login = () => {
           text: 'Rol no permitido.',
         });
       }
+      ocultarCargando();
     } catch (error) {
       console.error(error);
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'Credenciales inválidas. Por favor, intenta de nuevo.',
+        text: 'Credenciales inválidas. Por favor, intente de nuevo.',
+        timer: null,
+        allowOutsideClick: false,
       });
-    } finally {
-      ocultarCargando();
     }
   };
 
   const handleOpenModal = () => {
-    setShowModal(true); // Mostrar modal
+    setShowModal(true);
   };
 
   const handleCloseModal = () => {
-    setShowModal(false); // Ocultar modal
+    setShowModal(false);
   };
 
   const handleOverlayClick = (e) => {
-    // Si el clic es en el overlay (no dentro del contenido), cerramos el modal
     if (e.target.classList.contains('modal-overlay')) {
       handleCloseModal();
     }
@@ -110,10 +109,11 @@ const Login = () => {
               required
             />
           </div>
+          
           <div className="form-group">
             <label htmlFor="Contraseña"></label>
             <input
-              type="password"
+              type={mostrarContrasena ? 'text' : 'password'} // Cambiar entre 'text' y 'password'
               name="Contraseña"
               value={formData.Contraseña}
               onChange={handleChange}
@@ -121,25 +121,32 @@ const Login = () => {
               required
             />
           </div>
+          <div className="pass-vew">
+            <p>ver contraseña</p>
+            <input
+              type="checkbox"
+              id="mostrarContrasena"
+              checked={mostrarContrasena}
+              onChange={() => setMostrarContrasena(!mostrarContrasena)} // Actualizar estado
+            />
+          </div>
+          
           <button type="submit" className="btn-login">Iniciar Sesión</button>
         </form>
 
-        {/* Texto que abre el modal */}
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <span 
-            style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }} 
+          <span
+            style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }}
             onClick={handleOpenModal}
           >
             <br />
-            v2.1.2(Beta)
+            v2.1.3(Beta)
           </span>
         </div>
 
-        {/* Modal */}
         {showModal && (
           <div className="modal-overlay" onClick={handleOverlayClick}>
             <div onClick={(e) => e.stopPropagation()}>
-              {/* El clic dentro del modal no lo cierra */}
               <DatosV />
             </div>
           </div>

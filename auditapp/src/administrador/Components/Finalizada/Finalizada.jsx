@@ -416,7 +416,7 @@ const Finalizada = () => {
                                                                 const firePrefix = 'https://firebasestorage';
                                                                 const isFireImage = desc.Hallazgo.includes(firePrefix);
 
-                                                                if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
+                                                                if ((desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') || desc.Observacion.length !== 0) {
                                                                     const ishikawa = ishikawas.find(ish => {
                                                                         return ish.idReq === desc.ID && ish.idRep === dato._id;
                                                                     });

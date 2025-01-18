@@ -1,11 +1,44 @@
 const Ishikawa = require('../models/ishikawaSchema');
+const transporter = require('../emailconfig');
+const path = require('path');
+const fs = require('fs');
 
 const crearIshikawa = async (req, res) => {
     try {
         const newIshikawa = new Ishikawa(req.body);
         console.log(req.body);
+        
         await newIshikawa.save();
-        res.status(201).json(newIshikawa);
+
+        // Enviar correo para notificar la asignación de un diagrama
+        const auditado = newIshikawa.auditado;
+        const correo = newIshikawa.correo;
+        const proName = newIshikawa.proName;
+        
+        console.log('Auditado:', auditado, 'Correo:', correo, 'Programa:', proName);
+
+        const templatePathAsignacion = path.join(__dirname, 'templates', 'asignacion-ishikawa.html');
+        const emailTemplateAsignacion = fs.readFileSync(templatePathAsignacion, 'utf8');
+        const customizedTemplateAsignacion = emailTemplateAsignacion
+        .replace('{{usuario}}', auditado)
+        .replace('{{programa}}', proName);
+
+        const mailOptionsAsignacion = {
+          from: process.env.EMAIL_USERNAME,
+          to: correo,
+          subject: 'Se te ha asignado un nuevo Ishikawa',
+          html: customizedTemplateAsignacion,
+        }; 
+        
+        transporter.sendMail(mailOptionsAsignacion, (error, info) => {
+          if (error) {
+            console.error('Error al enviar el correo electrónico:', error);
+          } else {
+            console.log('Correo electrónico enviado:', info.response);
+          }
+        });
+        
+        res.status(200).json(newIshikawa);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -53,9 +86,100 @@ const actualizarIshikawaCompleto = async (req, res) => {
       const { id } = req.params;
       console.log('Datos recibidos en el cuerpo de la solicitud:', req.body); 
       const updatedIshikawa = await Ishikawa.findByIdAndUpdate(id, req.body, { new: true });
+      console.log('Ishikawa actualizado:', updatedIshikawa);
       if (!updatedIshikawa) {
           return res.status(404).json({ error: 'Ishikawa not found' });
       }
+
+      // Verificar si el estado es "En revisión"
+    if (updatedIshikawa.estado === 'En revisión') {
+      const usuario = req.body.usuario;
+
+      // Leer y personalizar la plantilla
+      const templatePathRevision = path.join(__dirname, 'templates', 'revision-ishikawa.html');
+      const emailTemplateRevision = fs.readFileSync(templatePathRevision, 'utf8');
+      const customizedTemplateRevision = emailTemplateRevision.replace('{{usuario}}', usuario);
+
+      // Configuración del correo
+      const mailOptions = {
+        from: process.env.EMAIL_USERNAME,
+        to: 'rcruces@aguida.com',
+        subject: 'Ishikawa enviado para revisión',
+        html: customizedTemplateRevision,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error('Error al enviar el correo electrónico:', error);
+        } else {
+          console.log('Correo electrónico enviado:', info.response);
+        }
+      });
+    }
+
+    // Verificar si el estado es "Rechazado"
+    if (updatedIshikawa.estado === 'Rechazado') {
+      const usuario = req.body.usuario;
+      const programa = req.body.programa;
+      const correo = req.body.correo;
+      const nota = req.body.notaRechazo;
+
+      console.log('correo:', correo)
+      console.log('usuario:', usuario)
+      console.log('programa:', programa)
+      console.log('nota:', nota)
+
+      const templatePathRechazado = path.join(__dirname, 'templates', 'rechazado-ishikawa.html');
+      const emailTemplateRechazado = fs.readFileSync(templatePathRechazado, 'utf8');
+      const customizedTemplateRechazado = emailTemplateRechazado
+      .replace('{{usuario}}', usuario)
+      .replace('{{programa}}', programa)
+      .replace('{{nota}}', nota);
+
+      const mailOptionsRechazado = {
+        from: process.env.EMAIL_USERNAME,
+        to: correo,
+        subject: 'Ishikawa rechazado',
+        html: customizedTemplateRechazado,
+      };
+
+      transporter.sendMail(mailOptionsRechazado, (error, info) => {
+        if (error) {
+          console.error('Error al enviar el correo electrónico:', error);
+        } else {
+          console.log('Correo electrónico enviado:', info.response);
+        }
+      });
+    };
+
+    // Verificar si el estado es "Aprobado"
+    if (updatedIshikawa.estado === 'Aprobado') {
+      const usuario = req.body.usuario;
+      const programa = req.body.programa;
+      const correo = req.body.correo;
+
+      const templatePathAprobado = path.join(__dirname, 'templates', 'aprobado-ishikawa.html');
+      const emailTemplateAprobado = fs.readFileSync(templatePathAprobado, 'utf8');
+      const customizedTemplateAprobado = emailTemplateAprobado
+      .replace('{{usuario}}', usuario)
+      .replace('{{programa}}', programa);
+
+      const mailOptionsAprobado = {
+        from: process.env.EMAIL_USERNAME,
+        to: correo,
+        subject: 'Ishikawa aprobado',
+        html: customizedTemplateAprobado,
+      };
+
+      transporter.sendMail(mailOptionsAprobado, (error, info) => {
+        if (error) {
+          console.error('Error al enviar el correo electrónico:', error);
+        } else {
+          console.log('Correo electrónico enviado:', info.response);
+        }
+      });
+    };
+
       res.status(200).json(updatedIshikawa);
   } catch (error) {
       res.status(400).json({ error: error.message });

@@ -11,6 +11,7 @@ import DatosV from './components/login/DatosV.jsx';
 import MigasPan from './resources/migas-pan.jsx';
 import IconMenu from './resources/icon-menu.jsx';
 import Navbar from './components/navbar/navbar.jsx';
+import InformacionAuditor from './components/Informacion/Informacion.jsx';
 
 //Administrador
 import Usuarios from "./administrador/Components/RegistroUsuarios/Usuarios";
@@ -40,13 +41,11 @@ import VistaRevicion from './administrador/Components/Reviciones/VistaRevicion.j
 //Auditor
 import PendienteAuditor from './auditor/components/Pendientes/Pendiente';
 import ReporteAuditor from './auditor/components/Reportes/Reporte';
-import InformacionAuditor from './auditor/components/Informacion/Informacion';
 
 //Auditado
 import ReporteAuditado from './auditado/Components/ReporteF/ReporteF';
 import IshikawaAuditado from './auditado/Components/Ishikawa/Ishikawa';
 import DiagramaAuditado from './auditado/Components/DiagramaRe/Diagrama';
-import InformacionAuditado from './auditado/Components/Informacion/Informacion';
 import VistaReportesAuditado from './auditado/Components/ReporteF/VistaReportes';
 import Reporte from './auditado/Components/Reportes/Reporte.jsx';
 
@@ -69,7 +68,7 @@ export const UserContext = createContext(null);
     const location = useLocation();
   
     // Rutas donde no queremos que se muestren MigasPan e IconMenu
-    const excludedRoutes = ['/'];
+    const excludedRoutes = ['/','/correo-prog-audi'];
   
     return (
       <>
@@ -79,6 +78,7 @@ export const UserContext = createContext(null);
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
           <Route path="/" element={<Login />} /> 
+          <Route path="/correo-prog-audi" element={<ProgramarAuditoria/>}/>
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['administrador']}><Administrador /></ProtectedRoute>} />
               <Route path="/auditor" element={<ProtectedRoute><Auditor /></ProtectedRoute>} />
               <Route path="/auditado" element={<ProtectedRoute><Auditado /></ProtectedRoute>} />
@@ -115,14 +115,13 @@ export const UserContext = createContext(null);
 
               <Route path="/pendiente" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><PendienteAuditor/></ProtectedRoute>}/> 
               <Route path="/reporte" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><ReporteAuditor/></ProtectedRoute>}/> 
-              <Route path="/informacion" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><InformacionAuditor/></ProtectedRoute>}/>
+              <Route path="/informacion" element={<ProtectedRoute><InformacionAuditor/></ProtectedRoute>}/>
 
               {/*Auditado*/}
 
               <Route path="/auditado/reporte/:_id" element={<ProtectedRoute><ReporteAuditado/></ProtectedRoute>}/>
               <Route path="/auditado/ishikawa/:_id/:id/:nombre" element={<ProtectedRoute><IshikawaAuditado/></ProtectedRoute>}/>
               <Route path="/auditado/diagrama" element={<ProtectedRoute><DiagramaAuditado/></ProtectedRoute>}/>
-              <Route path="/auditado/informacion" element={<ProtectedRoute><InformacionAuditado/></ProtectedRoute>}/>
               <Route path="/auditado/vistarep" element={<ProtectedRoute><VistaReportesAuditado/></ProtectedRoute>}/>
               <Route path="/reportes-auditado" element={<ProtectedRoute><Reporte/></ProtectedRoute>}/>
 
@@ -139,7 +138,7 @@ export const UserContext = createContext(null);
   };
 
 function App() {
-  const [appVersion] = useState('2.1.2');
+  const [appVersion] = useState('2.1.3');
   const [showModal, setShowModal] = useState(false);
 
   const handleOpenModal = () => {

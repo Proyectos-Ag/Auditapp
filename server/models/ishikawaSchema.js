@@ -42,6 +42,7 @@ const ishikawaSchema = new mongoose.Schema({
     afectacion: String,
     fecha: String,
     auditado: String,
+    correo: String,
     requisito: String,
     hallazgo: String,
     correccion: String,

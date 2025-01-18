@@ -69,7 +69,7 @@ const IconMenu = () => {
   };
 
   const handleNavigateToPerfil = () => {
-    navigate('/auditado/informacion'); 
+    navigate('/informacion'); 
     setOpen(false);  
   };
 

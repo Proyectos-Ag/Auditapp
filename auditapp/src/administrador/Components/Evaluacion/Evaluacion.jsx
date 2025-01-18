@@ -1,12 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import styles from './css/Evalua.module.css';
+import {
+  Typography,
+  Button,
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Select,
+  MenuItem,
+} from '@mui/material';
 
 const Evaluaciones = () => {
   const [auditores, setAuditores] = useState([]);
   const [selectedAuditor, setSelectedAuditor] = useState('');
+  const [selectedFolio, setSelectedFolio] = useState('');
+  const [selectedAuditoria, setSelectedAuditoria] = useState('');
+  const [selectedAudi, setSelectedAudi] = useState('');
+  const [evaluacionExistente, setEvaluacionEx] = useState('');
   const [evaluacion, setEvaluacion] = useState({
-
     
     cursos: {
       'Auditor interno en el SGI': { calificacion: '', aprobado: false },
@@ -48,24 +64,96 @@ const Evaluaciones = () => {
     comentarios: ''
   });
 
+  // Verificar si selectedFolio coincide con folio en evaluacionExistente
+  useEffect(() => {
+    if (selectedFolio && evaluacionExistente.length > 0) {
+      const registro = evaluacionExistente.find((item) => item.folio === selectedFolio);
+
+      if (registro) {
+        // Actualizar el estado evaluacion con los datos del registro encontrado
+        setEvaluacion({
+          cursos: registro.cursos.reduce((acc, curso) => {
+            acc[curso.nombreCurso] = { calificacion: curso.calificacion, aprobado: curso.aprobado };
+            return acc;
+          }, {}),
+          conocimientos: registro.conocimientosHabilidades.reduce((acc, conocimiento) => {
+            acc[conocimiento.conocimiento] = conocimiento.puntuacion;
+            return acc;
+          }, {}),
+          atributos: registro.atributosCualidadesPersonales.reduce((acc, atributo) => {
+            acc[atributo.atributo] = atributo.puntuacion;
+            return acc;
+          }, {}),
+          experiencia: registro.experiencia,
+        });
+      }
+    }
+  }, [selectedFolio, evaluacionExistente]);
 
   useEffect(() => {
     const obtenerAuditores = async () => {
       try {
-        const respuesta = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
-        const auditoresFiltrados = respuesta.data.filter(usuario => usuario.TipoUsuario === 'auditor');
-        setAuditores(auditoresFiltrados);
+        const responseEvaluacion = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/evaluacion`);
+        console.log('Estado',responseEvaluacion.data)
+        setEvaluacionEx(responseEvaluacion.data);
+        // Obtener los datos con los IDs y nombres de AuditorLider
+        const responseDatos = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/aud-lid`);
+  
+        console.log('Datos obtenidos:', responseDatos.data);
+  
+        // Crear una lista con objetos que incluyan ID y AuditorLider
+        const auditoresLider = responseDatos.data.map(dato => ({
+          idRegistro: dato._id,
+          nombreLider: dato.AuditorLider,
+          tipoAuditoria: dato.TipoAuditoria,
+          duracion: dato.Duracion
+        }));
+  
+        if (!auditoresLider.length) {
+          console.error("No se encontraron AuditoresLider en los datos obtenidos");
+          return;
+        }
+  
+        // Obtener la lista de usuarios
+        const responseUsuarios = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
+  
+        // Asociar cada AuditorLider con su usuario y conservar el ID del registro
+        const auditoresFiltrados = auditoresLider.map(({ idRegistro, nombreLider, duracion, tipoAuditoria }) => {
+          const usuarioEncontrado = responseUsuarios.data.find(usuario => usuario.Nombre === nombreLider);
+          if (usuarioEncontrado) {
+            return { ...usuarioEncontrado, idRegistro, nombreLider, duracion, tipoAuditoria };
+          }
+          return null;
+        }).filter(Boolean); // Eliminar valores nulos si no hay coincidencia
+
+        const filteredAuditores = auditoresFiltrados.filter(auditor => {
+          // Excluir los auditores que tengan coincidencias con evaluaciones "Completas"
+          return !responseEvaluacion.data.some(evaluacion => {
+            return evaluacion.auditoriaId === auditor.idRegistro && evaluacion.estado !== "Incompleta";
+          });
+        });        
+
+        console.log('Filtrado',filteredAuditores)
+  
+        console.log('Auditores con duplicados e IDs de registros:', auditoresFiltrados);
+        setAuditores(filteredAuditores);
+        console.log('Aver',auditoresFiltrados)
       } catch (error) {
         console.error('Error al obtener auditores:', error);
       }
     };
-
+  
     obtenerAuditores();
-  }, []);
-
+  }, []);  
+  
+  
   useEffect(() => {
     if (selectedAuditor) {
-      const auditor = auditores.find(a => a._id === selectedAuditor);
+      console.log('Selected Auditor:', selectedAuditor);
+      console.log('Auditores disponibles:', auditores);
+
+      const auditor = auditores.find(a => `${a._id}_${a.idRegistro}` === selectedAuditor);
+      console.log('Auditor:', auditor);
       setAuditorDetails(auditor);
 
       // Actualizar la sección de formación profesional
@@ -84,6 +172,7 @@ const Evaluaciones = () => {
         });
       }
     } else {
+      setSelectedFolio(null);
       setAuditorDetails(null);
       setFormacionProfesional({
         nivelEstudios: '',
@@ -288,38 +377,7 @@ const Evaluaciones = () => {
       puntuacion: 0,
       comentarios: ''
     });
-  };
-
-  const SelectedAuditor = async (auditorId) => {
-    try {
-      // Actualiza el auditor seleccionado
-      setSelectedAuditor(auditorId);
-      
-      // Verifica si existe un registro "Incompleta"
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/${auditorId}/estado/incompleta`);
-      const evaluacionExistente = response.data;
-  
-      if (evaluacionExistente) {
-        console.log('Registro con estado "Incompleta" encontrado:', evaluacionExistente);
-        
-        // Actualiza el estado local de la evaluación con los datos existentes
-        setEvaluacion({
-          cursos: evaluacionExistente.cursos || {},
-          conocimientos: evaluacionExistente.conocimientosHabilidades || {},
-          atributos: evaluacionExistente.atributosCualidadesPersonales || {},
-          experiencia: evaluacionExistente.experiencia || {},
-          formacionProfesional: evaluacionExistente.formacionProfesional || {},
-        });
-  
-        // Cargar otros detalles, si es necesario
-      } else {
-        console.log('No hay registro con estado "Incompleta".');
-        limpiarCampos(); // Si no existe, limpia los campos para una nueva evaluación
-      }
-    } catch (error) {
-      console.error('Error al verificar el estado de la evaluación:', error);
-    }
-  };  
+  }; 
 
   const guardarEvaluacionConEstado = async (estado) => {
     try {
@@ -342,7 +400,7 @@ const Evaluaciones = () => {
       let evaluacionExistente = null;
       try {
         // Consulta para verificar si el registro ya existe
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/${selectedAuditor}`);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/${selectedFolio}`);
         evaluacionExistente = response.data;
         console.log('Evaluación existente:', evaluacionExistente);
       } catch (error) {
@@ -358,8 +416,8 @@ const Evaluaciones = () => {
       if (evaluacionExistente) {
         // Actualizar registro existente con PUT
         console.log('Actualizando evaluación...');
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/${selectedAuditor}`, {
-          auditorId: selectedAuditor,
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/folio/${selectedFolio}`, {
+          folio: selectedFolio,
           cursos: cursosArray,
           conocimientosHabilidades: conocimientosHabilidadesArray,
           atributosCualidadesPersonales: atributosArray,
@@ -373,7 +431,10 @@ const Evaluaciones = () => {
         // Crear un nuevo registro con POST
         console.log('Creando nueva evaluación...');
         await axios.post(`${process.env.REACT_APP_BACKEND_URL}/evaluacion`, {
-          auditorId: selectedAuditor,
+          folio: selectedFolio,
+          auditoriaId:selectedAuditoria,
+          auditorId: selectedAudi,
+          nombre:auditorDetails.Nombre,
           cursos: cursosArray,
           conocimientosHabilidades: conocimientosHabilidadesArray,
           atributosCualidadesPersonales: atributosArray,
@@ -390,287 +451,356 @@ const Evaluaciones = () => {
       console.error('Error al guardar o actualizar la evaluación:', error);
     }
   };
-     
+
+  const handleAuditorSelect = (auditorId, idRegistro, Nombre) => {
+    // Obtener las iniciales del nombre
+    const iniciales = Nombre.split(' ') // Divide el nombre por espacios
+      .map(palabra => palabra.charAt(0).toUpperCase()) // Obtiene la primera letra de cada palabra y la convierte en mayúscula
+      .join(''); // Une las iniciales en una cadena
+  
+    // Construir folioKey con las iniciales y el idRegistro
+    const auditorKey = `${auditorId}_${idRegistro}`;
+    const folioKey = `${idRegistro}${iniciales}`;
+  
+    if (selectedAuditor === auditorId) {
+      // Deseleccionar si se hace clic en el auditor ya seleccionado
+      setSelectedAuditor(null);
+      setSelectedFolio(null);
+      setSelectedAuditoria(null);
+      setSelectedAudi(null);
+    } else {
+      // Seleccionar un auditor y ocultar los demás
+      setSelectedAuditor(auditorKey);
+      setSelectedFolio(folioKey);
+      setSelectedAuditoria(idRegistro);
+      setSelectedAudi(auditorId);
+    }
+  };  
+
 
   return (
-  <div>
-    <div className={styles.evaluaciones}>
+   <Box sx={{ padding: '20px', marginTop: '50px' }}>
+    <div>
+        <h1>Seleccione un Auditor</h1>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+          {auditores
+            .map((auditor) => (
+              <div
+                key={auditor.idRegistro}
+                style={{
+                  border: "1px solid #ccc",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  background: selectedAuditor === `${auditor._id}_${auditor.idRegistro}` ? "#f0f8ff" : "#fff",
+                  cursor: "pointer",
+                  display:
+                    selectedAuditor && selectedAuditor !== `${auditor._id}_${auditor.idRegistro}`
+                      ? "none"
+                      : "block",
+                }}
+                onClick={() => handleAuditorSelect(auditor._id, auditor.idRegistro, auditor.Nombre)}
+              >
+                <h3>{auditor.Nombre}</h3>
+                <p>{auditor.duracion}</p>
+                <p>{auditor.tipoAuditoria}</p>
+                <p>{auditor.idRegistro}</p>
+              </div>
+            ))}
+        </div>
+        {selectedAuditor && (
+          <Button
+            onClick={limpiarCampos}
+            style={{
+              marginTop: "20px",
+              padding: "10px 20px",
+              backgroundColor: "#007bff",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            Mostrar todos
+          </Button>
+        )}
+      </div>
+
+      {selectedAuditor && (
+        <>
+      <Box sx={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+
       <h1>Evaluación de Auditores Internos</h1>
-      <p>GESTIÓN PARA LA CALIDAD</p>
       <p>GCF070</p>
-      <p><strong>Folio:</strong> 3</p>
+      <p><strong>Departamento:</strong> {auditorDetails ? auditorDetails.Departamento : 'Seleccione un auditor'}</p>
+      <p><strong>Folio:</strong> {selectedFolio}</p>
       <p><strong>Nombre:</strong> {auditorDetails ? auditorDetails.Nombre : 'Seleccione un auditor'}</p>
       <p><strong>Fecha:</strong> {new Date().toLocaleDateString()}</p>
       <p><strong>Fecha de Ingreso:</strong> {auditorDetails ? formatearFecha(auditorDetails.FechaIngreso) : 'N/A'}</p>
       <p>La siguiente evaluación deberá ser llenada por el Gerente de Gestión para la Calidad y será aplicada a partir de la ejecución de la primera auditoría con la finalidad de conocer el rango del auditor interno.</p>
-      <select onChange={(e) => SelectedAuditor(e.target.value)} value={selectedAuditor}>
-        <option value="">Selecciona un auditor</option>
-        {auditores.map(auditor => (
-          <option key={auditor._id} value={auditor._id}>{auditor.Nombre}</option>
-        ))}
-      </select>
 
-      {selectedAuditor && (
-        <>
-          <h2>Evaluación de Cursos</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Curso</th>
-                <th>Calificación (%)</th>
-                <th>Aprobado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.keys(evaluacion.cursos).map(curso => (
-                <tr key={curso}>
-                  <td>{curso}</td>
-                  <td>
-                    <input
-                      type="number"
-                      name={`cursos.${curso}`}
-                      value={evaluacion.cursos[curso].calificacion}
-                      onChange={manejarCambio}
-                      min="0"
-                      max="100"
-                    />
-                  </td>
-                  <td>{evaluacion.cursos[curso].aprobado ? 'Sí' : 'No'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Box sx={{ marginTop: '20px' }}>
+          <Typography variant="h6">Evaluación de Cursos</Typography>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Curso</TableCell>
+                  <TableCell>Calificación (%)</TableCell>
+                  <TableCell>Aprobado</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {Object.keys(evaluacion.cursos).map((curso) => (
+                  <TableRow key={curso}>
+                    <TableCell>{curso}</TableCell>
+                    <TableCell>
+                      <TextField
+                        type="number"
+                        name={`cursos.${curso}`}
+                        value={evaluacion.cursos[curso].calificacion}
+                        onChange={manejarCambio}
+                        inputProps={{ min: 0, max: 100 }}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>{evaluacion.cursos[curso].aprobado ? 'Sí' : 'No'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
 
-          <h2>Conocimientos y Habilidades</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Conocimiento/Habilidad</th>
-                <th>Puntuación (1-5)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.keys(evaluacion.conocimientos).map(conocimiento => (
-                <tr key={conocimiento}>
-                  <td>{conocimiento}</td>
-                  <td>
-                    <input
-                      type="number"
-                      name={`conocimientos.${conocimiento}`}
-                      value={evaluacion.conocimientos[conocimiento]}
-                      onChange={manejarCambio}
-                      min="1"
-                      max="5"
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <Box sx={{ marginTop: '20px' }}>
+          <Typography variant="h6">Conocimientos y Habilidades</Typography>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Conocimiento/Habilidad</TableCell>
+                  <TableCell>Puntuación (1-5)</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {Object.keys(evaluacion.conocimientos).map((conocimientos) => (
+                  <TableRow key={conocimientos}>
+                    <TableCell>{conocimientos}</TableCell>
+                    <TableCell>
+                      <TextField
+                         type="number"
+                         name={`conocimientos.${conocimientos}`}
+                         value={evaluacion.conocimientos[conocimientos]}
+                         onChange={manejarCambio}
+                         inputProps={{
+                          min: 1,
+                          max: 5,
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
 
-          <h2>Atributos y Cualidades Personales</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Atributo/Cualidad</th>
-                <th>Puntuación (1-5)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.keys(evaluacion.atributos).map(atributo => (
-                <tr key={atributo}>
-                  <td>{atributo}</td>
-                  <td>
-                    <input
-                      type="number"
-                      name={`atributos.${atributo}`}
-                      value={evaluacion.atributos[atributo]}
-                      onChange={manejarCambio}
-                      min="1"
-                      max="5"
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <Box sx={{ marginTop: '20px' }}>
+          <Typography variant="h6">Atributos y Cualidades Personales</Typography>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Atributo/Cualidad</TableCell>
+                  <TableCell>Puntuación (1-5)</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {Object.keys(evaluacion.atributos).map((atributo) => (
+                  <TableRow key={atributo}>
+                    <TableCell>{atributo}</TableCell>
+                    <TableCell>
+                      <TextField
+                         type="number"
+                         name={`atributos.${atributo}`}
+                         value={evaluacion.atributos[atributo]}
+                         onChange={manejarCambio}
+                         inputProps={{
+                          min: 1,
+                          max: 5,
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
 
-          <h2>Evaluación de Experiencia</h2>
-          <table>
-            <tbody>
-              <tr>
-                <td>Tiempo laborando en la planta:</td>
-                <td>
-                  <select
+        <Box sx={{ marginTop: '20px' }}>
+          <Typography variant="h6">Evaluación de Experiencia</Typography>
+          <TableContainer>
+            <Table>
+              <TableBody>
+                  <TableRow >
+                    <TableCell>
+                    Tiempo laborando en la planta:
+                    </TableCell>
+                    <TableCell>
+                    <Select
                     name="experiencia.tiempoLaborando"
                     value={evaluacion.experiencia.tiempoLaborando}
                     onChange={manejarCambio}
                   >
-                    <option value="">Selecciona</option>
-                    <option value="menos de 2 años">Menos de 2 años</option>
-                    <option value="de 2 a 5 años">De 2 a 5 años</option>
-                    <option value="más de 5 años">Más de 5 años</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td>Forma parte del equipo de inocuidad:</td>
-                <td>
+                    <MenuItem value="">Seleccione</MenuItem>
+                    <MenuItem value="menos de 2 años">Menos de 2 años</MenuItem>
+                    <MenuItem value="de 2 a 5 años">De 2 a 5 años</MenuItem>
+                    <MenuItem value="más de 5 años">Más de 5 años</MenuItem>
+                  </Select>
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow >
+                  <TableCell>
+                  Forma parte del equipo de inocuidad:
+                  </TableCell>
+                  <TableCell>
                   <input
                     type="checkbox"
                     name="experiencia.equipoInocuidad"
                     checked={evaluacion.experiencia.equipoInocuidad}
                     onChange={manejarCambio}
                   />
-                </td>
-              </tr>
-              <tr>
-                <td>Participación en auditorías internas:</td>
-                <td>
-                  <select
+                  </TableCell>
+                </TableRow>
+
+                <TableRow >
+                  <TableCell>
+                  Participación en auditorías internas:
+                  </TableCell>
+                  <TableCell>
+                  <Select
                     name="experiencia.auditoriasInternas"
                     value={evaluacion.experiencia.auditoriasInternas}
                     onChange={manejarCambio}
                   >
-                    <option value="">Selecciona</option>
-                    <option value="4">4</option>
-                    <option value="3">3</option>
-                    <option value="2">2</option>
-                    <option value="1">1</option>
-                    <option value="0">0</option>
-                  </select>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                    <MenuItem value="">Seleccione</MenuItem>
+                    <MenuItem value="4">4</MenuItem>
+                    <MenuItem value="3">3</MenuItem>
+                    <MenuItem value="2">2</MenuItem>
+                    <MenuItem value="1">1</MenuItem>
+                    <MenuItem value="0">0</MenuItem>
+                  </Select>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
 
-          <h2>Formación Profesional</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Nivel de Estudios</th>
-                <th>Especialidad</th>
-                <th>Puntuación</th>
-                <th>Comentarios</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <select
+        <Box sx={{ marginTop: '20px' }}>
+          <Typography variant="h6">Formación Profesional</Typography>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Nivel de Estudios</TableCell>
+                  <TableCell>Especialidad</TableCell>
+                  <TableCell>Puntuación</TableCell>
+                  <TableCell>Comentarios</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                
+                  <TableRow >
+                    <TableCell>
+                    <Select
                     name="formacionProfesional.nivelEstudios"
                     value={formacionProfesional.nivelEstudios}
                     onChange={manejarCambio}
                   >
-                    <option value="">Selecciona</option>
-                    <option value="Profesional">Profesional</option>
-                    <option value="TSU">TSU</option>
-                    <option value="Preparatoria">Preparatoria</option>
-                  </select>
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    name="formacionProfesional.especialidad"
-                    value={formacionProfesional.especialidad}
-                    onChange={manejarCambio}
-                  />
-                </td>
-                <td>{formacionProfesional.puntuacion}</td>
-                <td>
-                  <input
-                    type="text"
-                    name="formacionProfesional.comentarios"
-                    value={formacionProfesional.comentarios}
-                    onChange={manejarCambio}
-                  />
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                    <MenuItem value="">Selecciona</MenuItem>
+                    <MenuItem value="Profesional">Profesional</MenuItem>
+                    <MenuItem value="TSU">TSU</MenuItem>
+                    <MenuItem value="Preparatoria">Preparatoria</MenuItem>
+                  </Select>
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        label="Especialidad"
+                        name="formacionProfesional.especialidad"
+                        value={formacionProfesional.especialidad}
+                        onChange={manejarCambio}
+                        variant="standard" // También puedes usar "filled" o "standard"
+                        fullWidth
+                      />
+                    </TableCell>
+                    <TableCell>
+                    {formacionProfesional.puntuacion}
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        label="Comentario"
+                        name="formacionProfesional.comentarios"
+                        value={formacionProfesional.comentarios}
+                        onChange={manejarCambio}
+                        variant="standard" // También puedes usar "filled" o "standard"
+                        fullWidth
+                      />
+                    </TableCell>
+                  </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+        <h1>Resultado Final: {resultadoFinal.toFixed(2)}%</h1>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '16px',
+            marginTop: '20px',
+          }}
+        >
 
-          <div >
-            <h2>Indicadores de Evaluación</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Indicador de Evaluación</th>
-                  <th>Puntuación Máxima</th>
-                  <th>Valor en %</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Experiencia</td>
-                  <td>10</td>
-                  <td>10%</td>
-                </tr>
-                <tr>
-                  <td>Capacitación</td>
-                  <td>5</td>
-                  <td>30%</td>
-                </tr>
-                <tr>
-                  <td>Conocimiento y habilidades</td>
-                  <td>25</td>
-                  <td>30%</td>
-                </tr>
-                <tr>
-                  <td>Formación y profesional</td>
-                  <td>3</td>
-                  <td>10%</td>
-                </tr>
-                <tr>
-                  <td>Atributos y cualidades personales</td>
-                  <td>40</td>
-                  <td>20%</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <Button
+            onClick={() => guardarEvaluacionConEstado('Incompleta')}
+            sx={{
+              backgroundColor: 'blue',
+              color: 'white',
+              fontWeight: 'bold',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              '&:hover': {
+                backgroundColor: 'darkred',
+              },
+            }}
+          >
+            Guardar Cambios
+          </Button>
 
-          <div>
-            <h2>Calificación Total Obtenida</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Calificación Total</th>
-                  <th>Descripción</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>80-100%</td>
-                  <td>Competente y candidato a ser auditor líder (evaluación anual)</td>
-                </tr>
-                <tr>
-                  <td>80-84%</td>
-                  <td>Competente y es candidato a formar parte del equipo de inocuidad (evaluación semestral)</td>
-                </tr>
-                <tr>
-                  <td>60-79%</td>
-                  <td>Se puede considerar auditor de entrenamiento (evaluación trimestral)</td>
-                </tr>
-                <tr>
-                  <td>Menor a 59%</td>
-                  <td>Se considera no competente y fuera del equipo auditor</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <h2>Resultado Final: {resultadoFinal.toFixed(2)}%</h2>
-
-          <button onClick={() => guardarEvaluacionConEstado('Incompleta')}>Guardar Cambios</button>
-          <button onClick={() => guardarEvaluacionConEstado('Completa')}>Guardar Evaluación</button>
-          <button onClick={limpiarCampos}>Limpiar Campos</button>
-        </>
+          <Button
+            onClick={() => guardarEvaluacionConEstado('Completa')}
+            sx={{
+              backgroundColor: 'green',
+              color: 'white',
+              fontWeight: 'bold',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              '&:hover': {
+                backgroundColor: 'darkred',
+              },
+            }}
+          >
+            Guardar Evaluación
+          </Button>
+        </Box>
+      </Box>
+      </>
       )}
-    </div>
-    </div>
-    
+    </Box>
   );
-
 };
 
 export default Evaluaciones;
