@@ -4,6 +4,10 @@ const puppeteer = require('puppeteer');
 const transporter = require('../emailconfig');
 const path = require('path');
 const fs = require('fs');
+const multer = require("multer");
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 /**
  * GET /programas-anuales/audits
@@ -22,20 +26,21 @@ exports.getAudits = async (req, res) => {
  * Crea una nueva auditoría y envía correo con captura de pantalla.
  */
 exports.createAudit = async (req, res) => {
-  const { cliente, fecha, modalidad, status, realizada, programada } = req.body;
+  const { cliente, fechaInicio, fechaFin, modalidad, status, realizada, programada } = req.body;
 
   // Validar campos requeridos
-  if (!cliente || !fecha || !modalidad || !status) {
+  if (!cliente || !fechaInicio || !fechaFin || !modalidad || !status) {
     return res
       .status(400)
       .json({ message: 'Por favor, completa todos los campos requeridos.' });
   }
 
   try {
-    // 1. Crear y guardar la auditoría en la BD
+    // Crear y guardar la auditoría en la base de datos
     const newAudit = new Audit({
       cliente,
-      fecha,
+      fechaInicio,
+      fechaFin,
       modalidad,
       status,
       realizada: realizada || false,
@@ -43,54 +48,14 @@ exports.createAudit = async (req, res) => {
     });
     const savedAudit = await newAudit.save();
 
-    // 2. Enviar Correo con Captura de Pantalla
-    try {
-      // a) Lanzar Puppeteer
-      const browser = await puppeteer.launch({
-        // Si lo corres en un hosting tipo Heroku u otro, a veces necesitas:
-        // args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      });
-      const page = await browser.newPage();
-      // Ajusta la URL a la ruta real donde se ve la tabla con la nueva auditoría
-      await page.goto('https://auditapp-dqej.onrender.com/correo-prog-audi', {
-        waitUntil: 'networkidle2',
-      });
+    // Si existe un archivo en la solicitud, accede a él con `req.file.buffer`
+    const pdfBuffer = req.file ? req.file.buffer : null;
 
-      // b) Ocultar elementos antes de la captura
-      await page.evaluate(() => {
-        const elementosOcultar = [
-          '.boton-consultar', // Clase del botón "Consultar Auditorías 2024"
-          '.acciones-panel', // Clase del panel de acciones
-          '.boton-agregar'   // Clase del botón "Agregar Nueva Auditoría"
-        ];
-        elementosOcultar.forEach(selector => {
-          const elemento = document.querySelector(selector);
-          if (elemento) {
-            elemento.style.display = 'none';
-          }
-        });
-      });
-       // b) Ocultar elementos antes de la captura
-       await page.evaluate(() => {
-        const elementosOcultar = [
-          '.boton-consultar', // Clase del botón "Consultar Auditorías 2024"
-          '.acciones-panel', // Clase del panel de acciones
-          '.boton-agregar' ,
-          'toggle-2024-button'  // Clase del botón "Agregar Nueva Auditoría"
-        ];
-        elementosOcultar.forEach(selector => {
-          const elemento = document.querySelector(selector);
-          if (elemento) {
-            elemento.style.display = 'none';
-          }
-        });
-      });
-      
-      // b) Tomar screenshot
-      const screenshotBuffer = await page.screenshot({ fullPage: true });
-      await browser.close();
+    // Si hay una imagen (pdfBuffer), puedes hacer lo que necesites, por ejemplo, enviarla en el correo
+    if (pdfBuffer) {
+      // Crear un archivo PDF o realizar cualquier otra operación con `pdfBuffer`
 
-      // c) Lista de correos separados por comas
+      // Preparar el email con el archivo adjunto
       const recipientEmails = `
       aaranda@aguida.com,
       almacen@aguida.com,
@@ -127,36 +92,36 @@ exports.createAudit = async (req, res) => {
       nbgarcia@aguida.com,
       jrivera@aguida.com,
       cpadron@aguida.com,
-      vbarron@aguida.com
+      vbarron@aguida.com,
+      soleje2862004@gmail.com
       `.trim().replace(/\s+/g, '');
 
       const templatePathPrograma = path.join(__dirname, 'templates', 'programa-auditorias.html');
-            const emailTemplatePrograma = fs.readFileSync(templatePathPrograma, 'utf8');
-            const customizedTemplatePrograma = emailTemplatePrograma
-            .replace('{{cliente}}', savedAudit.cliente)
-            .replace('{{fecha}}', savedAudit.fecha);
+      const emailTemplatePrograma = fs.readFileSync(templatePathPrograma, 'utf8');
+      const customizedTemplatePrograma = emailTemplatePrograma
+        .replace('{{cliente}}', savedAudit.cliente)
+        .replace('{{fechaFin}}', savedAudit.fechaFin)
+        .replace('{{fecha}}', savedAudit.fechaInicio);
 
-      // e) Enviar el correo 
+      // Configurar el correo con la imagen adjunta
       const mailOptions = {
         from: `"Sistema Auditorías" <${process.env.EMAIL_USERNAME}>`,
-        to: recipientEmails, // Usa 'bcc' si quieres ocultar los correos
+        bcc: recipientEmails,
         subject: 'Nueva Auditoría Registrada',
         html: customizedTemplatePrograma,
         attachments: [
           {
-            filename: 'captura.png',
-            content: screenshotBuffer,
+            filename: 'captura.png', // O el nombre que prefieras para el archivo
+            content: pdfBuffer,      // Este es el buffer de la imagen o archivo que recibiste
           },
         ],
       };
 
       const info = await transporter.sendMail(mailOptions);
       console.log('Correo enviado correctamente a múltiples destinatarios:', info.messageId);
-    } catch (errorMail) {
-      console.error('Error al enviar correo o capturar pantalla:', errorMail);
     }
 
-    // Finalmente, responder al front con la auditoría creada
+    // Responder con la auditoría creada
     res.status(201).json(savedAudit);
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -1,4 +1,7 @@
 const express = require('express');
+const multer = require("multer");
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 const router = express.Router();
 const auditController = require('../controllers/programar-audiController');
 
@@ -6,7 +9,7 @@ const auditController = require('../controllers/programar-audiController');
 router.get('/audits', auditController.getAudits);
 
 // Ruta para crear una nueva auditoría
-router.post('/audits', auditController.createAudit);
+router.post("/audits", upload.single("tablaImagen"), auditController.createAudit);
 
 // Ruta para actualizar el estado de realizada o programada
 router.put('/audits/:id', auditController.updateAuditStatus);

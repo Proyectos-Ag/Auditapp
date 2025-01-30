@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './css/AuditTable.css';
+import html2canvas from "html2canvas";
+import { Backdrop, CircularProgress, Typography, Snackbar, Alert } from "@mui/material";
 
 const AuditTable = () => {
   const [audits, setAudits] = useState([]);
   const [newAudit, setNewAudit] = useState({
     cliente: '',
-    fecha: '',
+    fechaInicio: '',
+    fechaFin: '',
     modalidad: 'Presencial',
     status: 'Realizada',
     realizada: false,
     programada: false,
   });
 
-  // Para controlar edición en la tabla
-  // { auditId: { editing: boolean, newStatus: string } }
   const [editStatus, setEditStatus] = useState({});
-  const [loading, setLoading] = useState(false); // Estado para el indicador de carga
-  const [show2024, setShow2024] = useState(false); // Estado para mostrar/ocultar 2024
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(false);
+  const [show2024, setShow2024] = useState(false);
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
@@ -41,34 +43,117 @@ const AuditTable = () => {
     });
   };
 
+  const captureTableImage = async () => {
+    const table = document.querySelector(".audit-table");
+    if (!table) return null;
+  
+    const canvas = await html2canvas(table, { scale: 2 });
+  
+    const rowCount = table.rows.length;
+    const colCount = table.rows[0]?.cells.length;
+    if (rowCount === 0 || colCount === 0) return null; // Evitar errores
+  
+    // Calcular el ancho total sin la última columna
+    let totalWidth = 0;
+    for (let i = 0; i < colCount - 1; i++) {
+      totalWidth += table.rows[0].cells[i].offsetWidth;
+    }
+  
+    // Calcular la altura total sin la última fila
+    let totalHeight = 0;
+    for (let i = 0; i < rowCount - 1; i++) {
+      totalHeight += table.rows[i].offsetHeight;
+    }
+  
+    // Crear un nuevo canvas con las dimensiones ajustadas
+    const croppedCanvas = document.createElement("canvas");
+    croppedCanvas.width = totalWidth * 2; // Ajustado por la escala
+    croppedCanvas.height = totalHeight * 2; // Ajustado por la escala
+    const croppedCtx = croppedCanvas.getContext("2d");
+  
+    // Dibujar la imagen recortada correctamente
+    croppedCtx.drawImage(canvas, 0, 0, croppedCanvas.width, croppedCanvas.height, 0, 0, croppedCanvas.width, croppedCanvas.height);
+  
+    return new Promise((resolve) => {
+      croppedCanvas.toBlob((blob) => resolve(blob), "image/png");
+    });
+  };  
+  
+
   const addAudit = async () => {
-    if (newAudit.cliente && newAudit.fecha && newAudit.modalidad && newAudit.status) {
-      setLoading(true); // Activar el indicador de carga
-      try {
-        const response = await axios.post(
-          `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits`,
-          newAudit
-        );
-        setAudits([...audits, response.data]);
-        setNewAudit({
-          cliente: '',
-          fecha: '',
-          modalidad: 'Presencial',
-          status: 'Realizada',
-          realizada: false,
-          programada: false,
-        });
-      } catch (error) {
-        console.error("Error al agregar la auditoría:", error);
-      } finally {
-        setLoading(false); // Desactivar el indicador de carga
+    if (
+      newAudit.cliente &&
+      newAudit.fechaInicio &&
+      newAudit.fechaFin &&
+      newAudit.modalidad &&
+      newAudit.status
+    ) {
+      if (new Date(newAudit.fechaInicio) > new Date(newAudit.fechaFin)) {
+        alert("La fecha de inicio no puede ser posterior a la fecha de fin.");
+        return;
       }
+  
+      console.log("Datos de la auditoría que se insertan visualmente:", newAudit);
+  
+      // Insertar visualmente la nueva auditoría en la tabla
+      const newAuditEntry = {
+        ...newAudit,
+        _id: Date.now().toString(), // Genera un ID temporal para evitar conflictos
+      };
+      setAudits([...audits, newAuditEntry]);
+  
+      // Restablecer el formulario inmediatamente
+      setNewAudit({
+        cliente: "",
+        fechaInicio: "",
+        fechaFin: "",
+        modalidad: "Presencial",
+        status: "Realizada",
+        realizada: false,
+        programada: false,
+      });
+  
+      // Esperar que la UI se actualice antes de capturar la imagen
+      setTimeout(async () => {
+        const tableImageBlob = await captureTableImage();
+  
+        if (tableImageBlob) {
+          console.log("Imagen capturada correctamente.");
+        } else {
+          console.warn("No se pudo capturar la imagen.");
+        }
+  
+        // Enviar los datos al servidor SIN ESPERAR LA RESPUESTA para capturar la imagen antes
+        const formData = new FormData();
+        formData.append("cliente", newAuditEntry.cliente);
+        formData.append("fechaInicio", newAuditEntry.fechaInicio);
+        formData.append("fechaFin", newAuditEntry.fechaFin);
+        formData.append("modalidad", newAuditEntry.modalidad);
+        formData.append("status", newAuditEntry.status);
+        if (tableImageBlob) {
+          formData.append("tablaImagen", tableImageBlob, "tabla.png");
+        }
+  
+        setLoading(true);
+        try {
+          await axios.post(
+            `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data" } }
+          );
+          setSuccessMessage(true);
+        } catch (error) {
+          console.error("Error al agregar la auditoría:", error);
+        } finally {
+          setLoading(false);
+        }
+      }, 300); // Pequeño retraso para asegurar la actualización del DOM
     } else {
       alert("Por favor, completa todos los campos.");
     }
-  };
+  };  
+  
 
-  // Iniciar edición del status de una fila
   const handleEditClick = (auditId, currentStatus) => {
     setEditStatus({
       ...editStatus,
@@ -76,7 +161,6 @@ const AuditTable = () => {
     });
   };
 
-  // Manejar cambio en el <select> de status
   const handleStatusChange = (auditId, newValue) => {
     setEditStatus(prev => ({
       ...prev,
@@ -87,14 +171,12 @@ const AuditTable = () => {
     }));
   };
 
-  // Cancelar edición
   const handleCancelEdit = (auditId) => {
     const copy = { ...editStatus };
     delete copy[auditId];
     setEditStatus(copy);
   };
 
-  // Guardar nueva status en BD
   const handleSaveStatus = async (auditId) => {
     const confirmChange = window.confirm("¿Seguro que deseas cambiar el status?");
     if (!confirmChange) return;
@@ -116,16 +198,35 @@ const AuditTable = () => {
     }
   };
 
-  const audits2024 = audits.filter((audit) => new Date(audit.fecha).getFullYear() === 2024);
-  const audits2025 = audits.filter((audit) => new Date(audit.fecha).getFullYear() === 2025);
+  const audits2024 = audits.filter((audit) => new Date(audit.fechaInicio).getFullYear() === 2024);
+  const audits2025 = audits.filter((audit) => new Date(audit.fechaInicio).getFullYear() === 2025);
 
   return (
     <div className="audit-table-container">
-      {loading && (
-        <div className="loading-overlay">
-          <p>Enviando correo, por favor espera...</p>
-        </div>
-      )}
+       {/* Cargando */}
+        {loading && (
+          <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={true}>
+            <div style={{ textAlign: "center" }}>
+              <CircularProgress color="inherit" />
+              <Typography variant="h6" sx={{ mt: 2 }}>
+                Enviando correo, por favor espere...
+              </Typography>
+            </div>
+          </Backdrop>
+        )}
+
+        {/* Mensaje de éxito */}
+        <Snackbar
+          open={successMessage}
+          autoHideDuration={4000}
+          onClose={() => setSuccessMessage(false)}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Alert onClose={() => setSuccessMessage(false)} severity="success" sx={{ width: "100%" }}>
+            📩 Correos enviados exitosamente.
+          </Alert>
+        </Snackbar>
+      
       <h1>Programa Anual de Auditorías</h1>
 
       {currentYear === 2025 && (
@@ -144,7 +245,7 @@ const AuditTable = () => {
                 <thead>
                   <tr>
                     <th>Cliente / Casa Auditora</th>
-                    <th>Fecha</th>
+                    <th>Rango de Fechas</th>
                     <th>Modalidad</th>
                     <th>Status</th>
                   </tr>
@@ -153,7 +254,7 @@ const AuditTable = () => {
                   {audits2024.map((audit) => (
                     <tr key={audit._id}>
                       <td>{audit.cliente}</td>
-                      <td>{audit.fecha}</td>
+                      <td>{audit.fechaInicio} - {audit.fechaFin}</td>
                       <td>{audit.modalidad}</td>
                       <td className={`status ${audit.status.toLowerCase().replace(/ /g, '-')}`}>
                         {audit.status}
@@ -172,7 +273,7 @@ const AuditTable = () => {
         <thead>
           <tr>
             <th>Cliente / Casa Auditora</th>
-            <th>Fecha</th>
+            <th>Rango de Fechas</th>
             <th>Modalidad</th>
             <th>Status</th>
             <th>Acciones</th>
@@ -182,7 +283,7 @@ const AuditTable = () => {
           {audits2025.map((audit) => (
             <tr key={audit._id}>
               <td>{audit.cliente}</td>
-              <td>{audit.fecha}</td>
+              <td>{audit.fechaInicio} - {audit.fechaFin}</td>
               <td>{audit.modalidad}</td>
               <td className={`status ${audit.status.toLowerCase().replace(/ /g, '-')}`}>
                 {editStatus[audit._id]?.editing ? (
@@ -215,7 +316,6 @@ const AuditTable = () => {
             </tr>
           ))}
 
-          {/* Fila para agregar una nueva auditoría */}
           <tr>
             <td>
               <input
@@ -229,8 +329,14 @@ const AuditTable = () => {
             <td>
               <input
                 type="date"
-                name="fecha"
-                value={newAudit.fecha}
+                name="fechaInicio"
+                value={newAudit.fechaInicio}
+                onChange={handleInputChange}
+              />
+              <input
+                type="date"
+                name="fechaFin"
+                value={newAudit.fechaFin}
                 onChange={handleInputChange}
               />
             </td>

@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 
 const auditSchema = new mongoose.Schema({
     cliente: { type: String, required: true },
-    fecha: { type: String, required: true },
+    fechaInicio: { type: String, required: true },
+    fechaFin: { type: String, required: true },
     modalidad: { type: String, required: true },
     status: { type: String, enum: ['Realizada', 'Programada', 'No ejecutada', 'Por Confirmar', 'En Curso'], required: true },
     realizada: { type: Boolean, default: false },
