@@ -2,9 +2,7 @@ import React, { useEffect, useRef } from "react";
 import BotonesRol from "../../../resources/botones-rol";
 import './css/Inicio.css';
 import videoFile from '../assets/img/UpscaleVideo_1_20240628.webm';
-import pez from "../assets/img/Ishikawa-mini.png";
-import usuario from "../assets/img/usuarios.png";
-import finalizado from "../assets/img/finalizado.png"
+import menu from "../assets/img/menu.png";
 import { useNavigate } from "react-router-dom";
 import Nieve from "../../../resources/nieve";
 
@@ -46,18 +44,19 @@ const Inicio = () => {
       <div className="card-home" onClick={() => navigate("/menu")}>
         Menú
         <br/><br/>
-        <img src={pez} alt="pez" className='imagen-mini' />
+        <img src={menu} alt="menu" className='imagen-mini' />
       </div>
-      <div className="card-home" onClick={() => navigate("/menu")}>
+      <div className="card-home" >
        Concentrado
        <br/><br/>
-        <img src={finalizado} alt="finalizado" style={{width:'80%'}} className='imagen-mini' />
+       <p>...</p>
+        
       </div>
-      <div className="card-home" onClick={() => navigate("/auditado/informacion")}>
+      <div className="card-home" >
       Safety Goals
         <br />
         <br />
-        <img src={usuario} alt="usuario" className='imagen-mini' />
+       <p>...</p>
       </div>
     </div>
     </div>

@@ -215,8 +215,8 @@ const ObjetivosTabla = () => {
         <thead>
           <tr>
             <th>#</th>
-            <th>OBJETIVO</th>
-            <th>RECURSOS</th>
+            <th style={{maxWidth: '30em', width:'100em'}}>OBJETIVO</th>
+            <th style={{maxWidth: '10em', width:'100em'}}>RECURSOS</th>
             <th>META / FRECUENCIA</th>
             <th>ENE - ABR</th>
             <th>MAYO - AGO</th>
@@ -241,7 +241,7 @@ const ObjetivosTabla = () => {
               onChange={(e) => manejarCambioCampo(row._id, "objetivo", e.target.value)}
             />
           ) : (
-            row.objetivo
+            <p style={{textAlign: 'justify'}}>{row.objetivo}</p>
           )}
         </td>
         <td>
@@ -252,7 +252,7 @@ const ObjetivosTabla = () => {
               onChange={(e) => manejarCambioCampo(row._id, "recursos", e.target.value)}
             />
           ) : (
-            row.recursos
+            <p style={{textAlign: 'justify'}}>{row.recursos}</p>
           )}
         </td>
         <td>
