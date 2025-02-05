@@ -7,7 +7,6 @@ import RegistroUsuarioModal from './RegistroUsuarioModal';
 import CalificacionModal from './CalificacionModal';
 
 const UsuariosRegistro = () => {
-
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,10 +21,13 @@ const UsuariosRegistro = () => {
     Puesto: '',
     FechaIngreso: '',
     Escolaridad: '',
-    Departamento:'',
+    Departamento: '',
+    Carrera: '',
     AñosExperiencia: '',
     FormaParteEquipoInocuidad: false,
-    calificaciones: [] // Inicializar como un array vacío
+    PuntuacionEspecialidad: '',
+    area: '',
+    calificaciones: []
   });
   const [editFormError, setEditFormError] = useState('');
   const [filtroTipoUsuario, setFiltroTipoUsuario] = useState('');
@@ -39,7 +41,6 @@ const UsuariosRegistro = () => {
     confirmPassword: ''
   });
   const [passwordError, setPasswordError] = useState('');
-
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -124,19 +125,16 @@ const UsuariosRegistro = () => {
       Puesto: usuario.Puesto || '',
       FechaIngreso: formattedFechaIngreso,
       Escolaridad: usuario.Escolaridad || '',
-      //cosa movida carrera
       Carrera: usuario.Carrera || '',
       Departamento: usuario.Departamento || '',
       AñosExperiencia: usuario.AñosExperiencia || '',
       FormaParteEquipoInocuidad: usuario.FormaParteEquipoInocuidad || false,
-      PuntuacionEspecialidad : usuario.PuntuacionEspecialidad || '',
+      PuntuacionEspecialidad: usuario.PuntuacionEspecialidad || '',
+      area: usuario.area || '',
       calificaciones: usuario.calificaciones || []
     });
     setShowEditModal(true);
   };
-
-  const [customArea, setCustomArea] = useState('');
-  
 
   const handleAgregarCalificaciones = (usuario) => {
     setUsuarioAEditar(usuario);
@@ -148,12 +146,12 @@ const UsuariosRegistro = () => {
       console.error("Usuario o calificaciones inválidas");
       return;
     }
-  
+
     const updatedUser = {
       ...usuarioAEditar,
       calificaciones: [...usuarioAEditar.calificaciones, ...calificaciones]
     };
-  
+
     axios.put(`${process.env.REACT_APP_BACKEND_URL}/usuarios/${usuarioAEditar._id}`, updatedUser)
       .then(response => {
         setUsers(users.map(user => (user._id === usuarioAEditar._id ? response.data : user)));
@@ -162,50 +160,33 @@ const UsuariosRegistro = () => {
       })
       .catch(error => {
         console.error('Error al actualizar las calificaciones:', error);
-        // Manejar el error adecuadamente y proporcionar retroalimentación al usuario si es necesario
       });
   };
-  
+
   const handleEditFormChange = (e, value) => {
-    const { name } = e.target;
-    const newValue = e.target.type === 'checkbox' ? value : e.target.value;
-    if (name === 'Área') {
-      setEditFormData(prevState => ({
-        ...prevState,
-        [name]: newValue
-      }));
-      if (newValue !== 'custom') {
-        setCustomArea(''); // Reinicia customArea si no es 'custom'
-      }
-    } else {
-      setEditFormData(prevState => ({
-        ...prevState,
-        [name]: newValue
-      }));
-      if (name === 'customArea') {
-        setCustomArea(newValue); // Actualiza customArea directamente
-      }
-    }
+    const { name, type } = e.target;
+    const newValue = type === 'checkbox' ? value : e.target.value;
+    setEditFormData(prevState => ({
+      ...prevState,
+      [name]: newValue
+    }));
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-  
+
     const fechaIngresoDate = new Date(editFormData.FechaIngreso);
     const currentDate = new Date();
-  
+
     if (fechaIngresoDate > currentDate) {
       setEditFormError('La fecha de ingreso no puede ser mayor a la fecha actual.');
       return;
     } else {
       setEditFormError('');
     }
-  
+
     try {
-      const updatedFormData = { ...editFormData }; // Copia de los datos del formulario
-      if (editFormData.Área === 'custom') {
-        updatedFormData.Área = customArea; // Reemplaza 'custom' con el valor de customArea
-      }
+      const updatedFormData = { ...editFormData };
       const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/usuarios/${usuarioAEditar._id}`, updatedFormData);
       setUsers(users.map(user => (user._id === usuarioAEditar._id ? response.data : user)));
       setShowEditModal(false);
@@ -240,7 +221,7 @@ const UsuariosRegistro = () => {
         setUsers(users.map(user => (user._id === userId ? response.data : user)));
         alert('Usuario degradado a auditado exitosamente');
       } else {
-        alert('El usuario no puede ser degradado a empleado porque su promedio de evaluación es mayor o igual a 80');
+        alert('El usuario no puede ser degradado porque su promedio de evaluación es mayor o igual a 80');
       }
     } catch (error) {
       console.error('Error al degradar el usuario:', error);
@@ -262,12 +243,11 @@ const UsuariosRegistro = () => {
     }
   };
 
-  
   const filteredUsers = users.filter(user => {
     return (
       (filtroTipoUsuario === '' || user.TipoUsuario === filtroTipoUsuario) &&
       (filtroInocuidad === '' || user.FormaParteEquipoInocuidad.toString() === filtroInocuidad) &&
-      (filtroAprobado === '' || user.Aprobado.toString() === filtroAprobado)&&
+      (filtroAprobado === '' || user.Aprobado.toString() === filtroAprobado) &&
       (filtroEscolaridad === '' || user.Escolaridad.toString() === filtroEscolaridad)
     );
   });
@@ -280,7 +260,7 @@ const UsuariosRegistro = () => {
       <div className="usuarios-container">
         <h1 className="h1-small-margin">Usuarios</h1>
         <div className='botonA-pos'>
-        <button className='botonA' onClick={() => setShowRegistrationForm(true)}>Agregar +</button>
+          <button className='botonA' onClick={() => setShowRegistrationForm(true)}>Agregar +</button>
         </div>
         <div className="filters">
           <select value={filtroTipoUsuario} onChange={(e) => setFiltroTipoUsuario(e.target.value)}>
@@ -289,18 +269,20 @@ const UsuariosRegistro = () => {
             <option value="auditor">Auditor</option>
             <option value="Administrador">Administrador</option>
           </select>
-          
+
           <select value={filtroEscolaridad} onChange={(e) => setFiltroEscolaridad(e.target.value)}>
             <option value="">Escolaridad</option>
             <option value="TSU">TSU</option>
             <option value="Profesional">Profesional</option>
             <option value="Preparatoria">Preparatoria</option>
           </select>
+
           <select value={filtroInocuidad} onChange={(e) => setFiltroInocuidad(e.target.value)}>
             <option value="">Inocuidad</option>
             <option value="true">Sí</option>
             <option value="false">No</option>
           </select>
+
           <select value={filtroAprobado} onChange={(e) => setFiltroAprobado(e.target.value)}>
             <option value="">Aprobado</option>
             <option value="true">Sí</option>
@@ -319,8 +301,7 @@ const UsuariosRegistro = () => {
               onDegradarClick={handleDegradarClick}
               onPromocionarClick={handlePromocionarClick}
               onAgregarCalificaciones={() => handleAgregarCalificaciones(user)}
-              onPasswordChange={handlePasswordChange} // Añade esta línea
-
+              onPasswordChange={handlePasswordChange}
             />
           ))}
         </div>
@@ -328,7 +309,7 @@ const UsuariosRegistro = () => {
           show={showRegistrationForm}
           handleClose={() => setShowRegistrationForm(false)}
         />
-         <CalificacionModal
+        <CalificacionModal
           show={showCalificacionModal}
           handleClose={() => setShowCalificacionModal(false)}
           onSubmit={handleGuardarCalificaciones}
@@ -349,7 +330,7 @@ const UsuariosRegistro = () => {
                     onChange={handleEditFormChange}
                   />
                 </div>
-                
+
                 <div className="form-group">
                   <label>Correo:</label>
                   <input
@@ -359,7 +340,7 @@ const UsuariosRegistro = () => {
                     onChange={handleEditFormChange}
                   />
                 </div>
-                
+
                 <div className="form-group">
                   <label>Puesto:</label>
                   <input
@@ -369,24 +350,36 @@ const UsuariosRegistro = () => {
                     onChange={handleEditFormChange}
                   />
                 </div>
+
                 <div className="form-group">
-                <label>Departamento:</label>
-              <select
-                name="Departamento"
-                value={editFormData.Área}
-                onChange={e => handleEditFormChange(e, editFormData.Área)}
-              >
-                <option value="">Selecciona el departamento</option>
-                <option value="Administración">Administración</option>
-                <option value="Aseguramiento de calidad">Aseguramiento de calidad                </option>
-                <option value="Gestión para la calidad">Gestión para la calidad</option>
-                <option value="Gestión para la productividad">Gestión para la productividad</option>
-                <option value="Mantenimiento">Mantenimiento</option>
-                <option value="Ingeniería">Ingeniería</option>
-                <option value="Planeación y Logística">Planeación y Logística</option>
-                <option value="Producción">Producción</option>
-              </select>
-              </div>
+                  <label>Departamento:</label>
+                  <select
+                    name="Departamento"
+                    value={editFormData.Departamento}
+                    onChange={handleEditFormChange}
+                  >
+                    <option value="">Selecciona el departamento</option>
+                    <option value="Administración">Administración</option>
+                    <option value="Aseguramiento de calidad">Aseguramiento de calidad</option>
+                    <option value="Gestión para la calidad">Gestión para la calidad</option>
+                    <option value="Gestión para la productividad">Gestión para la productividad</option>
+                    <option value="Mantenimiento">Mantenimiento</option>
+                    <option value="Ingeniería">Ingeniería</option>
+                    <option value="Planeación y Logística">Planeación y Logística</option>
+                    <option value="Producción">Producción</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Área:</label>
+                  <input
+                    type="text"
+                    name="area"
+                    value={editFormData.area}
+                    onChange={handleEditFormChange}
+                    required
+                  />
+                </div>
 
                 {(usuarioAEditar.TipoUsuario === 'auditor' || usuarioAEditar.TipoUsuario === 'Administrador' || usuarioAEditar.TipoUsuario === 'empleado') && (
                   <>
@@ -399,6 +392,7 @@ const UsuariosRegistro = () => {
                         onChange={handleEditFormChange}
                       />
                     </div>
+
                     <div className="form-group">
                       <label>Promedio de Evaluación:</label>
                       <input
@@ -408,32 +402,27 @@ const UsuariosRegistro = () => {
                         onChange={handleEditFormChange}
                       />
                     </div>
+
                     <div className="form-group">
-                    <label>
-                Escolaridad:
-                <select name="Escolaridad" value={editFormData.Escolaridad} onChange={handleEditFormChange} required>
-                  <option value="">Seleccione una opción</option>
-                  <option value="TSU">TSU</option>
-                   <option value="Profesional">Profesional</option>
-                   <option value="Preparatoria">Preparatoria</option>
-                </select>
-              </label>         
-                        <input
+                      <label>Escolaridad:</label>
+                      <select name="Escolaridad" value={editFormData.Escolaridad} onChange={handleEditFormChange} required>
+                        <option value="">Seleccione una opción</option>
+                        <option value="TSU">TSU</option>
+                        <option value="Profesional">Profesional</option>
+                        <option value="Preparatoria">Preparatoria</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Carrera:</label>
+                      <input
                         type="text"
-                        name="Escolaridad"
-                        value={editFormData.Escolaridad}
+                        name="Carrera"
+                        value={editFormData.Carrera}
                         onChange={handleEditFormChange}
                       />
                     </div>
-                    <div className="form-group">
-                   <label>Carrera:</label>
-                    <input
-                      type="text"
-                      name="Carrera"
-                      value={editFormData.Carrera}
-                      onChange={handleEditFormChange}
-                    />
-                  </div>
+
                     <div className="form-group">
                       <label>Años de Experiencia:</label>
                       <input
@@ -443,6 +432,7 @@ const UsuariosRegistro = () => {
                         onChange={handleEditFormChange}
                       />
                     </div>
+
                     <div className="form-group">
                       <label>Puntuación Especialidad:</label>
                       <input
@@ -452,6 +442,7 @@ const UsuariosRegistro = () => {
                         onChange={handleEditFormChange}
                       />
                     </div>
+
                     <div className="form-group">
                       <label>¿Forma parte del equipo de Inocuidad?</label>
                       <input
@@ -470,36 +461,37 @@ const UsuariosRegistro = () => {
             </div>
           </div>
         )}
-         {showPasswordModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <span className="close" onClick={() => setShowPasswordModal(false)}>&times;</span>
-            <form onSubmit={handlePasswordSubmit} className="edit-form">
-              <h2>Cambiar Contraseña</h2>
-              <div className="form-group">
-                <label>Nueva Contraseña:</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={passwordFormData.password}
-                  onChange={handlePasswordFormChange}
-                />
-              </div>
-              <div className="form-group">
-                <label>Confirmar Contraseña:</label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={passwordFormData.confirmPassword}
-                  onChange={handlePasswordFormChange}
-                />
-              </div>
-              {passwordError && <p className="error">{passwordError}</p>}
-              <button type="submit" className="btn-guardar">Cambiar Contraseña</button>
-            </form>
+
+        {showPasswordModal && (
+          <div className="modal">
+            <div className="modal-content">
+              <span className="close" onClick={() => setShowPasswordModal(false)}>&times;</span>
+              <form onSubmit={handlePasswordSubmit} className="edit-form">
+                <h2>Cambiar Contraseña</h2>
+                <div className="form-group">
+                  <label>Nueva Contraseña:</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={passwordFormData.password}
+                    onChange={handlePasswordFormChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Confirmar Contraseña:</label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={passwordFormData.confirmPassword}
+                    onChange={handlePasswordFormChange}
+                  />
+                </div>
+                {passwordError && <p className="error">{passwordError}</p>}
+                <button type="submit" className="btn-guardar">Cambiar Contraseña</button>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );
@@ -515,8 +507,9 @@ const UserCard = ({ user, formatDate, calculateYearsInCompany, onEditClick, onDe
       <p style={{overflowWrap: 'break-word'}}><strong>Correo:</strong> {user.Correo}</p>
       <p><strong>Tipo de usuario:</strong> {user.TipoUsuario}</p>
       <p><strong>Puesto:</strong> {user.Puesto}</p>
-      <p><strong>Departamento:</strong> {user.Departamento}</p> {}
-      {(user.TipoUsuario === 'auditor' || user.TipoUsuario === 'Administrador'|| user.TipoUsuario === 'empleado') && (
+      <p><strong>Departamento:</strong> {user.Departamento}</p>
+      <p><strong>Área:</strong> {user.area}</p>
+      {(user.TipoUsuario === 'auditor' || user.TipoUsuario === 'Administrador' || user.TipoUsuario === 'empleado') && (
         <>
           {user.FechaIngreso && (
             <p><strong>Fecha de Ingreso:</strong> {user.FechaIngreso.substring(8, 10)}/{user.FechaIngreso.substring(5, 7)}/{user.FechaIngreso.substring(0, 4)}</p>
@@ -530,54 +523,54 @@ const UserCard = ({ user, formatDate, calculateYearsInCompany, onEditClick, onDe
           <p><strong>Aprobado:</strong> {user.Aprobado ? 'Sí' : 'No'}</p>
           <p><strong>Promedio de Evaluación:</strong> {user.PromedioEvaluacion}</p>
           <div className="botones-cards">
-          <div className="dropdown">
-          <div className='dropdown-toggle-m'>
-            <button className="dropdown-toggle" onClick={() => setDropdownOpen(!dropdownOpen)}>
-             Opciones
-            </button>
-          </div>
-    {dropdownOpen && (
-          <div className='botones-cards-2'>
-          <button onClick={() => onEditClick(user)}>Editar</button>
-          <button onClick={() => onDeleteClick(user._id)}>Eliminar</button>
-          <button onClick={onAgregarCalificaciones}>Agregar Calificaciones</button>
-          <button onClick={() => onPasswordChange(user._id)}>Cambiar Contraseña</button>
-
-          {(user.TipoUsuario === 'empleado') && (
-            <>
-              {(user.PromedioEvaluacion >= 80) && <button onClick={() => onPromocionarClick(user._id)}>Promocionar</button>}
-            </>
-          )}
-
-          {(user.TipoUsuario === 'auditor') && (
-            <>
-              {(user.PromedioEvaluacion <= 79 ) && <button onClick={() => onDegradarClick(user._id)}>Degradar</button>}
-            </>
-          )}
-
-          <div className="accordion">
-            <button onClick={() => setShowCalificaciones(!showCalificaciones)}>
-              Ver Calificaciones
-            </button>
-            </div>
-            {showCalificaciones && (
-              <div className="calificaciones">
-                <h4>Calificaciones</h4>
-                <ul>
-                  {user.calificaciones.map((calificacion, index) => (
-                    <li key={index}>
-                      <p>
-                        Curso: {calificacion.nombreCurso}, Calificación: {calificacion.calificacion}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
+            <div className="dropdown">
+              <div className='dropdown-toggle-m'>
+                <button className="dropdown-toggle" onClick={() => setDropdownOpen(!dropdownOpen)}>
+                  Opciones
+                </button>
               </div>
-            )}
+              {dropdownOpen && (
+                <div className='botones-cards-2'>
+                  <button onClick={() => onEditClick(user)}>Editar</button>
+                  <button onClick={() => onDeleteClick(user._id)}>Eliminar</button>
+                  <button onClick={onAgregarCalificaciones}>Agregar Calificaciones</button>
+                  <button onClick={() => onPasswordChange(user._id)}>Cambiar Contraseña</button>
+
+                  {(user.TipoUsuario === 'empleado') && (
+                    <>
+                      {(user.PromedioEvaluacion >= 80) && <button onClick={() => onPromocionarClick(user._id)}>Promocionar</button>}
+                    </>
+                  )}
+
+                  {(user.TipoUsuario === 'auditor') && (
+                    <>
+                      {(user.PromedioEvaluacion <= 79 ) && <button onClick={() => onDegradarClick(user._id)}>Degradar</button>}
+                    </>
+                  )}
+
+                  <div className="accordion">
+                    <button onClick={() => setShowCalificaciones(!showCalificaciones)}>
+                      Ver Calificaciones
+                    </button>
+                  </div>
+                  {showCalificaciones && (
+                    <div className="calificaciones">
+                      <h4>Calificaciones</h4>
+                      <ul>
+                        {user.calificaciones.map((calificacion, index) => (
+                          <li key={index}>
+                            <p>
+                              Curso: {calificacion.nombreCurso}, Calificación: {calificacion.calificacion}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-          )}
-          </div>
-        </div>
         </>
       )}
       {user.TipoUsuario === 'auditado' && (
