@@ -65,7 +65,10 @@ const MigasPan = () => {
     '/auditado/informacion': 'Información Auditado',
     '/auditado/vistarep': 'Vista de Reportes',
     '/ver-reali':'Reportes en Revisión',
-    '/ishikawas-estadisticas':'Estadísticas de Ishikawas'
+    '/ishikawas-estadisticas':'Estadísticas de Ishikawas',
+    '/objetivos':'Objetivos',
+    '/menu':'Menú',
+    '/acciones':'Agregar Acción',
   };
 
   const getDynamicBreadcrumbName = (path) => {
@@ -76,6 +79,8 @@ const MigasPan = () => {
       { pattern: /^\/terminada\/[\w-]+/, name: 'Reporte Auditoría' },
       { pattern: /^\/revicion\/[\w-]+/, name: 'Reporte' },
       { pattern: /^\/finalizadas\/[\w-]+/, name: 'Reporte Finalizado' },
+      { pattern: /^\/objetivos\/[\w-]+/, name: 'Objetivos Área' },
+      { pattern: /^\/acciones-list\/[\w-]+/, name: 'Acciones' },
       { pattern: /^\/diagrama\/[\w-]+/, name: 'Ishikawa Específico' }
     ];
   
@@ -119,8 +124,8 @@ const MigasPan = () => {
   };
 
   return (
-    <div className="migas-pan">
-      <Breadcrumbs aria-label="breadcrumb">
+    <div >
+      <Breadcrumbs className="migas-pan" aria-label="breadcrumb">
         {breadcrumbHistory.map((path, index) => {
           const isLast = index === breadcrumbHistory.length - 1;
           return (

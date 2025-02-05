@@ -1,0 +1,139 @@
+/* TablaObjetivosArea.css */
+
+.tabla-container {
+    padding: 15px;
+    max-width: 100vw;
+  }
+  
+  .tabla-titulo {
+    color: #2c3e50;
+    text-align: center;
+    margin: 10px 0;
+    font-size: 1.4em;
+  }
+  
+  .tabla-subtitulo {
+    color: #34495e;
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+  }
+  
+  .meses-container {
+    margin-bottom: 30px;
+    overflow-x: auto;
+  }
+  
+  .meses-container h4 {
+    color: #3498db;
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+  }
+  
+  .objetivos-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    table-layout: fixed;
+  }
+  
+  .objetivos-tabla th,
+  .objetivos-tabla td {
+    padding: 6px 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+    min-width: 50px;
+    max-width: 80px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  
+  .objetivos-tabla th {
+    background-color: #3498db;
+    color: white;
+    font-weight: normal;
+    font-size: 0.85em;
+  }
+  
+  .objetivos-tabla input {
+    width: 100%;
+    padding: 2px;
+    border: 1px solid #ddd;
+    font-size: 0.8em;
+    height: 24px;
+  }
+
+  .botones-container {
+    display: flex;
+    justify-content: space-between; /* Separa los botones */
+    align-items: center;
+    margin-bottom: 15px; /* Espacio debajo */
+  }
+  
+  .btn-guardar {
+    color: #fff;
+    padding: 10px;
+    border-color: #ccc;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #27ae60;
+    cursor: pointer;
+    margin-left: auto;
+  }
+  
+  .btn-guardar:hover {
+    background-color: #219653;
+  }
+
+  .button-acciones{
+    color: #fff;
+    border-color: #ccc;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #2faef8;
+    cursor: pointer;
+  }
+  
+  .button-accoiones:hover{
+    background-color: #377bc9;
+  }
+  
+  /* Ajustes para pantallas pequeñas */
+  @media screen and (max-width: 768px) {
+    .tabla-container {
+      padding: 5px;
+    }
+  
+    .objetivos-tabla {
+      font-size: 0.7em;
+    }
+  
+    .objetivos-tabla th,
+    .objetivos-tabla td {
+      padding: 4px 5px;
+      min-width: 40px;
+      max-width: 60px;
+    }
+  
+    .objetivos-tabla input {
+      height: 20px;
+      padding: 1px;
+    }
+  
+    .tabla-titulo {
+      font-size: 1.1em;
+    }
+  
+    .tabla-subtitulo {
+      font-size: 0.9em;
+    }
+  }
+  
+  /* Estilos para mensajes de estado */
+  .no-objetivos {
+    text-align: center;
+    padding: 15px;
+    font-size: 0.9em;
+    color: #666;
+  }

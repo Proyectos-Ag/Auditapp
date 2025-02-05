@@ -1,0 +1,53 @@
+.acciones-correctivas-container {
+    margin-top: 100px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .acciones-correctivas-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .acciones-correctivas-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  .acciones-correctivas-tabla th,
+  .acciones-correctivas-tabla td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .acciones-correctivas-tabla th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  .acciones-correctivas-tabla input {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .acciones-correctivas-container button {
+    display: block;
+    margin: 0 auto;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .acciones-correctivas-container button:hover {
+    background-color: #218838;
+  }

@@ -50,10 +50,16 @@ import VistaReportesAuditado from './auditado/Components/ReporteF/VistaReportes'
 import Reporte from './auditado/Components/Reportes/Reporte.jsx';
 
 //Ishikawas Vacios
-
 import DiagramaIshVac from './ishikawa-vacio/components/DiagramaRe/Diagrama.jsx';
 import IshikawaVac from './ishikawa-vacio/components/Ishikawa/Ishikawa.jsx';
 
+//Objetivos 
+import Menu from './Objetivos/Components/Menu/elmenu.jsx';
+import Objetivos from './Objetivos/Components/Home/Inicio.jsx';
+import Tabla from './Objetivos/Components/Tabla/ObjetivosTabla.jsx'
+import Frecuencia from './Objetivos/Components/Tabla/frecuencia.jsx'
+import AccionesCorrectivas from './Objetivos/Components/Tabla/AccionesCorrectivas.jsx';
+import AccionesCorrectivasList from './Objetivos/Components/Tabla/AccionesCorrectivasList.jsx';
 
 // Cargar componentes según el rol correspondiente
 const Administrador = lazy(() => import('./administrador/Components/Home/inicio.jsx'));
@@ -129,6 +135,15 @@ export const UserContext = createContext(null);
 
               <Route path="/ishikawavacio" element={<ProtectedRoute><DiagramaIshVac/></ProtectedRoute>}/>
               <Route path="/diagramas" element={<ProtectedRoute><IshikawaVac/></ProtectedRoute>}/>
+
+                {/*Objetivos*/}
+
+              <Route path="/objetivos" element={<ProtectedRoute><Objetivos/></ProtectedRoute>}/>
+              <Route path="/menu" element={<ProtectedRoute><Menu/></ProtectedRoute>}/>
+              <Route path="/objetivos/:label" element={<ProtectedRoute><Tabla/></ProtectedRoute>}/>
+              <Route path="/objetivos/:label/frecuencia/:label" element={<Frecuencia />} />
+              <Route path="/acciones" element={<AccionesCorrectivas />} />
+              <Route path="/acciones-list/:label" element={<AccionesCorrectivasList />} />
 
 
           </Routes>

@@ -10,10 +10,34 @@
     top: 10px;
     right: 10px;
     cursor: pointer;
+    }
+  
+  .migas-pan {
+    position: absolute;
+    top: 40px;
+    padding: 8px; 
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
   }
   
-  .migas-pan{
-    position: absolute;
-    top: 20px;
+  .migas-pan .MuiBreadcrumbs-root {
+    overflow: hidden; /* Ocultar contenido que se desborde */
+    text-overflow: ellipsis; /* Puntos suspensivos para texto largo */
   }
+  
+  .migas-pan .MuiChip-root {
+    max-width: 150px; /* Ancho máximo para cada chip */
+    overflow: hidden; /* Ocultar contenido que se desborde */
+    text-overflow: ellipsis; /* Puntos suspensivos */
+    white-space: nowrap; /* Prevenir el salto de línea */
+  }
+  
+  @media (max-width: 600px) {
+    .migas-pan .MuiChip-root {
+      font-size: 0.75rem; /* Reducir el tamaño del texto en pantallas pequeñas */
+      max-width: 100px; /* Limitar el ancho en dispositivos pequeños */
+    }
+  }
+  
   

@@ -50,6 +50,7 @@ const BotonesRol = () => {
           <Tab label="Auditor" value="/auditor" />
           <Tab label="Auditado" value="/auditado" />
           <Tab label="Ishikawas" value="/diagramas" />
+          <Tab label="Objetivos" value="/objetivos" />
         </Tabs>
       )}
       
@@ -78,6 +79,7 @@ const BotonesRol = () => {
           <Tab label="Auditor" value="/auditor" />
           <Tab label="Auditado" value="/auditado" />
           <Tab label="Ishikawas" value="/diagramas" />
+          <Tab label="Objetivos" value="/objetivos" />
         </Tabs>
       )}
 
@@ -105,6 +107,7 @@ const BotonesRol = () => {
         >
           <Tab label="Auditado" value="/auditado" />
           <Tab label="Ishikawas" value="/diagramas" />
+          <Tab label="Objetivos" value="/objetivos" />
         </Tabs>
       )}
     </Box>

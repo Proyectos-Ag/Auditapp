@@ -1,0 +1,230 @@
+/* Para que el contenido aparezca más abajo */
+.tabla-container {
+  margin-top: 60px; /* Ajusta este valor a tu gusto */
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 20px;
+  background-color: #f2f9f2; /* verde muy claro */
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  margin-top: 100px;
+}
+
+.tabla-titulo {
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 1.6rem;
+  color: #2e6735; /* verde oscuro elegante */
+  font-weight: bold;
+}
+
+.tabla-subtitulo {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+  color: #2e6735;
+}
+
+.objetivos-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  margin-bottom: 20px;
+}
+
+.objetivos-tabla thead tr {
+  background-color: #b4f599; /* verde claro */
+  color: #000;
+}
+
+.objetivos-tabla th,
+.objetivos-tabla td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.objetivos-tabla tbody tr:nth-child(even) {
+  background-color: #f7f7f7;
+}
+
+.td-input {
+  width: 100%;
+  height: auto; /* Permitir que el campo de texto crezca según el contenido */
+  box-sizing: border-box;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-height: 30px; /* Asegura que el campo tenga un tamaño mínimo */
+  resize: vertical; /* Permite que el usuario ajuste la altura */
+}
+
+/* Botones */
+.btn-editar,
+.btn-guardar,
+.btn-eliminar {
+  background-color: #4c9e46; 
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 4px;
+}
+
+.btn-eliminar {
+  background-color: #c4494f; 
+}
+
+.btn-editar:hover,
+.btn-guardar:hover {
+  background-color: #3b7a36;
+}
+
+.btn-eliminar:hover {
+  background-color: #a4373d; 
+}
+
+.agregar-fila-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-agregar {
+  background-color: #2e6735;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  transition: background-color 0.2s;
+}
+
+.btn-agregar:hover {
+  background-color: #265f29;
+}
+
+.button-frecuencia{
+  color: #fff;
+  border-color: #ccc;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #2faef8;
+  cursor: pointer;
+  float: right;
+}
+
+.button-frecuencia:hover{
+  background-color: #377bc9;
+}
+
+/* Estilo para el botón "Guardar" */
+.button-guardar {
+  padding: 8px 16px;
+  background-color: #4CAF50; /* Verde */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.button-guardar:hover {
+  background-color: #45a049; /* Verde oscuro */
+}
+
+/* Estilo para el botón "Editar" */
+.button-editar {
+  padding: 8px 16px;
+  background-color: #FFA500; /* Naranja */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.button-editar:hover {
+  background-color: #ff7f00; /* Naranja oscuro */
+}
+
+/* Estilo para el botón "Eliminar" */
+.button-eliminar {
+  padding: 8px 16px;
+  background-color: #f44336; /* Rojo */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.button-eliminar:hover {
+  background-color: #e53935; /* Rojo oscuro */
+}
+
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .tabla-container {
+      padding: 10px;
+  }
+  .tabla-titulo {
+      font-size: 1.3rem;
+  }
+  .objetivos-tabla th,
+  .objetivos-tabla td {
+      font-size: 0.85rem;
+      padding: 6px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabla-titulo {
+      font-size: 1.1rem;
+  }
+
+  .objetivos-tabla,
+  .objetivos-tabla thead,
+  .objetivos-tabla tbody,
+  .objetivos-tabla th,
+  .objetivos-tabla td,
+  .objetivos-tabla tr {
+      display: block;
+  }
+
+  .objetivos-tabla thead tr {
+      display: none; 
+  }
+
+  .objetivos-tabla td {
+      border: none;
+      position: relative;
+      padding-left: 45%;
+      margin-bottom: 10px;
+  }
+
+  .objetivos-tabla td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 10px;
+      font-weight: bold;
+  }
+
+  /* Adaptación de los campos */
+  .td-input {
+      min-height: 40px; /* Aumentar el tamaño mínimo en dispositivos móviles */
+      font-size: 1rem;
+  }
+
+  .btn-editar, .btn-guardar, .btn-eliminar, .btn-agregar {
+      width: 100%; /* Los botones ocuparán todo el ancho */
+      margin-bottom: 10px; /* Espaciado entre botones */
+  }
+}
