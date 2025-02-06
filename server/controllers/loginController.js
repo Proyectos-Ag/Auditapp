@@ -37,7 +37,7 @@ const iniciarSesion = async (req, res) => {
     const token = jwt.sign({ userId: usuario._id }, process.env.JWT_SECRET, { expiresIn: '8h' });
    
 
-    return res.status(200).json({ token, tipo: tipoUsuario, usuario: { Correo: usuario.Correo, Nombre: usuario.Nombre, TipoUsuario: tipoUsuario } });
+    return res.status(200).json({ token, tipo: tipoUsuario, usuario: { Correo: usuario.Correo, Nombre: usuario.Nombre, TipoUsuario: tipoUsuario, area: usuario.area } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error interno del servidor' });
