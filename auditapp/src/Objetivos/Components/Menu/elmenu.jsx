@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import './css/menu.css';
 
 const menuItems = [
-  { label: "CONTROL Y CUIDADO AMBIENTAL", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL Y CUIDADO AMBIENTAL"] },
+  { label: "CONTROL Y CUIDADO AMBIENTAL", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL Y CUIDADO AMBIENTAL","CONTROL DE PLAGAS"] },
   { label: "EMBARQUE", roles: ["administrador", "auditor", "auditado"], areas: ["EMBARQUE","REVISIÓN"] },
   { label: "MANTENIMIENTO SERVICIOS", roles: ["administrador", "auditor", "auditado"], areas: ["MANTENIMIENTO SERVICIOS"] },
   { label: "SEGURIDAD E HIGIENE Y SANIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["SEGURIDAD E HIGIENE Y SANIDAD","CONTROL DE PLAGAS"] },
@@ -12,20 +12,21 @@ const menuItems = [
   { label: "COORDINADOR DE MATERIA PRIMA", roles: ["administrador", "auditor", "auditado"], areas: ["COORDINADOR DE MATERIA PRIMA"] },
   { label: "GERENCIA PLANEACIÓN Y LOGÍSTICA", roles: ["administrador", "auditor", "auditado"], areas: ["GERENCIA PLANEACIÓN Y LOGÍSTICA"] },
   { label: "MANTENIMIENTO TETRA PAK", roles: ["administrador", "auditor", "auditado"], areas: ["MANTENIMIENTO TETRA PAK"] },
-  { label: "CONTROL DE PLAGAS", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL DE PLAGAS"] },
-  { label: "AGUIDA", roles: ["administrador", "auditor", "auditado"], areas: ["AGUIDA"] },
+  { label: "CONTROL DE PLAGAS", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL DE PLAGAS","SEGURIDAD E HIGIENE Y SANIDAD"] },
+  { label: "AGUJA", roles: ["administrador", "auditor", "auditado"], areas: ["AGUJA"] },
   { label: "PESADAS", roles: ["administrador", "auditor", "auditado"], areas: ["PESADAS"] },
   { label: "PRODUCCIÓN", roles: ["administrador", "auditor", "auditado"], areas: ["PRODUCCIÓN"] },
   { label: "ASEGURAMIENTO DE CALIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["ASEGURAMIENTO DE CALIDAD","LIBERACIÓN DE PT"] },
   { label: "COMPRAS", roles: ["administrador", "auditor", "auditado"], areas: ["COMPRAS"] },
   { label: "ADMINISTRADOR", roles: ["administrador"], areas: ["ADMINISTRADOR"] },
-  { label: "REVISIÓN", roles: ["administrador", "auditor", "auditado"], areas: ["REVISIÓN"] },
+  { label: "REVISIÓN", roles: ["administrador", "auditor", "auditado"], areas: ["REVISIÓN","EMBARQUE"] },
   { label: "VALIDACIÓN", roles: ["administrador", "auditor", "auditado"], areas: ["VALIDACIÓN"] },
-  { label: "LIBERACIÓN DE PT", roles: ["administrador", "auditor", "auditado"], areas: ["LIBERACIÓN DE PT"] },
+  { label: "LIBERACIÓN DE PT", roles: ["administrador", "auditor", "auditado"], areas: ["LIBERACIÓN DE PT","ASEGURAMIENTO DE CALIDAD"] },
   { label: "RECURSOS HUMANOS", roles: ["administrador", "auditor", "auditado"], areas: ["RECURSOS HUMANOS"] },
   { label: "SAFETY GOALS", roles: ["administrador", "auditor", "auditado"], areas: ["SAFETY GOALS"] },
   { label: "CALIDAD E INOCUIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL Y CUIDADO AMBIENTAL", "EMBARQUE", "MANTENIMIENTO SERVICIOS", "SEGURIDAD E HIGIENE Y SANIDAD", "INGENIERÍA", "COORDINADOR DE MATERIA PRIMA", "GERENCIA PLANEACIÓN Y LOGÍSTICA", "MANTENIMIENTO TETRA PAK", "CONTROL DE PLAGAS", "AGUJA", "PESADAS", "PRODUCCIÓN", "ASEGURAMIENTO DE CALIDAD", "COMPRAS", "ADMINISTRADOR", "REVISIÓN", "VALIDACIÓN", "LIBERACIÓN DE PT", "RECURSOS HUMANOS", "SAFETY GOALS"] }
 ];
+
 
 const MenuByRoleAndArea = () => {
   const { userData } = useContext(UserContext);
