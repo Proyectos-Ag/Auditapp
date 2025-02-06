@@ -1,14 +1,31 @@
 /* Para que el contenido aparezca más abajo */
 .tabla-container {
-  margin-top: 60px; /* Ajusta este valor a tu gusto */
+  margin-top: 100px;
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
   padding: 20px;
-  background-color: #f2f9f2; /* verde muy claro */
+  background-color: #f2f9f2;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-  margin-top: 100px;
+  /* Puedes dejar el padding o cualquier otro estilo que ya tengas */
+}
+
+.tabla-wrapper {
+  overflow-x: auto;
+}
+
+/* Opcional: fija el layout de la tabla para un comportamiento más predecible */
+.objetivos-tabla {
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Permitir que el contenido de las celdas se rompa en línea si es muy largo */
+.objetivos-tabla th,
+.objetivos-tabla td {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 .tabla-titulo {
@@ -26,24 +43,9 @@
   color: #2e6735;
 }
 
-.objetivos-tabla {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: #fff;
-  margin-bottom: 20px;
-}
-
 .objetivos-tabla thead tr {
   background-color: #b4f599; /* verde claro */
   color: #000;
-}
-
-.objetivos-tabla th,
-.objetivos-tabla td {
-  border: 1px solid #ddd;
-  padding: 8px 12px;
-  text-align: left;
-  font-size: 0.95rem;
 }
 
 .objetivos-tabla tbody tr:nth-child(even) {

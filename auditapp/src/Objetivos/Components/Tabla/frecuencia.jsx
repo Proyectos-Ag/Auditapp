@@ -158,7 +158,7 @@ const TablaObjetivosArea = () => {
         <table className="objetivos-tabla">
           <thead>
             <tr>
-              <th rowSpan="2">OBJETIVOS 2025</th>
+              <th rowSpan="2" style={{}}>OBJ 2025</th>
               <th rowSpan="2">META</th>
               {meses.map((mes) => (
                 <th colSpan="5" key={mes.nombre}>{mes.nombre}</th>

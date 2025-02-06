@@ -204,113 +204,116 @@ const ObjetivosTabla = () => {
   return (
     <div className="tabla-container">
       <button 
-      className="button-frecuencia"
-      onClick={() => navigate(`frecuencia/${label}`)}>
+        className="button-frecuencia"
+        onClick={() => navigate(`frecuencia/${label}`)}>
         Frecuencia
       </button>
       <h2 className="tabla-titulo">OBJETIVOS DEL SISTEMA DE ADMINISTRACIÓN DE CALIDAD</h2>
       <h3 className="tabla-subtitulo">Área: {label}</h3>
-
-      <table className="objetivos-tabla">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th style={{maxWidth: '30em', width:'100em'}}>OBJETIVO</th>
-            <th style={{maxWidth: '10em', width:'100em'}}>RECURSOS</th>
-            <th>META / FRECUENCIA</th>
-            <th>ENE - ABR</th>
-            <th>MAYO - AGO</th>
-            <th>SEP - DIC</th>
-            <th>OBSERVACIONES</th>
-            {userData?.TipoUsuario === "administrador" && (
-            <th>Acciones</th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-  {tablaData.map((row, index) => {
-    const editando = modoEdicion[row._id] === true;
-    return (
-      <tr key={row._id}>
-        <td>{index + 1}</td>
-        <td>
-          {editando ? (
-            <input
-              type="text"
-              value={row.objetivo}
-              onChange={(e) => manejarCambioCampo(row._id, "objetivo", e.target.value)}
-            />
-          ) : (
-            <p style={{textAlign: 'justify'}}>{row.objetivo}</p>
-          )}
-        </td>
-        <td>
-          {editando ? (
-            <input
-              type="text"
-              value={row.recursos}
-              onChange={(e) => manejarCambioCampo(row._id, "recursos", e.target.value)}
-            />
-          ) : (
-            <p style={{textAlign: 'justify'}}>{row.recursos}</p>
-          )}
-        </td>
-        <td>
-          {editando ? (
-            <input
-              type="text"
-              value={row.metaFrecuencia}
-              onChange={(e) => manejarCambioCampo(row._id, "metaFrecuencia", e.target.value)}
-            />
-          ) : (
-            row.metaFrecuencia
-          )}
-        </td>
-        <td>{row.promedioENEABR}%</td>
-        <td>{row.promedioMAYOAGO}%</td>
-        <td>{row.promedioSEPDIC}%</td>
-        <td>
-          {editando ? (
-            <input
-              type="text"
-              value={row.observaciones}
-              onChange={(e) => manejarCambioCampo(row._id, "observaciones", e.target.value)}
-            />
-          ) : (
-            row.observaciones
-          )}
-        </td>
-        {userData?.TipoUsuario === "administrador" && (
-          <td>
-            {editando ? (
-              <button 
-              className="button-guardar"
-              onClick={() => manejarGuardarFila(row._id)}>Guardar</button>
-            ) : (
-              <button 
-              className="button-editar"
-              onClick={() => manejarEditarFila(row._id)}>Editar</button>
-            )}
-            <button 
-            className="button-eliminar"
-            onClick={() => manejarEliminarFila(row._id)}>Eliminar</button>
-          </td>
-        )}
-      </tr>
-    );
-  })}
-</tbody>
-      </table>
-
+      
+      {/* Contenedor que permite scroll horizontal */}
+      <div className="tabla-wrapper">
+        <table className="objetivos-tabla">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th style={{maxWidth: '30em', width:'100em'}}>OBJETIVO</th>
+              <th style={{maxWidth: '10em', width:'100em'}}>RECURSOS</th>
+              <th>META / FRECUENCIA</th>
+              <th>ENE - ABR</th>
+              <th>MAYO - AGO</th>
+              <th>SEP - DIC</th>
+              <th>OBSERVACIONES</th>
+              {userData?.TipoUsuario === "administrador" && (
+                <th>Acciones</th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {tablaData.map((row, index) => {
+              const editando = modoEdicion[row._id] === true;
+              return (
+                <tr key={row._id}>
+                  <td>{index + 1}</td>
+                  <td>
+                    {editando ? (
+                      <input
+                        type="text"
+                        value={row.objetivo}
+                        onChange={(e) => manejarCambioCampo(row._id, "objetivo", e.target.value)}
+                      />
+                    ) : (
+                      <p style={{textAlign: 'justify'}}>{row.objetivo}</p>
+                    )}
+                  </td>
+                  <td>
+                    {editando ? (
+                      <input
+                        type="text"
+                        value={row.recursos}
+                        onChange={(e) => manejarCambioCampo(row._id, "recursos", e.target.value)}
+                      />
+                    ) : (
+                      <p style={{textAlign: 'justify'}}>{row.recursos}</p>
+                    )}
+                  </td>
+                  <td>
+                    {editando ? (
+                      <input
+                        type="text"
+                        value={row.metaFrecuencia}
+                        onChange={(e) => manejarCambioCampo(row._id, "metaFrecuencia", e.target.value)}
+                      />
+                    ) : (
+                      row.metaFrecuencia
+                    )}
+                  </td>
+                  <td>{row.promedioENEABR}%</td>
+                  <td>{row.promedioMAYOAGO}%</td>
+                  <td>{row.promedioSEPDIC}%</td>
+                  <td>
+                    {editando ? (
+                      <input
+                        type="text"
+                        value={row.observaciones}
+                        onChange={(e) => manejarCambioCampo(row._id, "observaciones", e.target.value)}
+                      />
+                    ) : (
+                      row.observaciones
+                    )}
+                  </td>
+                  {userData?.TipoUsuario === "administrador" && (
+                    <td>
+                      {editando ? (
+                        <button 
+                          className="button-guardar"
+                          onClick={() => manejarGuardarFila(row._id)}>Guardar</button>
+                      ) : (
+                        <button 
+                          className="button-editar"
+                          onClick={() => manejarEditarFila(row._id)}>Editar</button>
+                      )}
+                      <button 
+                        className="button-eliminar"
+                        onClick={() => manejarEliminarFila(row._id)}>Eliminar</button>
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+  
       {userData?.TipoUsuario === "administrador" && (
         <div className="agregar-fila-container">
           <button 
-          className="button-guardar"
-          onClick={manejarAgregarFila}>Agregar Fila</button>
+            className="button-guardar"
+            onClick={manejarAgregarFila}>Agregar Fila</button>
         </div>
       )}
     </div>
-  );
+  );  
 };
 
 export default ObjetivosTabla;

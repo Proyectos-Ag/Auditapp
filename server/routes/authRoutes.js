@@ -28,6 +28,7 @@ router.post('/verifyToken', async (req, res) => {
       TipoUsuario: usuario.TipoUsuario,
       Puesto: usuario.Puesto,
       Departamento: usuario.Departamento,
+      area: usuario.area,
       ID:usuario.id
     });
   } catch (err) {
