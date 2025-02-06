@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import './css/menu.css';
 
 const menuItems = [
-  { label: "CONTROL Y CUIDADO AMBIENTAL", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL Y CUIDADO AMBIENTAL","CONTROL DE PLAGAS"] },
+  { label: "CONTROL Y CUIDADO AMBIENTAL", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL Y CUIDADO AMBIENTAL"] },
   { label: "EMBARQUE", roles: ["administrador", "auditor", "auditado"], areas: ["EMBARQUE","REVISIÓN"] },
   { label: "MANTENIMIENTO SERVICIOS", roles: ["administrador", "auditor", "auditado"], areas: ["MANTENIMIENTO SERVICIOS"] },
-  { label: "SEGURIDAD E HIGIENE Y SANIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["SEGURIDAD E HIGIENE Y SANIDAD"] },
+  { label: "SEGURIDAD E HIGIENE Y SANIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["SEGURIDAD E HIGIENE Y SANIDAD","CONTROL DE PLAGAS"] },
   { label: "INGENIERÍA", roles: ["administrador", "auditor", "auditado"], areas: ["INGENIERÍA"] },
   { label: "COORDINADOR DE MATERIA PRIMA", roles: ["administrador", "auditor", "auditado"], areas: ["COORDINADOR DE MATERIA PRIMA"] },
   { label: "GERENCIA PLANEACIÓN Y LOGÍSTICA", roles: ["administrador", "auditor", "auditado"], areas: ["GERENCIA PLANEACIÓN Y LOGÍSTICA"] },
