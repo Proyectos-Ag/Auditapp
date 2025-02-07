@@ -3,6 +3,11 @@ import { UserContext } from '../../../App'; // Ajusta la ruta según tu proyecto
 import { useNavigate } from 'react-router-dom';
 import './css/menu.css';
 
+// Función para normalizar las áreas y evitar problemas de mayúsculas o espacios
+const normalizeString = (str) => {
+  return str.trim().toUpperCase();
+};
+
 const menuItems = [
   { label: "CONTROL Y CUIDADO AMBIENTAL", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL Y CUIDADO AMBIENTAL","CONTROL DE PLAGAS","Control y Cuidado Ambiental"] },
   { label: "EMBARQUE", roles: ["administrador", "auditor", "auditado"], areas: ["EMBARQUE","REVISIÓN","PRODUCTO TERMINADO","Planeación y Logística"] },
@@ -28,7 +33,6 @@ const menuItems = [
   { label: "CALIDAD E INOCUIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL Y CUIDADO AMBIENTAL", "EMBARQUE", "MANTENIMIENTO SERVICIOS", "SEGURIDAD E HIGIENE Y SANIDAD", "INGENIERÍA", "COORDINADOR DE MATERIA PRIMA", "GERENCIA PLANEACIÓN Y LOGÍSTICA", "MANTENIMIENTO TETRA PAK", "CONTROL DE PLAGAS", "AGUIDA", "PESADAS", "PRODUCCIÓN", "ASEGURAMIENTO DE CALIDAD", "COMPRAS", "ADMINISTRADOR", "REVISIÓN", "VALIDACIÓN", "LIBERACIÓN DE PT", "RECURSOS HUMANOS", "SAFETY GOALS"] }
 ];
 
-
 const MenuByRoleAndArea = () => {
   const { userData } = useContext(UserContext);
   const navigate = useNavigate();
@@ -45,8 +49,8 @@ const MenuByRoleAndArea = () => {
     if (!userData.area) {
       return <div className="menu-container">No se ha asignado un área al usuario.</div>;
     }
-    const areaUpper = userData.area.toUpperCase();
-    filteredItems = filteredItems.filter(item => item.areas.includes(areaUpper));
+    const areaUpper = normalizeString(userData.area);
+    filteredItems = filteredItems.filter(item => item.areas.some(area => normalizeString(area) === areaUpper));
   }
 
   const handleItemClick = (label) => {
