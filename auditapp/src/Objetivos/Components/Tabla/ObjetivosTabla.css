@@ -18,14 +18,6 @@
 /* Opcional: fija el layout de la tabla para un comportamiento más predecible */
 .objetivos-tabla {
   width: 100%;
-  table-layout: fixed;
-}
-
-/* Permitir que el contenido de las celdas se rompa en línea si es muy largo */
-.objetivos-tabla th,
-.objetivos-tabla td {
-  overflow-wrap: break-word;
-  word-wrap: break-word;
 }
 
 .tabla-titulo {
@@ -61,32 +53,6 @@
   border-radius: 4px;
   min-height: 30px; /* Asegura que el campo tenga un tamaño mínimo */
   resize: vertical; /* Permite que el usuario ajuste la altura */
-}
-
-/* Botones */
-.btn-editar,
-.btn-guardar,
-.btn-eliminar {
-  background-color: #4c9e46; 
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 4px;
-}
-
-.btn-eliminar {
-  background-color: #c4494f; 
-}
-
-.btn-editar:hover,
-.btn-guardar:hover {
-  background-color: #3b7a36;
-}
-
-.btn-eliminar:hover {
-  background-color: #a4373d; 
 }
 
 .agregar-fila-container {
@@ -192,19 +158,6 @@
       font-size: 1.1rem;
   }
 
-  .objetivos-tabla,
-  .objetivos-tabla thead,
-  .objetivos-tabla tbody,
-  .objetivos-tabla th,
-  .objetivos-tabla td,
-  .objetivos-tabla tr {
-      display: block;
-  }
-
-  .objetivos-tabla thead tr {
-      display: none; 
-  }
-
   .objetivos-tabla td {
       border: none;
       position: relative;
@@ -223,10 +176,5 @@
   .td-input {
       min-height: 40px; /* Aumentar el tamaño mínimo en dispositivos móviles */
       font-size: 1rem;
-  }
-
-  .btn-editar, .btn-guardar, .btn-eliminar, .btn-agregar {
-      width: 100%; /* Los botones ocuparán todo el ancho */
-      margin-bottom: 10px; /* Espaciado entre botones */
   }
 }
