@@ -5,7 +5,7 @@ import './css/menu.css';
 
 // Función para normalizar las áreas y evitar problemas de mayúsculas o espacios
 const normalizeString = (str) => {
-  return str.trim().toUpperCase();
+  return str.trim().toUpperCase(); // Convertir a mayúsculas para evitar problemas de case
 };
 
 const menuItems = [
@@ -49,8 +49,12 @@ const MenuByRoleAndArea = () => {
     if (!userData.area) {
       return <div className="menu-container">No se ha asignado un área al usuario.</div>;
     }
+
+    // Normalizamos la área del usuario
     const areaUpper = normalizeString(userData.area);
-    filteredItems = filteredItems.filter(item => 
+
+    // Filtramos los items que tienen áreas coincidentes
+    filteredItems = filteredItems.filter(item =>
       item.areas.some(area => normalizeString(area) === areaUpper)
     );
   }
