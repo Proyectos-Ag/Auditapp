@@ -5,7 +5,7 @@ import './css/menu.css';
 
 const menuItems = [
   { label: "CONTROL Y CUIDADO AMBIENTAL", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL Y CUIDADO AMBIENTAL","CONTROL DE PLAGAS","Control y Cuidado Ambiental"] },
-  { label: "EMBARQUE", roles: ["administrador", "auditor", "auditado"], areas: ["EMBARQUE","REVISIÓN","Producto Terminado","Planeación y Logística"] },
+  { label: "EMBARQUE", roles: ["administrador", "auditor", "auditado"], areas: ["EMBARQUE","REVISIÓN","PRODUCTO TERMINADO","Planeación y Logística"] },
   { label: "MANTENIMIENTO SERVICIOS", roles: ["administrador", "auditor", "auditado"], areas: ["MANTENIMIENTO SERVICIOS","Mantenimiento Procesos"] },
   { label: "SEGURIDAD E HIGIENE Y SANIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["SEGURIDAD E HIGIENE Y SANIDAD","CONTROL DE PLAGAS","Seguridad e Higiene y Sanidad"] },
   { label: "INGENIERÍA", roles: ["administrador", "auditor", "auditado"], areas: ["INGENIERÍA","Ingeniería"] },
@@ -19,7 +19,7 @@ const menuItems = [
   { label: "ASEGURAMIENTO DE CALIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["ASEGURAMIENTO DE CALIDAD","LIBERACIÓN DE PT"] },
   { label: "COMPRAS", roles: ["administrador", "auditor", "auditado"], areas: ["COMPRAS","Compras"] },
   { label: "ADMINISTRADOR", roles: ["administrador"], areas: ["ADMINISTRADOR"] },
-  { label: "REVISIÓN", roles: ["administrador", "auditor", "auditado"], areas: ["REVISIÓN","EMBARQUE","Producto Terminado","Planeación y Logística"] },
+  { label: "REVISIÓN", roles: ["administrador", "auditor", "auditado"], areas: ["REVISIÓN","EMBARQUE","PRODUCTO TERMINADO","Planeación y Logística"] },
   { label: "VALIDACIÓN", roles: ["administrador", "auditor", "auditado"], areas: ["VALIDACIÓN","Producción.","Validación"] },
   { label: "LIBERACIÓN DE PT", roles: ["administrador", "auditor", "auditado"], areas: ["LIBERACIÓN DE PT","ASEGURAMIENTO DE CALIDAD"] },
   { label: "RECURSOS HUMANOS", roles: ["administrador", "auditor", "auditado"], areas: ["RECURSOS HUMANOS"] },
