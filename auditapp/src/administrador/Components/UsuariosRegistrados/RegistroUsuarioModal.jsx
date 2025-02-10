@@ -28,6 +28,7 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
     TipoUsuario: 'auditor',
     AñosExperiencia: '',
     Departamento: '',
+    area: '',
     customDepartamento: ''
   });
 
@@ -98,6 +99,7 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
         TipoUsuario: 'auditor',
         AñosExperiencia: '',
         Departamento: '',
+        area:'',
         customDepartamento: ''
       });
 
@@ -216,6 +218,10 @@ const RegistroUsuarioModal = ({ show, handleClose }) => {
                   <option key={area.departamento} value={area.departamento}>{area.departamento}</option>
             ))}
           </select>
+        </div>
+        <div className="form-group">
+          <label>Area:</label>
+          <input type="text" name="area" value={formData.area} onChange={handleChange} required />
         </div>
         {renderCustomDepartamento()}
         {renderAdditionalFields()}
