@@ -206,7 +206,7 @@ const ObjetivosTabla = () => {
       <button 
         className="button-frecuencia"
         onClick={() => navigate(`frecuencia/${label}`)}>
-        Frecuencia
+        Registrar
       </button>
       <h2 className="tabla-titulo">OBJETIVOS DEL SISTEMA DE ADMINISTRACIÓN DE CALIDAD</h2>
       <h3 className="tabla-subtitulo">Área: {label}</h3>

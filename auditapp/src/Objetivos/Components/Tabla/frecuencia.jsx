@@ -70,35 +70,41 @@ const TablaObjetivosArea = () => {
     return <div>No hay objetivos registrados para esta área.</div>;
   }
 
-  const handleBlur = (name, objetivoId, meta) => {
+   const handleBlur = (name, objetivoId, meta) => {
     const valor = valores[`${objetivoId}.${name}`];
     if (valor && parseFloat(valor) < parseFloat(meta)) {
       Swal.fire({
         title: "Meta no alcanzada",
-        text: "Ingresa a la siguiente pestaña para poner acciones correctivas.",
+        text: "Se guardará la información y se redirigirá a la sección de Acciones Correctivas.",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonText: "Ir a Acciones",
+        confirmButtonText: "Guardar e Ir a Acciones",
         cancelButtonText: "Cancelar",
       }).then((result) => {
         if (result.isConfirmed) {
-          // Obtener el objetivo seleccionado
-          const objetivo = objetivos.find((obj) => obj._id === objetivoId);
-          // Construir los datos que se quieren pasar
-          const objetivoData = {
-            numero: objetivos.indexOf(objetivo) + 1,
-            objetivo: objetivo.objetivo,
-          };
-          const periodoData = name.split(".")[0]; // Extraer el periodo
-  
-          // Navegar a la ruta /acciones pasando los datos en el state
-          navigate('/acciones', {
-            state: {
-              idObjetivo: objetivoId,
-              objetivo: objetivoData,
-              periodo: periodoData,
-            },
-          });
+          (async () => {
+            try {
+              // Guardar los cambios pendientes
+              await handleGuardar();
+              // Obtener el objetivo seleccionado
+              const objetivo = objetivos.find((obj) => obj._id === objetivoId);
+              const objetivoData = {
+                numero: objetivos.indexOf(objetivo) + 1,
+                objetivo: objetivo.objetivo,
+              };
+              const periodoData = name.split(".")[0]; // Extraer el periodo
+              // Redirigir a la ruta /acciones pasando los datos necesarios en el state
+              navigate('/acciones', {
+                state: {
+                  idObjetivo: objetivoId,
+                  objetivo: objetivoData,
+                  periodo: periodoData,
+                },
+              });
+            } catch (error) {
+              Swal.fire('Error', 'No se pudo guardar la información.', 'error');
+            }
+          })();
         }
       });
     }
