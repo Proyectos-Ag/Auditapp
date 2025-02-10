@@ -227,7 +227,7 @@ const actualizarEstado = async (req, res)=> {
       // Configuración del correo
       const mailOptionsAuditor = {
         from: process.env.EMAIL_USERNAME,
-        to: 'rcruces@aguida.com',
+        to: 'soleje2862004@gmail.com',
         subject: 'Se ha enviado una auditoría para revisión',
         html: customizedTemplate,
       };
@@ -547,6 +547,39 @@ const eliminarRegistro = async (req, res) => {
   }
 };
 
+const deleteImageUrl = async (req, res) => {
+  try {
+    const { docId, imageUrl } = req.body;
+
+    console.log('Datos recibidos en el cuerpo: ', req.body)
+
+    // Validamos que se reciban los datos necesarios
+    if (!docId || !imageUrl) {
+      return res.status(400).json({ message: 'Se requiere docId e imageUrl.' });
+    }
+
+    // Actualizamos el documento, eliminando la URL del arreglo "Hallazgo"
+    const updatedDoc = await Datos.findByIdAndUpdate(
+      docId,
+      { $pull: { 'Programa.0.Descripcion.$[].Hallazgo': imageUrl } }, // Ajusta la ruta según la estructura real
+      { new: true } // Retorna el documento actualizado
+    );
+
+    if (!updatedDoc) {
+      return res.status(404).json({ message: 'Documento no encontrado.' });
+    }
+
+    return res.status(200).json({
+      message: 'Imagen eliminada exitosamente de la base de datos.',
+      document: updatedDoc,
+    });
+  } catch (error) {
+    console.error('Error al eliminar la imagen:', error);
+    return res.status(500).json({ message: 'Error interno del servidor.' });
+  }
+};
+
+
 module.exports = {
   nuevoAuditoria,
   obtenerTodosDatos,
@@ -562,5 +595,6 @@ module.exports = {
   eliminarRegistro,
   obtenerDatosEspRealiz,
   obtenerDatosHistorial,
-  obtenerDatosAudLid
+  obtenerDatosAudLid,
+  deleteImageUrl
 };

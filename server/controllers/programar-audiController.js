@@ -57,43 +57,7 @@ exports.createAudit = async (req, res) => {
 
       // Preparar el email con el archivo adjunto
       const recipientEmails = `
-      aaranda@aguida.com,
-      almacen@aguida.com,
-      amartinez@aguida.com,
-      cgarciae@aguida.com,
-      comedor@aguida.com,
-      controlycuidadoambiental@aguida.com,
-      coord.seghigiene@aguida.com,
-      coordalmpt@aguida.com,
-      fjflores@aguida.com,
-      golvera@aguida.com,
-      jagranados@aguida.com,
-      jcarriaga@aguida.com,
-      jefelaboratorio@aguida.com,
-      jefeproduccion@aguida.com,
-      jloyolac@aguida.com,
-      jpsalinas@aguida.com,
-      jrhernandez@aguida.com,
-      jsarriaga@aguida.com,
-      ljalvarez@aguida.com,
-      materiasprimas@aguida.com,
-      rcruces@aguida.com,
-      rgutierrez@aguida.com,
-      rloyola@aguida.com,
-      rmendez@aguida.com,
-      supervisores@aguida.com,
-      validacionproceso@aguida.com,
-      jessica@aguida.com,
-      inventariosmp@aguida.com,
-      reclutamiento@aguida.com,
-      itzelcardenas@aguida.com,
-      paulesparza@aguida.com,
-      jefemantenimientotp@aguida.com,
-      nbgarcia@aguida.com,
-      jrivera@aguida.com,
-      cpadron@aguida.com,
-      vbarron@aguida.com,
-      soleje2862004@gmail.com
+        soleje2862004@gmail.com
       `.trim().replace(/\s+/g, '');
 
       const templatePathPrograma = path.join(__dirname, 'templates', 'programa-auditorias.html');

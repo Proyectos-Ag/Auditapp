@@ -1,9 +1,8 @@
 .content-diagrama{
     display: flex;
     flex-direction: column;
-    position: relative;
     margin: 2rem auto 0;
-    margin-top: 4rem;
+    margin-top: 7rem;
     width: 80rem;
     max-width: 100rem;
     padding: 20px;
@@ -57,4 +56,9 @@
     width: 81rem;
     background-color: #00B096;
     cursor: pointer;
+}
+
+.button-pasti-dia{
+    margin-top: 37rem;
+    margin-right: 68rem;
 }

@@ -17,7 +17,6 @@ const Programas = () => {
   const [editingPrograma, setEditingPrograma] = useState(null);
 
 
-
   const handleNombreChange = (e) => {
     setNombre(e.target.value);
   };

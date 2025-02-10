@@ -526,10 +526,9 @@ const Terminada = () => {
                                                         {dato.Programa.map((programa, programIdx) =>
                                                             programa.Descripcion.map((desc, descIdx) => {
                                                                 const firePrefix = 'https://firebasestorage';
-                                                                const isFireImage = desc.Hallazgo.includes(firePrefix);
-                                                                
+                                                                                                                               
                                                                 // Evita renderizar filas no necesarias
-                                                                if ((desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') || desc.Observacion.length !== 0) {
+                                                                if ((desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme')) {
                                                                     const ishikawaKey = `${desc.ID}-${dato._id}-${programa.Nombre}`;
                                                                     const ishikawa = ishikawasMap[ishikawaKey]; 
                                                                     
@@ -549,19 +548,26 @@ const Terminada = () => {
                                                                             )}
                                                                             {desc.Observacion}
                                                                             </td>
-                                                                            <td className='alingR' key={descIdx}>
-                                                                                {desc.Hallazgo ? (
-                                                                                    isFireImage ? (
+                                                                            <td className="alingR" key={descIdx}>
+                                                                            {Array.isArray(desc.Hallazgo) && desc.Hallazgo.length > 0 ? (
+                                                                                desc.Hallazgo.map((url, idx) => {
+                                                                                    const isFireImage = url.includes(firePrefix);
+                                                                                    return isFireImage ? (
                                                                                         <img
-                                                                                            src={desc.Hallazgo}
-                                                                                            alt="Evidencia"
+                                                                                            key={idx}
+                                                                                            src={url}
+                                                                                            alt={`Evidencia ${idx + 1}`}
                                                                                             className="hallazgo-imagen"
                                                                                         />
                                                                                     ) : (
-                                                                                        <span>{desc.Hallazgo}</span>
-                                                                                    )
-                                                                                ) : null}
-                                                                            </td>
+                                                                                        <span key={idx}>{url}</span>
+                                                                                    );
+                                                                                })
+                                                                            ) : (
+                                                                                <span>No hay evidencia</span>
+                                                                            )}
+                                                                        </td>
+
                                                                             <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].actividad : '') : ''}</td>
                                                                             <td>
                                                                                 {ishikawa ? (

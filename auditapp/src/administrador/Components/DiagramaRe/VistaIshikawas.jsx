@@ -29,6 +29,26 @@ const VistaIshikawas = () => {
     });
   };
 
+  const obtenerColorEstado = (estado) => {
+    switch (estado) {
+      case 'Hecho':
+        return 'yellow';
+      case 'Rechazado':
+        return 'red';
+      case 'Aprobado':
+        return 'blue';
+      case 'Finalizado':
+        return 'green';
+      default:
+        return 'black'; // Color por defecto
+    }
+  };
+
+   // Función para formatear el texto del estado
+   const formatearEstado = (estado) => {
+    return estado === 'Hecho' ? 'En revisión' : estado;
+  };
+
   const navReporte = (_id) => {
     navigate(`/diagrama/${_id}`);
 };
@@ -42,12 +62,15 @@ const VistaIshikawas = () => {
         <div className='cont-card-repo'>
         {ishikawas.map((ishikawa) => (
           <div key={ishikawa._id} 
-          className='card-repo'
+          className='card-repo-ish'
           onClick={() => navReporte(ishikawa._id)}
               style={{ cursor: 'pointer' }}>
              <img src={logo} alt="Logo Empresa" className="logo-empresa-revi" />
              <p>Fecha Elaboración: {formatearFecha(ishikawa.fecha)}</p>
             <p>Realizado por: {ishikawa.auditado}</p>
+            <p style={{ color: obtenerColorEstado(ishikawa.estado) }}>
+            Estado: {formatearEstado(ishikawa.estado)}
+              </p>
           </div>
         ))}
       </div>

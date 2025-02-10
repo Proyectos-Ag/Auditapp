@@ -23,7 +23,7 @@ const BotonesRol = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: { xs: 320, sm: 780 }, bgcolor: 'background.paper', margin: '0 auto' }}>
+    <Box sx={{ maxWidth: { xs: 320, sm: 980 }, bgcolor: 'background.paper', margin: '0 auto' }}>
       {userData && userData.TipoUsuario === 'administrador' && (
         <Tabs
           value={value}
@@ -49,7 +49,7 @@ const BotonesRol = () => {
           <Tab label="Administrador" value="/admin" />
           <Tab label="Auditor" value="/auditor" />
           <Tab label="Auditado" value="/auditado" />
-          <Tab label="Ishikawas" value="/diagramas" />
+          <Tab label="Ishikawas" value="/inicio-ishvac" />
           <Tab label="Objetivos" value="/objetivos" />
         </Tabs>
       )}
@@ -78,7 +78,7 @@ const BotonesRol = () => {
         >
           <Tab label="Auditor" value="/auditor" />
           <Tab label="Auditado" value="/auditado" />
-          <Tab label="Ishikawas" value="/diagramas" />
+          <Tab label="Ishikawas" value="/inicio-ishvac" />
           <Tab label="Objetivos" value="/objetivos" />
         </Tabs>
       )}
@@ -106,7 +106,7 @@ const BotonesRol = () => {
           }}
         >
           <Tab label="Auditado" value="/auditado" />
-          <Tab label="Ishikawas" value="/diagramas" />
+          <Tab label="Ishikawas" value="/inicio-ishvac" />
           <Tab label="Objetivos" value="/objetivos" />
         </Tabs>
       )}

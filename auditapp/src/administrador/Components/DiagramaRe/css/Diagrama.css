@@ -12,6 +12,54 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+.card-repo-ish {
+    background-color: #c2fabe;
+    border: 2px solid #7bfca2; 
+    padding: 20px;
+    transition: transform 0.3s ease;
+    max-width: 10em;
+    margin: 10px;
+    position: relative; /* Necesario para posicionar el pseudo-elemento */
+}
+
+/* Pseudo-elemento para crear la esquina doblada */
+.card-repo-ish::before {
+    content: '';
+    position: absolute;
+    top: -2.3em;
+    width: 30px;
+    height: 30px;
+    bottom: 0;
+    right: 0;
+    background-color: #ffffff; /* Color de la parte interna de la hoja */
+    border: 2px solid #7bfca2;
+    transform: translate(5%, 5%) rotate(-90deg);
+    transform-origin: bottom right;
+    box-shadow: -2px -2px 5px rgba(0, 0, 0, 0.1); /* Sombra de la esquina doblada */
+    z-index: 1; /* Asegurarse de que el pseudo-elemento esté encima del fondo */
+    clip-path: polygon(0 0, 100% 0, 0% 100%);
+}
+
+/* Pseudo-elemento para dar la ilusión de la parte doblada */
+.card-repo-ish::after {
+    content: '';
+    position: absolute;
+    top: -2.7em;
+    width: 36px;
+    height: 36px;
+    bottom: 0;
+    right: 0;
+    background-color: #ffffff; /* Color de la parte trasera de la hoja */
+    transform: translate(7%, 5%) rotate(-90deg);
+    transform-origin: bottom right;
+    z-index: 0; /* Coloca esta parte debajo del contenedor principal */
+    clip-path: polygon(100% 0, 100% 100%, 0% 100%);
+}
+
+.card-repo-ish:hover {
+    transform: translateY(-15px);
+}
+
 .image-container-dia {
     display: flex;
     flex-direction: column;
@@ -107,4 +155,9 @@
     top: 4.5rem;
     position: absolute;
     z-index: 3;
+}
+
+.button-pasti-dia{
+    margin-top: 37rem;
+    margin-right: 68rem;
 }

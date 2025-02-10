@@ -4,17 +4,26 @@ import './css/Ishikawa.css'
 import Logo from "../assets/img/logoAguida.png";
 import Ishikawa from '../assets/img/Ishikawa-transformed.png';
 import Swal from 'sweetalert2';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import CircularProgress from '@mui/material/CircularProgress';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../../App';
+import { Chip, TextField, Paper, List, ListItem } from '@mui/material';
 
 const CreacionIshikawa = () => {
   const [isEditing, setIsEditing] = useState(false);
   const { userData } = useContext(UserContext);
   const navigate = useNavigate();
-  const [showPart, setShowPart] = useState(true);
+  // const [showPart, setShowPart] = useState(true);
   const [ishikawaRecords, setIshikawaRecords] = useState([]); // Almacena los registros filtrados
   const [selectedRecordId, setSelectedRecordId] = useState(null); // Almacena el ID del registro seleccionado
   const [, setSelectedTextareas] = useState(new Set());
+  const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [selectedParticipants, setSelectedParticipants] = useState([]);
 
   const [formData, setFormData] = useState({
     problema: '',
@@ -173,6 +182,7 @@ const CreacionIshikawa = () => {
         problema: formData.problema,
         requisito: formData.requisito,
         auditado: userData.Nombre,
+        correo: userData.Correo,
         hallazgo: formData.hallazgo,
         correccion: formData.correccion,
         causa: formData.causa,
@@ -214,6 +224,7 @@ const CreacionIshikawa = () => {
         problema: formData.problema,
         requisito: formData.requisito,
         auditado: userData.Nombre,
+        correo: userData.Correo,
         hallazgo: formData.hallazgo,
         correccion: formData.correccion,
         causa: formData.causa,
@@ -383,8 +394,313 @@ const CreacionIshikawa = () => {
     e.target.style.fontSize = fontSize;
   };
 
+  // Mapas para guardar los elementos originales y sus valores
+// Mapas para guardar los elementos originales y sus valores
+const originalInputs = [];
+const originalTextareas = [];
+
+// Convierte inputs y textareas a divs
+const convertToDivs = (element) => {
+    // Procesar inputs
+    const inputs = element.querySelectorAll('input');
+    inputs.forEach((input) => {
+        const div = document.createElement('div');
+        div.textContent = input.value;
+        div.className = input.className;
+        div.style.cssText = input.style.cssText;
+        div.style.display = 'inline-block';
+        div.style.padding = '0';
+        div.style.border = 'none';
+        div.setAttribute("data-replaced", "true"); // Agregar atributo identificador
+
+        // Guardar el estado original
+        originalInputs.push({ parent: input.parentNode, element: input, sibling: input.nextSibling });
+
+        // Reemplazar el input con el div
+        input.parentNode.replaceChild(div, input);
+    });
+
+    // Procesar textareas
+    const textareas = element.querySelectorAll('textarea');
+    textareas.forEach((textarea) => {
+        const div = document.createElement('div');
+        div.innerHTML = textarea.value.replace(/\n/g, '<br>');
+        div.className = textarea.className;
+        div.style.cssText = textarea.style.cssText;
+        div.setAttribute("data-replaced", "true"); // Agregar atributo identificador
+
+        // Guardar el estado original
+        originalTextareas.push({ parent: textarea.parentNode, element: textarea, sibling: textarea.nextSibling });
+
+        // Reemplazar el textarea con el div
+        textarea.parentNode.replaceChild(div, textarea);
+    });
+};
+
+const restoreElements = () => {
+    // Restaurar inputs y eliminar los divs generados
+    originalInputs.forEach(({ parent, element, sibling }) => {
+        // Buscar y eliminar todos los divs generados
+        parent.querySelectorAll('div[data-replaced="true"]').forEach(div => div.remove());
+
+        // Restaurar el input en su posición original
+        if (sibling && sibling.parentNode === parent) {
+            parent.insertBefore(element, sibling);
+        } else {
+            parent.appendChild(element);
+        }
+    });
+    originalInputs.length = 0; // Limpiar el array
+
+    // Restaurar textareas y eliminar los divs generados
+    originalTextareas.forEach(({ parent, element, sibling }) => {
+        parent.querySelectorAll('div[data-replaced="true"]').forEach(div => div.remove());
+
+        if (sibling && sibling.parentNode === parent) {
+            parent.insertBefore(element, sibling);
+        } else {
+            parent.appendChild(element);
+        }
+    });
+    originalTextareas.length = 0; // Limpiar el array
+};
+
+  const handlePrintPDF = () => {
+    setIsLoading(true);
+    setProgress(0);
+    
+    const updateProgress = (increment) => {
+        setProgress((prevProgress) => Math.min(Math.ceil(prevProgress + increment), 100));
+    };
+
+    const part1 = document.getElementById('pdf-content-part1');
+    const part2 = document.getElementById('pdf-content-part2');
+    const part3 = document.getElementById('pdf-content-part3');
+
+    // Convertir inputs y textareas a divs
+    convertToDivs(part1);
+    convertToDivs(part2);
+    convertToDivs(part3);
+  
+
+    const ensureImagesLoaded = (element) => {
+        const images = element.querySelectorAll('img');
+        const promises = Array.from(images).map((img) => {
+            return new Promise((resolve) => {
+                if (img.complete) {
+                    resolve();
+                } else {
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                }
+            });
+        });
+        return Promise.all(promises);
+    };
+
+    const processRowAndImages = async (row, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+        // Captura cada fila, incluyendo imágenes en celdas
+        const rowCanvas = await html2canvas(row, { scale: 2.5, useCORS: true });
+        const rowHeight = (rowCanvas.height * (pageWidth - marginLeft - marginRight)) / rowCanvas.width;
+
+        if (yOffset + rowHeight + bottomMargin > pageHeight) {
+            pdf.addPage(); // Agregar nueva página si la fila no cabe
+            yOffset = 0.5; // Reiniciar el offset en la nueva página
+        }
+
+        const rowImgData = rowCanvas.toDataURL('image/jpeg', 0.8); // Convertir a datos base64
+        pdf.addImage(rowImgData, 'JPEG', marginLeft, yOffset, pageWidth - marginLeft - marginRight, rowHeight);
+        yOffset += rowHeight;
+
+        updateProgress(20);
+        return yOffset;
+    };
+
+    const processTableWithRowControl = async (tableElement, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+        const rows = tableElement.querySelectorAll('tr');
+
+        for (const row of rows) {
+            // Procesar cada fila y sus imágenes
+            yOffset = await processRowAndImages(row, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+        }
+
+        updateProgress(20);
+        return yOffset;
+    };
+
+    const processPart3WithTableRows = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+        await ensureImagesLoaded(element); // Asegurar que las imágenes estén completamente cargadas
+
+        const tables = element.querySelectorAll('table');
+                if (tables.length > 0) {
+            for (const table of tables) {
+                yOffset = await processTableWithRowControl(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+              }
+        }
+
+        updateProgress(20);
+        return yOffset;
+    };
+
+    const processCanvas = (canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+
+        const imgWidth = pageWidth - marginLeft - marginRight;
+        const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
+
+        if (yOffset + imgHeight + bottomMargin > pageHeight) {
+            pdf.addPage();
+            yOffset = 0.5;
+        }
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
+        pdf.addImage(imgData, 'JPEG', marginLeft, yOffset, imgWidth, imgHeight);
+
+        updateProgress(20);
+        return yOffset + imgHeight;
+    };
+
+    const pdf = new jsPDF('landscape', 'cm', 'letter');
+
+    let yOffset = 0.5;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const marginLeft = 0;
+    const marginRight = 0;
+    const marginLeft3 = 2;
+    const marginRight3 = 2;
+    const bottomMargin = 1.0; // Establecer un margen inferior de 1 cm
+
+    html2canvas(part1, { scale: 2.5, useCORS: true }).then((canvas) => {
+        yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+
+        return html2canvas(part2, { scale: 2.5, useCORS: true });
+    }).then((canvas) => {
+        yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+
+        setProgress(100);
+        setIsLoading(false);
+        // Procesar la parte 3 con tablas y manejo de filas
+        return processPart3WithTableRows(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, bottomMargin);
+        
+      }).then(() => {
+        pdf.save('diagrama_ishikawa.pdf'); //Descarga de PDF
+
+            // **Preguntar si se desea enviar por correo**
+            return Swal.fire({
+                title: '¿Enviar PDF por correo?',
+                text: 'Puede enviar el PDF a múltiples destinatarios.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, enviar',
+                cancelButtonText: 'No, solo descargar',
+            });
+        })
+        .then((result) => {
+            if (result.isConfirmed) {
+                // **Pedir correos electrónicos**
+                return Swal.fire({
+                    title: 'Ingresa los correos',
+                    input: 'text',
+                    inputPlaceholder: 'ejemplo1@gmail.com, ejemplo2@gmail.com',
+                    showCancelButton: true,
+                    confirmButtonText: 'Enviar',
+                    cancelButtonText: 'Cancelar',
+                    inputValidator: (value) => {
+                        if (!value) return 'Debes ingresar al menos un correo';
+                    }
+                }).then((emailResult) => {
+                    if (emailResult.isConfirmed) {
+                        const emailArray = emailResult.value.split(',').map(e => e.trim());
+                        const formData = new FormData();
+                        formData.append('pdf', pdf.output('blob'), 'diagrama_ishikawa.pdf');
+                        formData.append('emails', JSON.stringify(emailArray));
+
+                        return fetch(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/enviar-pdf`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                    }
+                });
+            }
+          }).then((response) => {
+              if (response?.ok) {
+                  Swal.fire('Éxito', 'Correo enviado exitosamente', 'success');
+              } else if (response) {
+                  Swal.fire('Error', 'No se pudo enviar el correo', 'error');
+              }
+          })
+          .catch((error) => {
+              console.error('Error generando o enviando PDF:', error);
+              Swal.fire('Error', 'Hubo un problema al generar el PDF', 'error');
+          }).finally(() => {
+            setIsLoading(false);
+            restoreElements();
+        });
+};
+
+useEffect(() => {
+  if (formData.participantes) {
+    const participantesArray = formData.participantes.split(" / ").map((nombre) => ({ Nombre: nombre.trim() }));
+    setSelectedParticipants(participantesArray);
+  }
+}, [formData.participantes]);
+
+useEffect(() => {
+  // Solo realiza la búsqueda si hay al menos 3 caracteres, por ejemplo
+  if (searchTerm.length < 3) {
+    setSuggestions([]);
+    return;
+  }
+
+  // Implementa un debounce sencillo para evitar muchas peticiones
+  const delayDebounceFn = setTimeout(() => {
+    // Realiza la consulta a tu API (asegúrate de tener un endpoint que reciba el query)
+    axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/search?search=${encodeURIComponent(searchTerm)}`)
+      .then(response => {
+        // Suponiendo que response.data es un array de participantes { id, name }
+        setSuggestions(response.data);
+        
+      })
+      .catch(error => {
+        console.error("Error al buscar participantes:", error);
+      });
+  }, 300); // 300ms de retraso
+
+  return () => clearTimeout(delayDebounceFn);
+}, [searchTerm]);
+
+// Función para manejar la selección de un participante
+const handleSelect = (participant) => {
+  // Evitar duplicados
+  if (selectedParticipants.some(p => p.Nombre === participant.Nombre)) return;
+
+  const nuevosSeleccionados = [...selectedParticipants, participant];
+  setSelectedParticipants(nuevosSeleccionados);
+
+  // Actualiza el formData (los almacena como cadena separados por "/")
+  const nuevosNombres = nuevosSeleccionados.map(p => p.Nombre).join(' / ');
+  setFormData({ ...formData, participantes: nuevosNombres });
+  console.log('usuarios: ',nuevosNombres);
+
+  setSearchTerm('');
+  setSuggestions([]);
+};
+
+// Función para eliminar un participante (si deseas permitir eliminar chips)
+const handleDelete = (participantToDelete) => {
+  const nuevosSeleccionados = selectedParticipants.filter(p => p.Nombre !== participantToDelete.Nombre);
+  setSelectedParticipants(nuevosSeleccionados);
+
+  const nuevosNombres = nuevosSeleccionados.map(p => p.Nombre).join(' / ');
+  setFormData({ ...formData, participantes: nuevosNombres });
+};
+
   return (
     <div>
+
+    <button className='button-pdf-imp' style={{top:'6em'}} onClick={handlePrintPDF}>Guardar en PDF</button>
 
       <form onSubmit={(e) => {
           e.preventDefault(); // Prevenir el envío automático del formulario
@@ -396,6 +712,17 @@ const CreacionIshikawa = () => {
         }}>
           
       <div>
+
+      {/*Mensaje de generacion*/}
+    {isLoading && (
+        <div className="loading-overlay">
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <CircularProgress variant="determinate" value={progress} />
+                <p>{progress}%</p>
+                <p>Generando PDF</p> {/* Muestra el porcentaje debajo del spinner */}
+            </div>
+         </div>
+    )}
       
       <div style={{textAlign:'center'}}>
       <h2>Seleccionar un Registro de Ishikawa:</h2>
@@ -415,7 +742,8 @@ const CreacionIshikawa = () => {
           </div>
          ): ''}
 
-        <div className="image-container">
+        <div className="content-diagrama">
+        <div id='pdf-content-part1' className="image-container-dia" >
         <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
         <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
           <div className='posicion-en'>
@@ -503,21 +831,49 @@ const CreacionIshikawa = () => {
           </div> 
 
           <div className='button-pasti'>
-                    <div className='cont-part'>
-                  <button className='button-part' onClick={(e) => {
-                      e.preventDefault();
-                      setShowPart(!showPart)
-                    }}>
-                    ⚇
-                  </button>
-                  {showPart && (
-                  <textarea type="text" name='participantes' value={formData.participantes} onChange={handleFormDataChange}
-                      style={{ width:'64rem', color:'#000000', border:'none', backgroundColor:'#ffffff'}} 
-                      placeholder="Agregar Participantes. . ." required></textarea>
-                    )}
-                  </div>
-                  </div>
+          <div style={{ width: '64rem' }}>
+            {/* Contenedor de chips y campo de busqueda */}
+              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+              <button className='button-part'> ⚇</button>
+                {selectedParticipants.map((participant, index) => (
+                  <Chip
+                    key={index}
+                    label={participant.Nombre}
+                    onDelete={() => handleDelete(participant)}
+                  />
+                ))}
+                {/* Campo de busqueda */}
+                <TextField
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar nombre..."
+                  variant="outlined"
+                  size="small"
+                  style={{ minWidth: '200px' }}
+                />
+              </div>
 
+              {/* Lista de sugerencias */}
+              {suggestions.length > 0 && (
+                <Paper style={{ maxHeight: '10rem', overflowY: 'auto', marginBottom: '1rem' }}>
+                  <List>
+                    {suggestions.map((participant, index) => (
+                      <ListItem
+                        button
+                        key={index}
+                        onClick={() => handleSelect(participant)}
+                      >
+                        {participant.Nombre}
+                      </ListItem>
+                    ))}
+                  </List>
+                </Paper>
+              )}
+            </div>
+            </div>
+          </div>
+
+          <div className="image-container2-dia" id='pdf-content-part2'>
           <div>
             <div className='posicion-bo' style={{ marginRight: '5rem' }}>
               <h3>No conformidad:</h3>
@@ -539,7 +895,9 @@ const CreacionIshikawa = () => {
                   value={formData.causa} onChange={handleFormDataChange} required />
             </div>
           </div>
+          </div>
 
+          <div className='image-container3-dia' id='pdf-content-part3'>
           <div className='table-ish'>
           <h3>SOLUCIÓN</h3>
             <table style={{ border: 'none' }}>
@@ -607,7 +965,8 @@ const CreacionIshikawa = () => {
               agregarFilaActividad();
             }} className='button-agregar'>Agregar Fila</button>
           </div>
-          <button type='submit'className='button-agregar'  onClick={(e) => {
+          </div>
+          <button type='submit'className='button-guardar-camb-ish'  onClick={(e) => {
             e.preventDefault();handleSaveAdvance(); }}>Guardar Cambios</button>
           <button type='submit'className='button-generar-ish'>Enviar</button>
           

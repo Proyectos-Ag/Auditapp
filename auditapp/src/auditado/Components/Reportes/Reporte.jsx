@@ -287,8 +287,8 @@ const Reporte = () => {
                                                 <tbody>
                                                     {dato.Programa.map((programa, programIdx) => (
                                                         programa.Descripcion.map((desc, descIdx) => {
-                                                            const base64Prefix = 'data:image/png;base64,';
-                                                             const isBase64Image = desc.Hallazgo.includes(base64Prefix);
+                                                            const firePrefix = 'https://firebasestorage';
+                                                            const isFireImage = desc.Hallazgo.includes(firePrefix);
                                                             if (desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') {
                                                                 return (
                                                                     <tr key={descIdx}>
@@ -297,19 +297,19 @@ const Reporte = () => {
                                                                         <td className='alingR'>{desc.Requisito}</td>
                                                                         <td>{desc.Criterio}</td>
                                                                         <td>{desc.Observacion}</td>
-                                                                        <td key={descIdx}>
-                                                                            {desc.Hallazgo ? (
-                                                                                isBase64Image ? (
-                                                                                    <img
-                                                                                        src={desc.Hallazgo}
-                                                                                        alt="Evidencia"
-                                                                                        className="hallazgo-imagen"
-                                                                                    />
-                                                                                ) : (
-                                                                                    <span>{desc.Hallazgo}</span>
-                                                                                )
-                                                                            ) : null}
-                                                                        </td>
+                                                                        <td className='alingR' key={descIdx}>
+                                                                                {desc.Hallazgo ? (
+                                                                                    isFireImage ? (
+                                                                                        <img
+                                                                                            src={desc.Hallazgo}
+                                                                                            alt="Evidencia"
+                                                                                            className="hallazgo-imagen"
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <span>{desc.Hallazgo}</span>
+                                                                                    )
+                                                                                ) : null}
+                                                                            </td>
                                                                         <td>{}</td>
                                                                         <td>{}</td>
                                                                         <td>{}</td>

@@ -2,7 +2,6 @@ const Usuarios = require('../models/usuarioSchema');
 const transporter = require('../emailconfig');
 const bcrypt = require('bcryptjs');
 
-
 // Controlador para registrar un nuevo usuario
 const registroUsuario = async (req, res) => {
   try {
@@ -135,6 +134,25 @@ const cambiarPassword = async (req, res) => {
   }
 };
 
+const searchUsuarios = async (req, res) => {
+  try {
+    const { search } = req.query;
+    // Se valida que el término de búsqueda tenga al menos 3 caracteres
+    if (!search || search.trim().length < 3) {
+      return res.status(400).json({ error: 'Ingrese al menos 3 caracteres para buscar' });
+    }
+    
+    // Se crea una expresión regular para realizar una búsqueda insensible a mayúsculas/minúsculas
+    const regex = new RegExp(search, 'i');
+    const usuarios = await Usuarios.find({ Nombre: regex }).limit(10);
+    
+    res.json(usuarios);
+  } catch (error) {
+    console.error('Error al buscar usuarios:', error);
+    res.status(500).json({ error: 'Error en la búsqueda de usuarios' });
+  }
+};
+
 module.exports = {
   registroUsuario,
   obtenerUsuarios,
@@ -142,5 +160,6 @@ module.exports = {
   actualizarUsuario,
   eliminarUsuario,
   obtenerUsuarioPorNombre,
-  cambiarPassword
+  cambiarPassword,
+  searchUsuarios
 };

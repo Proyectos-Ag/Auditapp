@@ -8,8 +8,8 @@
     padding: 2vh; 
     border-radius: 1vw; 
     margin-top: 5vh; 
-    border: 3px solid #ffffff;
-    background-color: #ffffd1;
+    border: 3px solid #b8b8b8;
+    background-color: #ffffff;
     margin-top: 50px;
 }
 
@@ -50,7 +50,7 @@
     height: 36px;
     bottom: 0;
     right: 0;
-    background-color: #ffffd1; /* Color de la parte trasera de la hoja */
+    background-color: #ffffff; /* Color de la parte trasera de la hoja */
     transform: translate(7%, 5%) rotate(-90deg);
     transform-origin: bottom right;
     z-index: 0; /* Coloca esta parte debajo del contenedor principal */

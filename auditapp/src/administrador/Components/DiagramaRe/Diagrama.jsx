@@ -626,7 +626,7 @@ const Diagrama = () => {
                                 </div>
                             ))}
                         </div>
-                        <div className='button-pasti'>
+                        <div className='button-pasti-dia'>
                             <div className='cont-part'>
                         <button className='button-part' onClick={(e) => {
                             e.preventDefault();

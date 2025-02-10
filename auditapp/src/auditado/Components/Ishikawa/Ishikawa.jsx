@@ -83,7 +83,8 @@ const Ishikawa = () => {
               setPrograma(programaEncontrado);
               setDescripcion(descripcionEncontrada);
               setRequisito(descripcionEncontrada.Requisito);
-              setHallazgo(descripcionEncontrada.Hallazgo);
+              setHallazgo((descripcionEncontrada?.Observacion && descripcionEncontrada?.PuntuacionMaxima) ?
+              descripcionEncontrada.Hallazgo : descripcionEncontrada.Observacion);
               setProblema((descripcionEncontrada?.Observacion && descripcionEncontrada?.PuntuacionMaxima) ?
                           descripcionEncontrada.Observacion : descripcionEncontrada.Problema);
               setAuditados(descripcionEncontrada.Auditados);

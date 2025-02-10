@@ -7,7 +7,7 @@ import './css/Modal.css';
 import Fotos from './Foto'; 
 import Swal from 'sweetalert2';
 import { storage } from '../../../firebase';
-import {ref, uploadBytes, getDownloadURL} from 'firebase/storage';
+import {ref, uploadBytes, getDownloadURL, deleteObject} from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -21,9 +21,13 @@ const Pendientes = () => {
     const [modalOpen, setModalOpen] = useState(false); 
     const [selectedField, setSelectedField] = useState(null); 
     const [capturedPhotos, setCapturedPhotos] = useState({}); 
-    const [imageModalOpen, setImageModalOpen] = useState(false);
-    const [selectedImage, setSelectedImage] = useState(null);
     const [open, setOpen] = React.useState(false);
+
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+    const [selectedImageDocId, setSelectedImageDocId] = useState(null);
+    const [imageModalOpen, setImageModalOpen] = useState(false);
+
 
     const handleClose = () => {
         setOpen(false);
@@ -141,10 +145,13 @@ setPercentages(initialPercentages);
         return meses.indexOf(nombreMes.toLowerCase());
     };
 
-    const handleImageClick = (imageSrc) => {
+    const handleImageClick = (imageSrc, index, docId) => {
         setSelectedImage(imageSrc);
+        setSelectedImageIndex(index);
+        setSelectedImageDocId(docId);
         setImageModalOpen(true);
-    };
+        console.log('Imagen seleccionada:', imageSrc, index, docId);
+    };    
 
     const closeModal = () => {
         setImageModalOpen(false);
@@ -195,13 +202,33 @@ setPercentages(initialPercentages);
 
     const handleCapture = (file) => {
         if (selectedField) {
-            setCapturedPhotos(prev => ({
-                ...prev,
-                [selectedField]: file
-            }));
+            // Generar el identificador para la fila basado en el `selectedField` y el contador de fotos por fila
+            const rowIdentifier = selectedField; // Puede ser algo como "0_0", "0_1", etc.
+            
+            // Actualizamos el estado de las fotos
+            setCapturedPhotos((prev) => {
+                const updatedPhotos = { ...prev };
+    
+                // Si la fila ya tiene fotos, agregamos la nueva foto, de lo contrario inicializamos el arreglo
+                if (updatedPhotos[rowIdentifier]) {
+                    // Si ya tiene 4 fotos, iniciamos una nueva fila
+                    if (updatedPhotos[rowIdentifier].length < 4) {
+                        updatedPhotos[rowIdentifier] = [...updatedPhotos[rowIdentifier], file];
+                    } else {
+                        // Agregar la foto en una nueva fila, por ejemplo "0_1", "0_2", etc.
+                        const newRow = `${parseInt(rowIdentifier.split('_')[0]) + 1}_${parseInt(rowIdentifier.split('_')[1])}`;
+                        updatedPhotos[newRow] = [file];
+                    }
+                } else {
+                    updatedPhotos[rowIdentifier] = [file];
+                }
+    
+                return updatedPhotos;
+            });
         }
-        setModalOpen(false);
-    };     
+        setModalOpen(false); // Cierra el modal
+        console.log("Foto Seleccionada", selectedField);
+    };    
 
     const navigate = useNavigate();
 
@@ -226,24 +253,28 @@ setPercentages(initialPercentages);
                     programa.Descripcion.map(async (desc, descIdx) => {
                         const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
                         const updatedObservation = { ...desc };
-    
-                        // Verificar si hay una imagen nueva capturada para este fieldKey
-                        const file = capturedPhotos[fieldKey];
-                        if (file) {
+                        const files = capturedPhotos[fieldKey] || [];
+                
+                        if (files.length > 0) {
                             try {
-                                const fileName = `evidencia_${id}_${periodIdx}_${programIdx}_${descIdx}`;
-                                const fileUrl = await uploadImageToFirebase(file, fileName);
-    
-                                // Asignar la URL al campo Hallazgo
-                                updatedObservation.Hallazgo = fileUrl;
+                                // Subir todas las imágenes asociadas al fieldKey
+                                const fileUrls = await Promise.all(
+                                    files.map(async (file, index) => {
+                                        const fileName = `evidencia_${id}_${periodIdx}_${programIdx}_${descIdx}_${index}`;
+                                        return await uploadImageToFirebase(file, fileName);
+                                    })
+                                );
+                
+                                // Asignar las URLs al campo Hallazgo como un array
+                                updatedObservation.Hallazgo = fileUrls;
                             } catch (error) {
-                                console.error(`Error al subir la imagen para ${fieldKey}:`, error);
+                                console.error(`Error al subir las imágenes para ${fieldKey}:`, error);
                             }
                         } else {
-                            // Mantener el hallazgo existente si no hay una imagen nueva
-                            updatedObservation.Hallazgo = desc.Hallazgo || '';
+                            // Mantener el hallazgo existente si no hay imágenes nuevas
+                            updatedObservation.Hallazgo = Array.isArray(desc.Hallazgo) ? desc.Hallazgo : [];
                         }
-    
+                
                         return {
                             ID: desc.ID,
                             Criterio: selectedCheckboxes[fieldKey] || '',
@@ -252,7 +283,7 @@ setPercentages(initialPercentages);
                             Hallazgo: updatedObservation.Hallazgo,
                         };
                     })
-                );
+                );                
     
                 const percentage = percentages[`${periodIdx}_${programIdx}`] || 0;
                 totalPorcentage += percentage;
@@ -277,7 +308,7 @@ setPercentages(initialPercentages);
                 // Actualizar porcentaje total
                 await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
                     PorcentajeTotal: totalPorcentageAvg,
-                    Estado: 'Realizada',
+                    Estado: 'Devuelto',
                     usuario: userData.Nombre
                 });
                 
@@ -444,14 +475,53 @@ setPercentages(initialPercentages);
         }
     };
 
-    const handleDeleteImage = (fieldKey) => {
-    setCapturedPhotos(prev => {
-        const updatedPhotos = { ...prev };
-        delete updatedPhotos[fieldKey];  // Elimina la imagen del objeto
-        return updatedPhotos;
-    });
-    closeModal();  // Cierra el modal después de eliminar la imagen
-};
+    const handleDeleteImage = async (docId, imageIndex, imageUrl) => {
+        // Si la imagen es temporal (vista previa), no se realiza la eliminación en la base de datos ni en Firebase.
+        console.log('imagen a borrar: ', imageUrl);
+        if (imageUrl.startsWith("blob:")) {
+          // Actualiza el estado para eliminar la imagen de la vista previa.
+          // Suponiendo que 'capturedPhotos' es parte del estado y 'fieldKey' es la clave asociada.
+          setCapturedPhotos(prevState => {
+            return {
+              ...prevState,
+              [selectedField]: prevState[selectedField].filter((_, idx) => idx !== imageIndex)
+            };
+          });
+          return; // Sale de la función sin hacer nada más.
+        }
+      
+        // Si la imagen no es temporal, se ejecutan las operaciones de eliminación reales.
+        try {
+          // 1. Eliminar la URL del arreglo en la base de datos.
+          await fetch(`${process.env.REACT_APP_BACKEND_URL}/datos/eliminarImagen`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              docId,      // ID del documento
+              imageUrl    // URL de la imagen
+            })
+          });
+          console.log("Imagen eliminada de la base de datos");
+      
+          // 2. Eliminar la imagen de Firebase Storage.
+          const fileName = imageUrl.split('/').pop().split('?')[0];
+          const decodedFileName = decodeURIComponent(fileName);
+          const imageRef = ref(storage, decodedFileName);
+          await deleteObject(imageRef);
+          console.log("Imagen eliminada de Firebase Storage");
+
+          setCapturedPhotos(prev => {
+            const updatedPhotos = { ...prev };
+            delete updatedPhotos[selectedField]; // Elimina la imagen del objeto
+            return updatedPhotos;
+        });
+      
+        } catch (error) {
+          console.error("Error al eliminar la imagen:", error);
+        }
+      };      
 
 
 return (
@@ -521,8 +591,10 @@ return (
                                                     {programa.Descripcion.map((desc, descIdx) => {
                                                         const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
                                                         
-                                                        // Aquí no necesitas manejar prefijos Base64, solo te preocupas de que sea un BLOB o base64
-                                                        const imageSrc = capturedPhotos[fieldKey] || desc.Hallazgo || '';
+
+                                                        const imageSrcs = (capturedPhotos[fieldKey] || []).map((file) =>
+                                                            typeof file === "object" && file instanceof File ? URL.createObjectURL(file) : file
+                                                        ).concat(Array.isArray(desc.Hallazgo) ? desc.Hallazgo : []);
 
                                                         return (
                                                         <tr key={descIdx}>
@@ -561,14 +633,23 @@ return (
                                                                 </span>
                                                             </div>
                                                             
-                                                            {imageSrc && (
-                                                                <img
-                                                                src={typeof imageSrc === 'string' ? imageSrc : URL.createObjectURL(imageSrc)} // Si es string (base64), úsalo directamente, si es Blob, usa createObjectURL
-                                                                alt="Evidencia"
-                                                                className="hallazgo-imagen"
-                                                                onClick={() => handleImageClick(imageSrc)}
-                                                                />
-                                                            )}
+                                                            <div
+                                                                className={`image-collage image-collage-${Math.min(
+                                                                    imageSrcs.length,
+                                                                    4
+                                                                )}`} 
+                                                            >
+                                                                {imageSrcs.map((src, idx) => (
+                                                                    <img
+                                                                        key={idx}
+                                                                        src={src}
+                                                                        alt={`Evidencia ${idx + 1}`}
+                                                                        className="hallazgo-imagen"
+                                                                        onClick={() => handleImageClick(src, idx, dato._id)}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                            <button onClick={() => handleOpenModal(fieldKey)}>Agregar Imagen</button>
                                                             </td>
                                                         </tr>
                                                         );
@@ -590,15 +671,20 @@ return (
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <img src={selectedImage} alt="Ampliada" className="modal-image" />
                         {/* Botón para eliminar la imagen */}
-                        <button 
-                            className="delete-button" 
-                            onClick={() => handleDeleteImage(selectedField)}
+                        <button
+                            className="delete-button"
+                            onClick={() => {
+                                // Puedes utilizar selectedImageIndex y selectedImageDocId para eliminar la imagen
+                                handleDeleteImage(selectedImageDocId, selectedImageIndex, selectedImage);
+                                closeModal(); // Cierra el modal después de eliminar
+                            }}
                         >
                             Eliminar Imagen
                         </button>
                     </div>
                 </div>
             )}
+
 
         </div> 
     ); 

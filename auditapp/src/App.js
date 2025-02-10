@@ -52,6 +52,7 @@ import Reporte from './auditado/Components/Reportes/Reporte.jsx';
 //Ishikawas Vacios
 import DiagramaIshVac from './ishikawa-vacio/components/DiagramaRe/Diagrama.jsx';
 import IshikawaVac from './ishikawa-vacio/components/Ishikawa/Ishikawa.jsx';
+import InicioIsh from './ishikawa-vacio/components/Home/inicio.jsx';
 
 //Objetivos 
 import Menu from './Objetivos/Components/Menu/elmenu.jsx';
@@ -135,6 +136,7 @@ export const UserContext = createContext(null);
 
               <Route path="/ishikawavacio" element={<ProtectedRoute><DiagramaIshVac/></ProtectedRoute>}/>
               <Route path="/diagramas" element={<ProtectedRoute><IshikawaVac/></ProtectedRoute>}/>
+              <Route path="/inicio-ishvac" element={<ProtectedRoute><InicioIsh/></ProtectedRoute>}/>
 
                 {/*Objetivos*/}
 

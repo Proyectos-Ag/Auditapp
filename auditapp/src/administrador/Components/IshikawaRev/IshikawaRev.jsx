@@ -583,21 +583,40 @@ const handleCorreccionChange = (index, field, value) => {
         });
       };
 
-      const handleGuardarAprobacion = async () => {
-        try {
-            const { _id } = filteredIshikawas[0];
-            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
-                estado: 'Aprobado',
-                usuario: ishikawas[0].auditado,
-                programa: ishikawas[0].proName,
-                correo: ishikawas[0].correo
-            });
-            fetchData();
-        } catch (error) {
-            console.error('Error updating data:', error);
-            alert('Hubo un error al actualizar la información');
-        }
-        };
+        const handleGuardarAprobacion = async () => {
+            try {
+                const { _id } = filteredIshikawas[0];
+                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
+                    estado: 'Aprobado',
+                    usuario: ishikawas[0].auditado,
+                    programa: ishikawas[0].proName,
+                    correo: ishikawas[0].correo
+                });
+        
+                fetchData();
+                verificarRegistro();
+        
+                // Mostrar alerta de éxito
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Operación exitosa',
+                    text: 'El ishicawa fue aprobado correctamente.',
+                    confirmButtonText: 'Aceptar',
+                    timer: 3000, // Cierra el alert automáticamente después de 3 segundos
+                    timerProgressBar: true
+                });
+            } catch (error) {
+                console.error('Error updating data:', error);
+        
+                // Mostrar alerta de error
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Hubo un error al actualizar la información.',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        };    
 
         const Aprobar = async (id, porcentaje) => {
             Swal.fire({
@@ -616,23 +635,43 @@ const handleCorreccionChange = (index, field, value) => {
             });
           };
 
-    const handleGuardarRechazo = async () => {
-    try {
-        const { _id } = filteredIshikawas[0];
-        console.log('Aver :',ishikawas[0].auditado,ishikawas[0].proName);
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
-            estado: 'Rechazado',
-            notaRechazo,
-            usuario: ishikawas[0].auditado,
-            programa: ishikawas[0].proName,
-            correo: ishikawas[0].correo
-        });
-        fetchData();
-    } catch (error) {
-        console.error('Error updating data:', error);
-        alert('Hubo un error al actualizar la información');
-    }
-    };
+          const handleGuardarRechazo = async () => {
+            try {
+                const { _id } = filteredIshikawas[0];
+                console.log('Aver :', ishikawas[0].auditado, ishikawas[0].proName);
+        
+                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
+                    estado: 'Rechazado',
+                    notaRechazo,
+                    usuario: ishikawas[0].auditado,
+                    programa: ishikawas[0].proName,
+                    correo: ishikawas[0].correo
+                });
+        
+                fetchData();
+        
+                // Mostrar alerta de rechazo exitoso
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Rechazo registrado',
+                    text: 'El ishikawa fue rechazado correctamente.',
+                    confirmButtonText: 'Aceptar',
+                    timer: 3000, // Cierra automáticamente después de 3 segundos
+                    timerProgressBar: true
+                });
+            } catch (error) {
+                console.error('Error updating data:', error);
+        
+                // Mostrar alerta de error
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Hubo un error al registrar el rechazo.',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        };
+        
 
     const Rechazar = async (id, porcentaje) => {
         Swal.fire({

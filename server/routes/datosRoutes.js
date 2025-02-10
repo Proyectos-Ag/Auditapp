@@ -16,6 +16,7 @@ router.get('/por/:_id', datosController.obtenerDatoPorId);
 router.get('/datos-filtrados', datosController.obtenerDatosFiltrados);
 router.get('/datos-filtrados-aud/:_id', datosController.obtenerDatosFiltradosAud);
 router.delete('/eliminar/:_id', datosController.eliminarRegistro);
+router.post('/eliminarImagen',datosController.deleteImageUrl);
 
 // Ruta para actualizar datos existentes
 router.put('/:id', datosController.actualizarEstado);

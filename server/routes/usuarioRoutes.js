@@ -8,6 +8,8 @@ router.post('/', usuariosController.registroUsuario);
 // Ruta para obtener todos los usuarios (GET)
 router.get('/', usuariosController.obtenerUsuarios);
 
+router.get('/search', usuariosController.searchUsuarios);
+
 // Ruta para obtener un usuario por su ID (GET)
 router.get('/:id', usuariosController.obtenerUsuarioPorId);
 

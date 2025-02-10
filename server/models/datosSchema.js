@@ -5,7 +5,7 @@ const DescripcionSchema = new mongoose.Schema({
   Criterio: { type: String },
   Requisito: { type: String, required: true },
   Observacion: { type: String },
-  Hallazgo: String,
+  Hallazgo: { type: [String], default: [] },
   Problema: { type: String }
 });
 
