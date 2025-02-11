@@ -10,6 +10,10 @@
   position: relative;
 }
 
+.contenedor-datos{
+  margin-top: 7em;
+}
+
 @media (max-width: 900px) {
   .datos-container {
     width: 80%;

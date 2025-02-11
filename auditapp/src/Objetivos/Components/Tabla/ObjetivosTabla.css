@@ -1,23 +1,14 @@
 /* Para que el contenido aparezca más abajo */
 .tabla-container {
-  margin-top: 100px;
+  margin-top: 60px; /* Ajusta este valor a tu gusto */
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
   padding: 20px;
-  background-color: #f2f9f2;
+  background-color: #f2f9f2; /* verde muy claro */
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-  /* Puedes dejar el padding o cualquier otro estilo que ya tengas */
-}
-
-.tabla-wrapper {
-  overflow-x: auto;
-}
-
-/* Opcional: fija el layout de la tabla para un comportamiento más predecible */
-.objetivos-tabla {
-  width: 100%;
+  margin-top: 100px;
 }
 
 .tabla-titulo {
@@ -35,9 +26,24 @@
   color: #2e6735;
 }
 
+.objetivos-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  margin-bottom: 20px;
+}
+
 .objetivos-tabla thead tr {
   background-color: #b4f599; /* verde claro */
   color: #000;
+}
+
+.objetivos-tabla th,
+.objetivos-tabla td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 0.95rem;
 }
 
 .objetivos-tabla tbody tr:nth-child(even) {
@@ -53,6 +59,32 @@
   border-radius: 4px;
   min-height: 30px; /* Asegura que el campo tenga un tamaño mínimo */
   resize: vertical; /* Permite que el usuario ajuste la altura */
+}
+
+/* Botones */
+.btn-editar,
+.btn-guardar,
+.btn-eliminar {
+  background-color: #4c9e46; 
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 4px;
+}
+
+.btn-eliminar {
+  background-color: #c4494f; 
+}
+
+.btn-editar:hover,
+.btn-guardar:hover {
+  background-color: #3b7a36;
+}
+
+.btn-eliminar:hover {
+  background-color: #a4373d; 
 }
 
 .agregar-fila-container {
@@ -158,6 +190,19 @@
       font-size: 1.1rem;
   }
 
+  .objetivos-tabla,
+  .objetivos-tabla thead,
+  .objetivos-tabla tbody,
+  .objetivos-tabla th,
+  .objetivos-tabla td,
+  .objetivos-tabla tr {
+      display: block;
+  }
+
+  .objetivos-tabla thead tr {
+      display: none; 
+  }
+
   .objetivos-tabla td {
       border: none;
       position: relative;
@@ -176,5 +221,10 @@
   .td-input {
       min-height: 40px; /* Aumentar el tamaño mínimo en dispositivos móviles */
       font-size: 1rem;
+  }
+
+  .btn-editar, .btn-guardar, .btn-eliminar, .btn-agregar {
+      width: 100%; /* Los botones ocuparán todo el ancho */
+      margin-bottom: 10px; /* Espaciado entre botones */
   }
 }

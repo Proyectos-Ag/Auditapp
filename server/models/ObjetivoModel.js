@@ -16,8 +16,9 @@ const AccionCorrectivaSchema = new mongoose.Schema({
   fichaCompromiso: { type: String, required: true },
   responsable: { type: String, required: true },
   efectividad: { type: String, required: true },
-  observaciones: { type: String, required: true }
-});
+  observaciones: { type: String, required: true },
+  historialFechas: { type: [String], default: [] } // Nuevo campo para historial
+}, { _id: true }); // Habilitar _id para subdocumentos
 
 const ObjetivoSchema = new mongoose.Schema({
   area: { type: String, required: true },

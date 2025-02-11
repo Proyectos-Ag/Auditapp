@@ -7,10 +7,10 @@
     margin: 0 auto; 
     padding: 2vh; 
     border-radius: 1vw; 
-    margin-top: 5vh; 
+    margin-top: 7em; 
+    margin-bottom: -5em;
     border: 3px solid #b8b8b8;
     background-color: #ffffff;
-    margin-top: 50px;
 }
 
 .card-repo {

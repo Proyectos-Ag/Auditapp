@@ -6,7 +6,6 @@ import ProtectedRoute from './ProtectedRoute';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { checkForUpdate } from './utils/checkForUpdate.js';
-import DatosV from './components/login/DatosV.jsx';
 //componentes
 import MigasPan from './resources/migas-pan.jsx';
 import IconMenu from './resources/icon-menu.jsx';
@@ -61,6 +60,8 @@ import Tabla from './Objetivos/Components/Tabla/ObjetivosTabla.jsx'
 import Frecuencia from './Objetivos/Components/Tabla/frecuencia.jsx'
 import AccionesCorrectivas from './Objetivos/Components/Tabla/AccionesCorrectivas.jsx';
 import AccionesCorrectivasList from './Objetivos/Components/Tabla/AccionesCorrectivasList.jsx';
+import SaeftyGoals from './Objetivos/Components/Tabla/objetivoslistsaeftygoals.jsx'
+import Concentrado from './Objetivos/Components/Tabla/concentrado.jsx'
 
 // Cargar componentes según el rol correspondiente
 const Administrador = lazy(() => import('./administrador/Components/Home/inicio.jsx'));
@@ -146,7 +147,8 @@ export const UserContext = createContext(null);
               <Route path="/objetivos/:label/frecuencia/:label" element={<Frecuencia />} />
               <Route path="/acciones" element={<AccionesCorrectivas />} />
               <Route path="/acciones-list/:label" element={<AccionesCorrectivasList />} />
-
+              <Route path="/saefty-goals2" element={<SaeftyGoals />} />
+              <Route path="/concentradon" element={<Concentrado />} />
 
           </Routes>
         </Suspense>
@@ -155,22 +157,8 @@ export const UserContext = createContext(null);
   };
 
 function App() {
-  const [appVersion] = useState('2.1.3');
-  const [showModal, setShowModal] = useState(false);
+  const [appVersion] = useState('2.1.4');
 
-  const handleOpenModal = () => {
-    setShowModal(true); // Mostrar modal
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false); // Ocultar modal
-  };
-
-  const handleOverlayClick = (e) => {
-    if (e.target.classList.contains('modal-overlay')) {
-      handleCloseModal();
-    }
-  };
 
   useEffect(() => {
     const showUpdateNotification = async () => {
@@ -182,9 +170,6 @@ function App() {
         toast.info(
           <div>
             ¡Nueva actualización disponible! Recargue la página para obtener la última versión.
-            <span onClick={handleOpenModal} style={{ color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}>
-              Ver Novedades
-            </span>
           </div>,
           {
             position: 'top-right',
@@ -211,14 +196,6 @@ function App() {
           <MainContent />
         </Router>
       </div>
-      {showModal && (
-          <div className="modal-overlay" onClick={handleOverlayClick}>
-            <div onClick={(e) => e.stopPropagation()}>
-              {/* El clic dentro del modal no lo cierra */}
-              <DatosV />
-            </div>
-          </div>
-        )}
     </AuthProvider>
     </>
   );

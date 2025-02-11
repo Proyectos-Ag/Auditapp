@@ -39,7 +39,7 @@ const AuditTable = () => {
     const { name, value, type, checked } = e.target;
     setNewAudit({
       ...newAudit,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === 'checkbox' ? checked : (name.includes("fecha") ? value : value),
     });
   };
 
@@ -78,80 +78,114 @@ const AuditTable = () => {
       croppedCanvas.toBlob((blob) => resolve(blob), "image/png");
     });
   };  
-  
 
-  const addAudit = async () => {
-    if (
-      newAudit.cliente &&
-      newAudit.fechaInicio &&
-      newAudit.fechaFin &&
-      newAudit.modalidad &&
-      newAudit.status
-    ) {
-      if (new Date(newAudit.fechaInicio) > new Date(newAudit.fechaFin)) {
-        alert("La fecha de inicio no puede ser posterior a la fecha de fin.");
-        return;
-      }
+  const sendAuditEmail = async (auditId) => {
+    // Capturar la imagen de la tabla (asegúrate de tener definida la función captureTableImage)
+    const tableImageBlob = await captureTableImage();
   
-      console.log("Datos de la auditoría que se insertan visualmente:", newAudit);
+    if (!tableImageBlob) {
+      console.warn("No se pudo capturar la imagen para el correo.");
+      return;
+    }
   
-      // Insertar visualmente la nueva auditoría en la tabla
-      const newAuditEntry = {
-        ...newAudit,
-        _id: Date.now().toString(), // Genera un ID temporal para evitar conflictos
-      };
-      setAudits([...audits, newAuditEntry]);
+    // Preparar FormData para enviar el auditId y la imagen
+    const formData = new FormData();
+    formData.append("auditId", auditId);
+    // El nombre "file" debe coincidir con el que se usa en el backend (por ejemplo, req.file)
+    formData.append("tablaImagen", tableImageBlob, "tabla.png");
   
-      // Restablecer el formulario inmediatamente
-      setNewAudit({
-        cliente: "",
-        fechaInicio: "",
-        fechaFin: "",
-        modalidad: "Presencial",
-        status: "Realizada",
-        realizada: false,
-        programada: false,
-      });
-  
-      // Esperar que la UI se actualice antes de capturar la imagen
-      setTimeout(async () => {
-        const tableImageBlob = await captureTableImage();
-  
-        if (tableImageBlob) {
-          console.log("Imagen capturada correctamente.");
-        } else {
-          console.warn("No se pudo capturar la imagen.");
-        }
-  
-        // Enviar los datos al servidor SIN ESPERAR LA RESPUESTA para capturar la imagen antes
-        const formData = new FormData();
-        formData.append("cliente", newAuditEntry.cliente);
-        formData.append("fechaInicio", newAuditEntry.fechaInicio);
-        formData.append("fechaFin", newAuditEntry.fechaFin);
-        formData.append("modalidad", newAuditEntry.modalidad);
-        formData.append("status", newAuditEntry.status);
-        if (tableImageBlob) {
-          formData.append("tablaImagen", tableImageBlob, "tabla.png");
-        }
-  
-        setLoading(true);
-        try {
-          await axios.post(
-            `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits`,
-            formData,
-            { headers: { "Content-Type": "multipart/form-data" } }
-          );
-          setSuccessMessage(true);
-        } catch (error) {
-          console.error("Error al agregar la auditoría:", error);
-        } finally {
-          setLoading(false);
-        }
-      }, 300); // Pequeño retraso para asegurar la actualización del DOM
-    } else {
-      alert("Por favor, completa todos los campos.");
+    try {
+      setLoading(true);
+      await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits/send-email`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      setSuccessMessage(true);
+      console.log("Correo enviado correctamente.");
+    } catch (error) {
+      console.error("Error al enviar el correo:", error);
+    } finally {
+      setLoading(false);
     }
   };  
+  
+
+  const registerAudit = async () => {
+    // Validar que se hayan completado los campos requeridos
+    if (
+      !newAudit.cliente ||
+      !newAudit.fechaInicio ||
+      !newAudit.fechaFin ||
+      !newAudit.modalidad ||
+      !newAudit.status
+    ) {
+      alert("Por favor, completa todos los campos.");
+      return null;
+    }
+  
+    // Validar que la fecha de inicio no sea posterior a la fecha de fin
+    if (new Date(newAudit.fechaInicio) > new Date(newAudit.fechaFin)) {
+      alert("La fecha de inicio no puede ser posterior a la fecha de fin.");
+      return null;
+    }
+  
+    // Crear un objeto temporal para la UI (optimistic update)
+    const newAuditEntry = {
+      ...newAudit,
+      _id: Date.now().toString(), // ID temporal para la UI
+    };
+  
+    // Actualizar la lista de auditorías en la UI
+    setAudits([...audits, newAuditEntry]);
+  
+    // Reiniciar el formulario
+    setNewAudit({
+      cliente: "",
+      fechaInicio: "",
+      fechaFin: "",
+      modalidad: "Presencial",
+      status: "Realizada",
+      realizada: false,
+      programada: false,
+    });     
+  
+    // Preparar los datos a enviar (sin archivo)
+    const auditData = {
+      cliente: newAuditEntry.cliente,
+      fechaInicio: newAuditEntry.fechaInicio,
+      fechaFin: newAuditEntry.fechaFin,
+      modalidad: newAuditEntry.modalidad,
+      status: newAuditEntry.status,
+      realizada: newAuditEntry.realizada,
+      programada: newAuditEntry.programada,
+    };
+  
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits`,
+        auditData
+      );
+      const savedAudit = response.data;
+  
+      // Reemplazar el registro temporal por el guardado en la BD
+      setAudits((prevAudits) =>
+        prevAudits.map((audit) =>
+          audit._id === newAuditEntry._id ? savedAudit : audit
+        )
+      );
+  
+      // Devolver la auditoría guardada para usar su _id_ en el envío de correo
+      return savedAudit;
+    } catch (error) {
+      console.error("Error al agregar la auditoría:", error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   
 
   const handleEditClick = (auditId, currentStatus) => {
@@ -283,7 +317,21 @@ const AuditTable = () => {
           {audits2025.map((audit) => (
             <tr key={audit._id}>
               <td>{audit.cliente}</td>
-              <td>{audit.fechaInicio} - {audit.fechaFin}</td>
+              <td>
+                {new Intl.DateTimeFormat("es-ES", {
+                  timeZone: "UTC",
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                }).format(new Date(audit.fechaInicio))}
+                {" - "}
+                {new Intl.DateTimeFormat("es-ES", {
+                  timeZone: "UTC",
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                }).format(new Date(audit.fechaFin))}
+              </td>
               <td>{audit.modalidad}</td>
               <td className={`status ${audit.status.toLowerCase().replace(/ /g, '-')}`}>
                 {editStatus[audit._id]?.editing ? (
@@ -365,13 +413,16 @@ const AuditTable = () => {
               </select>
             </td>
             <td>
-              <button onClick={addAudit} disabled={loading}>
+              <button onClick={registerAudit} disabled={loading}>
                 {loading ? "Cargando..." : "Agregar Auditoría"}
               </button>
             </td>
           </tr>
         </tbody>
       </table>
+      <button onClick={sendAuditEmail} disabled={loading}>
+                {loading ? "Cargando..." : "Enviar Correo"}
+              </button>
     </div>
   );
 };

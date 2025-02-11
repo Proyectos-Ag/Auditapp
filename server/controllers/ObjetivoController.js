@@ -13,6 +13,21 @@ const obtenerObjetivos = async (req, res) => {
   }
 };
 
+const reprogramarFechaCompromiso = async (req, res) => {
+  try {
+    const objetivo = await Objetivo.findOne({ 'accionesCorrectivas._id': req.params.id });
+    if (!objetivo) return res.status(404).send("Acción no encontrada");
+
+    const accion = objetivo.accionesCorrectivas.id(req.params.id);
+    accion.historialFechas.push(accion.fichaCompromiso); // Guardar fecha anterior
+    accion.fichaCompromiso = req.body.nuevaFecha; // Actualizar con nueva fecha
+
+    await objetivo.save();
+    res.json(accion);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
 // POST /api/objetivos
 const crearObjetivo = async (req, res) => {
   try {
@@ -115,5 +130,6 @@ module.exports = {
   actualizarObjetivo,
   eliminarObjetivo,
   agregarAccionCorrectiva,
-  getAccionesCorrectivasByArea
+  getAccionesCorrectivasByArea,
+  reprogramarFechaCompromiso
 };

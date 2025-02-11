@@ -45,8 +45,8 @@ const Historial = () => {
         onClick={handleOpen}
         sx={{
             position: 'absolute',
-            top: '5%',
-            left: '75%',
+            top: '20%',
+            left: '77%',
             transform: 'translate(-50%, -50%)',
         }}
         >

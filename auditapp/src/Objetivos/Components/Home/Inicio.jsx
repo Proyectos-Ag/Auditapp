@@ -46,13 +46,13 @@ const Inicio = () => {
         <br/><br/>
         <img src={menu} alt="menu" className='imagen-mini' />
       </div>
-      <div className="card-home" >
+      <div className="card-home" onClick={()=> navigate("/concentradon")}>
        Concentrado
        <br/><br/>
        <p>...</p>
         
       </div>
-      <div className="card-home" >
+      <div className="card-home" onClick={()=> navigate("/saefty-goals2")}>
       Safety Goals
         <br />
         <br />

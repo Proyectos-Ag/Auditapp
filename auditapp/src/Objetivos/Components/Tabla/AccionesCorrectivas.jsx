@@ -19,22 +19,33 @@ const AccionesCorrectivas = () => {
   }, [idObjetivo, objetivo, periodo, navigate]);
 
   const [fila, setFila] = useState({
-    fecha: new Date().toLocaleDateString(),
+    fecha: new Date().toLocaleDateString(), // Fecha como texto
     noObjetivo: objetivo ? objetivo.numero : "",
     objetivo: objetivo ? objetivo.objetivo : "",
     periodo: periodo || "",
     acciones: "",
-    fichaCompromiso: "",
+    fichaCompromiso: new Date().toISOString().split("T")[0], // Fecha Compromiso como calendario
     responsable: "",
     efectividad: "",
     observaciones: "",
   });
 
+  // Colores para cada porcentaje de efectividad
+  const efectividadColors = {
+    '0%': '#ff9999',
+    '25%': '#ffcc99',
+    '50%': '#ffff99',
+    '75%': '#99cc99',
+    '100%': '#99ff99'
+  };
+
+  // Función para manejar cambios en los campos del formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFila((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Función para guardar la acción correctiva
   const handleGuardar = async () => {
     try {
       console.log("ID del objetivo:", idObjetivo); // Depuración
@@ -47,18 +58,18 @@ const AccionesCorrectivas = () => {
           },
         }
       );
-  
+
       if (response.status !== 201) {
         throw new Error("Error al guardar la acción correctiva");
       }
-  
+
       console.log("Objetivo recibido en AccionesCorrectivas:", objetivo);
       console.log(
         "URL de la solicitud:",
         `${process.env.REACT_APP_BACKEND_URL}/api/objetivos/${idObjetivo}/acciones-correctivas`
       );
       console.log("Datos a enviar:", fila);
-  
+
       // Alerta de éxito con Swal
       Swal.fire({
         icon: "success",
@@ -66,11 +77,11 @@ const AccionesCorrectivas = () => {
         text: "La acción correctiva se ha guardado correctamente.",
         confirmButtonText: "OK",
       });
-  
+
       // navigate("/");
     } catch (error) {
       console.error("Error al guardar la acción correctiva:", error);
-  
+
       // Alerta de error con Swal
       Swal.fire({
         icon: "error",
@@ -99,7 +110,7 @@ const AccionesCorrectivas = () => {
         </thead>
         <tbody>
           <tr>
-            <td>{fila.fecha}</td>
+            <td>{fila.fecha}</td> {/* Fecha como texto */}
             <td>{fila.noObjetivo}</td>
             <td>{fila.periodo}</td>
             <td>
@@ -112,7 +123,7 @@ const AccionesCorrectivas = () => {
             </td>
             <td>
               <input
-                type="text"
+                type="date" // Fecha Compromiso como calendario
                 name="fichaCompromiso"
                 value={fila.fichaCompromiso}
                 onChange={handleChange}
@@ -127,12 +138,25 @@ const AccionesCorrectivas = () => {
               />
             </td>
             <td>
-              <input
-                type="text"
+              <select
                 name="efectividad"
                 value={fila.efectividad}
                 onChange={handleChange}
-              />
+                style={{
+                  backgroundColor: efectividadColors[fila.efectividad] || 'white',
+                  width: '100%',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  padding: '5px'
+                }}
+              >
+                <option value="" disabled>Seleccionar...</option>
+                <option value="0%">0%</option>
+                <option value="25%">25%</option>
+                <option value="50%">50%</option>
+                <option value="75%">75%</option>
+                <option value="100%">100%</option>
+              </select>
             </td>
             <td>
               <input

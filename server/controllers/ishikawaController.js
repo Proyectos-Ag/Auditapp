@@ -30,10 +30,17 @@ const crearIshikawa = async (req, res) => {
         .replace('{{programa}}', proName);
 
         const mailOptionsAsignacion = {
-          from: process.env.EMAIL_USERNAME,
+          from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
           to: correo,
           subject: 'Se te ha asignado un nuevo Ishikawa',
           html: customizedTemplateAsignacion,
+          attachments: [
+            {
+              filename: 'logoAguida.png',
+              path: path.join(__dirname, '../assets/logoAguida-min.png'),
+              cid: 'logoAguida' 
+            }
+          ]
         }; 
         
         transporter.sendMail(mailOptionsAsignacion, (error, info) => {
@@ -108,10 +115,17 @@ const actualizarIshikawaCompleto = async (req, res) => {
 
       // Configuración del correo
       const mailOptions = {
-        from: process.env.EMAIL_USERNAME,
+        from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
         to: 'soleje2862004@gmail.com',
         subject: 'Ishikawa enviado para revisión',
         html: customizedTemplateRevision,
+        attachments: [
+          {
+            filename: 'logoAguida.png',
+            path: path.join(__dirname, '../assets/logoAguida-min.png'),
+            cid: 'logoAguida' 
+          }
+        ]
       };
 
       transporter.sendMail(mailOptions, (error, info) => {
@@ -143,10 +157,17 @@ const actualizarIshikawaCompleto = async (req, res) => {
       .replace('{{nota}}', nota);
 
       const mailOptionsRechazado = {
-        from: process.env.EMAIL_USERNAME,
+        from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
         to: correo,
         subject: 'Ishikawa rechazado',
         html: customizedTemplateRechazado,
+        attachments: [
+          {
+            filename: 'logoAguida.png',
+            path: path.join(__dirname, '../assets/logoAguida-min.png'),
+            cid: 'logoAguida' 
+          }
+        ]
       };
 
       transporter.sendMail(mailOptionsRechazado, (error, info) => {
@@ -171,10 +192,17 @@ const actualizarIshikawaCompleto = async (req, res) => {
       .replace('{{programa}}', programa);
 
       const mailOptionsAprobado = {
-        from: process.env.EMAIL_USERNAME,
+        from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
         to: correo,
         subject: 'Ishikawa aprobado',
         html: customizedTemplateAprobado,
+        attachments: [
+          {
+            filename: 'logoAguida.png',
+            path: path.join(__dirname, '../assets/logoAguida-min.png'),
+            cid: 'logoAguida' 
+          }
+        ]
       };
 
       transporter.sendMail(mailOptionsAprobado, (error, info) => {
@@ -412,6 +440,7 @@ const actualizarIshikawa = async (req, res) => {
   try {
       const { id } = req.params; // Obtiene la ID desde los parámetros de la URL
       const correcciones = req.body; // Los datos enviados desde el frontend
+      console.log(correcciones);
 
       if (!Array.isArray(correcciones) || correcciones.length === 0) {
           return res.status(400).json({ error: 'No se enviaron correcciones para actualizar' });
@@ -515,7 +544,7 @@ const enviarPDF = async (req, res) => {
       });
 
       const mailOptions = {
-          from: process.env.EMAIL_USERNAME,
+          from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
           to: emails, // Usar directamente el array
           subject: "Diagrama Ishikawa",
           text: "Adjunto encontrarás el diagrama Ishikawa en formato PDF.",

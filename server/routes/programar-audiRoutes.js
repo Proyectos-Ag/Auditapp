@@ -9,7 +9,9 @@ const auditController = require('../controllers/programar-audiController');
 router.get('/audits', auditController.getAudits);
 
 // Ruta para crear una nueva auditoría
-router.post("/audits", upload.single("tablaImagen"), auditController.createAudit);
+router.post("/audits", auditController.createAudit);
+
+router.post("/audits/send-email", upload.single("tablaImagen"), auditController.sendAuditEmail);
 
 // Ruta para actualizar el estado de realizada o programada
 router.put('/audits/:id', auditController.updateAuditStatus);

@@ -64,10 +64,17 @@ const nuevoAuditoria = async (req, res) => {
 
     // Enviar correo electrónico al Auditor Líder
     const mailOptionsAuditorLider = {
-      from: process.env.EMAIL_USERNAME,
+      from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
       to: AuditorLiderEmail,
       subject: 'Tienes una nueva auditoría',
       html: customizedTemplateLider,
+      attachments: [
+        {
+          filename: 'logoAguida.png',
+          path: path.join(__dirname, '../assets/logoAguida-min.png'),
+          cid: 'logoAguida' 
+        }
+      ]
     };
 
     transporter.sendMail(mailOptionsAuditorLider, (error, info) => {
@@ -97,10 +104,17 @@ const nuevoAuditoria = async (req, res) => {
           .replace('{{AuditorLider}}', AuditorLider);
 
           const mailOptionsMiembro = {
-            from: process.env.EMAIL_USERNAME,
+            from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
             to: miembro.Correo,
             subject: 'Tienes una nueva auditoría',
             html: customizedTemplateMiembro,
+            attachments: [
+              {
+                filename: 'logoAguida.png',
+                path: path.join(__dirname, '../assets/logoAguida-min.png'),
+                cid: 'logoAguida' 
+              }
+            ]
           };
 
           transporter.sendMail(mailOptionsMiembro, (error, info) => {
@@ -134,10 +148,17 @@ const nuevoAuditoria = async (req, res) => {
           .replace('{{AuditorLider}}', AuditorLider);
 
           const mailOptionsAuditado = {
-            from: process.env.EMAIL_USERNAME,
+            from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
             to: aud.Correo,
             subject: 'Tienes una nueva auditoría',
-            html: customizedTemplateAuditado
+            html: customizedTemplateAuditado,
+            attachments: [
+              {
+                filename: 'logoAguida.png',
+                path: path.join(__dirname, '../assets/logoAguida-min.png'),
+                cid: 'logoAguida' 
+              }
+            ]
           };
 
           transporter.sendMail(mailOptionsAuditado, (error, info) => {
@@ -226,10 +247,17 @@ const actualizarEstado = async (req, res)=> {
 
       // Configuración del correo
       const mailOptionsAuditor = {
-        from: process.env.EMAIL_USERNAME,
+        from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
         to: 'soleje2862004@gmail.com',
         subject: 'Se ha enviado una auditoría para revisión',
         html: customizedTemplate,
+        attachments: [
+          {
+            filename: 'logoAguida.png',
+            path: path.join(__dirname, '../assets/logoAguida-min.png'),
+            cid: 'logoAguida' 
+          }
+        ]
       };
 
       transporter.sendMail(mailOptionsAuditor, (error, info) => {
@@ -508,10 +536,17 @@ const datosEstado = async (req, res)=>{
 
          // Enviar correo electrónico al Auditor Líder
     const mailOptionsAdministrador = {
-      from: process.env.EMAIL_USERNAME,
+      from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
       to: AuditorLiderEmail,
       subject: 'Auditoría '+estadoEmail,
-      html: customizedTemplateEstado
+      html: customizedTemplateEstado,
+      attachments: [
+        {
+          filename: 'logoAguida.png',
+          path: path.join(__dirname, '../assets/logoAguida-min.png'),
+          cid: 'logoAguida' 
+        }
+      ]
     };
 
     transporter.sendMail(mailOptionsAdministrador, (error, info) => {

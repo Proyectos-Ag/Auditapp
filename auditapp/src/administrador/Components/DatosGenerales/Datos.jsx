@@ -29,7 +29,6 @@ const Datos = () => {
 
   const [areasSeleccionadas, setAreasSeleccionadas] = useState([]);
 
-
   const [buttonText, setButtonText] = useState({
     button1: 'Datos generales',
     button2: 'Datos del Auditor',
@@ -499,7 +498,7 @@ const Datos = () => {
   }, []);
     
   return (
-      <div>
+      <div className="contenedor-datos">
         <div className="centrado">
         <div>
           <Historial />

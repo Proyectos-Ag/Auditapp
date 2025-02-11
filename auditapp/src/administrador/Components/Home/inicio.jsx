@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import './css/inicio.css';
 import BotonesRol from "../../../resources/botones-rol";
 import videoFile from '../assets/img/UpscaleVideo_1_20240628.webm';
@@ -16,18 +16,35 @@ import estadisticas from "../assets/img/estadisticas.png"
 import subirxls from "../assets/img/subir-xls.png"
 import programas from "../assets/img/programas.png"
 import Nieve from "../../../resources/nieve";
+import DatosV from "../../../components/login/DatosV";
 
 import { useNavigate } from "react-router-dom";
 
 const Inicio = () => {
   const videoRef = useRef(null);
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.play();
     }
   }, []);
+
+  const handleOpenModal = () => {
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  const handleOverlayClick = (e) => {
+    if (e.target.classList.contains('modal-overlay')) {
+      handleCloseModal();
+    }
+  };
+
 
   return(
     <div>
@@ -163,8 +180,28 @@ const Inicio = () => {
       </div>
     </div>
     </div>
+    <div style={{
+    position: 'fixed',
+    bottom: '10px',
+    right: '10px',
+  }}>
+    <span
+        style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }}
+        onClick={handleOpenModal}
+      >
+        <br />
+        v2.1.4(Beta)
+    </span>
+    </div>
 
     </div>
+    {showModal && (
+          <div className="modal-overlay" onClick={handleOverlayClick}>
+            <div onClick={(e) => e.stopPropagation()}>
+              <DatosV />
+            </div>
+          </div>
+        )}
 
     </div>
   );

@@ -36,7 +36,7 @@ exports.createAudit = async (req, res) => {
   }
 
   try {
-    // Crear y guardar la auditoría en la base de datos
+    // Crear y guardar la auditoría en la BD
     const newAudit = new Audit({
       cliente,
       fechaInicio,
@@ -48,46 +48,62 @@ exports.createAudit = async (req, res) => {
     });
     const savedAudit = await newAudit.save();
 
-    // Si existe un archivo en la solicitud, accede a él con `req.file.buffer`
-    const pdfBuffer = req.file ? req.file.buffer : null;
-
-    // Si hay una imagen (pdfBuffer), puedes hacer lo que necesites, por ejemplo, enviarla en el correo
-    if (pdfBuffer) {
-      // Crear un archivo PDF o realizar cualquier otra operación con `pdfBuffer`
-
-      // Preparar el email con el archivo adjunto
-      const recipientEmails = `
-        soleje2862004@gmail.com
-      `.trim().replace(/\s+/g, '');
-
-      const templatePathPrograma = path.join(__dirname, 'templates', 'programa-auditorias.html');
-      const emailTemplatePrograma = fs.readFileSync(templatePathPrograma, 'utf8');
-      const customizedTemplatePrograma = emailTemplatePrograma
-        .replace('{{cliente}}', savedAudit.cliente)
-        .replace('{{fechaFin}}', savedAudit.fechaFin)
-        .replace('{{fecha}}', savedAudit.fechaInicio);
-
-      // Configurar el correo con la imagen adjunta
-      const mailOptions = {
-        from: `"Sistema Auditorías" <${process.env.EMAIL_USERNAME}>`,
-        bcc: recipientEmails,
-        subject: 'Nueva Auditoría Registrada',
-        html: customizedTemplatePrograma,
-        attachments: [
-          {
-            filename: 'captura.png', // O el nombre que prefieras para el archivo
-            content: pdfBuffer,      // Este es el buffer de la imagen o archivo que recibiste
-          },
-        ],
-      };
-
-      const info = await transporter.sendMail(mailOptions);
-      console.log('Correo enviado correctamente a múltiples destinatarios:', info.messageId);
-    }
+    // Se podría almacenar el archivo en la BD si se requiere, o dejarlo para el otro controlador
+    // Por ejemplo, guardar el nombre del archivo o alguna referencia.
 
     // Responder con la auditoría creada
     res.status(201).json(savedAudit);
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.sendAuditEmail = async (req, res) => {
+  try {
+    // Acceder al archivo enviado en la solicitud (imagen o PDF)
+    const pdfBuffer = req.file ? req.file.buffer : null;
+    if (!pdfBuffer) {
+      return res.status(400).json({ message: 'No se recibió la imagen.' });
+    }
+
+    // Definir los destinatarios del correo
+    const recipientEmails = `
+    soleje2862004@gmail.com, 
+    soleje28062004@gmail.com`
+    .trim();
+
+    // Leer la plantilla HTML para el correo
+    const templatePath = path.join(__dirname, 'templates', 'programa-auditorias.html');
+    const emailTemplate = fs.readFileSync(templatePath, 'utf8');
+
+    const customizedTemplate = emailTemplate;
+
+    // Configurar las opciones del correo, incluyendo el adjunto (la imagen)
+    const mailOptions = {
+      from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
+      bcc: recipientEmails,
+      subject: 'Nueva Auditoría Registrada',
+      html: customizedTemplate,
+      attachments: [
+        {
+          filename: 'captura.png', // Puedes cambiar el nombre si lo deseas
+          content: pdfBuffer,
+          cid: 'tabla'
+        },
+        {
+          filename: 'logoAguida.png',
+          path: path.join(__dirname, '../assets/logoAguida-min.png'),
+          cid: 'logoAguida' 
+        }
+      ],
+    };
+
+    // Enviar el correo
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Correo enviado correctamente:', info.messageId);
+    res.status(200).json({ message: 'Correo enviado correctamente.' });
+  } catch (error) {
+    console.error("Error al enviar el correo:", error);
     res.status(500).json({ message: error.message });
   }
 };

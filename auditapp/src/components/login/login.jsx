@@ -5,7 +5,6 @@ import { UserContext } from '../../App';
 import './css/Login.css';
 import logo from '../../assets/img/logoAguida.png';
 import Swal from 'sweetalert2';
-import DatosV from './DatosV';
 
 const Login = () => {
   const [formData, setFormData] = useState({ Correo: '', Contraseña: '' });
@@ -13,7 +12,6 @@ const Login = () => {
   const [error] = useState('');
   const { setUserData } = useContext(UserContext);
   const navigate = useNavigate();
-  const [showModal, setShowModal] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -73,20 +71,6 @@ const Login = () => {
     }
   };
 
-  const handleOpenModal = () => {
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
-
-  const handleOverlayClick = (e) => {
-    if (e.target.classList.contains('modal-overlay')) {
-      handleCloseModal();
-    }
-  };
-
   return (
     <div className='login-container-all'>
       <div className="login-container">
@@ -135,22 +119,12 @@ const Login = () => {
         </form>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <span
-            style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }}
-            onClick={handleOpenModal}
-          >
+          <span>
             <br />
-            v2.1.3(Beta)
+            v2.1.4(Beta)
           </span>
         </div>
 
-        {showModal && (
-          <div className="modal-overlay" onClick={handleOverlayClick}>
-            <div onClick={(e) => e.stopPropagation()}>
-              <DatosV />
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

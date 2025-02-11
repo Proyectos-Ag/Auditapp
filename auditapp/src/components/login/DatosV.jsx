@@ -4,6 +4,51 @@ import './css/datosv.css'; // Archivo CSS importado para los estilos
 const DatosV = () => {
   return (
     <div className="modal-body">
+      <h1>Versión 2.1.4 (Beta)</h1>
+
+      <ul>
+        <h3 className="modal-title">Participantes</h3>
+        <li>Se agregó un campo de búsqueda para poder incorporar participantes según los registros.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Ishikawas Vacíos</h3>
+        <li>Se modificó el apartado de Ishikawas vacíos, proporcionando un menú para navegar entre la generación de Ishikawas y la visualización de Ishikawas ya generados.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Generación de PDF y Envío de Correo</h3>
+        <li>Se agregó la generación de PDF en el apartado de Ishikawas vacíos, junto a la posibilidad de enviar el archivo resultante por medio de correo electrónico.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Revisión de Ishikawas</h3>
+        <li>Se modificaron los estilos en la revisión de Ishikawas vacíos para una mejor comprensión del estado en que se encuentran.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Plantillas</h3>
+        <li>Se modificaron las plantillas para el envío de correos electrónicos.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Más Fotos</h3>
+        <li>Se agregó la posibilidad de añadir más fotos (un máximo de 4) al momento de llenar un check.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Objetivos</h3>
+        <li>Se agregaron el componente Safety Goals y el concentrado tanto para el administrador como para los usuarios.</li>
+        <li>Se reajustaron y completaron los diseños.</li>
+        <li>Se agregó en el apartado de acciones un método para reprogramar la fecha de compromiso.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Sistema de Correos en Programa Anual de Auditorías</h3>
+        <li>Se implementó un nuevo sistema que permite mandar manualmente el correo cada vez que el usuario lo necesite, en lugar de enviarlo automáticamente al agregar una nueva auditoría.</li>
+        <li>Se actualizó para permitir establecer la fecha de inicio y la fecha fin.</li>
+      </ul>
+
 
     <h1>Versión 2.1.3 (Beta)</h1>
 
