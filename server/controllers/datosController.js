@@ -248,7 +248,7 @@ const actualizarEstado = async (req, res)=> {
       // Configuración del correo
       const mailOptionsAuditor = {
         from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
-        to: 'soleje2862004@gmail.com',
+        to: 'rcruces@aguida.com',
         subject: 'Se ha enviado una auditoría para revisión',
         html: customizedTemplate,
         attachments: [
