@@ -456,7 +456,7 @@ const ishikawaFinalizado = async (req, res) => {
           correccion.responsable && 
           correccion.fechaCompromiso && 
           correccion.cerrada !== undefined && 
-          correccion.evidencia
+          (correccion.evidencia !== undefined)
       );
 
       if (!isCorreccionValid) {
