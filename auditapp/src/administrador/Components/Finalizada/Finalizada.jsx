@@ -414,8 +414,7 @@ const Finalizada = () => {
                                                         {dato.Programa.map((programa, programIdx) =>
                                                             programa.Descripcion.map((desc, descIdx) => {
                                                                 const firePrefix = 'https://firebasestorage';
-                                                                const isFireImage = desc.Hallazgo.includes(firePrefix);
-
+                                                             
                                                                 if ((desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme')) {
                                                                     const ishikawa = ishikawas.find(ish => {
                                                                         return ish.idReq === desc.ID && ish.idRep === dato._id;
@@ -443,19 +442,25 @@ const Finalizada = () => {
                                                                             )}
                                                                             {desc.Observacion}
                                                                             </td>
-                                                                            <td className='alingR' key={descIdx}>
-                                                                                {desc.Hallazgo ? (
-                                                                                    isFireImage ? (
+                                                                            <td className="alingR" key={descIdx}>
+                                                                            {Array.isArray(desc.Hallazgo) && desc.Hallazgo.length > 0 ? (
+                                                                                desc.Hallazgo.map((url, idx) => {
+                                                                                    const isFireImage = url.includes(firePrefix);
+                                                                                    return isFireImage ? (
                                                                                         <img
-                                                                                            src={desc.Hallazgo}
-                                                                                            alt="Evidencia"
+                                                                                            key={idx}
+                                                                                            src={url}
+                                                                                            alt={`Evidencia ${idx + 1}`}
                                                                                             className="hallazgo-imagen"
                                                                                         />
                                                                                     ) : (
-                                                                                        <span>{desc.Hallazgo}</span>
-                                                                                    )
-                                                                                ) : null}
-                                                                            </td>
+                                                                                        <span key={idx}>{url}</span>
+                                                                                    );
+                                                                                })
+                                                                            ) : (
+                                                                                <span>No hay evidencia</span>
+                                                                            )}
+                                                                        </td>
                                                                             <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].actividad : '') : ''}</td>
                                                                             <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
                                                                             <td>
