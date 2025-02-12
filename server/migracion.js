@@ -1,7 +1,15 @@
+require("dotenv").config(); // Cargar variables de entorno
 const mongoose = require("mongoose");
 const Datos = require("./models/datosSchema"); // Asegúrate de importar correctamente el modelo
 
-mongoose.connect("mongodb://localhost:27017/tu_base_de_datos");
+const mongoUrl = process.env.MONGODB_URL; // Obtener URL desde .env
+
+mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("Conectado a MongoDB"))
+  .catch(err => {
+    console.error("Error al conectar a MongoDB:", err);
+    process.exit(1);
+  });
 
 (async () => {
   try {
@@ -17,9 +25,9 @@ mongoose.connect("mongodb://localhost:27017/tu_base_de_datos");
       await dato.save();
     }
     console.log("Migración completada");
-    mongoose.connection.close();
   } catch (err) {
     console.error("Error durante la migración:", err);
+  } finally {
     mongoose.connection.close();
   }
 })();
