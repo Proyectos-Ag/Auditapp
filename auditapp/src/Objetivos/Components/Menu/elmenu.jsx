@@ -23,7 +23,7 @@ const menuItems = [
   { label: "VALIDACIÓN", roles: ["administrador", "auditor", "auditado"], areas: ["VALIDACIÓN"] },
   { label: "LIBERACIÓN DE PT", roles: ["administrador", "auditor", "auditado"], areas: ["LIBERACIÓN DE PT","ASEGURAMIENTO DE CALIDAD"] },
   { label: "RECURSOS HUMANOS", roles: ["administrador", "auditor", "auditado"], areas: ["RECURSOS HUMANOS"] },
-  { label: "SAFETY GOALS", roles: ["administrador", "auditor", "auditado"], areas: ["SAFETY GOALS"] },
+  { label: "SISTEMAS", roles: ["administrador", "auditor", "auditado"], areas: ["SISTEMAS"] },
   { label: "CALIDAD E INOCUIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL Y CUIDADO AMBIENTAL", "EMBARQUE", "MANTENIMIENTO SERVICIOS", "SEGURIDAD E HIGIENE Y SANIDAD", "INGENIERÍA", "COORDINADOR DE MATERIA PRIMA", "GERENCIA PLANEACIÓN Y LOGÍSTICA", "MANTENIMIENTO TETRA PAK", "CONTROL DE PLAGAS", "AGUIDA", "PESADAS", "PRODUCCIÓN", "ASEGURAMIENTO DE CALIDAD", "COMPRAS", "ADMINISTRADOR", "REVISIÓN", "VALIDACIÓN", "LIBERACIÓN DE PT", "RECURSOS HUMANOS", "SAFETY GOALS"] }
 ];
 
