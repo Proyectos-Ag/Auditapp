@@ -45,7 +45,7 @@ const IshikawaRev = () => {
     const [aprobado,  setAprobado] = useState([]);
     const [showPart, setShowPart] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(null);
-    const [showReprogramar, setShowReprogramar] = useState(false);
+    const [activeReprogramarId, setActiveReprogramarId] = useState(null);
     const [showNotaRechazo, setShowNotaRechazo] = useState(false);
     const [tempFechaCompromiso, setTempFechaCompromiso] = useState('');
     const [actividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: [] }]);
@@ -443,7 +443,7 @@ const handleCorreccionChange = (index, field, value) => {
     
             const storageRef = ref(storage, `files/${fileName}`);
             await uploadBytes(storageRef, file); // Sube el archivo al almacenamiento
-            return await getDownloadURL(storageRef); // Obtén la URL del archivo subido
+            return await getDownloadURL(storageRef); // Obtiene la URL del archivo subido
         } catch (error) {
             console.error("Error al subir la imagen:", error);
             throw new Error("No se pudo subir la imagen");
@@ -786,32 +786,39 @@ const Asignar = async () => {
         });
 };
 
-const handleUpdateFechaCompromiso = async (index) => {
-        try {
-            const nuevaFecha = tempFechaCompromiso;
-            const actividadActualizada = {
-                ...actividades[index],
-                fechaCompromiso: [...actividades[index].fechaCompromiso, nuevaFecha] // Asegúrate de agregar la nueva fecha al array existente
-            };
-    
-            const updatedActividades = [...actividades];
-            updatedActividades[index] = actividadActualizada;
-    
-            const updatedData = {
-                actividades: updatedActividades
-            };
-    
-            const { _id } = rechazo[0];
-    
-            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/fecha/${_id}`, updatedData);
-            console.log('Datos actualizados:', response.data);
-            fetchData();
-            Swal.fire('Fecha actualizada', `La nueva fecha de compromiso es: ${nuevaFecha}`, 'success');
-        } catch (error) {
-            console.error('Error al actualizar la fecha de compromiso:', error);
-            Swal.fire('Error', 'No se pudo actualizar la fecha de compromiso', 'error');
-        }
-};
+const handleUpdateFechaCompromiso = async (ishikawaId, actividadId, index) => {
+    try {
+      const nuevaFecha = tempFechaCompromiso;
+      const actividadActualizada = {
+        ...actividades[index],
+        fechaCompromiso: [...actividades[index].fechaCompromiso, nuevaFecha] // Se agrega la nueva fecha
+      };
+  
+      const updatedActividades = [...actividades];
+      updatedActividades[index] = actividadActualizada;
+  
+      const updatedData = {
+        actividades: [{
+          _id: actividadId,
+          fechaCompromiso: [nuevaFecha]
+        }]
+      };      
+  
+      // Aquí se usa el id del documento Ishikawa, no el id de la actividad
+      const response = await axios.put(
+        `${process.env.REACT_APP_BACKEND_URL}/ishikawa/fecha/${ishikawaId}`,
+        updatedData
+      );
+      console.log('Datos actualizados:', response.data);
+      fetchData();
+      Swal.fire('Fecha actualizada', `La nueva fecha de compromiso es: ${nuevaFecha}`, 'success');
+      setActiveReprogramarId(null);
+    } catch (error) {
+      console.error('Error al actualizar la fecha de compromiso:', error);
+      Swal.fire('Error', 'No se pudo actualizar la fecha de compromiso', 'error');
+    }
+  };  
+  
 
 const ajustarTamanoFuente = (textarea) => {
     const maxFontSize = 15; // Tamaño máximo de fuente
@@ -1157,50 +1164,77 @@ const ocultarCargando = () => {
                             <td style={{fontSize:'12px',width: '34em', height: 'auto', textAlign:'justify'}}>
                             {actividad.responsable}
                             </td>
-                            <td >
-                                <div className='td-fechas'>
-                                <select
-                                    className="custom-select"
-                                    onChange={(e) => handleSelectChange(e, actividad.fechaCompromiso.length - 1 - actividad.fechaCompromiso.slice().reverse().findIndex(fecha => fecha === e.target.value))}
-                                    style={{ color: colores[actividad.fechaCompromiso.length - 1]} } // Inicializa con el color del primer elemento invertido
-                                >
-                                    {actividad.fechaCompromiso.slice().reverse().map((fecha, index) => (
-                                        <option 
-                                            key={index}
-                                            className={`option-${index}`}
-                                            style={{ color: colores[(actividad.fechaCompromiso.length - 1 - index) % colores.length] }}
-                                        >
-                                            {fecha}
-                                        </option>
-                                    ))}
-                                </select>
-                                </div>
+                            <td>
+                <div className='td-fechas'>
+                    <select
+                    className="custom-select"
+                    onChange={(e) =>
+                        handleSelectChange(
+                        e,
+                        actividad.fechaCompromiso.length - 1 - actividad.fechaCompromiso
+                            .slice()
+                            .reverse()
+                            .findIndex((fecha) => fecha === e.target.value)
+                        )
+                    }
+                    style={{
+                        color: colores[actividad.fechaCompromiso.length - 1]
+                    }} // Inicializa con el color del primer elemento invertido
+                    >
+                    {actividad.fechaCompromiso.slice()
+                        .reverse()
+                        .map((fecha, index) => (
+                        <option
+                            key={index}
+                            className={`option-${index}`}
+                            style={{
+                            color:
+                                colores[(actividad.fechaCompromiso.length - 1 - index) % colores.length]
+                            }}
+                        >
+                            {fecha}
+                        </option>
+                    ))}
+                    </select>
+                </div>
 
-                                <div className='button-cancel'>
-                          {aprobado && showReprogramar ? (
-                              <>
-                                  <input
-                                      type="date"
-                                      onChange={(e) => handleTempFechaChange(e.target.value)}
-                                      required
-                                  />
-                                  <button onClick={(e) => { e.preventDefault();handleUpdateFechaCompromiso(index)
-                                   }} className='button-new-date'>
-                                      Reprogramar Fecha
-                                  </button>
-                              </>
-                          ) : (
-                              <></>
-                          )}
-                          {
-                        (!aprobado) ? null : (
-                          <button className='button-repro' onClick={() => setShowReprogramar(!showReprogramar)}>
-                                {showReprogramar ? 'Cancelar' : 'Reprogramar'}
-                          </button>
-                          )}
+                <div className='button-cancel'>
+                    {/* Renderiza el input y botón de reprogramación solo en la fila activa */}
+                    {aprobado && activeReprogramarId === actividad._id && (
+                    <>
+                        <input
+                        type="date"
+                        onChange={(e) => handleTempFechaChange(e.target.value)}
+                        required
+                        />
+                        <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    // Se pasan ambos id: el del documento Ishikawa y el de la actividad, si es necesario para el front
+                                    handleUpdateFechaCompromiso(ishikawa._id, actividad._id, index);
+                                }}
+                                className='button-new-date'
+                                >
+                                Reprogramar Fecha
+                                </button>
+
+                            </>
+                            )}
+                            {/* Botón para activar o desactivar el modo de reprogramación en la fila */}
+                            {aprobado && (
+                            <button
+                                className='button-repro'
+                                onClick={() =>
+                                setActiveReprogramarId(
+                                    activeReprogramarId === actividad._id ? null : actividad._id
+                                )
+                                }
+                            >
+                                {activeReprogramarId === actividad._id ? 'Cancelar' : 'Reprogramar'}
+                            </button>
+                            )}
                         </div>
-                                
-                      </td>
+                        </td>
                             </tr>
                         ))}
                         </tbody>

@@ -229,7 +229,7 @@ const actualizarIshikawaCompleto = async (req, res) => {
 
       // Configuración del correo
       const mailOptions = {
-        from: process.env.EMAIL_USERNAME,
+        from:`"Auditapp" <${process.env.EMAIL_USERNAME}>`,
         to: 'rcruces@aguida.com',
         subject: 'Ishikawa individual enviado para revisión',
         html: customizedTemplateRevision,
@@ -282,34 +282,44 @@ const actualizarEstado = async (req, res) => {
 };
 
 const actualizarFechaCompromiso = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { actividades } = req.body;
-  
-      const ishikawa = await Ishikawa.findById(id);
-      if (!ishikawa) {
-        return res.status(404).json({ error: 'Ishikawa not found' });
-      }
-  
-      // Actualizar actividades
-      const updatedActividades = actividades.map((actividad, index) => {
-        if (ishikawa.actividades[index]) {
-          return {
-            ...ishikawa.actividades[index].toObject(),
-            fechaCompromiso: [...ishikawa.actividades[index].fechaCompromiso, ...actividad.fechaCompromiso]
-          };
-        }
-        return actividad;
-      });
-  
-      ishikawa.actividades = updatedActividades;
-      await ishikawa.save();
-  
-      res.status(200).json(ishikawa);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+  try {
+    const { id } = req.params; // Id del documento Ishikawa
+    const { actividades } = req.body; // Se espera un arreglo con la(s) actividad(es) a actualizar
+
+    const ishikawaDoc = await Ishikawa.findById(id);
+    if (!ishikawaDoc) {
+      return res.status(404).json({ error: "Documento Ishikawa no encontrado" });
     }
-  };
+
+    // Se itera sobre las actividades enviadas desde el front
+    actividades.forEach((actividad) => {
+      // Se busca la actividad en el documento usando el _id
+      const actividadEncontrada = ishikawaDoc.actividades.find(
+        (act) => act._id.toString() === actividad._id
+      );
+      if (actividadEncontrada) {
+        // Asegurarse de que el campo fechaCompromiso es un arreglo
+        if (!Array.isArray(actividadEncontrada.fechaCompromiso)) {
+          actividadEncontrada.fechaCompromiso = [];
+        }
+        // Agrega la(s) nueva(s) fecha(s) recibida(s)
+        actividad.fechaCompromiso.forEach((nuevaFecha) => {
+          // Opcional: evitar duplicados
+          if (!actividadEncontrada.fechaCompromiso.includes(nuevaFecha)) {
+            actividadEncontrada.fechaCompromiso.push(nuevaFecha);
+          }
+        });
+      }
+    });
+
+    const updatedDoc = await ishikawaDoc.save();
+    res.status(200).json(updatedDoc);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+
 
   const obtenerIshikawaPorDato = async (req, res) => {
     try {
