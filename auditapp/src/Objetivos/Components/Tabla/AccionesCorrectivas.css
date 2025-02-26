@@ -39,24 +39,6 @@
   box-sizing: border-box;
 }
 
-
-.acciones-correctivas-tabla {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-.acciones-correctivas-tabla th,
-.acciones-correctivas-tabla td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-.acciones-correctivas-tabla th {
-  background-color: #f2f2f2;
-}
-
 .fecha-actual {
   font-weight: bold;
   color: #2c3e50;
@@ -112,24 +94,6 @@
   cursor: pointer;
   margin-left: 5px;
 }
-
-  .acciones-correctivas-tabla {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-  }
-  
-  .acciones-correctivas-tabla th,
-  .acciones-correctivas-tabla td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-  }
-  
-  .acciones-correctivas-tabla th {
-    background-color: #f2f2f2;
-    font-weight: bold;
-  }
   
   .acciones-correctivas-tabla input {
     width: 100%;

@@ -3,9 +3,12 @@ import axios from 'axios';
 import * as XLSX from 'xlsx';
 import './css/Carga.css'; // Importa tu archivo CSS aquí
 import Swal from 'sweetalert2'; // Importa SweetAlert
+import { useNavigate } from 'react-router-dom';
 
 const CargaMasiva = () => {
   const [file, setFile] = useState(null);
+  const navigate = useNavigate();
+
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -37,7 +40,8 @@ const CargaMasiva = () => {
       // Validación de campos requeridos
       const requiredFields = [
         'TipoAuditoria', 'FechaInicio', 'FechaFin', 'Duracion', 'Departamento',
-        'AreasAudi', 'Auditados_Nombre', 'Auditados_Correo', 'AuditorLider', 'AuditorLiderEmail', 'EquipoAuditor_Nombre', 'EquipoAuditor_Correo', 'Observador'
+        'Auditados_Nombre', 'Auditados_Correo', 'AuditorLider', 'AuditorLiderEmail', 
+        'EquipoAuditor_Nombre', 'EquipoAuditor_Correo', 'Observador', 'Alcance', 'Cliente'
       ];
 
       const mainData = jsonData[0];
@@ -72,8 +76,10 @@ const CargaMasiva = () => {
         FechaInicio: convertExcelDateToJSDate(mainData.FechaInicio),
         FechaFin: convertExcelDateToJSDate(mainData.FechaFin),
         Duracion: mainData.Duracion,
+        Cliente: mainData.Cliente,
+        FechaEvaluacion: convertExcelDateToJSDate(mainData.FechaEvaluacion),
         Departamento: mainData.Departamento,
-        AreasAudi: mainData.AreasAudi,
+        Alcance: mainData.Alcance,
         Auditados: [],
         AuditorLider: mainData.AuditorLider,
         AuditorLiderEmail: mainData.AuditorLiderEmail,
@@ -170,7 +176,7 @@ const CargaMasiva = () => {
           text: 'Los datos han sido cargados correctamente'
         }).then(() => {
           setFile(null); // Limpiar el subidor de archivos
-          window.location.reload(); // Recargar la página
+          navigate('/ver-reali');
         });
       } catch (error) {
         if (error.response && error.response.status === 409) {
@@ -200,7 +206,7 @@ const CargaMasiva = () => {
                   text: 'Los datos han sido sobrescritos correctamente'
                 }).then(() => {
                   setFile(null); // Limpiar el subidor de archivos
-                  window.location.reload(); // Recargar la página
+                  navigate('/ver-reali');
                 });
               } catch (overwriteError) {
                 console.error('Error al sobrescribir los datos:', overwriteError);

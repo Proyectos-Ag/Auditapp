@@ -5,7 +5,7 @@ const DescripcionSchema = new mongoose.Schema({
   Criterio: { type: String },
   Requisito: { type: String, required: true },
   Observacion: { type: String },
-  Hallazgo: { type: [String], default: [] },
+  Hallazgo: { type: [String], default: []},
   Problema: { type: String }
 });
 
@@ -29,9 +29,12 @@ const DatosSchema = new mongoose.Schema({
   TipoAuditoria: { type: String, required: true },
   FechaInicio: { type: String, required: true },
   FechaFin: { type: String, required: true },
+  FechaEvaluacion: {type: String},
   Duracion: { type: String, required: true },
+  Cliente:{type: String},
   Departamento: { type: String, required: true },
   AreasAudi: { type: [String], required: true },
+  Alcance: {type: String},
   Auditados: [AuditadosSchema],
   AuditorLider: { type: String, required: true },
   Objetivo: {type: String},

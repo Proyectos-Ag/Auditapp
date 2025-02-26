@@ -21,7 +21,6 @@
   
   .meses-container {
     margin-bottom: 30px;
-    overflow-x: auto;
   }
   
   .meses-container h4 {
@@ -35,7 +34,6 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9em;
-    table-layout: fixed;
   }
   
   .objetivos-tabla th,
@@ -64,9 +62,9 @@
 
   .botones-container {
     display: flex;
-    justify-content: space-between; /* Separa los botones */
+    justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px; /* Espacio debajo */
+    margin-bottom: 15px;
   }
   
   .btn-guardar {

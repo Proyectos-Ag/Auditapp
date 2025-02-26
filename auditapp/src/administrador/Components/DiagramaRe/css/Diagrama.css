@@ -161,3 +161,11 @@
     margin-top: 37rem;
     margin-right: 68rem;
 }
+
+.boton-eliminar{
+    background-color: red;
+    border-radius: 8px 8px 8px 0;
+    color: white;
+    border: none;
+    padding: 8px;
+}

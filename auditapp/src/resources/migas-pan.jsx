@@ -69,6 +69,8 @@ const MigasPan = () => {
     '/objetivos':'Objetivos',
     '/menu':'Menú',
     '/acciones':'Agregar Acción',
+    '/inicio-ishvac': 'Ishikawa Independientes',
+    '/diagramas': 'Generar Ishikawa'
   };
 
   const getDynamicBreadcrumbName = (path) => {

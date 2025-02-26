@@ -96,8 +96,15 @@ th.conformity-header-repo {
 }
 
 .mover {
+    display: flex;
+    justify-content: space-between;
     margin-top: -1%;
     margin-bottom: 1%;
+}
+
+.grupo-izquierda,
+.grupo-derecha {
+  width: 48%;
 }
 
 .horizontal-container {

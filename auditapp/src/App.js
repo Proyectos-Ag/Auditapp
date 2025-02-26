@@ -1,5 +1,6 @@
 import React, { createContext, Suspense, lazy, useState, useEffect} from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation} from "react-router-dom";
+import axios from 'axios';
 import Login from './components/login/login.jsx';
 import AuthProvider from './AuthProvider';
 import ProtectedRoute from './ProtectedRoute';
@@ -63,10 +64,17 @@ import AccionesCorrectivasList from './Objetivos/Components/Tabla/AccionesCorrec
 import SaeftyGoals from './Objetivos/Components/Tabla/objetivoslistsaeftygoals.jsx'
 import Concentrado from './Objetivos/Components/Tabla/concentrado.jsx'
 
+//Paginas de error
+import UnauthorizedPage from './components/Pag-error/UnauthorizedPage.jsx';
+import NotFoundPage from './components/Pag-error/NotFoundPage.jsx';
+
 // Cargar componentes según el rol correspondiente
 const Administrador = lazy(() => import('./administrador/Components/Home/inicio.jsx'));
 const Auditor = lazy(() => import('./auditor/components/Home/inicio.jsx'));
 const Auditado = lazy(() => import('./auditado/Components/Home/Inicio.jsx'));
+
+//Axios
+axios.defaults.withCredentials = true;
 
 
 export const UserContext = createContext(null);
@@ -80,9 +88,9 @@ export const UserContext = createContext(null);
   
     return (
       <>
-        {!excludedRoutes.includes(location.pathname) && <Navbar />}
-        {!excludedRoutes.includes(location.pathname) && <MigasPan />}
-        {!excludedRoutes.includes(location.pathname) && <IconMenu />}
+        {!excludedRoutes.includes(location.pathname)&& UserContext && <Navbar />}
+        {!excludedRoutes.includes(location.pathname)&& UserContext && <MigasPan />}
+        {!excludedRoutes.includes(location.pathname)&& UserContext &&<IconMenu />}
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
           <Route path="/" element={<Login />} /> 
@@ -149,6 +157,12 @@ export const UserContext = createContext(null);
               <Route path="/acciones-list/:label" element={<AccionesCorrectivasList />} />
               <Route path="/saefty-goals2" element={<SaeftyGoals />} />
               <Route path="/concentradon" element={<Concentrado />} />
+
+              {/*Paginas de error*/}
+              <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+              {/* Ruta comodín para rutas no encontradas */}
+              <Route path="*" element={<NotFoundPage />} />
 
           </Routes>
         </Suspense>

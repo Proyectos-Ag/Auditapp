@@ -14,9 +14,12 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { storage } from '../../../firebase';
 import {ref, uploadBytes, getDownloadURL} from 'firebase/storage';
+import { useNavigate } from 'react-router-dom';
+
 
 const Diagrama = () => {
     const {_id} = useParams();
+    const navigate = useNavigate();
     const [ishikawas, setIshikawas] = useState([]);
     const [visibleIndex, setVisibleIndex] = useState(0);
     const [showPart, setShowPart] = useState(true);
@@ -260,6 +263,47 @@ const Diagrama = () => {
               }
             });
           };
+
+          const handleEliminarDiagrama = async (id) => {
+            try {
+                await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/delete/${id}`);
+        
+                Swal.fire({
+                    title: 'Éxito!',
+                    text: 'El diagrama se ha eliminado correctamente.',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    navigate('/ishikawasesp');
+                });
+            } catch (error) {
+                console.error('Error al eliminar el diagrama:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Hubo un problema al eliminar el diagrama.',
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        };
+        
+        const EliminarDiagrama = async (id) => {
+            Swal.fire({
+                title: '¿Está seguro de querer eliminar este diagrama?',
+                text: '¡Esta acción no se puede deshacer!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3ccc37',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    handleEliminarDiagrama(id);
+                }
+            });
+        };
+        
 
           useEffect(() => {
             const simulateInputChange = () => {
@@ -695,6 +739,7 @@ const handleUploadFile = (fieldKey) => {
                     <h2 onClick={() => toggleVisibility(index)}>
                            {formatDate(ishikawa.fechaElaboracion)} : {ishikawa.auditado}
                     </h2>
+                    <button onClick={() => EliminarDiagrama(ishikawa._id)} className='boton-eliminar' >Eliminar</button>
                     </div>
                     {visibleIndex === index && (
                     <div >

@@ -579,6 +579,44 @@ const enviarPDF = async (req, res) => {
       res.status(500).json({ error: error.message });
   }
 };
+
+const actualizarAcceso = async (req, res) => {
+  const { id } = req.params;
+  const { acceso, nivelAcceso } = req.body;
+
+  try {
+    const ishikawa = await Ishikawa.findByIdAndUpdate(
+      id,
+      { acceso, nivelAcceso: Number(nivelAcceso) },
+      { new: true }
+    );
+
+    if (!ishikawa) {
+      return res.status(404).json({ message: "Registro no encontrado" });
+    }
+
+    res.status(200).json({ message: "Acceso actualizado", ishikawa });
+  } catch (error) {
+    res.status(500).json({ message: "Error al actualizar", error });
+  }
+};
+
+const deleteIshikawa = async (req, res) => {
+  try {
+      const { id } = req.params;
+
+      const deletedDiagram = await Ishikawa.findByIdAndDelete(id);
+
+      if (!deletedDiagram) {
+          return res.status(404).json({ message: 'Diagrama no encontrado' });
+      }
+
+      res.json({ message: 'Diagrama eliminado correctamente' });
+  } catch (error) {
+      console.error('Error al eliminar el diagrama:', error);
+      res.status(500).json({ message: 'Error al eliminar el diagrama' });
+  }
+};
   
   module.exports = {
     crearIshikawa,
@@ -595,5 +633,7 @@ const enviarPDF = async (req, res) => {
     obtenerIshikawaPorId,
     eliminarIshikawasPorIdRep,
     ishikawaFinalizado,
-    enviarPDF
+    enviarPDF,
+    actualizarAcceso,
+    deleteIshikawa
   };

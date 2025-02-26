@@ -1,32 +1,89 @@
-.content-inf{
-  max-width: 600px;
-  margin: 10vh auto 0;
+.info-container {
   padding: 20px;
+}
+
+.content-inf {
+  max-width: 600px;
+  margin: 7em auto;
+  padding: 30px;
   border: 1px solid #ddd;
   background-color: #ffffff;
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.inf-usuario{
+.inf-usuario {
   text-align: center;
+  margin-bottom: 20px;
 }
 
-.inf-contra{
-  text-align: center;
-  margin-bottom: 10px;
+.user-details p {
+  font-size: 16px;
+  padding: 10px;
+  margin:  0 9%
 }
 
-.inf-contra button{
+.profile-picture-section {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.profile-picture-section h2 {
+  margin-bottom: 15px;
+}
+
+.profile-picture {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  margin-bottom: 15px;
+}
+
+.profile-picture-placeholder {
+  width: 150px;
+  height: 150px;
+  line-height: 150px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  color: #888;
+  margin: 0 auto 15px;
+  border: 2px dashed #ccc;
+}
+
+.file-input {
+  display: block;
+  margin: 0 auto 10px;
+}
+
+.upload-button,
+.change-password-button {
   background-color: #00cc7e;
   border: none;
   border-radius: 8px;
-  padding: 10px;
+  padding: 10px 20px;
   color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.input-inf{
-  width: 50%;
-  height: 20px;
+.upload-button:hover,
+.change-password-button:hover {
+  background-color: #009c63;
+}
+
+.inf-contra {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.input-inf {
+  width: 80%;
+  height: 35px;
   margin-bottom: 10px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
 }

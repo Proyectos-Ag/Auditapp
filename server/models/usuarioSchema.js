@@ -47,7 +47,8 @@ const UsuariosSchema = new mongoose.Schema({
     }
   ],
   Departamento: { type: String, required: false}, // Añadido
-  area: { type: String, required: true }, // Añadido para todo tipo de usuario
+  area: { type: String, required: true },
+  Foto: { type: String}
 });
 
 // Hash de la contraseña antes de guardar

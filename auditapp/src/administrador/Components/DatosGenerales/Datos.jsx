@@ -373,7 +373,7 @@ const Datos = () => {
           Criterio: desc.Criterio || null,
           Requisito: desc.Requisito,
           Observacion:"",
-          Hallazgo: "",
+          Hallazgo: [],
           FechaElaboracion: "",
           Comentario: "",
           Estatus: ""

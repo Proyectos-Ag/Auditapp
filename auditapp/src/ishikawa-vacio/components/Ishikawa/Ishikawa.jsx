@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import CircularProgress from '@mui/material/CircularProgress';
+import AccesoModal from './AccesoModal';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../../App';
 import { Chip, TextField, Paper, List, ListItem } from '@mui/material';
@@ -24,6 +25,8 @@ const CreacionIshikawa = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [selectedParticipants, setSelectedParticipants] = useState([]);
+  //Acceso Modal
+  const [modalOpen, setModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     problema: '',
@@ -34,7 +37,9 @@ const CreacionIshikawa = () => {
     fecha: '',
     participantes: '',
     correccion: '',
-    causa: ''
+    causa: '',
+    acceso: ishikawaRecords.acceso,
+    nivelAcceso: ishikawaRecords.nivelAcceso
   });
 
   const [diagrama, setDiagrama] = useState([{
@@ -59,13 +64,17 @@ const CreacionIshikawa = () => {
   const [actividades, setActividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: '' }]);
 
   const fechaElaboracion = new Date().toISOString();
+  //Modo lectura 
+  const isReadOnly = formData.nivelAcceso === 1 && formData.acceso === userData.Nombre;
+
 
   useEffect(() => {
     const fetchIshikawaRecords = async () => {
       try {
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
         const filteredRecords = response.data.filter(item =>
-          (item.estado === 'Rechazado' || item.estado === 'Incompleto') && item.auditado === userData.Nombre
+          (["Rechazado", "Incompleto"].includes(item.estado)) && 
+          [item.auditado, item.acceso].some(nombre => nombre?.toLowerCase() === userData.Nombre?.toLowerCase())
         );
         setIshikawaRecords(filteredRecords);
       } catch (error) {
@@ -130,7 +139,9 @@ const CreacionIshikawa = () => {
           participantes: selectedRecord.participantes || '',
           correccion: selectedRecord.correccion || '',
           causa: selectedRecord.causa || '',
-          notaRechazo: selectedRecord.notaRechazo || ''
+          notaRechazo: selectedRecord.notaRechazo || '',
+          acceso: selectedRecord.acceso || '',
+          nivelAcceso: selectedRecord.nivelAcceso || ''
         });
     
         setDiagrama(selectedRecord.diagrama || [{
@@ -219,6 +230,7 @@ const CreacionIshikawa = () => {
 
   const handleSaveAdvance = async () => {
     try {
+      // Se arma el objeto de datos con todos los campos inicialmente.
       const data = {
         fecha: formData.fecha,
         problema: formData.problema,
@@ -235,13 +247,21 @@ const CreacionIshikawa = () => {
         estado: 'Incompleto',
         fechaElaboracion
       };
+
+      console.log('Acceso: ', formData.acceso)
+  
+      // Si el campo "acceso" es igual a userData.Nombre, se elimina auditado y correo
+      if (formData.acceso === userData.Nombre) {
+        delete data.auditado;
+        delete data.correo;
+      }
   
       if (selectedRecordId) {
-        // Si se está editando un registro existente
+        // Actualizando registro existente
         await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${selectedRecordId}`, data);
         Swal.fire('Cambios Actualizados', 'El registro ha sido actualizado.', 'success');
       } else {
-        // Si es un nuevo registro
+        // Creando un nuevo registro
         const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
         setSelectedRecordId(response.data._id);
         Swal.fire('Registro Guardado', 'El nuevo registro ha sido creado.', 'success');
@@ -249,7 +269,7 @@ const CreacionIshikawa = () => {
     } catch (error) {
       console.error('Error al guardar los datos:', error.response ? error.response.data : error.message);
     }
-  };
+  };  
   
   const handleUpdate = async () => {
     try {
@@ -697,6 +717,30 @@ const handleDelete = (participantToDelete) => {
   setFormData({ ...formData, participantes: nuevosNombres });
 };
 
+const ajustarTamanoFuente = (textarea) => {
+  const maxFontSize = 15; // Tamaño máximo de fuente
+  const minFontSize = 10; // Tamaño mínimo de fuente
+  const lineHeight = 1.2; // Ajusta según el diseño
+
+  let fontSize = maxFontSize;
+  textarea.style.fontSize = `${fontSize}px`;
+
+  while (
+      (textarea.scrollHeight > textarea.offsetHeight ||
+      textarea.scrollWidth > textarea.offsetWidth) &&
+      fontSize > minFontSize
+  ) {
+      fontSize -= 0.5; // Reduce el tamaño en pequeños pasos
+      textarea.style.fontSize = `${fontSize}px`;
+      textarea.style.lineHeight = `${lineHeight}em`;
+  }
+};
+
+useEffect(() => {
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach((textarea) => ajustarTamanoFuente(textarea));
+}, [selectedRecordId]);
+
   return (
     <div>
 
@@ -723,8 +767,13 @@ const handleDelete = (participantToDelete) => {
             </div>
          </div>
     )}
+
+    <div>
+      <button onClick={(e) => {e.preventDefault();setModalOpen(true); }}>Asignar Acceso</button>
+      <AccesoModal open={modalOpen} handleClose={() => setModalOpen(false)} idIshikawa={selectedRecordId}/>
+    </div>
       
-      <div style={{textAlign:'center'}}>
+      <div style={{textAlign:'center', marginTop: '7rem', marginBottom:'-5rem'}}>
       <h2>Seleccionar un Registro de Ishikawa:</h2>
         <select className='selector-ish' onChange={handleSelectRecord} value={selectedRecordId || ''}>
           <option value="">Nuevo...</option>
@@ -743,6 +792,12 @@ const handleDelete = (participantToDelete) => {
          ): ''}
 
         <div className="content-diagrama">
+        {isReadOnly && (
+        <div style={{ color: 'red', marginBottom: '1rem' }}>
+          Modo lectura: no se permiten cambios.
+        </div>
+      )}
+          <p>Acceso: {formData.acceso? formData.acceso : 'NA'}</p>
         <div id='pdf-content-part1' className="image-container-dia" >
         <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
         <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
@@ -750,13 +805,13 @@ const handleDelete = (participantToDelete) => {
             <h2>Problema:
               <input type="text" className="problema-input" name='problema'
                 style={{ marginTop: '0.4rem', color: '#000000' }} placeholder="Agregar problema. . ." required 
-                value={formData.problema} onChange={handleFormDataChange} />
+                value={formData.problema} onChange={handleFormDataChange} disabled={isReadOnly} />
             </h2>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <h2>Afectación:
                 <input type="text" className="problema-input" name='afectacion'
                   style={{ marginTop: '0.4rem', color: '#000000' }} placeholder="Agregar afectación. . ." required 
-                  value={formData.afectacion} onChange={handleFormDataChange} />
+                  value={formData.afectacion} onChange={handleFormDataChange} disabled={isReadOnly} />
               </h2>
             </div>
           </div>
@@ -767,7 +822,7 @@ const handleDelete = (participantToDelete) => {
             <h3>Fecha: 
             <input type="date" name='fecha' value={formData.fecha}
                   style={{ marginTop: '0.4rem', color: '#000000' }} placeholder="Agregar afectación. . ." required 
-                   onChange={handleFormDataChange} />
+                   onChange={handleFormDataChange} disabled={isReadOnly} />
             </h3>
           </div>
           <div>
@@ -776,61 +831,61 @@ const handleDelete = (participantToDelete) => {
               <div key={index}>
               <textarea maxLength={145} className="text-area" name="text1" value={dia.text1} onChange={handleInputChange} 
               style={{ top: '19.1rem', left: '8.7rem'}} placeholder="Texto..." required  onDoubleClick={handleDoubleClick}
-               />
+              disabled={isReadOnly}/>
                <textarea maxLength={145} className="text-area" name='text2' value={dia.text2} onChange={handleInputChange}
                style={{ top: '19.1rem', left: '25.4rem'}} placeholder="Texto..." required  onDoubleClick={handleDoubleClick}
-               />
+               disabled={isReadOnly}/>
                <textarea className="text-area" name='text3' value={dia.text3} onChange={handleInputChange}
                 style={{ top: '19.1rem', left: '41.2rem'}}placeholder="Texto..." required  onClick={handleDiagrama}
-                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
    
                <textarea className="text-area" name='text4' value={dia.text4} onChange={handleInputChange}
                 style={{ top: '23.2rem', left: '12.2rem'}}placeholder="Texto..."  onClick={handleDiagrama}
-                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text5' value={dia.text5} onChange={handleInputChange}
                 style={{ top: '23.2rem', left: '28.8rem'}}placeholder="Texto..."  onClick={handleDiagrama}
-                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text6' value={dia.text6} onChange={handleInputChange}
                 style={{ top: '23.2rem', left: '45rem' }}placeholder="Texto..."  onClick={handleDiagrama}
-                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
        
                <textarea className="text-area" name='text7' value={dia.text7} onChange={handleInputChange}
                 style={{ top: '27.2rem', left: '15.5rem'}}placeholder="Texto..."  onClick={handleDiagrama}
-                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text8' value={dia.text8} onChange={handleInputChange}
                 style={{ top: '27.2rem', left: '32.3rem'}}placeholder="Texto..."  onClick={handleDiagrama}
-                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text9' value={dia.text9} onChange={handleInputChange}
                 style={{ top: '27.2rem', left: '48.1rem'}}placeholder="Texto..."  onClick={handleDiagrama}
-                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
      
                <textarea className="text-area" name='text10' value={dia.text10} onChange={handleInputChange}
                 style={{ top: '31rem', left: '23rem'}}placeholder="Texto..." required  onClick={handleDiagrama}
-                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text11' value={dia.text11} onChange={handleInputChange}
                 style={{ top: '31rem', left: '39.4rem'}}placeholder="Texto..." required  onClick={handleDiagrama}
-                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
      
                <textarea className="text-area" name='text12' value={dia.text12} onChange={handleInputChange}
                 style={{ top: '35rem', left: '19.7rem'}}placeholder="Texto..."  onClick={handleDiagrama}
-                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text13' value={dia.text13} onChange={handleInputChange}
                 style={{ top: '35rem', left: '36rem'}}placeholder="Texto..."  onClick={handleDiagrama}
-                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
      
                <textarea className="text-area" name='text14' value={dia.text14} onChange={handleInputChange}
                 style={{ top: '39rem', left: '16.6rem'}}placeholder="Texto..."  onClick={handleDiagrama}
-                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text15' value={dia.text15} onChange={handleInputChange}
                 style={{ top: '39rem', left: '32.8rem'}}placeholder="Texto..."  onClick={handleDiagrama}
-                onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
+                onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                 <textarea maxLength={145} className="text-area" name='problema' value={formData.problema} onChange={handleDiagrama}
-                  style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} placeholder="Problema..." />
+                  style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} placeholder="Problema..." disabled={isReadOnly}/>
                </div>
             ))}
           </div> 
 
-          <div className='button-pasti'>
+          <div className='button-parti-ish'>
           <div style={{ width: '64rem' }}>
             {/* Contenedor de chips y campo de busqueda */}
               <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -840,6 +895,7 @@ const handleDelete = (participantToDelete) => {
                     key={index}
                     label={participant.Nombre}
                     onDelete={() => handleDelete(participant)}
+                    disabled={isReadOnly}
                   />
                 ))}
                 {/* Campo de busqueda */}
@@ -850,6 +906,7 @@ const handleDelete = (participantToDelete) => {
                   variant="outlined"
                   size="small"
                   style={{ minWidth: '200px' }}
+                  disabled={isReadOnly}
                 />
               </div>
 
@@ -879,20 +936,20 @@ const handleDelete = (participantToDelete) => {
               <h3>No conformidad:</h3>
               <textarea type="text" className="textarea-acc" name='requisito'
                 style={{ width: '72em', textAlign: 'justify' }} placeholder="Agregar Acción. . ." 
-                value={formData.requisito} onChange={handleFormDataChange} required />
+                value={formData.requisito} onChange={handleFormDataChange} required disabled={isReadOnly} />
               <h3>Hallazgo:</h3>
               <textarea type="text" className="textarea-acc" name='hallazgo'
                 style={{ width: '72em', color: '#000000' }} placeholder="Agregar Hallazgo. . ." 
-                value={formData.hallazgo} onChange={handleFormDataChange} required />
+                value={formData.hallazgo} onChange={handleFormDataChange} required disabled={isReadOnly}/>
               <h3>Acción inmediata o corrección:</h3>
               <textarea type="text" className="textarea-acc" name='correccion'
                 style={{ width: '72em', color: '#000000' }} placeholder="Agregar Acción. . ." 
-                value={formData.correccion} onChange={handleFormDataChange} required />
+                value={formData.correccion} onChange={handleFormDataChange} required disabled={isReadOnly}/>
               <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
               <textarea type="text" className="textarea-acc" name='causa'
                  style={{ marginBottom: '20px', width:'72em', overflowWrap: 'break-word' }} 
                  placeholder="Seleccione la causa desde el diagrama"  onKeyDown={(e) => e.preventDefault()} 
-                  value={formData.causa} onChange={handleFormDataChange} required />
+                  value={formData.causa} onChange={handleFormDataChange} required disabled={isReadOnly}/>
             </div>
           </div>
           </div>
@@ -923,6 +980,7 @@ const handleDelete = (participantToDelete) => {
                           setActividades(newActividades);
                         }}
                         required
+                        disabled={isReadOnly}
                       />
                     </td>
                     <td>
@@ -937,6 +995,7 @@ const handleDelete = (participantToDelete) => {
                           setActividades(newActividades);
                         }}
                         required
+                        disabled={isReadOnly}
                       />
                     </td>
                     <td>
@@ -950,11 +1009,12 @@ const handleDelete = (participantToDelete) => {
                             setActividades(newActividades);
                           }}
                           required
+                          disabled={isReadOnly}
                         />
                       </div>
                     </td>
                     <td className='cancel-acc'>
-                      <button type='button' onClick={() => eliminarFilaActividad(index)}>Eliminar</button>
+                      <button type='button' onClick={() => eliminarFilaActividad(index)} disabled={isReadOnly}>Eliminar</button>
                     </td>
                   </tr>
                 ))}
@@ -963,12 +1023,13 @@ const handleDelete = (participantToDelete) => {
             <button type='button' onClick={(e) => {
               e.preventDefault();
               agregarFilaActividad();
-            }} className='button-agregar'>Agregar Fila</button>
+            }} className='button-agregar' disabled={isReadOnly}>Agregar Fila</button>
           </div>
           </div>
           <button type='submit'className='button-guardar-camb-ish'  onClick={(e) => {
-            e.preventDefault();handleSaveAdvance(); }}>Guardar Cambios</button>
-          <button type='submit'className='button-generar-ish'>Enviar</button>
+            e.preventDefault();handleSaveAdvance(); } } disabled={isReadOnly}>Guardar Cambios</button>
+          
+            <button type='submit' className='button-generar-ish'>Enviar</button>
           
         </div>
       </div>

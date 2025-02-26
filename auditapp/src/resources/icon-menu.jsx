@@ -1,4 +1,5 @@
 import React, { useContext} from "react";
+import axios from 'axios';
 import './css/estilos.css';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Grow from '@mui/material/Grow';
@@ -46,7 +47,7 @@ const IconMenu = () => {
     prevOpen.current = open;
   }, [open]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Swal.fire({
       title: '¿Está seguro de querer cerrar sesión?',
       text: '¡Tu sesión actual se cerrará!',
@@ -55,14 +56,23 @@ const IconMenu = () => {
       confirmButtonColor: '#3ccc37',
       cancelButtonColor: '#d33',
       confirmButtonText: 'Sí, cerrar sesión',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userData');
-        localStorage.removeItem('breadcrumbHistory');
+        try {
+          // Llama al endpoint de logout para borrar la cookie del token
+          await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/logout`);
+        } catch (error) {
+          console.error('Error al cerrar sesión en el servidor', error);
+        }
+  
+        // Limpia cualquier otro dato que ya no necesites en el front end
+        localStorage.removeItem('breadcrumbHistory'); // Si aún lo usas
+        // Actualiza el contexto para remover la información del usuario
         setUserData(null);
+        // Si tienes algún modal abierto, ciérralo
         setOpen(false);
+        // Redirige al usuario a la página de inicio o login
         navigate('/');
       }
     });
@@ -87,12 +97,29 @@ const IconMenu = () => {
          <span>{userData.Nombre}</span>
           
           {/* Ícono */}
-          <AccountCircleIcon
-            ref={anchorRef}
-            onClick={handleToggle}
-            color="primary"
-            sx={{ fontSize: 50, marginLeft: '10px' }} // Añade margen entre el nombre y el ícono
-          />
+          {userData.Foto ? (
+  <img
+    src={userData.Foto}
+    alt="Foto de usuario"
+    onClick={handleToggle}
+    ref={anchorRef}
+    style={{
+      width: '50px',
+      height: '50px',
+      borderRadius: '50%',
+      marginLeft: '10px',
+      cursor: 'pointer'
+    }}
+  />
+) : (
+  <AccountCircleIcon
+    onClick={handleToggle}
+    ref={anchorRef}
+    color="primary"
+    sx={{ fontSize: 50, marginLeft: '10px' }}
+  />
+)}
+
         </div>
         <Popper
           open={open}

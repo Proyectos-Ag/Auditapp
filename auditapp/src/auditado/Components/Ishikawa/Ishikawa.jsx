@@ -624,7 +624,7 @@ useEffect(() => {
             Guardar();
           }
         }}>
-        <div className="image-container">
+        <div className="image-container-auditado">
           <div className='button-cam'>
           {
           (aprobado || estRech || revisado) ? null : (         

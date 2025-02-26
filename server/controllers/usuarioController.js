@@ -153,6 +153,34 @@ const searchUsuarios = async (req, res) => {
   }
 };
 
+const actualizarFoto = async (req, res) => {
+  const { id } = req.params;
+  const { url } = req.body;
+
+  console.log(req.params, req.body);
+  
+  if (!url) {
+    return res.status(400).json({ message: 'No se proporcionó la URL de la imagen.' });
+  }
+  
+  try {
+    // Buscar al usuario por su ID
+    const usuario = await Usuarios.findById(id);
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    }
+    
+    // Actualizar el campo Foto con la URL proporcionada
+    usuario.Foto = url;
+    await usuario.save();
+    
+    res.status(200).json({ message: 'Foto actualizada correctamente.', usuario });
+  } catch (error) {
+    console.error('Error al actualizar la foto:', error);
+    res.status(500).json({ message: 'Error al actualizar la foto.', error: error.message });
+  }
+};
+
 module.exports = {
   registroUsuario,
   obtenerUsuarios,
@@ -161,5 +189,6 @@ module.exports = {
   eliminarUsuario,
   obtenerUsuarioPorNombre,
   cambiarPassword,
-  searchUsuarios
+  searchUsuarios,
+  actualizarFoto
 };

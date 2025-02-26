@@ -202,33 +202,31 @@ setPercentages(initialPercentages);
 
     const handleCapture = (file) => {
         if (selectedField) {
-            // Generar el identificador para la fila basado en el `selectedField` y el contador de fotos por fila
-            const rowIdentifier = selectedField; // Puede ser algo como "0_0", "0_1", etc.
-            
-            // Actualizamos el estado de las fotos
-            setCapturedPhotos((prev) => {
-                const updatedPhotos = { ...prev };
-    
-                // Si la fila ya tiene fotos, agregamos la nueva foto, de lo contrario inicializamos el arreglo
-                if (updatedPhotos[rowIdentifier]) {
-                    // Si ya tiene 4 fotos, iniciamos una nueva fila
-                    if (updatedPhotos[rowIdentifier].length < 4) {
-                        updatedPhotos[rowIdentifier] = [...updatedPhotos[rowIdentifier], file];
-                    } else {
-                        // Agregar la foto en una nueva fila, por ejemplo "0_1", "0_2", etc.
-                        const newRow = `${parseInt(rowIdentifier.split('_')[0]) + 1}_${parseInt(rowIdentifier.split('_')[1])}`;
-                        updatedPhotos[newRow] = [file];
-                    }
-                } else {
-                    updatedPhotos[rowIdentifier] = [file];
-                }
-    
-                return updatedPhotos;
-            });
+          // Generar el identificador para la fila basado en el `selectedField`
+          const rowIdentifier = selectedField; // Ejemplo: "0_0", "0_1", etc.
+          
+          setCapturedPhotos((prev) => {
+            const updatedPhotos = { ...prev };
+      
+            if (updatedPhotos[rowIdentifier]) {
+              // Si ya tiene 4 fotos, mostramos una alerta y no actualizamos el estado
+              if (updatedPhotos[rowIdentifier].length < 4) {
+                updatedPhotos[rowIdentifier] = [...updatedPhotos[rowIdentifier], file];
+              } else {
+                alert("Ya hay 4 fotos, no se puede agregar más.");
+                return prev; // Retornamos el estado anterior sin modificaciones
+              }
+            } else {
+              // Si no hay fotos en la fila, la inicializamos con la nueva foto
+              updatedPhotos[rowIdentifier] = [file];
+            }
+      
+            return updatedPhotos;
+          });
         }
         setModalOpen(false); // Cierra el modal
         console.log("Foto Seleccionada", selectedField);
-    };    
+      };       
 
     const navigate = useNavigate();
 
@@ -308,7 +306,7 @@ setPercentages(initialPercentages);
                 // Actualizar porcentaje total
                 await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
                     PorcentajeTotal: totalPorcentageAvg,
-                    Estado: 'Devuelto',
+                    Estado: 'Realizado',
                     usuario: userData.Nombre
                 });
                 
@@ -340,24 +338,28 @@ setPercentages(initialPercentages);
                     programa.Descripcion.map(async (desc, descIdx) => {
                         const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
                         const updatedObservation = { ...desc };
-    
-                        // Verificar si hay una imagen nueva capturada para este fieldKey
-                        const file = capturedPhotos[fieldKey];
-                        if (file) {
+                        const files = capturedPhotos[fieldKey] || [];
+                
+                        if (files.length > 0) {
                             try {
-                                const fileName = `evidencia_${id}_${periodIdx}_${programIdx}_${descIdx}`;
-                                const fileUrl = await uploadImageToFirebase(file, fileName);
-    
-                                // Asignar la URL al campo Hallazgo
-                                updatedObservation.Hallazgo = fileUrl;
+                                // Subir todas las imágenes asociadas al fieldKey
+                                const fileUrls = await Promise.all(
+                                    files.map(async (file, index) => {
+                                        const fileName = `evidencia_${id}_${periodIdx}_${programIdx}_${descIdx}_${index}`;
+                                        return await uploadImageToFirebase(file, fileName);
+                                    })
+                                );
+                
+                                // Asignar las URLs al campo Hallazgo como un array
+                                updatedObservation.Hallazgo = fileUrls;
                             } catch (error) {
-                                console.error(`Error al subir la imagen para ${fieldKey}:`, error);
+                                console.error(`Error al subir las imágenes para ${fieldKey}:`, error);
                             }
                         } else {
-                            // Mantener el hallazgo existente si no hay una imagen nueva
-                            updatedObservation.Hallazgo = desc.Hallazgo || '';
+                            // Mantener el hallazgo existente si no hay imágenes nuevas
+                            updatedObservation.Hallazgo = Array.isArray(desc.Hallazgo) ? desc.Hallazgo : [];
                         }
-    
+                
                         return {
                             ID: desc.ID,
                             Criterio: selectedCheckboxes[fieldKey] || '',
@@ -366,7 +368,7 @@ setPercentages(initialPercentages);
                             Hallazgo: updatedObservation.Hallazgo,
                         };
                     })
-                );
+                );                
     
                 const percentage = percentages[`${periodIdx}_${programIdx}`] || 0;
                 totalPorcentage += percentage;
@@ -381,7 +383,7 @@ setPercentages(initialPercentages);
                 } catch (error) {
                     console.error('Error al actualizar los datos:', error);
                     alert('Error al actualizar los datos');
-                    handleClose();
+                    
                     return;
                 }
             }
@@ -391,7 +393,7 @@ setPercentages(initialPercentages);
                 // Actualizar porcentaje total
                 await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
                     PorcentajeTotal: totalPorcentageAvg,
-                    Estado: 'Devuelto',
+                    Estado: 'pendiente',
                 });
                 handleClose();
                 Swal.fire({

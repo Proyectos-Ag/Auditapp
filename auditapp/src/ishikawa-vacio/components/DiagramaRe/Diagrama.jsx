@@ -21,7 +21,7 @@ const Diagrama = () => {
         const fetchData = async () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-                const dataFiltrada = response.data.filter(item => item.estado === 'Aprobado' && 
+                const dataFiltrada = response.data.filter(item => (item.estado === 'Aprobado' || item.estado === 'Hecho') && 
                     item.auditado === userData.Nombre &&
                     item.tipo === 'vacio');
                 

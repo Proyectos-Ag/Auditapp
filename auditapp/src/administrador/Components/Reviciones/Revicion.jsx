@@ -438,9 +438,30 @@ const Reporte = () => {
                                             </div>
                                         </div>
                                         <div className='mover'>
-                                            <div className="dato"><span className="bold-text">Duración de la auditoría:</span> {dato.Duracion}</div>
-                                            <div className="dato"><span className="bold-text">Tipo de auditoría:</span> {dato.TipoAuditoria}</div>
-                                            <div className="dato"><span className="bold-text">Fecha de Elaboración de Reporte:</span> {formatDate(dato.FechaElaboracion)}</div>
+                                        <div className={`grupo-izquierda ${!dato.Cliente ? 'sin-cliente' : ''}`}>
+                                        <div className="dato">
+                                            <span className="bold-text">Duración de la auditoría:</span> {dato.Duracion}
+                                        </div>
+                                        <div className="dato">
+                                            <span className="bold-text">Tipo de auditoría:</span> {dato.TipoAuditoria}
+                                        </div>
+                                        {dato.Cliente && (
+                                            <div className="dato">
+                                                <span className="bold-text">Cliente:</span> {dato.Cliente}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                        <div className="grupo-derecha">
+                                        {dato.Cliente && (
+                                            <div className="dato-right">
+                                                <span className="bold-text">Fecha de evaluación de auditoría:</span> {formatDate(dato.FechaEvaluacion)}
+                                            </div>
+                                            )}
+                                            <div className="dato-right">
+                                                <span className="bold-text">Fecha de elaboración de reporte:</span> {formatDate(dato.FechaElaboracion)}
+                                            </div>
+                                        </div>
                                         </div>
                                         <div className='tabla-reporte'>
                                         <table>
@@ -523,19 +544,21 @@ const Reporte = () => {
                                                     <th colSpan="2" className="conformity-header-repo">Alcance</th>
                                                 </tr>
                                                 <tr>
-                                                    <th className="table-header">Programas</th>
-                                                    <th className="table-header">Áreas Auditadas</th>
-                                                </tr>
-                                                <tr>
+                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold', width:'50%'}}>Documento de Referencia</td>
+                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold'}}>Alcance de Auditoría</td>
+                                                    </tr>
+                                                    <tr>
                                                     <td>
-                                                        {dato.Programa.map((programa, programIdx) => (
-                                                            <div key={programIdx}>
-                                                                {programa.Nombre}
-                                                            </div>
-                                                        ))}
+                                                        {dato.Referencia ? (
+                                                            <div>{dato.Referencia}</div>
+                                                        ) : (
+                                                            dato.Programa.map((programa, programIdx) => (
+                                                                <div key={programIdx}>{programa.Nombre}</div>
+                                                            ))
+                                                        )}
                                                     </td>
-                                                    <td><div>{dato.AreasAudi}</div></td>
-                                                </tr>
+                                                        <td>{dato.Alcance? dato.Alcance: dato.AreasAudi}</td>
+                                                    </tr>
                                                 <tr>
                                                     <th className="table-header">Equipo Auditor</th>
                                                     <th className="table-header">Participantes en el Área del Recorrido</th>

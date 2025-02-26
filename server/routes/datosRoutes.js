@@ -42,7 +42,8 @@ router.post('/carga-masiva', async (req, res) => {
         });
 
         // Validación de campos requeridos
-        const requiredFields = ['TipoAuditoria', 'FechaInicio', 'FechaFin', 'Duracion', 'Departamento', 'AreasAudi', 'Auditados', 'AuditorLider', 'AuditorLiderEmail', 'Observador'];
+        const requiredFields = ['TipoAuditoria', 'FechaInicio', 'FechaFin', 'Duracion', 'Departamento', 
+            'Alcance', 'Auditados', 'AuditorLider', 'AuditorLiderEmail', 'Observador'];
         const missingFields = jsonData.filter(item => requiredFields.some(field => !item[field]));
 
         if (missingFields.length > 0) {

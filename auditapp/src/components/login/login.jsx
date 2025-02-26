@@ -39,9 +39,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, formData);
-      const { token, usuario } = response.data;
-
-      localStorage.setItem('token', token);
+      const { usuario } = response.data;
       setUserData(usuario);
       console.log(usuario);
 

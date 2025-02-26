@@ -23,4 +23,6 @@ router.get('/nombre/:nombre', usuariosController.obtenerUsuarioPorNombre);
 
 router.put('/cambiarPassword/:id', usuariosController.cambiarPassword);
 
+router.put('/actualizarFoto/:id', usuariosController.actualizarFoto);
+
 module.exports = router;

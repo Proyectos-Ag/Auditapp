@@ -3,18 +3,23 @@ import axios from 'axios';
 import './css/Info.css';
 import { UserContext } from '../../App';
 import Swal from 'sweetalert2';
+import FotoPerfil from './foto-perfil.jsx'; 
+import { storage } from '../../firebase.js';
+import {ref, uploadBytes, getDownloadURL} from 'firebase/storage';
 
 const Informacion = () => {
   const { userData } = useContext(UserContext);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   if (!userData) {
     return <div>No hay información disponible.</div>;
   }
 
   let tipo = userData.TipoUsuario;
-
   if (userData.TipoUsuario === 'auditado') {
     tipo = 'Auditado';
   }
@@ -45,11 +50,11 @@ const Informacion = () => {
       return;
     }
 
-    let _id = userData.ID ? userData.ID : userData._id;
+    const _id = userData.ID;
 
     try {
       await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/usuarios/cambiarPassword/${_id}`, 
+        `${process.env.REACT_APP_BACKEND_URL}/usuarios/cambiarPassword/${_id}`,
         { password: newPassword },
         {
           headers: {
@@ -63,8 +68,6 @@ const Informacion = () => {
         title: 'Éxito',
         text: 'Contraseña actualizada exitosamente',
       });
-
-      // Limpiar el formulario
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
@@ -76,20 +79,107 @@ const Informacion = () => {
     }
   };
 
+  const uploadImageToFirebase = async (file, fileName) => {
+    try {
+        if (!(file instanceof File)) {
+            throw new Error("El objeto recibido no es un archivo válido");
+        }
+
+        const storageRef = ref(storage, `perfil-usuarios/${fileName}`);
+        await uploadBytes(storageRef, file); // Sube el archivo al almacenamiento
+        return await getDownloadURL(storageRef); // Obtiene la URL del archivo subido
+    } catch (error) {
+        console.error("Error al subir la imagen:", error);
+        throw new Error("No se pudo subir la imagen");
+    }
+}; 
+
+const handleFirebaseImageUpload = async () => {
+  if (!selectedFile) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Advertencia',
+      text: 'Por favor, seleccione un archivo de imagen.',
+    });
+    return;
+  }
+  
+  const _id = userData.ID;
+  console.log("ID: ", userData.ID)
+  try {
+    // Genera un nombre único para el archivo (por ejemplo, combinando el id del usuario y la fecha actual)
+    const fileName = `${_id}_${Date.now()}`;
+    
+    // Sube la imagen a Firebase y obtiene la URL
+    const imageUrl = await uploadImageToFirebase(selectedFile, fileName);
+    
+    // Envía la URL al backend para actualizar el campo Foto del usuario
+    await axios.put(
+      `${process.env.REACT_APP_BACKEND_URL}/usuarios/actualizarFoto/${_id}`,
+      { url: imageUrl },
+      {
+        headers: {
+          'Authorization': `Bearer ${userData.token}`
+        }
+      }
+    );
+    
+    Swal.fire({
+      icon: 'success',
+      title: 'Éxito',
+      text: 'Foto de perfil actualizada exitosamente',
+    });
+    // Actualiza la vista previa con la nueva imagen (opcional)
+    setPreviewImage(imageUrl);
+  } catch (error) {
+    console.error("Error al subir la imagen:", error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Error al subir la foto de perfil',
+    });
+  }
+};
+
+
   return (
-    <div>
-      <div className='content-inf'>
-        <h1 className='inf-usuario'>Información del Usuario</h1>
-        <p>Nombre: {userData.Nombre}</p>
-        <p>Email: {userData.Correo}</p>
-        <p>Tipo de Usuario: {tipo}</p>
-        <p>Puesto: {userData.Puesto}</p>
-        <p>Departamento: {userData.Departamento}</p>
+    <div className="info-container">
+      <div className="content-inf">
+        <h1 className="inf-usuario">Información del Usuario</h1>
         
-        <h2 className='inf-usuario'>Cambiar Contraseña</h2>
-        <div className='inf-contra'>
+        <div className="profile-picture-section">
+          <h2>Foto de Perfil</h2>
+          {previewImage ? (
+            <img src={previewImage} alt="Vista previa" className="profile-picture" />
+          ) : userData.Foto ? (
+            <img src={userData.Foto} alt="Foto de Perfil" className="profile-picture" />
+          ) : (
+            <div className="profile-picture-placeholder">No hay imagen</div>
+          )}
+          <button onClick={() => setModalOpen(true)} className="upload-button">
+            Cambiar Foto
+          </button>
+          {selectedFile && (
+            <button onClick={handleFirebaseImageUpload} className="upload-button">
+              Subir Foto
+            </button>
+          )}
+        </div>
+
+
+        <div className="user-details">
+          <p><strong>Nombre:</strong> {userData.Nombre}</p>
+          <p><strong>Email:</strong> {userData.Correo}</p>
+          <p><strong>Tipo de Usuario:</strong> {tipo}</p>
+          <p><strong>Puesto:</strong> {userData.Puesto}</p>
+          <p><strong>Departamento:</strong> {userData.Departamento}</p>
+          <p><strong>Todo</strong> {userData.ID}</p>
+        </div>
+
+        <h2 className="inf-usuario">Cambiar Contraseña</h2>
+        <div className="inf-contra">
           <input 
-            className='input-inf'
+            className="input-inf"
             type="password" 
             placeholder="Nueva Contraseña" 
             value={newPassword} 
@@ -97,7 +187,7 @@ const Informacion = () => {
             maxLength="8"
           />
           <input 
-            className='input-inf'
+            className="input-inf"
             type="password" 
             placeholder="Confirmar Nueva Contraseña" 
             value={confirmPassword} 
@@ -105,10 +195,23 @@ const Informacion = () => {
             maxLength="8"
           />
         </div>
-        <div className='inf-contra'>
-          <button onClick={handlePasswordChange}>Cambiar Contraseña</button>
+        <div className="inf-contra">
+          <button onClick={handlePasswordChange} className="change-password-button">
+            Cambiar Contraseña
+          </button>
         </div>
       </div>
+
+      {/* Modal para seleccionar foto desde el almacenamiento */}
+      <FotoPerfil 
+        open={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+        onCapture={(file) => {
+          setSelectedFile(file);
+          setPreviewImage(URL.createObjectURL(file));
+          setModalOpen(false);
+        }} 
+      />
     </div>
   );
 };

@@ -3,31 +3,22 @@ import axios from 'axios';
 import { UserContext } from './App';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+
 const MySwal = withReactContent(Swal);
 
+axios.defaults.withCredentials = true; // Asegura el envío de cookies
+
 const AuthProvider = ({ children }) => {
-  const [userData, setUserData] = useState(() => {
-    const storedUserData = localStorage.getItem('userData');
-    return storedUserData ? JSON.parse(storedUserData) : null;
-  });
+  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const verifyToken = async () => {
       try {
-        const token = localStorage.getItem('token');
-        // Si ya tienes token y datos de usuario guardados, no hagas otra consulta
-        if (token && !userData) {
-          const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/verifyToken`, { token });
-          const data = { ...response.data, token };
-          setUserData(data);
-          localStorage.setItem('userData', JSON.stringify(data));
-        } else if (!token) {
-          setUserData(null);
-        }
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/auth/verifyToken`);
+        setUserData({ ...response.data });
       } catch (error) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userData');
+        // Si no se puede verificar el token, aseguramos que no haya datos de usuario
         setUserData(null);
       } finally {
         setLoading(false);
@@ -35,9 +26,21 @@ const AuthProvider = ({ children }) => {
     };
 
     verifyToken();
-  }, [userData]);
+  }, []);
 
-  const mostrarCargando = () => {
+  // Ejemplo de interceptor para centralizar la lógica de errores 401
+  axios.interceptors.response.use(
+    response => response,
+    async error => {
+      if (error.response && error.response.status === 401) {
+        // Aquí podrías implementar la lógica para intentar renovar el token (refresh token)
+        // o redirigir al usuario al login.
+      }
+      return Promise.reject(error);
+    }
+  );
+
+  if (loading) {
     MySwal.fire({
       title: 'Cargando...',
       text: 'Por favor, espere',
@@ -46,16 +49,9 @@ const AuthProvider = ({ children }) => {
         Swal.showLoading();
       }
     });
-  };
-
-  const ocultarCargando = () => {
-    Swal.close();
-  };
-
-  if (loading) {
-    return mostrarCargando();
+    return null;
   } else {
-    ocultarCargando();
+    Swal.close();
   }
 
   return (

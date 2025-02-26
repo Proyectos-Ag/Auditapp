@@ -23,6 +23,7 @@ const app = express();
 
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
+app.use(cookieParser());
 
 
 const mongo = require('./config/dbconfig');
@@ -31,7 +32,7 @@ const corsOptions = {
   origin: ['http://localhost:3000', 'https://auditapp-dqej.onrender.com'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true, // Permitir cookies si son necesarias
+  credentials: true,
 }
 
 app.set('views', path.join(__dirname, 'views'));

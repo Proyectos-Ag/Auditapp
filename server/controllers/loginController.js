@@ -1,14 +1,15 @@
 const Usuarios = require('../models/usuarioSchema');
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const iniciarSesion = async (req, res) => {
   const { Correo, Contraseña } = req.body;
 
   try {
     const usuario = await Usuarios.findOne({ Correo });
-
     if (!usuario) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
@@ -34,10 +35,26 @@ const iniciarSesion = async (req, res) => {
         break;
     }
 
+    // Generar el token JWT con una validez de 8 horas
     const token = jwt.sign({ userId: usuario._id }, process.env.JWT_SECRET, { expiresIn: '8h' });
-   
-
-    return res.status(200).json({ token, tipo: tipoUsuario, usuario: { Correo: usuario.Correo, Nombre: usuario.Nombre, TipoUsuario: tipoUsuario, area: usuario.area } });
+    
+    // Establecer el token en una cookie HttpOnly
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Solo en producción
+      sameSite: 'strict',
+      maxAge: 8 * 60 * 60 * 1000, // 8 horas en milisegundos
+    });
+    
+    return res.status(200).json({
+      usuario: {
+        Correo: usuario.Correo, 
+        Nombre: usuario.Nombre, 
+        TipoUsuario: tipoUsuario, 
+        area: usuario.area, 
+        Foto: usuario.Foto
+      }
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error interno del servidor' });

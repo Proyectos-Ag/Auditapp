@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
-import { Navigate } from 'react-router-dom';
 import { UserContext } from './App';
+import UnauthorizedPage from './components/Pag-error/UnauthorizedPage';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { userData, loading } = useContext(UserContext);
@@ -11,13 +11,12 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (!userData) {
-    // Si no hay datos de usuario (después de cargar), redirigir al login
-    return <Navigate to="/" replace />;
+    return <UnauthorizedPage />;
   }
 
   // Verificar si el rol del usuario está permitido
   if (allowedRoles && !allowedRoles.includes(userData.TipoUsuario)) {
-    return <Navigate to="/" replace />; // O a una página de acceso denegado
+    return <UnauthorizedPage />; // O a una página de acceso denegado
   }
 
   return children; // Si el usuario tiene acceso, renderizamos el contenido
