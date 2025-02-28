@@ -41,7 +41,6 @@ const iniciarSesion = async (req, res) => {
     // Establecer el token en una cookie HttpOnly
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Solo en producción
       sameSite: 'strict',
       maxAge: 8 * 60 * 60 * 1000, // 8 horas en milisegundos
     });
@@ -52,7 +51,10 @@ const iniciarSesion = async (req, res) => {
         Nombre: usuario.Nombre, 
         TipoUsuario: tipoUsuario, 
         area: usuario.area, 
-        Foto: usuario.Foto
+        Foto: usuario.Foto,
+        Puesto: usuario.Puesto,
+        Departamento: usuario.Departamento,
+        ID: usuario._id
       }
     });
   } catch (error) {
