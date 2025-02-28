@@ -15,7 +15,7 @@ const menuItems = [
   { label: "CONTROL DE PLAGAS", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL DE PLAGAS","SEGURIDAD E HIGIENE Y SANIDAD"] },
   { label: "AGUIDA", roles: ["administrador", "auditor", "auditado"], areas: ["AGUIDA"] },
   { label: "PESADAS", roles: ["administrador", "auditor", "auditado"], areas: ["PESADAS"] },
-  { label: "PRODUCCIÓN", roles: ["administrador", "auditor", "auditado"], areas: ["PRODUCCIÓN","Producción"] },
+  { label: "PRODUCCIÓN", roles: ["administrador", "auditor", "auditado"], areas: ["PRODUCCIÓN.","Producción."] },
   { label: "ASEGURAMIENTO DE CALIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["ASEGURAMIENTO DE CALIDAD","LIBERACIÓN DE PT"] },
   { label: "COMPRAS", roles: ["administrador", "auditor", "auditado"], areas: ["COMPRAS"] },
   { label: "ADMINISTRADOR", roles: ["administrador"], areas: ["ADMINISTRADOR"] },
