@@ -29,7 +29,7 @@ app.use(cookieParser());
 const mongo = require('./config/dbconfig');
 
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://auditapp-dqej.onrender.com'],
+  origin: ['http://localhost:3000', 'https://auditapp-dqej.onrender.com', 'https://otravez-1.onrender.com/'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -42,7 +42,6 @@ app.use(cors(corsOptions));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');
