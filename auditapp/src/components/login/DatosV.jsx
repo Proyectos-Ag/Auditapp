@@ -4,6 +4,29 @@ import './css/datosv.css'; // Archivo CSS importado para los estilos
 const DatosV = () => {
   return (
     <div className="modal-body">
+      <h1>Versión 2.1.5 (Beta)</h1>
+
+      <ul>
+        <h3 className="modal-title">Nuevo método de verificación</h3>
+        <li>Se modificó la forma en que se almacena el token de acceso de localStorage a cookies para aumentar la seguridad en el acceso a la información.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Páginas de error</h3>
+        <li>Se agregaron páginas de error 404 (Página no encontrada) y 401 (No autorizado), las cuales redirigen al usuario al inicio de sesión.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Foto de perfil</h3>
+        <li>Se agregó la posibilidad de añadir una foto al perfil de usuario.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Ishikawa Vacío</h3>
+        <li>Se agregó la posibilidad de añadir participantes con un nivel de acceso de lectura o escritura, según lo requerido.</li>
+        <li>Se solucionaron errores como el desfase de texto en el diagrama y la selección de causa raíz.</li>
+      </ul>
+
       <h1>Versión 2.1.4 (Beta)</h1>
 
       <ul>

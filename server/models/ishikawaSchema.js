@@ -34,6 +34,12 @@ const correccionSchema = new mongoose.Schema({
     evidencia: String
 });
 
+const accesoSchema = new mongoose.Schema({
+    nombre: String,
+    nivelAcceso: Number,
+    correo: String
+});
+
 const ishikawaSchema = new mongoose.Schema({
     idRep: String,
     idReq: String,
@@ -55,8 +61,7 @@ const ishikawaSchema = new mongoose.Schema({
     tipo: String,
     notaRechazo: String,
     fechaElaboracion: String,
-    acceso: String,
-    nivelAcceso: Number
+    acceso: [accesoSchema]
 });
 
 const Ishikawa = mongoose.model('Ishikawa', ishikawaSchema);

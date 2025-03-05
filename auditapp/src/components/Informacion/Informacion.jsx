@@ -166,14 +166,12 @@ const handleFirebaseImageUpload = async () => {
           )}
         </div>
 
-
         <div className="user-details">
           <p><strong>Nombre:</strong> {userData.Nombre}</p>
           <p><strong>Email:</strong> {userData.Correo}</p>
           <p><strong>Tipo de Usuario:</strong> {tipo}</p>
           <p><strong>Puesto:</strong> {userData.Puesto}</p>
           <p><strong>Departamento:</strong> {userData.Departamento}</p>
-          <p><strong>Todo</strong> {userData.ID}</p>
         </div>
 
         <h2 className="inf-usuario">Cambiar Contraseña</h2>

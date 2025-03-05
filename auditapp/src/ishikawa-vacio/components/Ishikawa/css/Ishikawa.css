@@ -427,3 +427,12 @@ table, th, td {
     color: #000;
     font-size: 1rem;
   }
+
+.button-perm{
+    background-color: #0426c0;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+}

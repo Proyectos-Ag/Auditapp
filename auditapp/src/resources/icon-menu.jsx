@@ -94,31 +94,33 @@ const IconMenu = () => {
         {/* ícono */}
 
         <div className="user-icon">
-         <span>{userData.Nombre}</span>
+        <span>{userData?.Nombre || "Usuario"}</span>
           
           {/* Ícono */}
-          {userData.Foto ? (
-  <img
-    src={userData.Foto}
-    alt="Foto de usuario"
-    onClick={handleToggle}
-    ref={anchorRef}
-    style={{
-      width: '50px',
-      height: '50px',
-      borderRadius: '50%',
-      marginLeft: '10px',
-      cursor: 'pointer'
-    }}
-  />
-) : (
-  <AccountCircleIcon
-    onClick={handleToggle}
-    ref={anchorRef}
-    color="primary"
-    sx={{ fontSize: 50, marginLeft: '10px' }}
-  />
-)}
+          {userData?.Foto ? (
+            <img
+              src={userData.Foto}
+              alt="Foto de usuario"
+              onClick={handleToggle}
+              ref={anchorRef}
+              style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                marginLeft: '10px',
+                cursor: 'pointer',
+                border: '2px solid #3498db'
+              }}
+            />
+          ) : (
+            <AccountCircleIcon
+              onClick={handleToggle}
+              ref={anchorRef}
+              color="primary"
+              sx={{ fontSize: 50, marginLeft: '10px' }}
+            />
+          )}
+
 
         </div>
         <Popper

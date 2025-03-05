@@ -41,7 +41,7 @@ const Login = () => {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, formData);
       const { usuario } = response.data;
       setUserData(usuario);
-      console.log(usuario);
+      console.log('informacion almacenada por user data: ',usuario);
 
       if (usuario.TipoUsuario === 'administrador') {
         navigate('/admin');
@@ -119,7 +119,7 @@ const Login = () => {
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <span>
             <br />
-            v2.1.4(Beta)
+            v2.1.5(Beta)
           </span>
         </div>
 

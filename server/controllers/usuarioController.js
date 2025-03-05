@@ -144,7 +144,9 @@ const searchUsuarios = async (req, res) => {
     
     // Se crea una expresión regular para realizar una búsqueda insensible a mayúsculas/minúsculas
     const regex = new RegExp(search, 'i');
-    const usuarios = await Usuarios.find({ Nombre: regex }).limit(10);
+    const usuarios = await Usuarios.find({ Nombre: regex })
+  .select('Nombre Correo')
+  .limit(10);
     
     res.json(usuarios);
   } catch (error) {

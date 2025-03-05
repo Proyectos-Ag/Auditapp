@@ -580,14 +580,29 @@ const enviarPDF = async (req, res) => {
   }
 };
 
+// Controlador: actualizarAcceso
 const actualizarAcceso = async (req, res) => {
   const { id } = req.params;
-  const { acceso, nivelAcceso } = req.body;
+  const { acceso} = req.body;
+
+  console.log('Datos: ', acceso);
+
+  if (!Array.isArray(acceso)) {
+    return res.status(400).json({ message: "El campo acceso debe ser un array" });
+  }
+
+  const accesos = acceso.map(a => ({
+    nombre: a.nombre,
+    correo: a.correo,
+    nivelAcceso: Number(a.nivelAcceso)
+  }));
+
+  const accesosEmail = acceso;
 
   try {
     const ishikawa = await Ishikawa.findByIdAndUpdate(
       id,
-      { acceso, nivelAcceso: Number(nivelAcceso) },
+      { $push: { acceso: { $each: accesos } } },
       { new: true }
     );
 
@@ -595,11 +610,48 @@ const actualizarAcceso = async (req, res) => {
       return res.status(404).json({ message: "Registro no encontrado" });
     }
 
-    res.status(200).json({ message: "Acceso actualizado", ishikawa });
+    // Enviar correos a cada usuario agregado
+    const templatePath = path.join(__dirname, 'templates', 'notificacion-acceso.html');
+    const emailTemplate = fs.readFileSync(templatePath, 'utf8');
+
+    accesosEmail.forEach(({ nombre, correo, nivelAcceso, problema}) => {
+      const nivelAccesoTexto = Number(nivelAcceso) === 1 ? "Solo Lectura" : "Editor";
+
+      const customizedTemplate = emailTemplate
+        .replace('{{usuario}}', nombre)
+        .replace('{{problema}}', problema)
+        .replace('{{nivelAcceso}}', nivelAccesoTexto);
+
+      const mailOptions = {
+        from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
+        to: correo,
+        subject: "Se te ha otorgado acceso a un Ishikawa",
+        html: customizedTemplate,
+        attachments: [
+          {
+            filename: 'logoAguida.png',
+            path: path.join(__dirname, '../assets/logoAguida-min.png'),
+            cid: 'logoAguida'
+          }
+        ]
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error(`Error al enviar el correo a ${correo}:`, error);
+        } else {
+          console.log(`Correo enviado a ${correo}:`, info.response);
+        }
+      });
+    });
+
+    res.status(200).json({ message: "Acceso actualizado y correos enviados", ishikawa });
   } catch (error) {
-    res.status(500).json({ message: "Error al actualizar", error });
-  }
+    console.error("Error al actualizar el acceso:", error);
+    res.status(500).json({ message: "Error al actualizar", error: error.message });
+  }  
 };
+
 
 const deleteIshikawa = async (req, res) => {
   try {

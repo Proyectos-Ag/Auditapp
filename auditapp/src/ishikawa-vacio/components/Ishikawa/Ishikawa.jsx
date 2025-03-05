@@ -18,7 +18,7 @@ const CreacionIshikawa = () => {
   const navigate = useNavigate();
   // const [showPart, setShowPart] = useState(true);
   const [ishikawaRecords, setIshikawaRecords] = useState([]); // Almacena los registros filtrados
-  const [selectedRecordId, setSelectedRecordId] = useState(null); // Almacena el ID del registro seleccionado
+  const [selectedRecordId, setSelectedRecordId] = useState(null);
   const [, setSelectedTextareas] = useState(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -64,19 +64,37 @@ const CreacionIshikawa = () => {
   const [actividades, setActividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: '' }]);
 
   const fechaElaboracion = new Date().toISOString();
+
   //Modo lectura 
-  const isReadOnly = formData.nivelAcceso === 1 && formData.acceso === userData.Nombre;
+  const isReadOnly =
+  Array.isArray(formData.acceso) &&
+  formData.acceso.some(
+    (acc) =>
+      acc.nombre?.toLowerCase() === userData.Nombre?.toLowerCase() &&
+      Number(acc.nivelAcceso) === 1
+  );
 
 
   useEffect(() => {
     const fetchIshikawaRecords = async () => {
       try {
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-        const filteredRecords = response.data.filter(item =>
-          (["Rechazado", "Incompleto"].includes(item.estado)) && 
-          [item.auditado, item.acceso].some(nombre => nombre?.toLowerCase() === userData.Nombre?.toLowerCase())
-        );
+        console.log('Nombre: ', userData.Nombre);
+        
+        const filteredRecords = response.data.filter(item => {
+          const estadoValido = ["Rechazado", "Incompleto"].includes(item.estado);
+          // Verifica si auditado coincide
+          const auditadoMatch = item.auditado?.toLowerCase() === userData.Nombre?.toLowerCase();
+          // Verifica si alguno de los accesos coincide en su propiedad "nombre"
+          const accesoMatch = Array.isArray(item.acceso) && item.acceso.some(acc => 
+            acc.nombre?.toLowerCase() === userData.Nombre?.toLowerCase()
+          );
+          
+          return estadoValido && (auditadoMatch || accesoMatch);
+        });
+        
         setIshikawaRecords(filteredRecords);
+        console.log('Problema: ',filteredRecords.problema);
       } catch (error) {
         console.error('Error fetching Ishikawa records:', error);
       }
@@ -84,6 +102,7 @@ const CreacionIshikawa = () => {
   
     fetchIshikawaRecords();
   }, [userData.Nombre]);
+  
 
   const handleSelectRecord = (e) => {
     const selectedId = e.target.value;
@@ -330,12 +349,24 @@ const CreacionIshikawa = () => {
       }
   
       // Actualizar los textos seleccionados en el campo 'causa'
-      setFormData((prevState) => ({
-        ...prevState,
-        causa: Array.from(newSelected).map(t => t.value).join('; ')
-      }));
-  
-      return newSelected;
+      setFormData((prevState) => {
+        // Si ya existe un valor en causa, separamos sus partes
+        const currentValues = prevState.causa 
+          ? prevState.causa.split('; ').filter(v => v) 
+          : [];
+        
+        // Obtenemos los valores de los textareas seleccionados
+        const selectedValues = Array.from(newSelected).map(t => t.value);
+        
+        // Fusionamos ambos arrays, eliminando duplicados
+        const mergedValues = [...new Set([...currentValues, ...selectedValues])];
+        
+        return {
+          ...prevState,
+          causa: mergedValues.join('; ')
+        };
+      });
+      
     });
   
     textarea.select(); // Selecciona el texto dentro del textarea
@@ -569,7 +600,7 @@ const restoreElements = () => {
         const imgWidth = pageWidth - marginLeft - marginRight;
         const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
 
-        if (yOffset + imgHeight + bottomMargin > pageHeight) {
+        if (yOffset + imgHeight > pageHeight) {
             pdf.addPage();
             yOffset = 0.5;
         }
@@ -736,6 +767,28 @@ const ajustarTamanoFuente = (textarea) => {
   }
 };
 
+function verificarCoincidencia(textAreaValue, causa) {
+  // Verificar que los valores no sean undefined o null
+  if (typeof textAreaValue !== 'string' || typeof causa !== 'string') {
+      return false;
+  }
+
+  const trimmedTextAreaValue = textAreaValue.trim();
+  const trimmedCausaParts = causa.trim().split(';').map(part => part.trim());
+
+  if (trimmedTextAreaValue === '') {
+      return false;
+  }
+
+  return trimmedCausaParts.some(part => part === trimmedTextAreaValue);
+}
+
+const obtenerEstiloTextarea = (texto, causa) => {
+  return verificarCoincidencia(texto, causa) 
+  ? { backgroundColor: '#f1fc5e9f', borderRadius: '10px' } 
+  : {};
+};
+
 useEffect(() => {
     const textareas = document.querySelectorAll('textarea');
     textareas.forEach((textarea) => ajustarTamanoFuente(textarea));
@@ -767,11 +820,6 @@ useEffect(() => {
             </div>
          </div>
     )}
-
-    <div>
-      <button onClick={(e) => {e.preventDefault();setModalOpen(true); }}>Asignar Acceso</button>
-      <AccesoModal open={modalOpen} handleClose={() => setModalOpen(false)} idIshikawa={selectedRecordId}/>
-    </div>
       
       <div style={{textAlign:'center', marginTop: '7rem', marginBottom:'-5rem'}}>
       <h2>Seleccionar un Registro de Ishikawa:</h2>
@@ -792,12 +840,35 @@ useEffect(() => {
          ): ''}
 
         <div className="content-diagrama">
+        <div>
+        {!(Array.isArray(formData.acceso) &&
+            formData.acceso.some(acc => acc.nombre?.toLowerCase() === userData.Nombre?.toLowerCase())) && (
+            <button className='button-perm' onClick={(e) => { e.preventDefault(); setModalOpen(true); }}>
+              Asignar Acceso
+            </button>
+          )}
+
+          <AccesoModal open={modalOpen} handleClose={() => setModalOpen(false)} idIshikawa={selectedRecordId} problemaIshikawa={formData.problema}/>
+        </div>
+
         {isReadOnly && (
         <div style={{ color: 'red', marginBottom: '1rem' }}>
           Modo lectura: no se permiten cambios.
         </div>
       )}
-          <p>Acceso: {formData.acceso? formData.acceso : 'NA'}</p>
+         <p>
+          Acceso:{" "}
+          {formData.acceso && Array.isArray(formData.acceso) && formData.acceso.length > 0 ? (
+            formData.acceso.map((acc, index) => (
+              <span key={index}>
+                {acc.nombre} (Nivel: {acc.nivelAcceso}) {index < formData.acceso.length - 1 ? ", " : ""}
+              </span>
+            ))
+          ) : (
+            "NA"
+          )}
+        </p>
+
         <div id='pdf-content-part1' className="image-container-dia" >
         <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
         <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
@@ -830,54 +901,54 @@ useEffect(() => {
             {diagrama.map((dia, index) => (
               <div key={index}>
               <textarea maxLength={145} className="text-area" name="text1" value={dia.text1} onChange={handleInputChange} 
-              style={{ top: '19.1rem', left: '8.7rem'}} placeholder="Texto..." required  onDoubleClick={handleDoubleClick}
+              style={{ top: '19.1rem', left: '8.7rem', ...obtenerEstiloTextarea(dia.text1, formData.causa)}} placeholder="Texto..." required  onDoubleClick={handleDoubleClick}
               disabled={isReadOnly}/>
                <textarea maxLength={145} className="text-area" name='text2' value={dia.text2} onChange={handleInputChange}
-               style={{ top: '19.1rem', left: '25.4rem'}} placeholder="Texto..." required  onDoubleClick={handleDoubleClick}
+               style={{ top: '19.1rem', left: '25.4rem', ...obtenerEstiloTextarea(dia.text2, formData.causa)}} placeholder="Texto..." required  onDoubleClick={handleDoubleClick}
                disabled={isReadOnly}/>
                <textarea className="text-area" name='text3' value={dia.text3} onChange={handleInputChange}
-                style={{ top: '19.1rem', left: '41.2rem'}}placeholder="Texto..." required  onClick={handleDiagrama}
+                style={{ top: '19.1rem', left: '41.2rem', ...obtenerEstiloTextarea(dia.text3, formData.causa)}}placeholder="Texto..." required  onClick={handleDiagrama}
                 onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
    
                <textarea className="text-area" name='text4' value={dia.text4} onChange={handleInputChange}
-                style={{ top: '23.2rem', left: '12.2rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                style={{ top: '23.2rem', left: '12.2rem', ...obtenerEstiloTextarea(dia.text4, formData.causa)}}placeholder="Texto..."  onClick={handleDiagrama}
                 onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text5' value={dia.text5} onChange={handleInputChange}
-                style={{ top: '23.2rem', left: '28.8rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                style={{ top: '23.2rem', left: '28.8rem', ...obtenerEstiloTextarea(dia.text5, formData.causa)}}placeholder="Texto..."  onClick={handleDiagrama}
                 onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text6' value={dia.text6} onChange={handleInputChange}
-                style={{ top: '23.2rem', left: '45rem' }}placeholder="Texto..."  onClick={handleDiagrama}
+                style={{ top: '23.2rem', left: '45rem', ...obtenerEstiloTextarea(dia.text6, formData.causa)}}placeholder="Texto..."  onClick={handleDiagrama}
                 onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
        
                <textarea className="text-area" name='text7' value={dia.text7} onChange={handleInputChange}
-                style={{ top: '27.2rem', left: '15.5rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                style={{ top: '27.2rem', left: '15.5rem', ...obtenerEstiloTextarea(dia.text7, formData.causa)}}placeholder="Texto..."  onClick={handleDiagrama}
                 onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text8' value={dia.text8} onChange={handleInputChange}
-                style={{ top: '27.2rem', left: '32.3rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                style={{ top: '27.2rem', left: '32.3rem', ...obtenerEstiloTextarea(dia.text8, formData.causa)}}placeholder="Texto..."  onClick={handleDiagrama}
                 onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text9' value={dia.text9} onChange={handleInputChange}
-                style={{ top: '27.2rem', left: '48.1rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                style={{ top: '27.2rem', left: '48.1rem', ...obtenerEstiloTextarea(dia.text9, formData.causa)}}placeholder="Texto..."  onClick={handleDiagrama}
                 onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
      
                <textarea className="text-area" name='text10' value={dia.text10} onChange={handleInputChange}
-                style={{ top: '31rem', left: '23rem'}}placeholder="Texto..." required  onClick={handleDiagrama}
+                style={{ top: '31rem', left: '23rem', ...obtenerEstiloTextarea(dia.text10, formData.causa)}}placeholder="Texto..." required  onClick={handleDiagrama}
                 onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text11' value={dia.text11} onChange={handleInputChange}
-                style={{ top: '31rem', left: '39.4rem'}}placeholder="Texto..." required  onClick={handleDiagrama}
+                style={{ top: '31rem', left: '39.4rem', ...obtenerEstiloTextarea(dia.text11, formData.causa)}}placeholder="Texto..." required  onClick={handleDiagrama}
                 onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
      
                <textarea className="text-area" name='text12' value={dia.text12} onChange={handleInputChange}
-                style={{ top: '35rem', left: '19.7rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                style={{ top: '35rem', left: '19.7rem', ...obtenerEstiloTextarea(dia.text12, formData.causa)}}placeholder="Texto..."  onClick={handleDiagrama}
                 onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text13' value={dia.text13} onChange={handleInputChange}
-                style={{ top: '35rem', left: '36rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                style={{ top: '35rem', left: '36rem', ...obtenerEstiloTextarea(dia.text13, formData.causa)}}placeholder="Texto..."  onClick={handleDiagrama}
                 onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
      
                <textarea className="text-area" name='text14' value={dia.text14} onChange={handleInputChange}
-                style={{ top: '39rem', left: '16.6rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                style={{ top: '39rem', left: '16.6rem', ...obtenerEstiloTextarea(dia.text14, formData.causa)}}placeholder="Texto..."  onClick={handleDiagrama}
                 onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                <textarea className="text-area" name='text15' value={dia.text15} onChange={handleInputChange}
-                style={{ top: '39rem', left: '32.8rem'}}placeholder="Texto..."  onClick={handleDiagrama}
+                style={{ top: '39rem', left: '32.8rem', ...obtenerEstiloTextarea(dia.text15, formData.causa)}}placeholder="Texto..."  onClick={handleDiagrama}
                 onDoubleClick={handleDoubleClick} maxLength={145} disabled={isReadOnly}></textarea>
                 <textarea maxLength={145} className="text-area" name='problema' value={formData.problema} onChange={handleDiagrama}
                   style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} placeholder="Problema..." disabled={isReadOnly}/>
