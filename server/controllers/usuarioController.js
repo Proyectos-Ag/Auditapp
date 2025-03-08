@@ -173,8 +173,11 @@ const actualizarFoto = async (req, res) => {
     }
     
     // Actualizar el campo Foto con la URL proporcionada
-    usuario.Foto = url;
-    await usuario.save();
+    const usuarioActualizado = await Usuarios.findByIdAndUpdate(
+      id,
+      { Foto: url },
+      { new: true, runValidators: false }
+    );
     
     res.status(200).json({ message: 'Foto actualizada correctamente.', usuario });
   } catch (error) {
