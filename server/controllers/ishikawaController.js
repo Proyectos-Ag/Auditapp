@@ -106,7 +106,7 @@ const actualizarIshikawaCompleto = async (req, res) => {
 
       // Verificar si el estado es "En revisión"
     if (updatedIshikawa.estado === 'En revisión') {
-      const usuario = req.body.auditado;
+      const usuario = updatedIshikawa.auditado;
 
       // Leer y personalizar la plantilla
       const templatePathRevision = path.join(__dirname, 'templates', 'revision-ishikawa.html');
@@ -139,7 +139,7 @@ const actualizarIshikawaCompleto = async (req, res) => {
 
     // Verificar si el estado es "Rechazado"
     if (updatedIshikawa.estado === 'Rechazado') {
-      const usuario = req.body.auditado;
+      const usuario = updatedIshikawa.auditado;
       const programa = req.body.programa;
       const correo = req.body.correo;
       const nota = req.body.notaRechazo;
@@ -181,7 +181,7 @@ const actualizarIshikawaCompleto = async (req, res) => {
 
     // Verificar si el estado es "Aprobado"
     if (updatedIshikawa.estado === 'Aprobado') {
-      const usuario = req.body.auditado;
+      const usuario = updatedIshikawa.auditado;
       const programa = req.body.programa;
       const correo = req.body.correo;
 
@@ -393,9 +393,23 @@ const actualizarFechaCompromiso = async (req, res) => {
     }
 };
 
+const obtenerIshikawaEspInc = async (req, res) => {
+  try {
+    const ishikawas = await Ishikawa.find(
+      { idRep: { $exists: false }, estado: 'Incompleto' },
+      '_id auditado fechaElaboracion estado'
+    );
+
+    res.status(200).json(ishikawas);
+  } catch (error) {
+    console.error('Error al obtener los ishikawas:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+};
+
 const obtenerIshikawaEsp = async (req, res) => {
   try {
-    // Selecciona solo los campos que deseas incluir en la respuesta
+    // Selecciona solo los campos que desean incluir en la respuesta
     const ishikawas = await Ishikawa.find({ tipo: 'vacio' },'_id auditado fecha estado'); 
 
     res.status(200).json(ishikawas);
@@ -583,7 +597,7 @@ const enviarPDF = async (req, res) => {
 // Controlador: actualizarAcceso
 const actualizarAcceso = async (req, res) => {
   const { id } = req.params;
-  const { acceso} = req.body;
+  const { acceso } = req.body;
 
   console.log('Datos: ', acceso);
 
@@ -597,7 +611,7 @@ const actualizarAcceso = async (req, res) => {
     nivelAcceso: Number(a.nivelAcceso)
   }));
 
-  const accesosEmail = acceso;
+  // const accesosEmail = acceso;
 
   try {
     const ishikawa = await Ishikawa.findByIdAndUpdate(
@@ -610,11 +624,12 @@ const actualizarAcceso = async (req, res) => {
       return res.status(404).json({ message: "Registro no encontrado" });
     }
 
-    // Enviar correos a cada usuario agregado
+    // COMENTADO: Enviar correos a cada usuario agregado
+    /*
     const templatePath = path.join(__dirname, 'templates', 'notificacion-acceso.html');
     const emailTemplate = fs.readFileSync(templatePath, 'utf8');
 
-    accesosEmail.forEach(({ nombre, correo, nivelAcceso, problema}) => {
+    accesosEmail.forEach(({ nombre, correo, nivelAcceso, problema }) => {
       const nivelAccesoTexto = Number(nivelAcceso) === 1 ? "Solo Lectura" : "Editor";
 
       const customizedTemplate = emailTemplate
@@ -644,12 +659,13 @@ const actualizarAcceso = async (req, res) => {
         }
       });
     });
+    */
 
-    res.status(200).json({ message: "Acceso actualizado y correos enviados", ishikawa });
+    res.status(200).json({ message: "Acceso actualizado (sin envío de correos)", ishikawa });
   } catch (error) {
     console.error("Error al actualizar el acceso:", error);
     res.status(500).json({ message: "Error al actualizar", error: error.message });
-  }  
+  }
 };
 
 
@@ -687,5 +703,6 @@ const deleteIshikawa = async (req, res) => {
     ishikawaFinalizado,
     enviarPDF,
     actualizarAcceso,
-    deleteIshikawa
+    deleteIshikawa,
+    obtenerIshikawaEspInc
   };

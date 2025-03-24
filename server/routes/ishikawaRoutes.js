@@ -9,6 +9,7 @@ const upload = multer({ storage: storage });
 router.post('/', ishikawaController.crearIshikawa);
 router.get('/', ishikawaController.obtenerIshikawas);
 router.get('/ishesp', ishikawaController.obtenerIshikawaEsp);
+router.get('/ishesp-inc', ishikawaController.obtenerIshikawaEspInc);
 router.get('/por/:_id', ishikawaController.obtenerIshikawasId);
 router.get('/vac/por/:_id', ishikawaController.obtenerIshikawaPorId);
 router.get('/por/vista/:nombre', ishikawaController.obtenerIshikawaVista);

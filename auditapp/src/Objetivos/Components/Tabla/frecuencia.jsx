@@ -5,15 +5,27 @@ import Swal from 'sweetalert2';
 import './css/TablaObjetivosArea.css';
 import { useNavigate } from 'react-router-dom';
 
-
 const TablaObjetivosArea = () => {
   const { label } = useParams();
   const [objetivos, setObjetivos] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [valores, setValores] = useState({});
   const [cambios, setCambios] = useState({});
+  const [showPanel, setShowPanel] = useState(false);
+  const [panelPosition, setPanelPosition] = useState({ x: 100, y: 100 });
+  const [panelSize, setPanelSize] = useState({ width: 500, height: 400 });
+  const [dragging, setDragging] = useState(false);
+  const [resizing, setResizing] = useState(false);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
   const navigate = useNavigate();
-  
+
+  // Evita la selección de texto mientras se arrastra o redimensiona
+  useEffect(() => {
+    if (dragging || resizing) {
+      document.body.classList.add('no-select');
+    } else {
+      document.body.classList.remove('no-select');
+    }
+  }, [dragging, resizing]);
 
   const fetchObjetivos = async () => {
     try {
@@ -50,11 +62,49 @@ const TablaObjetivosArea = () => {
 
       setObjetivos(objetivosData);
       setValores(valoresIniciales);
-      setLoading(false);
     } catch (error) {
       console.error("Error al cargar objetivos:", error);
-      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (dragging || resizing) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    } else {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragging, resizing]);
+
+  const handleMouseDown = (e) => {
+    if (e.target.classList.contains('resize-handle')) {
+      setResizing(true);
+    } else {
+      setDragging(true);
+      setOffset({ x: e.clientX - panelPosition.x, y: e.clientY - panelPosition.y });
+    }
+    e.preventDefault(); // Evita la selección de texto
+  };
+
+  const handleMouseMove = (e) => {
+    if (dragging) {
+      setPanelPosition({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+    }
+    if (resizing) {
+      setPanelSize({ width: e.clientX - panelPosition.x, height: e.clientY - panelPosition.y });
+    }
+    e.preventDefault(); // Evita la selección de texto
+  };
+
+  const handleMouseUp = () => {
+    setDragging(false);
+    setResizing(false);
   };
 
   useEffect(() => {
@@ -62,15 +112,7 @@ const TablaObjetivosArea = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [label]);
 
-  if (loading) {
-    return <div>Cargando objetivos...</div>;
-  }
-
-  if (!objetivos || objetivos.length === 0) {
-    return <div>No hay objetivos registrados para esta área.</div>;
-  }
-
-   const handleBlur = (name, objetivoId, meta) => {
+  const handleBlur = (name, objetivoId, meta) => {
     const valor = valores[`${objetivoId}.${name}`];
     if (valor && parseFloat(valor) < parseFloat(meta)) {
       Swal.fire({
@@ -84,16 +126,13 @@ const TablaObjetivosArea = () => {
         if (result.isConfirmed) {
           (async () => {
             try {
-              // Guardar los cambios pendientes
               await handleGuardar();
-              // Obtener el objetivo seleccionado
               const objetivo = objetivos.find((obj) => obj._id === objetivoId);
               const objetivoData = {
                 numero: objetivos.indexOf(objetivo) + 1,
                 objetivo: objetivo.objetivo,
               };
-              const periodoData = name.split(".")[0]; // Extraer el periodo
-              // Redirigir a la ruta /acciones pasando los datos necesarios en el state
+              const periodoData = name.split(".")[0];
               navigate('/acciones', {
                 state: {
                   idObjetivo: objetivoId,
@@ -110,14 +149,6 @@ const TablaObjetivosArea = () => {
     }
   };
 
-  if (loading) {
-    return <div>Cargando objetivos...</div>;
-  }
-
-  if (!objetivos || objetivos.length === 0) {
-    return <div>No hay objetivos registrados para esta área.</div>;
-  }
-
   const handleChange = (e, objetivoId) => {
     const { name, value } = e.target;
     setValores({ ...valores, [`${objetivoId}.${name}`]: value });
@@ -129,17 +160,14 @@ const TablaObjetivosArea = () => {
       for (const [key, value] of Object.entries(cambios)) {
         if (value) {
           const [objetivoId, campo] = key.split('.');
-  
-          // Si el campo pertenece a un indicador, asegurarse de enviar un objeto con la estructura esperada
           if (campo.startsWith('indicador')) {
             const semanas = ["S1", "S2", "S3", "S4", "S5"];
             const indicadorData = semanas.reduce((acc, semana) => {
               acc[semana] = valores[`${objetivoId}.${campo}.${semana}`] || "";
               return acc;
             }, {});
-  
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos/${objetivoId}`, {
-              [campo]: indicadorData, // Enviar el objeto completo
+              [campo]: indicadorData,
             });
           } else {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos/${objetivoId}`, {
@@ -159,12 +187,11 @@ const TablaObjetivosArea = () => {
   const renderTablaMeses = (meses, titulo) => {
     return (
       <div className="meses-container">
-
         <h4>{titulo}</h4>
         <table className="objetivos-tabla">
           <thead>
             <tr>
-              <th rowSpan="2" style={{}}>OBJ 2025</th>
+              <th rowSpan="2">OBJ 2025</th>
               <th rowSpan="2">META</th>
               {meses.map((mes) => (
                 <th colSpan="5" key={mes.nombre}>{mes.nombre}</th>
@@ -191,7 +218,7 @@ const TablaObjetivosArea = () => {
                         name={`${mes.campo}.S${i + 1}`}
                         value={valores[`${objetivo._id}.${mes.campo}.S${i + 1}`] || ''}
                         onChange={(e) => handleChange(e, objetivo._id)}
-                        onBlur={() => handleBlur(`${mes.campo}.S${i + 1}`, objetivo._id, objetivo.metaFrecuencia,objetivo[mes.campo]?._id)}
+                        onBlur={() => handleBlur(`${mes.campo}.S${i + 1}`, objetivo._id, objetivo.metaFrecuencia, objetivo[mes.campo]?._id)}
                       />
                     </td>
                   ))
@@ -239,26 +266,61 @@ const TablaObjetivosArea = () => {
       <h2 className="tabla-titulo">OBJETIVOS DEL SISTEMA DE ADMINISTRACIÓN DE CALIDAD E INOCUIDAD DE LOS ALIMENTOS</h2>
       <h3 className="tabla-subtitulo">Área: {label}</h3>
       <div className="botones-container">
-      <button 
-        className="button-acciones"
-        onClick={() => navigate(`/acciones-list/${label}`)}
-      >
-        Acciones Correctivas
-      </button>
+        <button 
+          className="button-acciones"
+          onClick={() => navigate(`/acciones-list/${label}`)}
+        >
+          Acciones Correctivas
+        </button>
 
-      <button 
-        className="btn-guardar"
-        onClick={handleGuardar}
-      >
-        Guardar
-      </button>
+        <button 
+          className="btn-guardar"
+          onClick={handleGuardar}
+        >
+          Guardar
+        </button>
+
+        <button 
+          className="btn-ver-objetivos"
+          onClick={() => setShowPanel(!showPanel)}
+        >
+          Ver Objetivos
+        </button>
       </div>
-      
-      <div >
-      {periodos.map((periodo) => renderTablaMeses(periodo.meses, periodo.titulo))}
-      
+
+      {showPanel && (
+          <div
+            className="panel-flotante"
+            style={{
+              position: 'absolute',
+              left: `${panelPosition.x}px`,
+              top: `${panelPosition.y}px`,
+              width: `${panelSize.width}px`,
+              height: `${panelSize.height}px`,
+              border: '1px solid #ccc',
+              backgroundColor: '#fff',
+              padding: '10px',
+              cursor: dragging ? 'grabbing' : 'grab',
+              resize: 'none',
+              overflow: 'auto'
+            }}
+            onMouseDown={handleMouseDown}
+          >
+          <div className="resize-handle" />
+          <h4>Objetivos del Área: {label}</h4>
+          <ul>
+            {objetivos.map((objetivo, index) => (
+              <li key={objetivo._id}>
+                {index + 1}. {objetivo.objetivo}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div>
+        {periodos.map((periodo) => renderTablaMeses(periodo.meses, periodo.titulo))}
       </div>
-      
     </div>
   );
 };

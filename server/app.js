@@ -16,6 +16,8 @@ const ishikawa = require('./routes/ishikawaRoutes');
 const evaluacionRoutes = require('./routes/evaluacionRoutes');
 const programarRoutes = require('./routes/programar-audiRoutes');
 const objetivosRoutes = require("./routes/ObjetivosRoutes");
+//archivo que usa cron
+require('./tarea_config/notificacionIsh');
 
 dotenv.config();
 

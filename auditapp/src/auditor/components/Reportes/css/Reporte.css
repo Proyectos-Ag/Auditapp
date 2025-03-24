@@ -8,7 +8,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 2rem auto 0;
+    margin: 7em auto 0;
     width: 80rem;
     max-width: 100rem;
     padding: 20px;
@@ -75,7 +75,7 @@ th.conformity-header-repo {
 }
 
 .espacio-repo {
-    margin-top: 70px;
+    margin-top: 7em;
 }
 
 .logo-empresa-repo {

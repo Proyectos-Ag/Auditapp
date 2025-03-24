@@ -68,7 +68,7 @@ const AccesoModal = ({ open, handleClose, idIshikawa, problemaIshikawa}) => {
 
     setAccesos([...accesos, newAcceso]);
     setSelectedUser(user);
-    setSearchTerm(user.Nombre);
+    setSearchTerm("");
     setSuggestions([]);
   };
 
@@ -81,12 +81,23 @@ const AccesoModal = ({ open, handleClose, idIshikawa, problemaIshikawa}) => {
   // En el submit se envía el array de accesos
   const handleSubmit = async (e) => {
     e.preventDefault();
+  
+    if (!idIshikawa || idIshikawa.trim() === "") {
+      handleClose();
+      Swal.fire({
+        icon: "warning",
+        title: "Selecciona un Ishikawa",
+        text: "Debes seleccionar un Ishikawa antes de asignar accesos.",
+      });
+      return; // Evita que continúe con la solicitud
+    }
+  
     try {
       await axios.put(
         `${process.env.REACT_APP_BACKEND_URL}/ishikawa/acceso/${idIshikawa}`,
         { acceso: accesos }
       );
-
+  
       // Notificación de éxito
       Swal.fire({
         icon: "success",
@@ -95,11 +106,11 @@ const AccesoModal = ({ open, handleClose, idIshikawa, problemaIshikawa}) => {
         timer: 3000,
         showConfirmButton: false,
       });
-
+  
       handleClose(); // Cierra el modal después de guardar
     } catch (error) {
       console.error("Error al actualizar el acceso:", error);
-
+  
       // Notificación de error
       Swal.fire({
         icon: "error",
@@ -107,7 +118,7 @@ const AccesoModal = ({ open, handleClose, idIshikawa, problemaIshikawa}) => {
         text: "Hubo un problema al actualizar el acceso.",
       });
     }
-  };
+  };  
 
   return (
     <Modal open={open} onClose={handleClose}>

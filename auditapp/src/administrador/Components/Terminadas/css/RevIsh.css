@@ -67,3 +67,22 @@
     margin: 0 auto 20px auto; 
     display: block;
 }
+
+.divider {
+    flex-basis: 100%;         /* Hace que ocupe toda la línea en el contenedor flex */
+    border-top: 2px solid black;
+    margin: 20px 0;
+    position: relative;
+    text-align: center;
+}
+
+.divider::after {
+    content: attr(data-label); /* Usa el atributo data-label para mostrar el texto */
+    position: absolute;
+    top: -12px;               /* Ajusta según el espacio deseado */
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffffff;      /* Mismo color de fondo que el contenedor para "romper" la línea */
+    padding: 0 10px;
+    color: black;
+}

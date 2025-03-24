@@ -20,9 +20,15 @@ const diagramaSchema = new mongoose.Schema({
     text15: String
 });
 
+const responsableSchema = new mongoose.Schema({
+    nombre: String,
+    correo: String
+});
+
 const actividadSchema = new mongoose.Schema({
     actividad: String,
-    responsable: String,
+    responsable: [responsableSchema],
+    correo: String,
     fechaCompromiso: [String],
 });
 

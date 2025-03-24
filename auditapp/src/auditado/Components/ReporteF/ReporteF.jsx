@@ -160,10 +160,31 @@ const ReporteF = () => {
                                             <h1>REPORTE DE AUDITORÍA</h1>
                                             </div>
                                         </div>
-                                        <div className='mover'>
-                                            <div className="dato"><span className="bold-text">Duración de la auditoría:</span> {dato.Duracion}</div>
-                                            <div className="dato"><span className="bold-text">Tipo de auditoría:</span> {dato.TipoAuditoria}</div>
-                                            <div className="dato"><span className="bold-text">Fecha de elaboración de reporte:</span> {formatDate(dato.FechaElaboracion)}</div>
+                                        <div className="mover">
+                                        <div className={`grupo-izquierda ${!dato.Cliente ? 'sin-cliente' : ''}`}>
+                                        <div className="dato">
+                                            <span className="bold-text">Duración de la auditoría:</span> {dato.Duracion}
+                                        </div>
+                                        <div className="dato">
+                                            <span className="bold-text">Tipo de auditoría:</span> {dato.TipoAuditoria}
+                                        </div>
+                                        {dato.Cliente && (
+                                            <div className="dato">
+                                                <span className="bold-text">Cliente:</span> {dato.Cliente}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                        <div className="grupo-derecha">
+                                        {dato.Cliente && (
+                                            <div className="dato-right">
+                                                <span className="bold-text">Fecha de evaluación de auditoría:</span> {formatDate(dato.FechaEvaluacion)}
+                                            </div>
+                                            )}
+                                            <div className="dato-right">
+                                                <span className="bold-text">Fecha de elaboración de reporte:</span> {formatDate(dato.FechaElaboracion)}
+                                            </div>
+                                        </div>
                                         </div>
                                         <div className='tabla-reporte'>
                                         <table>
@@ -369,7 +390,13 @@ const ReporteF = () => {
                                                                     ''
                                                                 ) : ''}
                                                             </td>
-                                                            <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
+                                                            <td>
+                                                            {ishikawa && 
+                                                            ishikawa.actividades.length > 0 && 
+                                                            ishikawa.actividades[0].responsable.length > 0 
+                                                                ? ishikawa.actividades[0].responsable[0].nombre 
+                                                                : ''}
+                                                            </td>
                                                             <td>
                                                                 {ishikawa && userData.Nombre === ishikawa.auditado ? (
                                                                 <button className="button-estado" 

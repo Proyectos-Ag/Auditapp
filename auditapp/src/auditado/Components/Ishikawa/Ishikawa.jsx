@@ -7,6 +7,8 @@ import axios from 'axios';
 import { UserContext } from '../../../App';
 import Swal from 'sweetalert2'; 
 import withReactContent from 'sweetalert2-react-content';
+import Busqueda from './Busqueda';
+import Chip from '@mui/material/Chip';
 
 const Ishikawa = () => {
   const { userData } = useContext(UserContext);
@@ -60,7 +62,7 @@ const Ishikawa = () => {
     text15: ''
    }]);
    
-   const [actividades, setActividades] = useState({ actividad: '', responsable: '', fechaCompromiso: [] });
+  const [actividades, setActividades] = useState({ actividad: '', responsable: [], fechaCompromiso: [] });
 
   const idRep = _id;
 
@@ -85,7 +87,7 @@ const Ishikawa = () => {
               setRequisito(descripcionEncontrada.Requisito);
               setHallazgo((descripcionEncontrada?.Observacion && descripcionEncontrada?.PuntuacionMaxima) ?
               descripcionEncontrada.Hallazgo : descripcionEncontrada.Observacion);
-              setProblema((descripcionEncontrada?.Observacion && descripcionEncontrada?.PuntuacionMaxima) ?
+              setProblema((descripcionEncontrada?.Observacion && datosFiltrados?.PuntuacionMaxima) ?
                           descripcionEncontrada.Observacion : descripcionEncontrada.Problema);
               setAuditados(descripcionEncontrada.Auditados);
             }
@@ -459,7 +461,10 @@ const handleSaveOrUpdate = async () => {
   };
 
   const agregarFilaActividad = () => {
-    setActividades([...actividades, { actividad: '', responsable: '', fechaCompromiso: [] }]);
+    setActividades([
+      ...actividades, 
+      { actividad: '', responsable: [], fechaCompromiso: [] }
+    ]);
   };
 
   const ajustarFecha = (fechaString) => {
@@ -588,6 +593,43 @@ useEffect(() => {
 // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
+const handleResponsableSelect = (index, user) => {
+  const nuevasActividades = actividades.map((actividad, i) => {
+    if (i === index) {
+      // Validamos si el responsable ya está en el array (comparamos por nombre, por ejemplo)
+      const yaExiste = actividad.responsable.some(
+        (resp) => resp.nombre === user.Nombre
+      );
+
+      // Si no existe, lo agregamos
+      if (!yaExiste) {
+        return {
+          ...actividad,
+          responsable: [
+            ...actividad.responsable,
+            { nombre: user.Nombre, correo: user.Correo },
+          ],
+        };
+      }
+    }
+    return actividad;
+  });
+  setActividades(nuevasActividades);
+};
+
+const handleDeleteResponsable = (index, responsableIndex) => {
+  const nuevasActividades = actividades.map((actividad, i) => {
+    if (i === index) {
+      return {
+        ...actividad,
+        responsable: actividad.responsable.filter((_, idx) => idx !== responsableIndex)
+      };
+    }
+    return actividad;
+  });
+  // Actualiza el estado, asumiendo que tienes una función setActividades o similar
+  setActividades(nuevasActividades);
+};
  
   if (proceso) {
     return (
@@ -803,15 +845,18 @@ useEffect(() => {
                         />
                       </td>
                       <td>
-                        <textarea
-                          className='table-input'
-                          type="text"
-                          value={actividad.responsable}
-                          onChange={(e) => handleActividadChange(index, 'responsable', e.target.value)}
-                          placeholder='Agregar Responsable. . .'
-                          required
-                          disabled={revisado}
+                      {actividad?.responsable && actividad.responsable.map((resp, idx) => (
+                        <Chip
+                          key={idx}
+                          label={`${resp.nombre}`}
+                          onDelete={() => handleDeleteResponsable(index, idx)}
+                          style={{ margin: '0.2rem' }}
+                          variant="outlined"
                         />
+                      ))}
+              
+                      <Busqueda onSelect={(user) => handleResponsableSelect(index, user)} />
+
                       </td>
                       <td>
                       {

@@ -171,7 +171,7 @@ export const UserContext = createContext(null);
   };
 
 function App() {
-  const [appVersion] = useState('2.1.5');
+  const [appVersion] = useState('2.1.6');
 
 
   useEffect(() => {

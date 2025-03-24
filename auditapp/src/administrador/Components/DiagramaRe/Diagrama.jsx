@@ -759,7 +759,7 @@ const handleUploadFile = (fieldKey) => {
                             )}
 
                         {
-                        ((ishikawa.estado === 'Aprobado')|| (ishikawa.estado === 'Finalizado')) ? null : (
+                        ((ishikawa.estado === 'Aprobado')||(ishikawa.estado === 'Finalizado')||(ishikawa.estado === 'Incompleto')) ? null : (
                         <div className='dia-buttons-g'>
                                 <button onClick={() => setShowNotaRechazo(!showNotaRechazo)}>
                                     {showNotaRechazo ? 'Ocultar Nota' : 'Nota'}

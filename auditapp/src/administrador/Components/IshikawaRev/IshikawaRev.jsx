@@ -48,7 +48,7 @@ const IshikawaRev = () => {
     const [activeReprogramarId, setActiveReprogramarId] = useState(null);
     const [showNotaRechazo, setShowNotaRechazo] = useState(false);
     const [tempFechaCompromiso, setTempFechaCompromiso] = useState('');
-    const [actividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: [] }]);
+    const [actividades] = useState([{ actividad: '', responsable: [], fechaCompromiso: [] }]);
     const [correcciones, setCorrecciones] = useState([{ actividad: '', responsable: '', fechaCompromiso: null, cerrada: '', evidencia: ''}]);
     const [nuevaCorreccion, setNuevaCorreccion] = useState({actividad: '', responsable: '', fechaCompromiso: '', cerrada: '' });
     const MySwal = withReactContent(Swal);
@@ -192,6 +192,7 @@ useEffect(() => {
     if (ishikawas.length > 0) {
         const nuevosFiltrados = ishikawas.filter(({ idRep, idReq, proName }) => idRep === _id && idReq === id && proName === nombre);
         setFilteredIshikawas(nuevosFiltrados);
+        console.log('Ishikawa: ',nuevosFiltrados)
         if (nuevosFiltrados.length === 0) {
             setMensaje('No hay nada por aquí.');
         } else {
@@ -1161,8 +1162,41 @@ const ocultarCargando = () => {
                             <td style={{fontSize:'12px',width: '34em', height: 'auto', textAlign:'justify'}}>
                             {actividad.actividad}
                             </td>
-                            <td style={{fontSize:'12px',width: '34em', height: 'auto', textAlign:'justify'}}>
-                            {actividad.responsable}
+                            <td style={{ fontSize: '12px', width: '34em', height: 'auto', textAlign: 'justify' }}>
+                            {
+                                Array.isArray(actividad.responsable)
+                                    ? actividad.responsable.flat().map((r, i, arr) => (
+                                        <span key={i}>
+                                        {typeof r === 'object'
+                                            ? (r.nombre 
+                                                ? r.nombre 
+                                                : Object.keys(r)
+                                                    .filter(key => !isNaN(key))
+                                                    .sort((a, b) => a - b)
+                                                    .map(key => r[key])
+                                                    .join('')
+                                            )
+                                            : r
+                                        }
+                                        {i < arr.length - 1 ? ', ' : ''}
+                                        </span>
+                                    ))
+                                    : (
+                                    // Caso en que "actividad.responsable" es un objeto
+                                    typeof actividad.responsable === 'object' &&
+                                    actividad.responsable !== null &&
+                                    (actividad.responsable.nombre 
+                                        ? <span>{actividad.responsable.nombre}</span>
+                                        : <span>{
+                                            Object.keys(actividad.responsable)
+                                                .filter(key => !isNaN(key))
+                                                .sort((a, b) => a - b)
+                                                .map(key => actividad.responsable[key])
+                                                .join('')
+                                            }</span>
+                                    )
+                                    )
+                                }
                             </td>
                             <td>
                 <div className='td-fechas'>

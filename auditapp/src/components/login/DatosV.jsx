@@ -4,6 +4,38 @@ import './css/datosv.css'; // Archivo CSS importado para los estilos
 const DatosV = () => {
   return (
     <div className="modal-body">
+      <h1>Versión 2.1.6 (Beta)</h1>
+
+      <ul>
+        <h3 className="modal-title">Ishikawas en proceso</h3>
+        <li>Se agregó la posibilidad de observar los Ishikawas que se encuentran en proceso.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Foto de perfil</h3>
+        <li>Se solucionaron errores al cargar fotos de perfil, agregando la recarga automática de la pantalla y la eliminación de la fotografía anterior del almacenamiento.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Responsables</h3>
+        <li>Se ha modificado el apartado de la tabla de solución en Ishikawas para poder agregar responsables de forma automática mediante búsqueda.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Cliente en cards</h3>
+        <li>Se agregó el cliente para poder visualizarlo en las cards de selección de auditorías.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Organización de la información</h3>
+        <li>Se modificó la forma en que se muestran las auditorías para mejorar la navegación del usuario.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Objetivos en registro</h3>
+        <li>Se agregó la posibilidad de consultar los objetivos en la pestaña de registro, en apoyo al usuario.</li>
+      </ul>
+
       <h1>Versión 2.1.5 (Beta)</h1>
 
       <ul>

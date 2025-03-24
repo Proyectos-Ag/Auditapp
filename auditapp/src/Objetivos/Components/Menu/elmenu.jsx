@@ -6,7 +6,7 @@ import './css/menu.css';
 const menuItems = [
   { label: "CONTROL Y CUIDADO AMBIENTAL", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL Y CUIDADO AMBIENTAL", "CONTROL DE PLAGAS", "Control y Cuidado Ambiental"] },
   { label: "EMBARQUE", roles: ["administrador", "auditor", "auditado"], areas: ["EMBARQUE", "REVISIÓN", "PRODUCTO TERMINADO", "Planeación y Logística"] },
-  { label: "MANTENIMIENTO SERVICIOS", roles: ["administrador", "auditor", "auditado"], areas: ["MANTENIMIENTO SERVICIOS", "Mantenimiento Procesos"] },
+  { label: "MANTENIMIENTO SERVICIOS", roles: ["administrador", "auditor", "auditado"], areas: ["MANTENIMIENTO SERVICIOS", "Mantenimiento Procesos","MANTENIMIENTO PROCESOS"] },
   { label: "SEGURIDAD E HIGIENE Y SANIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["SEGURIDAD E HIGIENE Y SANIDAD", "CONTROL DE PLAGAS", "Seguridad e Higiene y Sanidad"] },
   { label: "INGENIERÍA", roles: ["administrador", "auditor", "auditado"], areas: ["INGENIERÍA", "Ingeniería"] },
   { label: "COORDINADOR DE MATERIA PRIMA", roles: ["administrador", "auditor", "auditado"], areas: ["COORDINADOR DE MATERIA PRIMA", "MATERIA PRIMA"] },

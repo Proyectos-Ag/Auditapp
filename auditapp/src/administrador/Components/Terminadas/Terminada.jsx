@@ -602,7 +602,13 @@ const Terminada = () => {
                                                                                         ''
                                                                                 ) : ''}
                                                                             </td>
-                                                                            <td>{ishikawa ? (ishikawa.actividades.length > 0 ? ishikawa.actividades[0].responsable : '') : ''}</td>
+                                                                            <td>
+                                                                            {ishikawa && 
+                                                                            ishikawa.actividades.length > 0 && 
+                                                                            ishikawa.actividades[0].responsable.length > 0 
+                                                                                ? ishikawa.actividades[0].responsable[0].nombre 
+                                                                                : ''}
+                                                                            </td>
                                                                             <td>
                                                                                 <button 
                                                                                     className='button-estado'

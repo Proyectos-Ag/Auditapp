@@ -5,7 +5,7 @@ import { UserContext } from '../../App';
 import Swal from 'sweetalert2';
 import FotoPerfil from './foto-perfil.jsx'; 
 import { storage } from '../../firebase.js';
-import {ref, uploadBytes, getDownloadURL} from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 const Informacion = () => {
   const { userData } = useContext(UserContext);
@@ -81,66 +81,78 @@ const Informacion = () => {
 
   const uploadImageToFirebase = async (file, fileName) => {
     try {
-        if (!(file instanceof File)) {
-            throw new Error("El objeto recibido no es un archivo válido");
-        }
+      if (!(file instanceof File)) {
+        throw new Error("El objeto recibido no es un archivo válido");
+      }
 
-        const storageRef = ref(storage, `perfil-usuarios/${fileName}`);
-        await uploadBytes(storageRef, file); // Sube el archivo al almacenamiento
-        return await getDownloadURL(storageRef); // Obtiene la URL del archivo subido
+      const storageRef = ref(storage, `perfil-usuarios/${fileName}`);
+      await uploadBytes(storageRef, file); // Sube el archivo al almacenamiento
+      return await getDownloadURL(storageRef); // Obtiene la URL del archivo subido
     } catch (error) {
-        console.error("Error al subir la imagen:", error);
-        throw new Error("No se pudo subir la imagen");
+      console.error("Error al subir la imagen:", error);
+      throw new Error("No se pudo subir la imagen");
     }
-}; 
+  };
 
-const handleFirebaseImageUpload = async () => {
-  if (!selectedFile) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Advertencia',
-      text: 'Por favor, seleccione un archivo de imagen.',
-    });
-    return;
-  }
-  
-  const _id = userData.ID;
-  console.log("ID: ", userData.ID)
-  try {
-    // Genera un nombre único para el archivo (por ejemplo, combinando el id del usuario y la fecha actual)
-    const fileName = `${_id}_${Date.now()}`;
+  const handleFirebaseImageUpload = async () => {
+    if (!selectedFile) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Advertencia',
+        text: 'Por favor, seleccione un archivo de imagen.',
+      });
+      return;
+    }
     
-    // Sube la imagen a Firebase y obtiene la URL
-    const imageUrl = await uploadImageToFirebase(selectedFile, fileName);
-    
-    // Envía la URL al backend para actualizar el campo Foto del usuario
-    await axios.put(
-      `${process.env.REACT_APP_BACKEND_URL}/usuarios/actualizarFoto/${_id}`,
-      { url: imageUrl },
-      {
-        headers: {
-          'Authorization': `Bearer ${userData.token}`
+    const _id = userData.ID;
+    console.log("ID: ", userData.ID);
+    try {
+      // Si existe una imagen anterior en Firebase, se intenta eliminar
+      if (userData.Foto) {
+        try {
+          // Se crea una referencia a la imagen anterior utilizando la URL almacenada
+          const oldImageRef = ref(storage, userData.Foto);
+          await deleteObject(oldImageRef);
+          console.log("Imagen antigua eliminada correctamente.");
+        } catch (error) {
+          console.error("Error al eliminar la imagen anterior:", error);
+          // Aquí podrías decidir si abortar o continuar, según tu lógica
         }
       }
-    );
-    
-    Swal.fire({
-      icon: 'success',
-      title: 'Éxito',
-      text: 'Foto de perfil actualizada exitosamente',
-    });
-    // Actualiza la vista previa con la nueva imagen (opcional)
-    setPreviewImage(imageUrl);
-  } catch (error) {
-    console.error("Error al subir la imagen:", error);
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: 'Error al subir la foto de perfil',
-    });
-  }
-};
-
+      
+      // Genera un nombre único para el archivo (por ejemplo, combinando el id del usuario y la fecha actual)
+      const fileName = `${_id}_${Date.now()}`;
+      
+      // Sube la imagen a Firebase y obtiene la URL
+      const imageUrl = await uploadImageToFirebase(selectedFile, fileName);
+      
+      // Envía la URL al backend para actualizar el campo Foto del usuario
+      await axios.put(
+        `${process.env.REACT_APP_BACKEND_URL}/usuarios/actualizarFoto/${_id}`,
+        { url: imageUrl },
+        {
+          headers: {
+            'Authorization': `Bearer ${userData.token}`
+          }
+        }
+      );
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Éxito',
+        text: 'Foto de perfil actualizada exitosamente',
+      }).then(() => {
+        window.location.reload();
+      });
+    } catch (error) {
+      console.error("Error al subir la imagen:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al subir la foto de perfil',
+      });
+    }
+  };
 
   return (
     <div className="info-container">
