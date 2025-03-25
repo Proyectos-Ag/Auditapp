@@ -15,7 +15,7 @@ import calendario from "../assets/img/calendario.png"
 import estadisticas from "../assets/img/estadisticas.png"
 import subirxls from "../assets/img/subir-xls.png"
 import programas from "../assets/img/programas.png"
-import Nieve from "../../../resources/nieve";
+import Event from "../../../resources/event";
 import DatosV from "../../../components/login/DatosV";
 
 import { useNavigate } from "react-router-dom";
@@ -63,7 +63,7 @@ const Inicio = () => {
         <h1>Bienvenidos a Auditapp</h1>
       </div>
     </div>
-    <Nieve/>
+    <Event/>
 
     <div className="fondo-home">
       <BotonesRol/>

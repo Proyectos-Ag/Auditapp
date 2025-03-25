@@ -4,7 +4,7 @@ import './css/Inicio.css';
 import videoFile from '../assets/img/UpscaleVideo_1_20240628.webm';
 import menu from "../assets/img/menu.png";
 import { useNavigate } from "react-router-dom";
-import Nieve from "../../../resources/nieve";
+import Event from "../../../resources/event";
 
 const Inicio = () => {
   const videoRef = useRef(null);
@@ -32,7 +32,7 @@ const Inicio = () => {
         <h1>Bienvenidos a Auditapp</h1>
       </div>
     </div>
-    <Nieve/>
+    <Event/>
 
     <div className="fondo-home">
     <BotonesRol/>

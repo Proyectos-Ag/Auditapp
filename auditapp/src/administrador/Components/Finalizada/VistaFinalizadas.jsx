@@ -40,7 +40,12 @@ const VistaFinalizadas = () => {
     if (diffDays === 1) return "Ayer";
     if (diffDays === 2) return "Hace 2 días";
     if (diffDays >= 3 && diffDays < 7) return "Esta semana";
-    if (diffDays >= 7 && diffDays < 30) return "Este mes";
+    if (
+      recordDate.getMonth() === today.getMonth() &&
+      recordDate.getFullYear() === today.getFullYear()
+    ) {
+      return "Este mes";
+    }
   
     // Para fechas de hace 30 días o más
     const options = { month: 'long' };

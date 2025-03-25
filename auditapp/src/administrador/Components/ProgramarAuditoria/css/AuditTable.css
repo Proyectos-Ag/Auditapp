@@ -112,7 +112,7 @@
     background-color: #e67e22; /* Naranja para "En Curso" */
 }
 
-.audit-table .status.no-ejecutada {
+.audit-table .status.cancelada {
     background-color: #e74c3c; /* Rojo para "No Ejecutada" */
 }
 

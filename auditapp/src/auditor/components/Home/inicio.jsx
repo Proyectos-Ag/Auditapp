@@ -6,7 +6,7 @@ import revision from "../assets/img/revision.png";
 import finalizado from "../assets/img/finalizado.png";
 import usuario from "../assets/img/usuario.png";
 import { useNavigate } from "react-router-dom";
-import Nieve from "../../../resources/nieve";
+import Event from "../../../resources/event";
 
 const Inicio = () => {
   const videoRef = useRef(null);
@@ -33,7 +33,7 @@ const Inicio = () => {
         <h1>Bienvenidos a Auditapp</h1>
       </div>
     </div>
-    <Nieve/>
+    <Event/>
 
     <div className="fondo-home">
     <BotonesRol/>

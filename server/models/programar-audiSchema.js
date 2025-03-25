@@ -5,7 +5,7 @@ const auditSchema = new mongoose.Schema({
     fechaInicio: { type: String, required: true },
     fechaFin: { type: String, required: true },
     modalidad: { type: String, required: true },
-    status: { type: String, enum: ['Realizada', 'Programada', 'No ejecutada', 'Por Confirmar', 'En Curso'], required: true },
+    status: { type: String, enum: ['Realizada', 'Programada', 'Cancelada', 'Por Confirmar', 'En Curso'], required: true },
     realizada: { type: Boolean, default: false },
     programada: { type: Boolean, default: false }
 });

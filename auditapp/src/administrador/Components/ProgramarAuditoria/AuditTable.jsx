@@ -343,7 +343,7 @@ const AuditTable = () => {
                     <option value="Programada">Programada</option>
                     <option value="Por Confirmar">Por Confirmar</option>
                     <option value="En Curso">En Curso</option>
-                    <option value="No ejecutada">No ejecutada</option>
+                    <option value="Cancelada">Cancelada</option>
                   </select>
                 ) : (
                   audit.status
@@ -409,7 +409,7 @@ const AuditTable = () => {
                 <option value="Programada">Programada</option>
                 <option value="Por Confirmar">Por Confirmar</option>
                 <option value="En Curso">En Curso</option>
-                <option value="No ejecutada">No ejecutada</option>
+                <option value="Cancelada">Cancelada</option>
               </select>
             </td>
             <td>
