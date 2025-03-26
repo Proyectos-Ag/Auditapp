@@ -622,56 +622,10 @@
   );
   -webkit-mask-image: linear-gradient(to top, transparent 30%, #079097 60%);
 }
-.flower__g-right--1 {
-  -webkit-animation: flower-g-right-ans 2.5s linear infinite;
-  animation: flower-g-right-ans 2.5s linear infinite;
-}
-.flower__g-right--2 {
-  left: 5vmin;
-  transform: rotateY(-180deg);
-  -webkit-animation: flower-g-right-ans--2 3s linear infinite;
-  animation: flower-g-right-ans--2 3s linear infinite;
-}
 .flower__g-right--2 .leaf {
   height: 75vmin;
   filter: blur(0.3vmin);
   opacity: 0.8;
-}
-@-webkit-keyframes flower-g-right-ans {
-  0%,
-  100% {
-    transform: rotate(20deg);
-  }
-  50% {
-    transform: rotate(24deg) rotateX(-20deg);
-  }
-}
-@keyframes flower-g-right-ans {
-  0%,
-  100% {
-    transform: rotate(20deg);
-  }
-  50% {
-    transform: rotate(24deg) rotateX(-20deg);
-  }
-}
-@-webkit-keyframes flower-g-right-ans--2 {
-  0%,
-  100% {
-    transform: rotateY(-180deg) rotate(0deg) rotateX(-20deg);
-  }
-  50% {
-    transform: rotateY(-180deg) rotate(6deg) rotateX(-20deg);
-  }
-}
-@keyframes flower-g-right-ans--2 {
-  0%,
-  100% {
-    transform: rotateY(-180deg) rotate(0deg) rotateX(-20deg);
-  }
-  50% {
-    transform: rotateY(-180deg) rotate(6deg) rotateX(-20deg);
-  }
 }
 .flower__g-front {
   position: absolute;
@@ -1183,132 +1137,7 @@
     opacity: 0;
   }
 }
-@-webkit-keyframes light-ans {
-  0% {
-    opacity: 0;
-    transform: translateY(0vmin);
-  }
-  25% {
-    opacity: 1;
-    transform: translateY(-5vmin) translateX(-2vmin);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-15vmin) translateX(2vmin);
-    filter: blur(0.2vmin);
-  }
-  75% {
-    transform: translateY(-20vmin) translateX(-2vmin);
-    filter: blur(0.2vmin);
-  }
-  100% {
-    transform: translateY(-30vmin);
-    opacity: 0;
-    filter: blur(1vmin);
-  }
-}
-@keyframes light-ans {
-  0% {
-    opacity: 0;
-    transform: translateY(0vmin);
-  }
-  25% {
-    opacity: 1;
-    transform: translateY(-5vmin) translateX(-2vmin);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-15vmin) translateX(2vmin);
-    filter: blur(0.2vmin);
-  }
-  75% {
-    transform: translateY(-20vmin) translateX(-2vmin);
-    filter: blur(0.2vmin);
-  }
-  100% {
-    transform: translateY(-30vmin);
-    opacity: 0;
-    filter: blur(1vmin);
-  }
-}
-@-webkit-keyframes moving-flower-1 {
-  0%,
-  100% {
-    transform: rotate(2deg);
-  }
-  50% {
-    transform: rotate(-2deg);
-  }
-}
-@keyframes moving-flower-1 {
-  0%,
-  100% {
-    transform: rotate(2deg);
-  }
-  50% {
-    transform: rotate(-2deg);
-  }
-}
-@-webkit-keyframes moving-flower-2 {
-  0%,
-  100% {
-    transform: rotate(18deg);
-  }
-  50% {
-    transform: rotate(14deg);
-  }
-}
-@keyframes moving-flower-2 {
-  0%,
-  100% {
-    transform: rotate(18deg);
-  }
-  50% {
-    transform: rotate(14deg);
-  }
-}
-@-webkit-keyframes moving-flower-3 {
-  0%,
-  100% {
-    transform: rotate(-18deg);
-  }
-  50% {
-    transform: rotate(-20deg) rotateY(-10deg);
-  }
-}
-@keyframes moving-flower-3 {
-  0%,
-  100% {
-    transform: rotate(-18deg);
-  }
-  50% {
-    transform: rotate(-20deg) rotateY(-10deg);
-  }
-}
-@-webkit-keyframes blooming-leaf-right {
-  0% {
-    transform-origin: left;
-    transform: rotate(70deg) rotateY(30deg) scale(0);
-  }
-}
-@keyframes blooming-leaf-right {
-  0% {
-    transform-origin: left;
-    transform: rotate(70deg) rotateY(30deg) scale(0);
-  }
-}
-@-webkit-keyframes blooming-leaf-left {
-  0% {
-    transform-origin: right;
-    transform: rotate(-70deg) rotateY(30deg) scale(0);
-  }
-}
-@keyframes blooming-leaf-left {
-  0% {
-    transform-origin: right;
-    transform: rotate(-70deg) rotateY(30deg) scale(0);
-  }
-}
+
 @-webkit-keyframes grow-flower-tree {
   0% {
     height: 0;
@@ -1331,42 +1160,7 @@
     transform: scale(0);
   }
 }
-@-webkit-keyframes moving-grass {
-  0%,
-  100% {
-    transform: rotate(-48deg) rotateY(40deg);
-  }
-  50% {
-    transform: rotate(-50deg) rotateY(40deg);
-  }
-}
-@keyframes moving-grass {
-  0%,
-  100% {
-    transform: rotate(-48deg) rotateY(40deg);
-  }
-  50% {
-    transform: rotate(-50deg) rotateY(40deg);
-  }
-}
-@-webkit-keyframes moving-grass--2 {
-  0%,
-  100% {
-    transform: scale(0.5) rotate(75deg) rotateX(10deg) rotateY(-200deg);
-  }
-  50% {
-    transform: scale(0.5) rotate(79deg) rotateX(10deg) rotateY(-200deg);
-  }
-}
-@keyframes moving-grass--2 {
-  0%,
-  100% {
-    transform: scale(0.5) rotate(75deg) rotateX(10deg) rotateY(-200deg);
-  }
-  50% {
-    transform: scale(0.5) rotate(79deg) rotateX(10deg) rotateY(-200deg);
-  }
-}
+
 .growing-grass {
   -webkit-animation: growing-grass-ans 1s 2s backwards;
   animation: growing-grass-ans 1s 2s backwards;

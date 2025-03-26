@@ -780,7 +780,7 @@ const handleDeleteResponsable = (index, responsableIndex) => {
             .filter(desc => desc.ID === id && programa.Nombre === nombre)
             .map((desc, index) => {
               return(
-          <textarea key={index} maxlength="105" className="text-area" name='problema' value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : desc.Problema} onChange={handleInputChange} onClick={handleDiagrama}
+          <textarea key={index} className="text-area" name='problema' value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : desc.Problema} onChange={handleInputChange} onClick={handleDiagrama}
              style={{ top: '27rem', left: '67.5rem',width:'8.5rem', height:'8rem' }}placeholder="Problema..." required disabled={revisado}></textarea>
             )})}
           </div>
