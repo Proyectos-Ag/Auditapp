@@ -85,8 +85,13 @@ const Ishikawa = () => {
               setPrograma(programaEncontrado);
               setDescripcion(descripcionEncontrada);
               setRequisito(descripcionEncontrada.Requisito);
-              setHallazgo((descripcionEncontrada?.Observacion && descripcionEncontrada?.PuntuacionMaxima) ?
-              descripcionEncontrada.Hallazgo : descripcionEncontrada.Observacion);
+              setHallazgo(
+                (descripcionEncontrada?.Observacion && datosFiltrados?.PuntuacionMaxima)
+                  ? (Array.isArray(descripcionEncontrada.Hallazgo)
+                       ? descripcionEncontrada.Hallazgo.join(', ')
+                       : descripcionEncontrada.Hallazgo)
+                  : descripcionEncontrada.Observacion
+              );              
               setProblema((descripcionEncontrada?.Observacion && datosFiltrados?.PuntuacionMaxima) ?
                           descripcionEncontrada.Observacion : descripcionEncontrada.Problema);
               setAuditados(descripcionEncontrada.Auditados);
