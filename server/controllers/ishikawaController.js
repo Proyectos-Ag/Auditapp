@@ -116,7 +116,7 @@ const actualizarIshikawaCompleto = async (req, res) => {
       // Configuración del correo
       const mailOptions = {
         from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
-        to: 'rcruces@aguida.com',
+        to: 'soleje2862004@gmail.com',
         subject: 'Ishikawa enviado para revisión',
         html: customizedTemplateRevision,
         attachments: [
@@ -138,7 +138,11 @@ const actualizarIshikawaCompleto = async (req, res) => {
     }
 
     // Verificar si el estado es "Rechazado"
-    if (updatedIshikawa.estado === 'Rechazado') {
+    if (
+      updatedIshikawa.estado === 'Rechazado' &&
+      req.body.correo &&
+      req.body.correo.trim() !== ''
+    ) {
       const usuario = updatedIshikawa.auditado;
       const programa = req.body.programa;
       const correo = req.body.correo;
@@ -230,7 +234,7 @@ const actualizarIshikawaCompleto = async (req, res) => {
       // Configuración del correo
       const mailOptions = {
         from:`"Auditapp" <${process.env.EMAIL_USERNAME}>`,
-        to: 'rcruces@aguida.com',
+        to: 'soleje2862004@gmail.com',
         subject: 'Ishikawa individual enviado para revisión',
         html: customizedTemplateRevision,
         attachments: [

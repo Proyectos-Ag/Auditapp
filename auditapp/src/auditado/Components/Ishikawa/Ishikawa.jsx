@@ -122,7 +122,7 @@ const Ishikawa = () => {
   useEffect(() => {
     const textareas = document.querySelectorAll('textarea');
     textareas.forEach((textarea) => ajustarTamanoFuente(textarea));
-}, [datos]);
+}, [proceso]);
 
   const verificarRegistro = async () => {
     try {
@@ -282,8 +282,7 @@ const handleDoubleClick = (e) => {
         diagrama,
         participantes: formData.participantes,
         afectacion: formData.afectacion,
-        actividades,
-        estado: 'Asignado'
+        actividades
       };
   
       const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, data);
@@ -464,6 +463,37 @@ const handleSaveOrUpdate = async () => {
     const fecha = new Date(fechaString);
     fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset());
     return fecha.toLocaleDateString('es-ES');
+};
+
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  // Definicion del tamaño de fuente según el rango de caracteres
+  let fontSize;
+  if (value.length > 125) {
+    fontSize = '10.5px'; 
+  } else if (value.length > 120) {
+    fontSize = '11px';
+  } else if (value.length > 110) {
+    fontSize = '12px';
+  } else if (value.length > 88) {
+    fontSize = '13px';
+  } else if (value.length > 65) {
+    fontSize = '14px';
+  } else {
+    fontSize = '15px'; // Por defecto
+  }
+
+  // Actualiza el estado del diagrama
+  setDiagrama(prevState => [{
+    ...prevState[0],
+    [name]: value
+  }]);
+
+  // Aplica el nuevo tamaño de fuente al textarea específico
+  if (['text1', 'text2', 'text3', 'text4', 'text5', 'text6', 'text7', 'text8', 'text9', 
+    'text10', 'text11', 'text12', 'text13', 'text14', 'text15', 'problema'].includes(name)) {
+    e.target.style.fontSize = fontSize;
+  }
 };
 
 const ajustarTamanoFuente = (textarea) => {
@@ -650,7 +680,7 @@ const handleDeleteResponsable = (index, responsableIndex) => {
         <div className="image-container-auditado">
           <div className='button-cam'>
           {
-          (aprobado || estRech || revisado) ? null : (         
+          (aprobado || revisado) ? null : (         
           <button onClick={(e) => {
             e.preventDefault();
               handleSaveOrUpdate();
@@ -699,54 +729,54 @@ const handleDeleteResponsable = (index, responsableIndex) => {
             <img src={ishikawa} alt="Diagrama de Ishikawa" className="responsive-image" />
             {diagrama.map((dia, index) => (
             <div key={index}>
-           <textarea maxLength={145} className="text-area" name="text1" value={dia.text1}  
+           <textarea maxLength={145} className="text-area" name="text1" value={dia.text1} onChange={handleInputChange} 
            style={{ top: '19.1rem', left: '8.7rem', ...obtenerEstiloTextarea(dia.text1, formData.causa)}} placeholder="Texto..." required disabled={revisado} onDoubleClick={handleDoubleClick}
             />
-            <textarea maxLength={145} className="text-area" name='text2' value={dia.text2} 
+            <textarea maxLength={145} className="text-area" name='text2' value={dia.text2} onChange={handleInputChange}
             style={{ top: '19.1rem', left: '25.4rem', ...obtenerEstiloTextarea(dia.text2, formData.causa)}} placeholder="Texto..." required disabled={revisado} onDoubleClick={handleDoubleClick}
             />
-            <textarea className="text-area" name='text3' value={dia.text3} 
+            <textarea className="text-area" name='text3' value={dia.text3} onChange={handleInputChange}
              style={{ top: '19.1rem', left: '41.2rem', ...obtenerEstiloTextarea(dia.text3, formData.causa) }}placeholder="Texto..." required disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
 
-            <textarea className="text-area" name='text4' value={dia.text4} 
+            <textarea className="text-area" name='text4' value={dia.text4} onChange={handleInputChange}
              style={{ top: '23.2rem', left: '12.2rem', ...obtenerEstiloTextarea(dia.text4, formData.causa) }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
-            <textarea className="text-area" name='text5' value={dia.text5} 
+            <textarea className="text-area" name='text5' value={dia.text5} onChange={handleInputChange}
              style={{ top: '23.2rem', left: '28.8rem', ...obtenerEstiloTextarea(dia.text5, formData.causa) }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
-            <textarea className="text-area" name='text6' value={dia.text6} 
+            <textarea className="text-area" name='text6' value={dia.text6} onChange={handleInputChange}
              style={{ top: '23.2rem', left: '45rem', ...obtenerEstiloTextarea(dia.text6, formData.causa) }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
     
-            <textarea className="text-area" name='text7' value={dia.text7} 
+            <textarea className="text-area" name='text7' value={dia.text7} onChange={handleInputChange}
              style={{ top: '27.2rem', left: '15.5rem', ...obtenerEstiloTextarea(dia.text7, formData.causa) }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
-            <textarea className="text-area" name='text8' value={dia.text8} 
+            <textarea className="text-area" name='text8' value={dia.text8} onChange={handleInputChange}
              style={{ top: '27.2rem', left: '32.3rem', ...obtenerEstiloTextarea(dia.text8, formData.causa) }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
-            <textarea className="text-area" name='text9' value={dia.text9} 
+            <textarea className="text-area" name='text9' value={dia.text9} onChange={handleInputChange}
              style={{ top: '27.2rem', left: '48.1rem', ...obtenerEstiloTextarea(dia.text9, formData.causa) }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
   
-            <textarea className="text-area" name='text10' value={dia.text10} 
+            <textarea className="text-area" name='text10' value={dia.text10} onChange={handleInputChange}
              style={{ top: '31rem', left: '23rem', ...obtenerEstiloTextarea(dia.text10, formData.causa) }}placeholder="Texto..." required disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
-            <textarea className="text-area" name='text11' value={dia.text11} 
+            <textarea className="text-area" name='text11' value={dia.text11} onChange={handleInputChange}
              style={{ top: '31rem', left: '39.4rem', ...obtenerEstiloTextarea(dia.text11, formData.causa) }}placeholder="Texto..." required disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
   
-            <textarea className="text-area" name='text12' value={dia.text12} 
+            <textarea className="text-area" name='text12' value={dia.text12} onChange={handleInputChange}
              style={{ top: '35rem', left: '19.7rem', ...obtenerEstiloTextarea(dia.text12, formData.causa) }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
-            <textarea className="text-area" name='text13' value={dia.text13} 
+            <textarea className="text-area" name='text13' value={dia.text13} onChange={handleInputChange}
              style={{ top: '35rem', left: '36rem', ...obtenerEstiloTextarea(dia.text13, formData.causa)}}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
   
-            <textarea className="text-area" name='text14' value={dia.text14} 
+            <textarea className="text-area" name='text14' value={dia.text14} onChange={handleInputChange}
              style={{ top: '39rem', left: '16.6rem', ...obtenerEstiloTextarea(dia.text14, formData.causa) }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
-            <textarea className="text-area" name='text15' value={dia.text15} 
+            <textarea className="text-area" name='text15' value={dia.text15} onChange={handleInputChange}
              style={{ top: '39rem', left: '32.8rem', ...obtenerEstiloTextarea(dia.text15, formData.causa) }}placeholder="Texto..." disabled={revisado} onClick={handleDiagrama}
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
             </div>
@@ -756,7 +786,7 @@ const handleDeleteResponsable = (index, responsableIndex) => {
             .filter(desc => desc.ID === id && programa.Nombre === nombre)
             .map((desc, index) => {
               return(
-          <textarea key={index} className="text-area" name='problema' value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : desc.Problema}  onClick={handleDiagrama}
+          <textarea key={index} className="text-area" name='problema' value={(descripcion?.Observacion && datos?.PuntuacionMaxima) ? `${descripcion.Observacion}` : desc.Problema} onChange={handleInputChange} onClick={handleDiagrama}
              style={{ top: '27rem', left: '67.5rem',width:'8.5rem', height:'8rem' }}placeholder="Problema..." required disabled={revisado}></textarea>
             )})}
           </div>
