@@ -116,7 +116,7 @@ const actualizarIshikawaCompleto = async (req, res) => {
       // Configuración del correo
       const mailOptions = {
         from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
-        to: 'soleje2862004@gmail.com',
+        to: `${process.env.EMAIL_ADMIN}`,
         subject: 'Ishikawa enviado para revisión',
         html: customizedTemplateRevision,
         attachments: [
@@ -234,7 +234,7 @@ const actualizarIshikawaCompleto = async (req, res) => {
       // Configuración del correo
       const mailOptions = {
         from:`"Auditapp" <${process.env.EMAIL_USERNAME}>`,
-        to: 'soleje2862004@gmail.com',
+        to: `${process.env.EMAIL_ADMIN}`,
         subject: 'Ishikawa individual enviado para revisión',
         html: customizedTemplateRevision,
         attachments: [

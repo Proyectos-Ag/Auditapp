@@ -23,7 +23,6 @@ const Ishikawa = () => {
   const [asignado,  setAsignado] = useState([]);
   const [revisado,  setRevisado] = useState([]);
   const [aprobado,  setAprobado] = useState([]);
-  const [estRech,  setEstRech] = useState([]);
   const [showPart, setShowPart] = useState(true);
   const [rechazo,  setRechazo] = useState([]);
   const [problema, setProblema] = useState(''); // Almacena el valor del problema
@@ -138,10 +137,8 @@ const Ishikawa = () => {
       const registroExistente = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&  item.estado === 'En revisión');
       const registroAprobado = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&  (item.estado === 'Aprobado'));
       const registroRevisado = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&  item.estado === 'Revisado' );
-      const registroEstadoRe = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&  item.estado === 'Rechazado' );
       const registroAsignado = response.data.some(item => item.idRep === _id && item.idReq === id && item.proName === nombre &&  item.estado === 'Asignado' );
       setAsignado(registroAsignado);
-      setEstRech(registroEstadoRe);
       setAprobado(registroAprobado);
       setRevisado(registroRevisado);
       setEnProceso(registroExistente);
