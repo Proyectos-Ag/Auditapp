@@ -8,6 +8,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import CircularProgress from '@mui/material/CircularProgress';
 import AccesoModal from './AccesoModal';
+import Busqueda from './Busqueda';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../../App';
 import { Chip, TextField, Paper, List, ListItem } from '@mui/material';
@@ -61,7 +62,7 @@ const CreacionIshikawa = () => {
     text15: ''
   }]);
 
-  const [actividades, setActividades] = useState([{ actividad: '', responsable: '', fechaCompromiso: '' }]);
+  const [actividades, setActividades] = useState([{ actividad: '', responsable: [], fechaCompromiso: '' }]);
 
   const fechaElaboracion = new Date().toISOString();
 
@@ -141,7 +142,7 @@ const CreacionIshikawa = () => {
         text15: ''
       }]);
   
-      setActividades([{ actividad: '', responsable: '', fechaCompromiso: '' }]);
+      setActividades([{ actividad: '', responsable: [], fechaCompromiso: '' }]);
       setIsEditing(false); // Cambiamos el modo a "creación"
     } else {
       const selectedRecord = ishikawaRecords.find(record => record._id === selectedId);
@@ -182,7 +183,7 @@ const CreacionIshikawa = () => {
           text15: ''
         }]);
     
-        setActividades(selectedRecord.actividades || [{ actividad: '', responsable: '', fechaCompromiso: '' }]);
+        setActividades(selectedRecord.actividades || [{ actividad: '', responsable: [], fechaCompromiso: '' }]);
         setIsEditing(true); // Modo edición activado
       }
     }
@@ -409,7 +410,7 @@ const CreacionIshikawa = () => {
   };
 
   const agregarFilaActividad = () => {
-    setActividades([...actividades, { actividad: '', responsable: '', fechaCompromiso: '' }]);
+    setActividades([...actividades, { actividad: '', responsable: [], fechaCompromiso: '' }]);
   };
 
   const eliminarFilaActividad = (index) => {
@@ -789,6 +790,44 @@ const obtenerEstiloTextarea = (texto, causa) => {
   : {};
 };
 
+const handleResponsableSelect = (index, user) => {
+  const nuevasActividades = actividades.map((actividad, i) => {
+    if (i === index) {
+      // Validamos si el responsable ya está en el array (comparamos por nombre, por ejemplo)
+      const yaExiste = actividad.responsable.some(
+        (resp) => resp.nombre === user.Nombre
+      );
+
+      // Si no existe, lo agregamos
+      if (!yaExiste) {
+        return {
+          ...actividad,
+          responsable: [
+            ...actividad.responsable,
+            { nombre: user.Nombre, correo: user.Correo },
+          ],
+        };
+      }
+    }
+    return actividad;
+  });
+  setActividades(nuevasActividades);
+};
+
+const handleDeleteResponsable = (index, responsableIndex) => {
+  const nuevasActividades = actividades.map((actividad, i) => {
+    if (i === index) {
+      return {
+        ...actividad,
+        responsable: actividad.responsable.filter((_, idx) => idx !== responsableIndex)
+      };
+    }
+    return actividad;
+  });
+  // Actualiza el estado, asumiendo que tienes una función setActividades o similar
+  setActividades(nuevasActividades);
+};
+
 useEffect(() => {
     const textareas = document.querySelectorAll('textarea');
     textareas.forEach((textarea) => ajustarTamanoFuente(textarea));
@@ -1055,20 +1094,19 @@ useEffect(() => {
                       />
                     </td>
                     <td>
-                      <textarea
-                        className='table-input'
-                        type="text"
-                        placeholder='Agregar responsable. . .'
-                        value={actividad.responsable}
-                        onChange={(e) => {
-                          const newActividades = [...actividades];
-                          newActividades[index].responsable = e.target.value;
-                          setActividades(newActividades);
-                        }}
-                        required
-                        disabled={isReadOnly}
-                      />
-                    </td>
+                      {actividad?.responsable && actividad.responsable.map((resp, idx) => (
+                        <Chip
+                          key={idx}
+                          label={`${resp.nombre}`}
+                          onDelete={() => handleDeleteResponsable(index, idx)}
+                          style={{ margin: '0.2rem' }}
+                          variant="outlined"
+                        />
+                      ))}
+              
+                      <Busqueda onSelect={(user) => handleResponsableSelect(index, user)} />
+
+                      </td>
                     <td>
                       <div>
                         <input
