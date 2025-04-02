@@ -100,7 +100,7 @@ const Inicio = () => {
     <div className="conten-funcion" style={{marginTop:'-18%'}}>
     <h1>Ishikawas</h1>
     <div className="contenedor-home">
-      <div className="card-home" onClick={() => navigate("/ishikawa")}>
+      <div className="card-home" onClick={() => navigate("/diagramas")}>
         Generar Ishikawa
         <img src={pez} alt="pez" className='imagen-mini' />
         <img src={proceso} alt="proceso" className='imagen-mini' style={{marginTop:'-2em', width:'75%'}}/>
