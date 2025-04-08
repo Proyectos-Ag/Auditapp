@@ -297,16 +297,21 @@ const obtenerDatosFiltrados = async (req, res) => {
           return res.status(404).json({ message: 'Datos no encontrados' });
       }
 
-      // Filtra el programa con la descripción específica
-      const programaEncontrado = datosFiltrados.Programa.find(prog =>
-          prog.Descripcion.some(desc => desc.ID === id && prog.Nombre === nombre)
-      );
+     // Busca el programa con el nombre específico
+    const programaEncontrado = datosFiltrados.Programa.find(prog => prog.Nombre === nombre);
 
-      if (!programaEncontrado) {
-          return res.status(404).json({ message: 'Programa no encontrado' });
-      }
+    if (!programaEncontrado) {
+      return res.status(404).json({ message: 'Programa no encontrado' });
+    }
 
-      res.status(200).json({ datosFiltrados, programaEncontrado });
+    // Busca la descripción específica dentro del programa
+    const descripcionEncontrada = programaEncontrado.Descripcion.find(desc => desc.ID === id);
+
+    if (!descripcionEncontrada) {
+      return res.status(404).json({ message: 'Descripción no encontrada' });
+    }
+
+      res.status(200).json({ datosFiltrados, programaEncontrado, descripcionEncontrada });
   } catch (error) {
       console.error('Error al obtener los datos filtrados:', error);
       res.status(500).json({ error: 'Error interno del servidor', details: error.message });
@@ -350,7 +355,7 @@ const obtenerDatosHistorial = async (req, res) => {
 const obtenerDatosEspFinal = async (req, res) => {
   try {
     // Selecciona solo los campos que deseas incluir en la respuesta
-    const datos = await Datos.find({ Estado: 'Finalizado' },'_id FechaElaboracion TipoAuditoria Duracion Estado'); 
+    const datos = await Datos.find({ Estado: 'Finalizado' },'_id FechaElaboracion TipoAuditoria Duracion Estado Cliente'); 
 
     res.status(200).json(datos);
   } catch (error) {
