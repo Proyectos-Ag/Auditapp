@@ -601,26 +601,25 @@ const enviarPDF = async (req, res) => {
 // Controlador: actualizarAcceso
 const actualizarAcceso = async (req, res) => {
   const { id } = req.params;
-  const { acceso } = req.body;
+  const { acceso: accesosEmail } = req.body;    // renombramos aquí
 
-  console.log('Datos: ', acceso);
+  console.log('Datos recibidos para acceso:', accesosEmail);
 
-  if (!Array.isArray(acceso)) {
+  if (!Array.isArray(accesosEmail)) {
     return res.status(400).json({ message: "El campo acceso debe ser un array" });
   }
 
-  const accesos = acceso.map(a => ({
-    nombre: a.nombre,
-    correo: a.correo,
-    nivelAcceso: Number(a.nivelAcceso)
+  // Preparo lo que realmente voy a guardar en Mongo
+  const accesosParaDB = accesosEmail.map(a => ({
+    nombre:     a.nombre,
+    correo:     a.correo,
+    nivelAcceso:Number(a.nivelAcceso)
   }));
-
-  // const accesosEmail = acceso;
 
   try {
     const ishikawa = await Ishikawa.findByIdAndUpdate(
       id,
-      { $push: { acceso: { $each: accesos } } },
+      { $push: { acceso: { $each: accesosParaDB } } },
       { new: true }
     );
 
@@ -628,50 +627,50 @@ const actualizarAcceso = async (req, res) => {
       return res.status(404).json({ message: "Registro no encontrado" });
     }
 
-    // COMENTADO: Enviar correos a cada usuario agregado
-    /*
-    const templatePath = path.join(__dirname, 'templates', 'notificacion-acceso.html');
-    const emailTemplate = fs.readFileSync(templatePath, 'utf8');
+    // Cargo la plantilla de correo
+    const templatePath   = path.join(__dirname, 'templates', 'notificacion-acceso.html');
+    const emailTemplate  = fs.readFileSync(templatePath, 'utf8');
 
+    // Envío un correo por cada acceso nuevo
     accesosEmail.forEach(({ nombre, correo, nivelAcceso, problema }) => {
-      const nivelAccesoTexto = Number(nivelAcceso) === 1 ? "Solo Lectura" : "Editor";
+      const nivelTexto = Number(nivelAcceso) === 1
+        ? "Solo Lectura"
+        : "Editor";
 
-      const customizedTemplate = emailTemplate
-        .replace('{{usuario}}', nombre)
-        .replace('{{problema}}', problema)
-        .replace('{{nivelAcceso}}', nivelAccesoTexto);
+      const customized = emailTemplate
+        .replace('{{usuario}}',     nombre)
+        .replace('{{problema}}',    problema || '')
+        .replace('{{nivelAcceso}}', nivelTexto);
 
       const mailOptions = {
-        from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
-        to: correo,
+        from:    `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
+        to:      correo,
         subject: "Se te ha otorgado acceso a un Ishikawa",
-        html: customizedTemplate,
-        attachments: [
-          {
-            filename: 'logoAguida.png',
-            path: path.join(__dirname, '../assets/logoAguida-min.png'),
-            cid: 'logoAguida'
-          }
-        ]
+        html:    customized,
+        attachments: [{
+          filename: 'logoAguida.png',
+          path:     path.join(__dirname, '../assets/logoAguida-min.png'),
+          cid:      'logoAguida'
+        }]
       };
 
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error(`Error al enviar el correo a ${correo}:`, error);
-        } else {
-          console.log(`Correo enviado a ${correo}:`, info.response);
-        }
+      transporter.sendMail(mailOptions, (err, info) => {
+        if (err) console.error(`Error al enviar a ${correo}:`, err);
+        else     console.log(`Correo enviado a ${correo}:`, info.response);
       });
     });
-    */
 
-    res.status(200).json({ message: "Acceso actualizado (sin envío de correos)", ishikawa });
+    return res
+      .status(200)
+      .json({ message: "Acceso actualizado y correos enviados", ishikawa });
+
   } catch (error) {
     console.error("Error al actualizar el acceso:", error);
-    res.status(500).json({ message: "Error al actualizar", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Error al actualizar", error: error.message });
   }
 };
-
 
 const deleteIshikawa = async (req, res) => {
   try {
@@ -687,6 +686,95 @@ const deleteIshikawa = async (req, res) => {
   } catch (error) {
       console.error('Error al eliminar el diagrama:', error);
       res.status(500).json({ message: 'Error al eliminar el diagrama' });
+  }
+};
+
+const getActivitiesByUsername = async (req, res) => { 
+  try {
+    // Obtenemos el parámetro "username" de la URL (por ejemplo: /activities/:username)
+    const username = req.params.username;
+
+    // Buscamos todos los documentos que tengan al menos una actividad
+    // cuyo responsable contenga el nombre buscado
+    const ishikawas = await Ishikawa.find({ 'actividades.responsable.nombre': username });
+
+    // Array para acumular las actividades que cumplan la condición
+    let actividadesFiltradas = [];
+
+    // Recorremos cada documento encontrado
+    ishikawas.forEach(doc => {
+      // Recorremos el arreglo de actividades del documento
+      doc.actividades.forEach(actividad => {
+        // Verificamos si en el arreglo de responsables alguno tiene el nombre igual a "username"
+        const responsableEncontrado = actividad.responsable.find(r => r.nombre === username);
+        if (responsableEncontrado) {
+          // Agregamos la actividad, fecha de compromiso, id del ishikawa y id de la actividad al array de resultados
+          actividadesFiltradas.push({
+            ishikawaId: doc._id,
+            actividadId: actividad._id,
+            actividad: actividad.actividad,
+            fechaCompromiso: actividad.fechaCompromiso,
+            concluido: actividad.concluido
+          });
+        }
+      });
+    });
+
+    // Devolvemos el resultado en formato JSON
+    return res.json(actividadesFiltradas);
+  } catch (error) {
+    console.error('Error al obtener actividades:', error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+const updateConcluido = async (req, res) => {
+  try {
+    console.log(req.body);
+    const { ishikawaId, actividadId, actividad, user, concluido } = req.body;
+
+    const result = await Ishikawa.updateOne(
+      { _id: ishikawaId, "actividades._id": actividadId },
+      { $set: { "actividades.$.concluido": concluido } }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ message: 'No se encontró la actividad especificada.' });
+    }
+
+    const templatePath = path.join(__dirname, 'templates', 'notificacion-actividad.html');
+    const emailTemplate = fs.readFileSync(templatePath, 'utf8');
+
+    const customizedTemplate = emailTemplate
+        .replace('{{usuario}}', user)
+        .replace('{{actividad}}', actividad);
+
+    const mailOptions = {
+      from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
+      to: process.env.EMAIL_ADMIN,
+      subject: "Actualización de actividad: Estado Concluido modificado",
+      html: customizedTemplate,
+        attachments: [
+          {
+            filename: 'logoAguida.png',
+            path: path.join(__dirname, '../assets/logoAguida-min.png'),
+            cid: 'logoAguida'
+          }
+        ]
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error(`Error al enviar el correo al administrador:`, error);
+      } else {
+        console.log(`Correo enviado exitosamente al administrador: ${process.env.EMAIL_ADMIN}`, info.response);
+      }
+    });
+
+    res.json({ message: 'Estado "concluido" actualizado correctamente.', result });
+  } catch (error) {
+    console.error("Error al actualizar 'concluido':", error);
+    res.status(500).json({ error: error.message });
   }
 };
   
@@ -708,5 +796,7 @@ const deleteIshikawa = async (req, res) => {
     enviarPDF,
     actualizarAcceso,
     deleteIshikawa,
-    obtenerIshikawaEspInc
+    obtenerIshikawaEspInc,
+    getActivitiesByUsername,
+    updateConcluido
   };

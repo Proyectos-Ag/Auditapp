@@ -76,32 +76,26 @@ const CreacionIshikawa = () => {
   );
 
 
+  const fetchIshikawaRecords = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+      const filtered = response.data.filter(item => {
+        const estadoValido = ["Rechazado", "Incompleto"].includes(item.estado);
+        const auditadoMatch = item.auditado?.toLowerCase() === userData.Nombre?.toLowerCase();
+        const accesoMatch = Array.isArray(item.acceso) &&
+          item.acceso.some(acc => acc.nombre?.toLowerCase() === userData.Nombre?.toLowerCase());
+        return estadoValido && (auditadoMatch || accesoMatch);
+      });
+      setIshikawaRecords(filtered);
+    } catch (error) {
+      console.error('Error fetching Ishikawa records:', error);
+    }
+  };
+
+  // 2️⃣ Lo usamos en el useEffect como antes
   useEffect(() => {
-    const fetchIshikawaRecords = async () => {
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-        console.log('Nombre: ', userData.Nombre);
-        
-        const filteredRecords = response.data.filter(item => {
-          const estadoValido = ["Rechazado", "Incompleto"].includes(item.estado);
-          // Verifica si auditado coincide
-          const auditadoMatch = item.auditado?.toLowerCase() === userData.Nombre?.toLowerCase();
-          // Verifica si alguno de los accesos coincide en su propiedad "nombre"
-          const accesoMatch = Array.isArray(item.acceso) && item.acceso.some(acc => 
-            acc.nombre?.toLowerCase() === userData.Nombre?.toLowerCase()
-          );
-          
-          return estadoValido && (auditadoMatch || accesoMatch);
-        });
-        
-        setIshikawaRecords(filteredRecords);
-        console.log('Problema: ',filteredRecords.problema);
-      } catch (error) {
-        console.error('Error fetching Ishikawa records:', error);
-      }
-    };
-  
     fetchIshikawaRecords();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData.Nombre]);
   
 
@@ -286,6 +280,8 @@ const CreacionIshikawa = () => {
         setSelectedRecordId(response.data._id);
         Swal.fire('Registro Guardado', 'El nuevo registro ha sido creado.', 'success');
       }
+
+      await fetchIshikawaRecords();
     } catch (error) {
       console.error('Error al guardar los datos:', error.response ? error.response.data : error.message);
     }
@@ -700,18 +696,15 @@ useEffect(() => {
 }, [formData.participantes]);
 
 useEffect(() => {
-  // Solo realiza la búsqueda si hay al menos 3 caracteres, por ejemplo
+  // Solo realiza la búsqueda si hay al menos 3 caracteres
   if (searchTerm.length < 3) {
     setSuggestions([]);
     return;
   }
 
-  // Implementa un debounce sencillo para evitar muchas peticiones
   const delayDebounceFn = setTimeout(() => {
-    // Realiza la consulta a tu API (asegúrate de tener un endpoint que reciba el query)
     axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/search?search=${encodeURIComponent(searchTerm)}`)
       .then(response => {
-        // Suponiendo que response.data es un array de participantes { id, name }
         setSuggestions(response.data);
         
       })

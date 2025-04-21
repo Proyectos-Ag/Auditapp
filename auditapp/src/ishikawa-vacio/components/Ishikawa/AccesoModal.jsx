@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import Swal from "sweetalert2";
 import {
   Paper,
@@ -16,12 +16,15 @@ import {
   Chip
 } from "@mui/material";
 import axios from "axios";
+import { UserContext } from '../../../App';
 
 const AccesoModal = ({ open, handleClose, idIshikawa, problemaIshikawa}) => {
   // Estado para manejar la búsqueda de usuarios
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  const { userData } = useContext(UserContext);
 
   // Estado para el nivel de acceso (se aplica al usuario que se selecciona)
   const [nivelAcceso, setNivelAcceso] = useState(1);
@@ -91,6 +94,16 @@ const AccesoModal = ({ open, handleClose, idIshikawa, problemaIshikawa}) => {
       });
       return; // Evita que continúe con la solicitud
     }
+
+    if (accesos.some(acceso => acceso.nombre === userData.Nombre)) {
+      handleClose();
+      Swal.fire({
+        icon: "warning",
+        title: "Acceso denegado",
+        text: "No puede darse acceso a sí mismo.",
+      });
+      return;
+    }    
   
     try {
       await axios.put(
