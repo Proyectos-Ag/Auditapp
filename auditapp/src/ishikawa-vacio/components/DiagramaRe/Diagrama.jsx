@@ -445,7 +445,40 @@ const Diagrama = () => {
                                 {ishikawa.actividades && ishikawa.actividades.map((actividad, i) => (
                                     <tr key={i}>
                                         <td>{actividad.actividad}</td>
-                                        <td>{actividad.responsable}</td>
+                                        <td>{
+                                Array.isArray(actividad.responsable)
+                                    ? actividad.responsable.flat().map((r, i, arr) => (
+                                        <span key={i}>
+                                        {typeof r === 'object'
+                                            ? (r.nombre 
+                                                ? r.nombre 
+                                                : Object.keys(r)
+                                                    .filter(key => !isNaN(key))
+                                                    .sort((a, b) => a - b)
+                                                    .map(key => r[key])
+                                                    .join('')
+                                            )
+                                            : r
+                                        }
+                                        {i < arr.length - 1 ? ', ' : ''}
+                                        </span>
+                                    ))
+                                    : (
+                                    // Caso en que "actividad.responsable" es un objeto
+                                    typeof actividad.responsable === 'object' &&
+                                    actividad.responsable !== null &&
+                                    (actividad.responsable.nombre 
+                                        ? <span>{actividad.responsable.nombre}</span>
+                                        : <span>{
+                                            Object.keys(actividad.responsable)
+                                                .filter(key => !isNaN(key))
+                                                .sort((a, b) => a - b)
+                                                .map(key => actividad.responsable[key])
+                                                .join('')
+                                            }</span>
+                                    )
+                                    )
+                                }</td>
                                         <td>{new Date(actividad.fechaCompromiso + 'T00:00:00').toLocaleDateString()}</td>
                                     </tr>
                                 ))}
