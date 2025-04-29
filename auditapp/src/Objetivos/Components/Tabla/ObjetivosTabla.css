@@ -1,230 +1,335 @@
-/* Para que el contenido aparezca más abajo */
-.tabla-container {
-  margin-top: 60px; /* Ajusta este valor a tu gusto */
-  max-width: 1200px;
+/* Estilos generales del dashboard */
+.objectives-dashboard {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin-top: 96px;
+  margin-bottom: 2rem;
   margin-left: auto;
   margin-right: auto;
-  padding: 20px;
-  background-color: #f2f9f2; /* verde muy claro */
+  max-width: 1400px;
+  width: 95%;
+  overflow: hidden;
+}
+
+/* Estilos del encabezado del dashboard */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.dashboard-title h1 {
+  color: #343a40;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 auto;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dashboard-title h2 {
+  color: #3085d6;
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0 auto;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Estilos de botones */
+.primary-button,
+.add-button,
+.action-button {
+  padding: 0.75rem 1.25rem;
+  border: none;
   border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-  margin-top: 100px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.tabla-titulo {
-  text-align: center;
-  margin-bottom: 10px;
-  font-size: 1.6rem;
-  color: #2e6735; /* verde oscuro elegante */
-  font-weight: bold;
+.primary-button {
+  background-color: #3085d6;
+  color: white;
 }
 
-.tabla-subtitulo {
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 1.2rem;
-  color: #2e6735;
+.primary-button:hover {
+  background-color: #2672bd;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.objetivos-tabla {
+.add-button {
+  background-color: #4a6fa5;
+  color: white;
+}
+
+.add-button:hover {
+  background-color: #3c5d8c;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.action-button {
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.edit-button {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.edit-button:hover {
+  background-color: #138496;
+}
+
+.save-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #218838;
+}
+
+.cancel-button {
+  background-color: #6c757d;
+  color: white;
+}
+
+.cancel-button:hover {
+  background-color: #5a6268;
+}
+
+.delete-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+}
+
+/* Estilos de la tabla */
+.objectives-table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.objectives-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #fff;
-  margin-bottom: 20px;
-}
-
-.objetivos-tabla thead tr {
-  background-color: #b4f599; /* verde claro */
-  color: #000;
-}
-
-.objetivos-tabla th,
-.objetivos-tabla td {
-  border: 1px solid #ddd;
-  padding: 8px 12px;
-  text-align: left;
-  font-size: 0.95rem;
-}
-
-.objetivos-tabla tbody tr:nth-child(even) {
-  background-color: #f7f7f7;
-}
-
-.td-input {
-  width: 100%;
-  height: auto; /* Permitir que el campo de texto crezca según el contenido */
-  box-sizing: border-box;
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  min-height: 30px; /* Asegura que el campo tenga un tamaño mínimo */
-  resize: vertical; /* Permite que el usuario ajuste la altura */
-}
-
-/* Botones */
-.btn-editar,
-.btn-guardar,
-.btn-eliminar {
-  background-color: #4c9e46; 
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 4px;
-}
-
-.btn-eliminar {
-  background-color: #c4494f; 
-}
-
-.btn-editar:hover,
-.btn-guardar:hover {
-  background-color: #3b7a36;
-}
-
-.btn-eliminar:hover {
-  background-color: #a4373d; 
-}
-
-.agregar-fila-container {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.btn-agregar {
-  background-color: #2e6735;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  cursor: pointer;
-  border-radius: 4px;
-  font-size: 0.95rem;
-  transition: background-color 0.2s;
-}
-
-.btn-agregar:hover {
-  background-color: #265f29;
-}
-
-.button-frecuencia{
-  color: #fff;
-  border-color: #ccc;
-  padding: 10px;
   border-radius: 8px;
-  background-color: #2faef8;
-  cursor: pointer;
-  float: right;
+  overflow: hidden;
 }
 
-.button-frecuencia:hover{
-  background-color: #377bc9;
+.objectives-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
 }
 
-/* Estilo para el botón "Guardar" */
-.button-guardar {
-  padding: 8px 16px;
-  background-color: #4CAF50; /* Verde */
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
+.objectives-table tbody tr {
+  background-color: white;
+  border-bottom: 1px solid #dee2e6;
   transition: background-color 0.3s;
 }
 
-.button-guardar:hover {
-  background-color: #45a049; /* Verde oscuro */
+.objectives-table tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
 }
 
-/* Estilo para el botón "Editar" */
-.button-editar {
-  padding: 8px 16px;
-  background-color: #FFA500; /* Naranja */
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+.objectives-table tbody tr.row-editing {
+  background-color: rgba(0, 123, 255, 0.1);
 }
 
-.button-editar:hover {
-  background-color: #ff7f00; /* Naranja oscuro */
+.objectives-table td {
+  padding: 1rem;
+  vertical-align: top;
 }
 
-/* Estilo para el botón "Eliminar" */
-.button-eliminar {
-  padding: 8px 16px;
-  background-color: #f44336; /* Rojo */
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+.column-narrow {
+  width: 80px;
 }
 
-.button-eliminar:hover {
-  background-color: #e53935; /* Rojo oscuro */
+.column-medium {
+  width: 150px;
 }
 
+.column-wide {
+  min-width: 250px;
+}
 
-/* Responsivo */
+.column-actions {
+  width: 130px;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.column-centered {
+  text-align: center;
+}
+
+/* Estilos para las barras de progreso */
+.progress-container {
+  width: 100%;
+  height: 25px;
+  background-color: #f0f0f0;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 12px;
+  transition: width 0.5s ease-in-out;
+}
+
+.progress-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #333;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.7);
+}
+
+/* Estilos para los campos de formulario */
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3085d6;
+  box-shadow: 0 0 0 2px rgba(48, 133, 214, 0.25);
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Estilos para el texto en celdas */
+.text-content {
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Loader y estados vacíos */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3085d6;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+  padding: 2rem;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: #ccc;
+  margin-bottom: 1rem;
+}
+
+/* Responsive styles */
+@media (max-width: 992px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-actions {
+    margin-top: 1rem;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .column-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
 @media (max-width: 768px) {
-  .tabla-container {
-      padding: 10px;
+  .objectives-dashboard {
+    padding: 1rem;
+    margin-top: 96px;
+    margin-bottom: 1rem;
+    margin-left: auto;
+    margin-right: auto;
   }
-  .tabla-titulo {
-      font-size: 1.3rem;
+
+  .dashboard-title h1 {
+    font-size: 1.5rem;
   }
-  .objetivos-tabla th,
-  .objetivos-tabla td {
-      font-size: 0.85rem;
-      padding: 6px 8px;
+
+  .dashboard-title h2 {
+    font-size: 1.2rem;
   }
 }
 
-@media (max-width: 480px) {
-  .tabla-titulo {
-      font-size: 1.1rem;
-  }
-
-  .objetivos-tabla,
-  .objetivos-tabla thead,
-  .objetivos-tabla tbody,
-  .objetivos-tabla th,
-  .objetivos-tabla td,
-  .objetivos-tabla tr {
-      display: block;
-  }
-
-  .objetivos-tabla thead tr {
-      display: none; 
-  }
-
-  .objetivos-tabla td {
-      border: none;
-      position: relative;
-      padding-left: 45%;
-      margin-bottom: 10px;
-  }
-
-  .objetivos-tabla td::before {
-      content: attr(data-label);
-      position: absolute;
-      left: 10px;
-      font-weight: bold;
-  }
-
-  /* Adaptación de los campos */
-  .td-input {
-      min-height: 40px; /* Aumentar el tamaño mínimo en dispositivos móviles */
-      font-size: 1rem;
-  }
-
-  .btn-editar, .btn-guardar, .btn-eliminar, .btn-agregar {
-      width: 100%; /* Los botones ocuparán todo el ancho */
-      margin-bottom: 10px; /* Espaciado entre botones */
-  }
-}
+/* Font Awesome compatibility */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');

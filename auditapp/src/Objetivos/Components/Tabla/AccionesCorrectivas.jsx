@@ -1,177 +1,331 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./AccionesCorrectivas.css";
 import Swal from "sweetalert2";
+import "./RegistroAccionCorrectiva.css";
 
-const AccionesCorrectivas = () => {
+const RegistroAccionCorrectiva = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { state } = location;
+  
+  // Extraemos todos los datos necesarios con valores por defecto
+  const { 
+    idObjetivo = null, 
+    objetivo = { numero: '', objetivo: '', area: '' }, 
+    periodo = '',
+    label = objetivo?.area || ''
+  } = state || {};
 
-  // Extraemos la información pasada en el state de navigate
-  const { idObjetivo, objetivo, periodo } = location.state || {};
+  const [registro, setRegistro] = useState({
+    fecha: new Date().toLocaleDateString(),
+    noObjetivo: objetivo?.numero || '',
+    objetivo: objetivo?.objetivo || '',
+    periodo: periodo || '',
+    acciones: '',
+    fichaCompromiso: new Date().toISOString().split('T')[0],
+    responsable: {
+      nombre: '',
+      email: ''
+    },
+    efectividad: '',
+    observaciones: ''
+  });
 
-  // Si no se recibe la información necesaria, redirigimos al usuario (por ejemplo, a la página principal)
+  const [guardando, setGuardando] = useState(false);
+
+  // Validamos que tengamos los datos necesarios al cargar
   useEffect(() => {
-    if (!idObjetivo || !objetivo || !periodo) {
-      navigate("/");
+    if (!idObjetivo || !objetivo?.numero || !periodo) {
+      Swal.fire({
+        title: 'Datos incompletos',
+        text: 'Falta información necesaria para registrar la acción',
+        icon: 'error'
+      }).then(() => {
+        navigate('/');
+      });
     }
   }, [idObjetivo, objetivo, periodo, navigate]);
 
-  const [fila, setFila] = useState({
-    fecha: new Date().toLocaleDateString(), // Fecha como texto
-    noObjetivo: objetivo ? objetivo.numero : "",
-    objetivo: objetivo ? objetivo.objetivo : "",
-    periodo: periodo || "",
-    acciones: "",
-    fichaCompromiso: new Date().toISOString().split("T")[0], // Fecha Compromiso como calendario
-    responsable: "",
-    efectividad: "",
-    observaciones: "",
-  });
-
-  // Colores para cada porcentaje de efectividad
-  const efectividadColors = {
-    '0%': '#ff9999',
-    '25%': '#ffcc99',
-    '50%': '#ffff99',
-    '75%': '#99cc99',
-    '100%': '#99ff99'
-  };
-
-  // Función para manejar cambios en los campos del formulario
-  const handleChange = (e) => {
+  const manejarCambio = (e) => {
     const { name, value } = e.target;
-    setFila((prev) => ({ ...prev, [name]: value }));
+    
+    if (name === "responsableNombre" || name === "responsableEmail") {
+      setRegistro(prev => ({
+        ...prev,
+        responsable: {
+          ...prev.responsable,
+          [name === "responsableNombre" ? "nombre" : "email"]: value
+        }
+      }));
+    } else {
+      setRegistro(prev => ({ ...prev, [name]: value }));
+    }
   };
 
-  // Función para guardar la acción correctiva
-  const handleGuardar = async () => {
+  const validarFormulario = () => {
+    if (!registro.acciones.trim()) {
+      Swal.fire({
+        title: 'Acciones requeridas',
+        text: 'Debe describir las acciones correctivas',
+        icon: 'warning'
+      });
+      return false;
+    }
+
+    if (!registro.fichaCompromiso) {
+      Swal.fire({
+        title: 'Fecha requerida',
+        text: 'Debe especificar una fecha de compromiso',
+        icon: 'warning'
+      });
+      return false;
+    }
+
+    if (new Date(registro.fichaCompromiso) <= new Date()) {
+      Swal.fire({
+        title: 'Fecha inválida',
+        text: 'La fecha de compromiso debe ser futura',
+        icon: 'warning'
+      });
+      return false;
+    }
+
+    if (!registro.responsable.nombre.trim()) {
+      Swal.fire({
+        title: 'Responsable requerido',
+        text: 'Debe especificar un responsable',
+        icon: 'warning'
+      });
+      return false;
+    }
+
+    if (!registro.responsable.email || !/\S+@\S+\.\S+/.test(registro.responsable.email)) {
+      Swal.fire({
+        title: 'Email inválido',
+        text: 'Debe proporcionar un email válido del responsable',
+        icon: 'warning'
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const guardarAccionCorrectiva = async () => {
+    if (!validarFormulario()) return;
+    
+    setGuardando(true);
+    
     try {
-      console.log("ID del objetivo:", idObjetivo); // Depuración
+      const datosParaBackend = {
+        ...registro,
+        area: label // Asegurarnos de incluir el área
+      };
+
       const response = await axios.post(
         `${process.env.REACT_APP_BACKEND_URL}/api/objetivos/${idObjetivo}/acciones-correctivas`,
-        fila,
+        datosParaBackend,
         {
           headers: {
-            "Content-Type": "application/json",
-          },
+            'Content-Type': 'application/json'
+          }
         }
       );
 
-      if (response.status !== 201) {
-        throw new Error("Error al guardar la acción correctiva");
+      if (response.status === 201) {
+        await Swal.fire({
+          title: '¡Acción registrada!',
+          text: 'La acción correctiva se ha guardado correctamente',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+
+        // Redirigir a la lista de acciones con el área codificada
+        navigate(`/acciones-list/${encodeURIComponent(label)}`);
+      }
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      let mensajeError = 'Ocurrió un error al guardar la acción';
+      
+      if (error.response) {
+        if (error.response.status === 404) {
+          mensajeError = 'No se encontró el objetivo relacionado';
+        } else if (error.response.data?.message) {
+          mensajeError = error.response.data.message;
+        }
       }
 
-      console.log("Objetivo recibido en AccionesCorrectivas:", objetivo);
-      console.log(
-        "URL de la solicitud:",
-        `${process.env.REACT_APP_BACKEND_URL}/api/objetivos/${idObjetivo}/acciones-correctivas`
-      );
-      console.log("Datos a enviar:", fila);
-
-      // Alerta de éxito con Swal
       Swal.fire({
-        icon: "success",
-        title: "Guardado exitoso",
-        text: "La acción correctiva se ha guardado correctamente.",
-        confirmButtonText: "OK",
+        title: 'Error',
+        text: mensajeError,
+        icon: 'error'
       });
-
-      // navigate("/");
-    } catch (error) {
-      console.error("Error al guardar la acción correctiva:", error);
-
-      // Alerta de error con Swal
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Hubo un problema al guardar la acción correctiva.",
-        confirmButtonText: "OK",
-      });
+    } finally {
+      setGuardando(false);
     }
   };
 
   return (
-    <div className="acciones-correctivas-container">
-      <h2>Acciones Correctivas</h2>
-      <table className="acciones-correctivas-tabla">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>No. Objetivo</th>
-            <th>Periodo</th>
-            <th>Acciones</th>
-            <th>Fecha Compromiso</th>
-            <th>Responsable</th>
-            <th>Efectividad</th>
-            <th>Observaciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>{fila.fecha}</td> {/* Fecha como texto */}
-            <td>{fila.noObjetivo}</td>
-            <td>{fila.periodo}</td>
-            <td>
-              <input
-                type="text"
+    <div className="contenedor-principal-accion">
+      <div className="encabezado-accion">
+        <h1 className="titulo-accion">
+          <span className="icono-accion">📝</span> Registro de Acción Correctiva
+        </h1>
+        <p className="subtitulo-accion">
+          Sistema de seguimiento y mejora continua - Área: {label}
+        </p>
+      </div>
+
+      <div className="tarjeta-formulario-accion">
+        <div className="encabezado-tarjeta">
+          <h2>Formulario de Registro</h2>
+          <div className="indicador-estado">
+            <span className={`estado-burbuja ${!registro.fichaCompromiso ? 'inactivo' : 
+              new Date(registro.fichaCompromiso) < new Date() ? 'vencido' : 'activo'}`}></span>
+            {!registro.fichaCompromiso ? 'Sin planificar' : 
+              new Date(registro.fichaCompromiso) < new Date() ? 'Acción vencida' : 'En progreso'}
+          </div>
+        </div>
+
+        <div className="contenedor-formulario">
+          <div className="grupo-campos">
+            <div className="campo-formulario">
+              <label>Fecha de registro</label>
+              <div className="campo-texto">{registro.fecha}</div>
+            </div>
+
+            <div className="campo-formulario">
+              <label>Número de objetivo</label>
+              <div className="campo-texto">{registro.noObjetivo}</div>
+            </div>
+
+            <div className="campo-formulario">
+              <label>Periodo de evaluación</label>
+              <div className="campo-texto">{registro.periodo}</div>
+            </div>
+          </div>
+
+          <div className="campo-formulario campo-completo">
+            <label>Descripción del objetivo</label>
+            <div className="campo-texto-descripcion">{registro.objetivo}</div>
+          </div>
+
+          <div className="grupo-campos">
+            <div className="campo-formulario">
+              <label>Acciones correctivas *</label>
+              <textarea
                 name="acciones"
-                value={fila.acciones}
-                onChange={handleChange}
+                value={registro.acciones}
+                onChange={manejarCambio}
+                className="input-acciones"
+                placeholder="Describa detalladamente las acciones a implementar"
+                rows="3"
+                required
               />
-            </td>
-            <td>
+            </div>
+
+            <div className="campo-formulario">
+              <label>Fecha compromiso *</label>
               <input
-                type="date" // Fecha Compromiso como calendario
+                type="date"
                 name="fichaCompromiso"
-                value={fila.fichaCompromiso}
-                onChange={handleChange}
+                value={registro.fichaCompromiso}
+                onChange={manejarCambio}
+                className="input-fecha"
+                min={new Date().toISOString().split('T')[0]}
+                required
               />
-            </td>
-            <td>
+            </div>
+          </div>
+
+          <div className="grupo-campos">
+            <div className="campo-formulario">
+              <label>Responsable *</label>
               <input
                 type="text"
-                name="responsable"
-                value={fila.responsable}
-                onChange={handleChange}
+                name="responsableNombre"
+                value={registro.responsable.nombre}
+                onChange={manejarCambio}
+                className="input-responsable"
+                placeholder="Nombre completo del responsable"
+                required
               />
-            </td>
-            <td>
+            </div>
+
+            <div className="campo-formulario">
+              <label>Email responsable *</label>
+              <input
+                type="email"
+                name="responsableEmail"
+                value={registro.responsable.email}
+                onChange={manejarCambio}
+                className="input-contacto"
+                placeholder="correo@ejemplo.com"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grupo-campos">
+            <div className="campo-formulario">
+              <label>Efectividad</label>
               <select
                 name="efectividad"
-                value={fila.efectividad}
-                onChange={handleChange}
-                style={{
-                  backgroundColor: efectividadColors[fila.efectividad] || 'white',
-                  width: '100%',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  padding: '5px'
-                }}
+                value={registro.efectividad}
+                onChange={manejarCambio}
+                className="selector-efectividad"
               >
-                <option value="" disabled>Seleccionar...</option>
-                <option value="0%">0%</option>
-                <option value="25%">25%</option>
-                <option value="50%">50%</option>
-                <option value="75%">75%</option>
-                <option value="100%">100%</option>
+                <option value="">Seleccione efectividad...</option>
+                <option value="0%">0% - No efectivo</option>
+                <option value="25%">25% - Poco efectivo</option>
+                <option value="50%">50% - Medianamente efectivo</option>
+                <option value="75%">75% - Muy efectivo</option>
+                <option value="100%">100% - Totalmente efectivo</option>
               </select>
-            </td>
-            <td>
-              <input
-                type="text"
+            </div>
+
+            <div className="campo-formulario">
+              <label>Observaciones</label>
+              <textarea
                 name="observaciones"
-                value={fila.observaciones}
-                onChange={handleChange}
+                value={registro.observaciones}
+                onChange={manejarCambio}
+                className="input-observaciones"
+                placeholder="Observaciones adicionales relevantes"
+                rows="3"
               />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <button onClick={handleGuardar}>Guardar</button>
+            </div>
+          </div>
+        </div>
+
+        <div className="pie-tarjeta">
+          <button 
+            className="boton-primario"
+            onClick={guardarAccionCorrectiva}
+            disabled={guardando || 
+              !registro.acciones || 
+              !registro.fichaCompromiso || 
+              !registro.responsable.nombre || 
+              !registro.responsable.email}
+          >
+            {guardando ? (
+              <>
+                <span className="boton-cargando"></span>
+                <span>Guardando...</span>
+              </>
+            ) : (
+              <>
+                <span className="boton-icono">💾</span>
+                <span className="boton-texto">Guardar Acción Correctiva</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default AccionesCorrectivas;
+export default RegistroAccionCorrectiva;

@@ -1,4 +1,4 @@
-import React, { useContext} from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import axios from 'axios';
 import './css/estilos.css';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
@@ -7,48 +7,88 @@ import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
-import Stack from '@mui/material/Stack';
+import { Box, IconButton, Stack, Badge } from '@mui/material';
+import ListIcon from '@mui/icons-material/List';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Swal from "sweetalert2";
 import { UserContext } from '../App';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import ActivList from './activ-list';
+import logo from '../assets/img/logoAguida.png';
 
 const IconMenu = () => {
-  const [open, setOpen] = React.useState(false);
-  const anchorRef = React.useRef(null);
+  const [open, setOpen] = useState(false);
+  const [openList, setOpenList] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const anchorRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [showOnLogin, setShowOnLogin] = useState(false);
   const { userData, setUserData } = useContext(UserContext);
 
-  const handleToggle = () => {
-    setOpen((prevOpen) => !prevOpen);
-  };
-
-  const handleClose = (event) => {
-    if (anchorRef.current && anchorRef.current.contains(event.target)) {
-      return;
+  useEffect(() => {
+    if (location.state?.showModal) {
+      setShowOnLogin(true);
+      window.history.replaceState({}, document.title);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // sólo al montar
+
+  // Obtener conteo de actividades pendientes
+  useEffect(() => {
+    if (!userData?.Nombre) return;
+    axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/activities/${userData.Nombre}`)
+      .then(res => {
+        const pendientes = res.data.filter(a => !a.concluido).length;
+        setPendingCount(pendientes);
+      })
+      .catch(console.error);
+  }, [userData]);
+
+  useEffect(() => {
+    if (showOnLogin && pendingCount > 0) {
+      setOpenList(true);
+      // opcional: resetear showOnLogin para que no vuelva a dispararse
+      setShowOnLogin(false);
+    }
+  }, [showOnLogin, pendingCount]);
+
+  const handleOpen = () => setOpenList(true);
+  const handleCloseList = () => setOpenList(false);
+
+  const handleToggle = () => setOpen(prev => !prev);
+  const handleClose = event => {
+    if (anchorRef.current && anchorRef.current.contains(event.target)) return;
     setOpen(false);
   };
 
-  function handleListKeyDown(event) {
+  const handleListKeyDown = event => {
     if (event.key === 'Tab') {
       event.preventDefault();
       setOpen(false);
     } else if (event.key === 'Escape') {
       setOpen(false);
     }
-  }
+  };
 
-  const prevOpen = React.useRef(open);
-  React.useEffect(() => {
-    if (prevOpen.current === true && open === false) {
-      anchorRef.current.focus();
+  // Redirecciones dinámicas según TipoUsuario
+  const handleNavigateToInicio = () => {
+    if (!userData?.TipoUsuario) {
+      navigate('/');
+    } else if (userData.TipoUsuario === 'administrador') {
+      navigate('/admin', { state: { showModal: true } });
+    } else if (userData.TipoUsuario === 'auditado') {
+      navigate('/auditado', { state: { showModal: true } });
+    } else if (userData.TipoUsuario === 'auditor') {
+      navigate('/auditor', { state: { showModal: true } });
+    } else {
+      navigate('/');
     }
-    prevOpen.current = open;
-  }, [open]);
+    setOpen(false);
+  };
 
   const handleLogout = async () => {
-    Swal.fire({
+    const result = await Swal.fire({
       title: '¿Está seguro de querer cerrar sesión?',
       text: '¡Tu sesión actual se cerrará!',
       icon: 'warning',
@@ -57,96 +97,88 @@ const IconMenu = () => {
       cancelButtonColor: '#d33',
       confirmButtonText: 'Sí, cerrar sesión',
       cancelButtonText: 'Cancelar',
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          // Llama al endpoint de logout para borrar la cookie del token
-          await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/logout`);
-        } catch (error) {
-          console.error('Error al cerrar sesión en el servidor', error);
-        }
-  
-        // Limpia cualquier otro dato que ya no necesites en el front end
-        localStorage.removeItem('breadcrumbHistory'); // Si aún lo usas
-        // Actualiza el contexto para remover la información del usuario
-        setUserData(null);
-        // Si tienes algún modal abierto, ciérralo
-        setOpen(false);
-        // Redirige al usuario a la página de inicio o login
-        navigate('/');
-      }
     });
+
+    if (result.isConfirmed) {
+      try {
+        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/logout`);
+      } catch (error) {
+        console.error('Error al cerrar sesión en el servidor', error);
+      }
+      localStorage.removeItem('breadcrumbHistory');
+      setUserData(null);
+      setOpen(false);
+      navigate('/');
+    }
   };
 
   const handleNavigateToPerfil = () => {
-    navigate('/informacion'); 
-    setOpen(false);  
-  };
-
-  const handleNavigateToInicio = () => {
-    navigate('/admin');  
-    setOpen(false);  
+    navigate('/informacion');
+    setOpen(false);
   };
 
   return (
-    <Stack direction="row" spacing={2}>
-      <div className="superposicion">
-        {/* ícono */}
+    <div className="unique-header">
+      <div className="logo-container">
+        <img src={logo} alt="Logo" onClick={handleNavigateToInicio} className="logo" />
+      </div>
 
-        <div className="user-icon">
-        <span>{userData?.Nombre || "Usuario"}</span>
-          
-          {/* Ícono */}
-          {userData?.Foto ? (
-            <img
-              src={userData.Foto}
-              alt="Foto de usuario"
-              onClick={handleToggle}
-              ref={anchorRef}
-              style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '50%',
-                marginLeft: '10px',
-                cursor: 'pointer',
-                border: '2px solid #3498db'
-              }}
-            />
-          ) : (
-            <AccountCircleIcon
-              onClick={handleToggle}
-              ref={anchorRef}
-              color="primary"
-              sx={{ fontSize: 50, marginLeft: '10px' }}
-            />
-          )}
+      <Stack direction="row" spacing={2}>
+        <div className="superposicion">
+          <div className="user-icon">
+            <span>{userData?.Nombre || "Usuario"}</span>
 
+            {userData?.Foto ? (
+              <img
+                src={userData.Foto}
+                alt="Foto de usuario"
+                onClick={handleToggle}
+                ref={anchorRef}
+                style={{ width: 50, height: 50, borderRadius: '50%', marginLeft: 10, cursor: 'pointer', border: '2px solid #3498db' }}
+              />
+            ) : (
+              <AccountCircleIcon
+                onClick={handleToggle}
+                ref={anchorRef}
+                color="primary"
+                sx={{ fontSize: 50, marginLeft: 1 }}
+              />
+            )}
 
+            {/* Badge en el icono de lista */}
+            <Badge badgeContent={pendingCount} color="error">
+              <IconButton onClick={handleOpen}>
+                <ListIcon />
+              </IconButton>
+            </Badge>
+
+            {/* Modal con ActivList */}
+            {openList && (
+              <Box
+                onClick={handleCloseList}
+                sx={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', bgcolor: 'rgba(0,0,0,0.5)', zIndex: 1500, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Box
+                  onClick={e => e.stopPropagation()}
+                  sx={{ width: 400, maxHeight: '80vh', overflowY: 'auto', bgcolor: 'background.paper', borderRadius: 1, boxShadow: 24, p: 4 }}
+                >
+                  <ActivList />
+                  <Box textAlign="right" mt={2}>
+                    <button onClick={handleCloseList}>Cerrar</button>
+                  </Box>
+                </Box>
+              </Box>
+            )}
+          </div>
         </div>
-        <Popper
-          open={open}
-          anchorEl={anchorRef.current}
-          role={undefined}
-          placement="bottom-start"
-          transition
-          disablePortal
-        >
+
+        {/* Popper para menú de cuenta */}
+        <Popper open={open} anchorEl={anchorRef.current} placement="bottom-start" transition disablePortal>
           {({ TransitionProps, placement }) => (
-            <Grow
-              {...TransitionProps}
-              style={{
-                transformOrigin:
-                  placement === 'bottom-start' ? 'left top' : 'left bottom',
-              }}
-            >
+            <Grow {...TransitionProps} style={{ transformOrigin: placement === 'bottom-start' ? 'left top' : 'left bottom' }}>
               <Paper>
                 <ClickAwayListener onClickAway={handleClose}>
-                  <MenuList
-                    autoFocusItem={open}
-                    id="composition-menu"
-                    aria-labelledby="composition-button"
-                    onKeyDown={handleListKeyDown}
-                  >
+                  <MenuList autoFocusItem={open} onKeyDown={handleListKeyDown}>
                     <MenuItem onClick={handleNavigateToPerfil}>Mi Cuenta</MenuItem>
                     <MenuItem onClick={handleNavigateToInicio}>Volver a Inicio</MenuItem>
                     <MenuItem onClick={handleLogout}>Cerrar Sesión</MenuItem>
@@ -156,9 +188,9 @@ const IconMenu = () => {
             </Grow>
           )}
         </Popper>
-      </div>
-    </Stack>
+      </Stack>
+    </div>
   );
-}
+};
 
 export default IconMenu;

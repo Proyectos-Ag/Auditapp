@@ -13,12 +13,22 @@ const AccionCorrectivaSchema = new mongoose.Schema({
   noObjetivo: { type: String, required: true },
   periodo: { type: String, required: true },
   acciones: { type: String, required: true },
-  fichaCompromiso: { type: String, required: true },
-  responsable: { type: String, required: true },
+  fichaCompromiso: { type: Date, required: true }, // Cambiado a Date
+  responsable: {
+    nombre: { type: String, required: true },
+    email: { type: String, required: true } // Nuevo campo para notificaciones
+  },
   efectividad: { type: String, required: true },
   observaciones: { type: String, required: true },
-  historialFechas: { type: [String], default: [] } // Nuevo campo para historial
-}, { _id: true }); // Habilitar _id para subdocumentos
+  historialFechas: { type: [String], default: [] },
+  notificaciones: [{
+    tipo: { type: String, enum: ['email', 'sistema'] },
+    fecha: Date,
+    mensaje: String,
+    urgencia: { type: String, enum: ['media', 'inmediata'] }
+  }],
+  ultimaNotificacion: Date // Para evitar notificaciones duplicadas
+}, { _id: true });
 
 const ObjetivoSchema = new mongoose.Schema({
   area: { type: String, required: true },

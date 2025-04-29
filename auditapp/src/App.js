@@ -63,6 +63,7 @@ import AccionesCorrectivas from './Objetivos/Components/Tabla/AccionesCorrectiva
 import AccionesCorrectivasList from './Objetivos/Components/Tabla/AccionesCorrectivasList.jsx';
 import SaeftyGoals from './Objetivos/Components/Tabla/objetivoslistsaeftygoals.jsx'
 import Concentrado from './Objetivos/Components/Tabla/concentrado.jsx'
+import RegistroAccionCorrectiva from './Objetivos/Components/Tabla/AccionesCorrectivas.jsx'
 
 //Paginas de error
 import UnauthorizedPage from './components/Pag-error/UnauthorizedPage.jsx';
@@ -155,6 +156,7 @@ export const UserContext = createContext(null);
               <Route path="/objetivos/:label/frecuencia/:label" element={<Frecuencia />} />
               <Route path="/acciones" element={<AccionesCorrectivas />} />
               <Route path="/acciones-list/:label" element={<AccionesCorrectivasList />} />
+              <Route path="/registro-accion" element={<ProtectedRoute><RegistroAccionCorrectiva/></ProtectedRoute>}/>
               <Route path="/saefty-goals2" element={<SaeftyGoals />} />
               <Route path="/concentradon" element={<Concentrado />} />
 
@@ -171,7 +173,7 @@ export const UserContext = createContext(null);
   };
 
 function App() {
-  const [appVersion] = useState('2.1.6');
+  const [appVersion] = useState('2.1.7');
 
 
   useEffect(() => {

@@ -22,7 +22,7 @@ const diagramaSchema = new mongoose.Schema({
 
 const responsableSchema = new mongoose.Schema({
     nombre: String,
-    correo: String
+    correo: String,
 });
 
 const actividadSchema = new mongoose.Schema({
@@ -30,6 +30,8 @@ const actividadSchema = new mongoose.Schema({
     responsable: [responsableSchema],
     correo: String,
     fechaCompromiso: [String],
+    concluido: {type: Boolean, default: false},
+    fechaCheck: Date
 });
 
 const correccionSchema = new mongoose.Schema({
@@ -53,6 +55,7 @@ const ishikawaSchema = new mongoose.Schema({
     problema: String,
     afectacion: String,
     fecha: String,
+    folio: String,
     auditado: String,
     correo: String,
     requisito: String,

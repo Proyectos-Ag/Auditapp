@@ -15,11 +15,13 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { storage } from '../../../firebase';
 import {ref, uploadBytes, getDownloadURL} from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
+import Cargando from '../../../components/cargando/Cargando';
 
 
 const Diagrama = () => {
     const {_id} = useParams();
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false)
     const [ishikawas, setIshikawas] = useState([]);
     const [visibleIndex, setVisibleIndex] = useState(0);
     const [showPart, setShowPart] = useState(true);
@@ -91,26 +93,34 @@ const Diagrama = () => {
         });
     };
 
-    const handleAprobar = async (id) => {
+    const handleAprobar = async (id, participantes) => {
         try {
-            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
-                estado: 'Aprobado'
-            });
-            Swal.fire({
-                title: 'Éxito!',
-                text: 'El diagrama se ha aprobado correctamente.',
-                icon: 'success',
-                confirmButtonText: 'Aceptar'
-              }).then(async () => {
-                await fetchData(); // Asegúrate de que la verificación ocurra después de aprobar
-              });
-        } catch (error) {
-            console.error('Error updating data:', error);
-            alert('Hubo un error al actualizar la información');
-        }
-        };
+          // 1. Marcar como aprobado en el backend
+          await axios.put(
+            `${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${id}`,
+            { estado: 'Aprobado' }
+          );
+      
+          // 2. Mostrar alerta y esperar a que el usuario pulse "Aceptar"
+          await Swal.fire({
+            title: 'Éxito!',
+            text: 'El diagrama se ha aprobado correctamente.',
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+          });
+      
+          // 3. Refrescar datos
+          await handlePrintPDF({ download: false, id, participantes });
+          await fetchData();
     
-        const Aprobar = async (id) => {
+      
+        } catch (error) {
+          console.error('Error updating data:', error);
+          alert('Hubo un error al actualizar la información');
+        }
+      };      
+    
+        const Aprobar = async (id, participantes) => {
             Swal.fire({
               title: '¿Está seguro de querer aprobar este diagrama?',
               text: '¡Esta acción no se puede revertir!',
@@ -122,7 +132,7 @@ const Diagrama = () => {
               cancelButtonText: 'Cancelar'
             }).then((result) => {
               if (result.isConfirmed) {
-                handleAprobar (id);
+                handleAprobar (id, participantes);
               }
             });
           };
@@ -550,16 +560,8 @@ const Diagrama = () => {
     };
     
 
-     const handlePrintPDF = () => {
-        const showLoading = () => {
-            document.getElementById('loading-overlay').style.display = 'flex';
-        };
-    
-        const hideLoading = () => {
-            document.getElementById('loading-overlay').style.display = 'none';
-        };
-    
-        showLoading();
+    const handlePrintPDF = async ({ download = true, id, participantes } = {}) => {
+        setLoading(true)
     
         const part1 = document.getElementById('pdf-content-part1');
         const part2 = document.getElementById('pdf-content-part2');
@@ -662,24 +664,41 @@ const Diagrama = () => {
         const marginRight3 = 2;
         const bottomMargin = 1.0; // Establecer un margen inferior de 1 cm
     
-        convertTextAreasToDivs(part1); // Convertir textareas a divs
-    
-        html2canvas(part1, { scale: 2.5, useCORS: true }).then((canvas) => {
-            yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
-    
-            return html2canvas(part2, { scale: 2.5, useCORS: true });
-        }).then((canvas) => {
-            yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
-    
-            // Procesar la parte 3 con tablas y manejo de filas
-            return processPart3WithTableRows(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, bottomMargin);
-        }).then(() => {
-            pdf.save("diagrama_ishikawa.pdf");
-            hideLoading();
-        }).catch((error) => {
-            console.error('Error generating PDF:', error);
-            hideLoading();
-        });
+        try {
+            // 1) convertir textareas y esperar imágenes
+            convertTextAreasToDivs(part1);
+            await ensureImagesLoaded(part1);
+            // 2) capturar parte1, parte2 y procesar part3
+            const canvas1 = await html2canvas(part1, { scale: 2.5, useCORS: true });
+            yOffset = processCanvas(canvas1, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+            const canvas2 = await html2canvas(part2, { scale: 2.5, useCORS: true });
+            yOffset = processCanvas(canvas2, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+            await processPart3WithTableRows(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, bottomMargin);
+        
+            // 3) generar blob
+            const pdfBlob = pdf.output('blob');
+        
+            if (download) {
+              // descarga local
+              pdf.save('diagrama_ishikawa.pdf');
+            } else {
+              // envío al backend
+              const file = new File([pdfBlob], 'diagrama_ishikawa.pdf', { type: 'application/pdf' });
+              const formData = new FormData();
+              formData.append('pdf', file);
+              formData.append('participantes', participantes);
+              await axios.post(
+                `${process.env.REACT_APP_BACKEND_URL}/ishikawa/enviar-pdf-dos`,
+                formData
+              );
+            }
+        } catch (error) {
+            console.error('Error generating or sending PDF:', error);
+            setLoading(false);
+            alert('Hubo un error al generar o enviar el PDF');
+          } finally {
+            setLoading(false);
+          }
     }; 
     
 const handleAgregarFila = () => {
@@ -725,13 +744,15 @@ const handleUploadFile = (fieldKey) => {
             >
                 <CircularProgress color="inherit" />
             </Backdrop>
-            <button className='button-pdf-imp' style={{top:'6em'}} onClick={handlePrintPDF}>Guardar en PDF</button>
+            <button className='button-pdf-imp'
+             style={{top:'6em'}} onClick={() => handlePrintPDF({ download: true })}>Guardar en PDF</button>
             {/*Mensaje de generacion*/}
-            <div id="loading-overlay" style={{display:'none'}}>
-            <div class="loading-content">
-                Generando archivo PDF...
-            </div>
-            </div>
+
+            {loading && (
+                <Cargando fullScreen message="Generando PDF…" />
+                )}
+
+
             <div className='content-diagrama'>
                 {ishikawas.map((ishikawa, index) => (
                     <div key={index}>
@@ -743,6 +764,17 @@ const handleUploadFile = (fieldKey) => {
                     </div>
                     {visibleIndex === index && (
                     <div >
+                        {
+                        ((ishikawa.estado === 'Aprobado')||(ishikawa.estado === 'Finalizado')||(ishikawa.estado === 'Incompleto')) ? null : (
+                        <div className='dia-buttons-g'>
+                                <button onClick={() => setShowNotaRechazo(!showNotaRechazo)}>
+                                    {showNotaRechazo ? 'Ocultar Nota' : 'Nota'}
+                                </button>
+                                <button onClick={() => Rechazar(ishikawa._id)} className='boton-rechazar' >Rechazar</button>
+                                <button onClick={() => Aprobar(ishikawa._id, ishikawa.participantes)} >Aprobar</button>
+                                
+                            </div>
+                            )}
                         <div id='pdf-content-part1' className="image-container-dia" >
 
                         {showNotaRechazo && (
@@ -757,19 +789,7 @@ const handleUploadFile = (fieldKey) => {
                                     />
                                 </div>
                             )}
-
-                        {
-                        ((ishikawa.estado === 'Aprobado')||(ishikawa.estado === 'Finalizado')||(ishikawa.estado === 'Incompleto')) ? null : (
-                        <div className='dia-buttons-g'>
-                                <button onClick={() => setShowNotaRechazo(!showNotaRechazo)}>
-                                    {showNotaRechazo ? 'Ocultar Nota' : 'Nota'}
-                                </button>
-                                <button onClick={() => Rechazar(ishikawa._id)} className='boton-rechazar' >Rechazar</button>
-                                <button onClick={() => Aprobar(ishikawa._id)} >Aprobar</button>
-                                
-                            </div>
-                            )}
-
+                        
                         <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
                         <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
                         <div className='posicion-en'>

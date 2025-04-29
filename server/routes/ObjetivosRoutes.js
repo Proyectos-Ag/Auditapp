@@ -1,4 +1,5 @@
 const express = require("express");
+const transporter = require('../emailconfig');
 const router = express.Router();
 const {
   obtenerObjetivos,
@@ -13,6 +14,20 @@ const {
 // GET /api/objetivos?area=INGENIERIA
 router.get("/", obtenerObjetivos);
 
+
+router.get('/test-email', async (req, res) => {
+  try {
+    await transporter.sendMail({
+      to: 'fredyesparza08@gmail.com',
+      subject: 'Prueba de correo',
+      html: '<h1>¡Este es un correo de prueba!</h1>'
+    });
+    res.send('Correo enviado correctamente');
+  } catch (error) {
+    console.error('Error al enviar correo:', error);
+    res.status(500).send('Error al enviar correo');
+  }
+});
 // GET /api/objetivos/acciones?area=INGENIERIA
 router.get("/acciones", getAccionesCorrectivasByArea);
 

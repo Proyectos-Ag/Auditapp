@@ -1,19 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Typography,
-  Button,
-  Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Select,
-  MenuItem,
+  Typography, Button, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
+  TextField, Select, MenuItem, Paper, Card, CardContent, Grid, Divider, Checkbox,
+  FormControlLabel, Avatar, Chip, LinearProgress, styled
 } from '@mui/material';
+import { 
+  Person, School, Work, Assessment, CheckCircle, Cancel, 
+  Save, Send, DateRange, HowToReg, Star, StarBorder 
+} from '@mui/icons-material';
+
+// Estilos personalizados
+const ElegantPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  borderRadius: '16px',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+  background: 'linear-gradient(to bottom right, #ffffff, #f8f9fa)',
+  border: '1px solid rgba(255,255,255,0.3)'
+}));
+
+const HeaderTypography = styled(Typography)(({ theme }) => ({
+  color: theme.palette.primary.dark,
+  fontWeight: 600,
+  marginBottom: theme.spacing(2),
+  position: 'relative',
+  '&:after': {
+    content: '""',
+    position: 'absolute',
+    bottom: -8,
+    left: 0,
+    width: '60px',
+    height: '4px',
+    backgroundColor: theme.palette.primary.main,
+    borderRadius: '2px'
+  }
+}));
+
+const AuditorCard = styled(Card)(({ theme, selected }) => ({
+  cursor: 'pointer',
+  transition: 'all 0.3s ease',
+  border: selected ? `2px solid ${theme.palette.primary.main}` : '1px solid #e0e0e0',
+  '&:hover': {
+    transform: 'translateY(-5px)',
+    boxShadow: theme.shadows[6]
+  }
+}));
+
+const ProgressBarWithLabel = ({ value }) => {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+      <Box sx={{ width: '100%', mr: 1 }}>
+        <LinearProgress 
+          variant="determinate" 
+          value={value} 
+          sx={{ 
+            height: 10, 
+            borderRadius: 5,
+            backgroundColor: '#e0e0e0',
+            '& .MuiLinearProgress-bar': {
+              borderRadius: 5,
+              backgroundColor: value > 70 ? '#4caf50' : value > 40 ? '#ff9800' : '#f44336'
+            }
+          }} 
+        />
+      </Box>
+      <Box sx={{ minWidth: 35 }}>
+        <Typography variant="body2" color="text.secondary">{`${Math.round(value)}%`}</Typography>
+      </Box>
+    </Box>
+  );
+};
 
 const Evaluaciones = () => {
   const [auditores, setAuditores] = useState([]);
@@ -23,7 +79,6 @@ const Evaluaciones = () => {
   const [selectedAudi, setSelectedAudi] = useState('');
   const [evaluacionExistente, setEvaluacionEx] = useState('');
   const [evaluacion, setEvaluacion] = useState({
-    
     cursos: {
       'Auditor interno en el SGI': { calificacion: '', aprobado: false },
       'BPM´s': { calificacion: '', aprobado: false },
@@ -54,9 +109,8 @@ const Evaluaciones = () => {
       auditoriasInternas: ''
     }
   });
-
   const [resultadoFinal, setResultadoFinal] = useState(0);
-  const [auditorDetails, setAuditorDetails] = useState(null); // Para guardar los detalles del auditor
+  const [auditorDetails, setAuditorDetails] = useState(null);
   const [formacionProfesional, setFormacionProfesional] = useState({
     nivelEstudios: '',
     especialidad: '',
@@ -64,13 +118,10 @@ const Evaluaciones = () => {
     comentarios: ''
   });
 
-  // Verificar si selectedFolio coincide con folio en evaluacionExistente
   useEffect(() => {
     if (selectedFolio && evaluacionExistente.length > 0) {
       const registro = evaluacionExistente.find((item) => item.folio === selectedFolio);
-
       if (registro) {
-        // Actualizar el estado evaluacion con los datos del registro encontrado
         setEvaluacion({
           cursos: registro.cursos.reduce((acc, curso) => {
             acc[curso.nombreCurso] = { calificacion: curso.calificacion, aprobado: curso.aprobado };
@@ -94,76 +145,54 @@ const Evaluaciones = () => {
     const obtenerAuditores = async () => {
       try {
         const responseEvaluacion = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/evaluacion`);
-        console.log('Estado',responseEvaluacion.data)
         setEvaluacionEx(responseEvaluacion.data);
-        // Obtener los datos con los IDs y nombres de AuditorLider
         const responseDatos = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/aud-lid`);
-  
-        console.log('Datos obtenidos:', responseDatos.data);
-  
-        // Crear una lista con objetos que incluyan ID y AuditorLider
         const auditoresLider = responseDatos.data.map(dato => ({
           idRegistro: dato._id,
           nombreLider: dato.AuditorLider,
           tipoAuditoria: dato.TipoAuditoria,
           duracion: dato.Duracion
         }));
-  
+        
         if (!auditoresLider.length) {
           console.error("No se encontraron AuditoresLider en los datos obtenidos");
           return;
         }
-  
-        // Obtener la lista de usuarios
+        
         const responseUsuarios = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
-  
-        // Asociar cada AuditorLider con su usuario y conservar el ID del registro
         const auditoresFiltrados = auditoresLider.map(({ idRegistro, nombreLider, duracion, tipoAuditoria }) => {
           const usuarioEncontrado = responseUsuarios.data.find(usuario => usuario.Nombre === nombreLider);
           if (usuarioEncontrado) {
             return { ...usuarioEncontrado, idRegistro, nombreLider, duracion, tipoAuditoria };
           }
           return null;
-        }).filter(Boolean); // Eliminar valores nulos si no hay coincidencia
-
+        }).filter(Boolean);
+        
         const filteredAuditores = auditoresFiltrados.filter(auditor => {
-          // Excluir los auditores que tengan coincidencias con evaluaciones "Completas"
           return !responseEvaluacion.data.some(evaluacion => {
             return evaluacion.auditoriaId === auditor.idRegistro && evaluacion.estado !== "Incompleta";
           });
-        });        
-
-        console.log('Filtrado',filteredAuditores)
-  
-        console.log('Auditores con duplicados e IDs de registros:', auditoresFiltrados);
+        });
+        
         setAuditores(filteredAuditores);
-        console.log('Aver',auditoresFiltrados)
       } catch (error) {
         console.error('Error al obtener auditores:', error);
       }
     };
-  
+    
     obtenerAuditores();
   }, []);  
-  
-  
+
   useEffect(() => {
     if (selectedAuditor) {
-      console.log('Selected Auditor:', selectedAuditor);
-      console.log('Auditores disponibles:', auditores);
-
       const auditor = auditores.find(a => `${a._id}_${a.idRegistro}` === selectedAuditor);
-      console.log('Auditor:', auditor);
       setAuditorDetails(auditor);
-
-      // Actualizar la sección de formación profesional
       if (auditor) {
         const puntuacionPorEscolaridad = {
           'Profesional': 3,
           'TSU': 2,
           'Preparatoria': 1
         };
-
         setFormacionProfesional({
           nivelEstudios: auditor.Escolaridad || '',
           especialidad: auditor.Carrera || '',
@@ -185,12 +214,12 @@ const Evaluaciones = () => {
 
   useEffect(() => {
     calcularResultadoFinal();
-  },);
+  });
 
   const manejarCambio = (event) => {
     const { name, value, type, checked } = event.target;
     const [categoria, tipo] = name.split('.');
-
+    
     if (categoria === 'cursos') {
       const numeroValor = parseFloat(value) || 0;
       setEvaluacion(prevState => ({
@@ -244,7 +273,6 @@ const Evaluaciones = () => {
     }
   };
 
-  // Función para formatear la fecha en formato DD/MM/YYYY
   const formatearFecha = (fechaISO) => {
     const fecha = new Date(fechaISO);
     const dia = fecha.getDate().toString().padStart(2, '0');
@@ -254,88 +282,52 @@ const Evaluaciones = () => {
   };
 
   const calcularResultadoFinal = () => {
-    // Total de puntos para cursos
     const totalCursos = Object.keys(evaluacion.cursos).length;
     const cursosAprobados = Object.values(evaluacion.cursos).filter(curso => curso.aprobado).length;
-
-    // Puntos obtenidos en cursos (Capacitación)
-    const puntosCursos = (cursosAprobados / totalCursos) * 5; // La puntuación máxima de capacitación es 5
-    const porcentajeCursos = (puntosCursos / 5) * 30; // 30% del total corresponde a capacitación
-
-    // Puntos de conocimientos y habilidades
+    const puntosCursos = (cursosAprobados / totalCursos) * 5;
+    const porcentajeCursos = (puntosCursos / 5) * 30;
     const puntosConocimientos = Object.values(evaluacion.conocimientos).reduce((a, b) => a + b, 0);
-    const porcentajeConocimientos = (puntosConocimientos / (5 * Object.keys(evaluacion.conocimientos).length)) * 30; // 30% del total
-
-    // Puntos de atributos y cualidades personales
+    const porcentajeConocimientos = (puntosConocimientos / (5 * Object.keys(evaluacion.conocimientos).length)) * 30;
     const puntosAtributos = Object.values(evaluacion.atributos).reduce((a, b) => a + b, 0);
-    const porcentajeAtributos = (puntosAtributos / 40) * 20; // 20% del total corresponde a atributos y cualidades personales
-
-    // Puntos de experiencia
+    const porcentajeAtributos = (puntosAtributos / 40) * 20;
     let puntosExperiencia = 0;
+    
     switch (evaluacion.experiencia.tiempoLaborando) {
-      case 'menos de 2 años':
-        puntosExperiencia += 1;
-        break;
-      case 'de 2 a 5 años':
-        puntosExperiencia += 4;
-        break;
-      case 'más de 5 años':
-        puntosExperiencia += 5;
-        break;
-      default:
-        puntosExperiencia += 0;
-        break;
+      case 'menos de 2 años': puntosExperiencia += 1; break;
+      case 'de 2 a 5 años': puntosExperiencia += 4; break;
+      case 'más de 5 años': puntosExperiencia += 5; break;
+      default: puntosExperiencia += 0; break;
     }
-  
+    
     if (evaluacion.experiencia.equipoInocuidad) puntosExperiencia += 2;
+    
     const auditorias = evaluacion.experiencia.auditoriasInternas;
     switch (auditorias) {
-      case '4':
-        puntosExperiencia += 3;
-        break;
-      case '3':
-        puntosExperiencia += 2;
-        break;
-      case '2':
-        puntosExperiencia += 1;
-        break;
-      case '1':
-        puntosExperiencia += 1;
-        break;
-      case '0':
-        puntosExperiencia += 0;
-        break;
-      default:
-        puntosExperiencia += 0;
-        break;
+      case '4': puntosExperiencia += 3; break;
+      case '3': puntosExperiencia += 2; break;
+      case '2': puntosExperiencia += 1; break;
+      case '1': puntosExperiencia += 1; break;
+      case '0': puntosExperiencia += 0; break;
+      default: puntosExperiencia += 0; break;
     }
-
-    const porcentajeExperiencia = (puntosExperiencia / 10) * 10; // 10% del total corresponde a experiencia
-  
-    // Puntos de formación profesional
+    
+    const porcentajeExperiencia = (puntosExperiencia / 10) * 10;
     let puntosFormacionProfesional = 0;
+    
     switch (formacionProfesional.nivelEstudios) {
-      case 'Profesional':
-        puntosFormacionProfesional = 3;
-        break;
-      case 'TSU':
-        puntosFormacionProfesional = 2;
-        break;
-      case 'Preparatoria':
-        puntosFormacionProfesional = 1;
-        break;
-      default:
-        puntosFormacionProfesional = 0;
+      case 'Profesional': puntosFormacionProfesional = 3; break;
+      case 'TSU': puntosFormacionProfesional = 2; break;
+      case 'Preparatoria': puntosFormacionProfesional = 1; break;
+      default: puntosFormacionProfesional = 0;
     }
-    const porcentajeFormacionProfesional = (puntosFormacionProfesional / 3) * 10; // 10% del total corresponde a formación profesional
-  
-    // Calcular resultado final con un máximo de 100%
+    
+    const porcentajeFormacionProfesional = (puntosFormacionProfesional / 3) * 10;
     const resultadoFinalCalculado = Math.min(
       porcentajeCursos + porcentajeConocimientos + porcentajeAtributos + porcentajeExperiencia + porcentajeFormacionProfesional, 100
     );
-  
+    
     setResultadoFinal(resultadoFinalCalculado);
-};
+  };
 
   const limpiarCampos = () => {
     setEvaluacion({
@@ -383,64 +375,57 @@ const Evaluaciones = () => {
     try {
       const cursosArray = Object.entries(evaluacion.cursos).map(([nombreCurso, datos]) => ({
         nombreCurso,
-        calificacion: Number(datos.calificacion) || null, // Enviar vacío si no hay calificación
-        aprobado: datos.aprobado !== undefined ? datos.aprobado : null, // Enviar vacío si no hay aprobado
+        calificacion: Number(datos.calificacion) || null,
+        aprobado: datos.aprobado !== undefined ? datos.aprobado : null,
       }));
   
       const conocimientosHabilidadesArray = Object.entries(evaluacion.conocimientos).map(([conocimiento, puntuacion]) => ({
         conocimiento,
-        puntuacion: puntuacion !== undefined ? puntuacion : null, // Enviar vacío si no hay puntuación
+        puntuacion: puntuacion !== undefined ? puntuacion : null,
       }));
   
       const atributosArray = Object.entries(evaluacion.atributos).map(([atributo, puntuacion]) => ({
         atributo,
-        puntuacion: puntuacion !== undefined ? puntuacion : null, // Enviar vacío si no hay puntuación
+        puntuacion: puntuacion !== undefined ? puntuacion : null,
       }));
   
       let evaluacionExistente = null;
       try {
-        // Consulta para verificar si el registro ya existe
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/${selectedFolio}`);
         evaluacionExistente = response.data;
-        console.log('Evaluación existente:', evaluacionExistente);
       } catch (error) {
         if (error.response && error.response.status === 404) {
           console.log('Registro no encontrado, se creará uno nuevo.');
         } else {
           console.error('Error al verificar la existencia de la evaluación:', error);
-          throw error; // Si hay otro error, termina la ejecución aquí
+          throw error;
         }
       }
   
-      // Si existe, realiza una actualización; si no, crea el registro
       if (evaluacionExistente) {
-        // Actualizar registro existente con PUT
-        console.log('Actualizando evaluación...');
         await axios.put(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/folio/${selectedFolio}`, {
           folio: selectedFolio,
           cursos: cursosArray,
           conocimientosHabilidades: conocimientosHabilidadesArray,
           atributosCualidadesPersonales: atributosArray,
-          experiencia: evaluacion.experiencia !== undefined ? evaluacion.experiencia : null, // Enviar vacío si no hay experiencia
-          formacionProfesional: formacionProfesional !== undefined ? formacionProfesional : null, // Enviar vacío si no hay formación
-          porcentajeTotal: resultadoFinal !== undefined ? resultadoFinal : null, // Enviar vacío si no hay porcentaje
+          experiencia: evaluacion.experiencia !== undefined ? evaluacion.experiencia : null,
+          formacionProfesional: formacionProfesional !== undefined ? formacionProfesional : null,
+          porcentajeTotal: resultadoFinal !== undefined ? resultadoFinal : null,
           estado,
         });
         alert(`Evaluación actualizada como ${estado}`);
       } else {
-        // Crear un nuevo registro con POST
-        console.log('Creando nueva evaluación...');
         await axios.post(`${process.env.REACT_APP_BACKEND_URL}/evaluacion`, {
           folio: selectedFolio,
-          auditoriaId:selectedAuditoria,
+          auditoriaId: selectedAuditoria,
           auditorId: selectedAudi,
-          nombre:auditorDetails.Nombre,
+          nombre: auditorDetails.Nombre,
           cursos: cursosArray,
           conocimientosHabilidades: conocimientosHabilidadesArray,
           atributosCualidadesPersonales: atributosArray,
-          experiencia: evaluacion.experiencia !== undefined ? evaluacion.experiencia : null, // Enviar vacío si no hay experiencia
-          formacionProfesional: formacionProfesional !== undefined ? formacionProfesional : null, // Enviar vacío si no hay formación
-          porcentajeTotal: resultadoFinal !== undefined ? resultadoFinal : null, // Enviar vacío si no hay porcentaje
+          experiencia: evaluacion.experiencia !== undefined ? evaluacion.experiencia : null,
+          formacionProfesional: formacionProfesional !== undefined ? formacionProfesional : null,
+          porcentajeTotal: resultadoFinal !== undefined ? resultadoFinal : null,
           estado,
         });
         alert(`Evaluación guardada como ${estado}`);
@@ -453,352 +438,414 @@ const Evaluaciones = () => {
   };
 
   const handleAuditorSelect = (auditorId, idRegistro, Nombre) => {
-    // Obtener las iniciales del nombre
-    const iniciales = Nombre.split(' ') // Divide el nombre por espacios
-      .map(palabra => palabra.charAt(0).toUpperCase()) // Obtiene la primera letra de cada palabra y la convierte en mayúscula
-      .join(''); // Une las iniciales en una cadena
+    const iniciales = Nombre.split(' ')
+      .map(palabra => palabra.charAt(0).toUpperCase())
+      .join('');
   
-    // Construir folioKey con las iniciales y el idRegistro
     const auditorKey = `${auditorId}_${idRegistro}`;
     const folioKey = `${idRegistro}${iniciales}`;
   
-    if (selectedAuditor === auditorId) {
-      // Deseleccionar si se hace clic en el auditor ya seleccionado
+    if (selectedAuditor === auditorKey) {
       setSelectedAuditor(null);
       setSelectedFolio(null);
       setSelectedAuditoria(null);
       setSelectedAudi(null);
     } else {
-      // Seleccionar un auditor y ocultar los demás
       setSelectedAuditor(auditorKey);
       setSelectedFolio(folioKey);
       setSelectedAuditoria(idRegistro);
       setSelectedAudi(auditorId);
     }
-  };  
+  };
 
+  const renderStars = (value) => {
+    const stars = [];
+    const maxStars = 5;
+    for (let i = 1; i <= maxStars; i++) {
+      stars.push(
+        i <= value ? 
+        <Star key={i} color="primary" fontSize="small" /> : 
+        <StarBorder key={i} color="primary" fontSize="small" />
+      );
+    }
+    return stars;
+  };
 
   return (
-   <Box sx={{ padding: '20px', marginTop: '50px' }}>
-    <div>
-        <h1>Seleccione un Auditor</h1>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-          {auditores
-            .map((auditor) => (
-              <div
-                key={auditor.idRegistro}
-                style={{
-                  border: "1px solid #ccc",
-                  padding: "10px",
-                  borderRadius: "8px",
-                  background: selectedAuditor === `${auditor._id}_${auditor.idRegistro}` ? "#f0f8ff" : "#fff",
-                  cursor: "pointer",
-                  display:
-                    selectedAuditor && selectedAuditor !== `${auditor._id}_${auditor.idRegistro}`
-                      ? "none"
-                      : "block",
-                }}
-                onClick={() => handleAuditorSelect(auditor._id, auditor.idRegistro, auditor.Nombre)}
-              >
-                <h3>{auditor.Nombre}</h3>
-                <p>{auditor.duracion}</p>
-                <p>{auditor.tipoAuditoria}</p>
-                <p>{auditor.idRegistro}</p>
-              </div>
-            ))}
-        </div>
+    <Box sx={{ padding: '40px', marginTop: '3em' }}>
+      <ElegantPaper elevation={3}>
+        <HeaderTypography variant="h4" gutterBottom>
+          <Assessment sx={{ verticalAlign: 'middle', mr: 1 }} />
+          Evaluación de Auditores Internos
+        </HeaderTypography>
+        
+        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+          GCF070 - Sistema de Gestión para la Calidad
+        </Typography>
+        
+        <Divider sx={{ my: 3 }} />
+        
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'text.primary' }}>
+            Seleccione un Auditor para Evaluar
+          </Typography>
+          
+          <Grid container spacing={3} sx={{ mt: 2 }}>
+            {auditores.map((auditor) => {
+              const isSelected = selectedAuditor === `${auditor._id}_${auditor.idRegistro}`;
+              return (
+                <Grid item xs={12} sm={6} md={4} key={auditor.idRegistro}>
+                  <AuditorCard selected={isSelected} onClick={() => handleAuditorSelect(auditor._id, auditor.idRegistro, auditor.Nombre)}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Avatar sx={{ bgcolor: isSelected ? 'primary.main' : 'grey.300', mr: 2 }}>
+                          {auditor.Nombre.charAt(0)}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="h6" component="div">
+                            {auditor.Nombre}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {auditor.Departamento}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Chip 
+                        label={auditor.tipoAuditoria} 
+                        size="small" 
+                        color="secondary" 
+                        sx={{ mr: 1, mb: 1 }} 
+                      />
+                      <Chip 
+                        label={`Duración: ${auditor.duracion}`} 
+                        size="small" 
+                        variant="outlined" 
+                        sx={{ mb: 1 }} 
+                      />
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        ID: {auditor.idRegistro}
+                      </Typography>
+                    </CardContent>
+                  </AuditorCard>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Box>
+
         {selectedAuditor && (
-          <Button
-            onClick={limpiarCampos}
-            style={{
-              marginTop: "20px",
-              padding: "10px 20px",
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-            }}
-          >
-            Mostrar todos
-          </Button>
+          <>
+            <Box sx={{ mb: 4, p: 3, backgroundColor: '#f0f4f8', borderRadius: '12px' }}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+                    <Person sx={{ mr: 1, color: 'primary.main' }} /> Información del Auditor
+                  </Typography>
+                  <Box sx={{ pl: 2 }}>
+                    <Typography><strong>Nombre:</strong> {auditorDetails?.Nombre || 'N/A'}</Typography>
+                    <Typography><strong>Departamento:</strong> {auditorDetails?.Departamento || 'N/A'}</Typography>
+                    <Typography><strong>Fecha de Ingreso:</strong> {auditorDetails ? formatearFecha(auditorDetails.FechaIngreso) : 'N/A'}</Typography>
+                    <Typography><strong>Escolaridad:</strong> {auditorDetails?.Escolaridad || 'N/A'}</Typography>
+                    <Typography><strong>Carrera:</strong> {auditorDetails?.Carrera || 'N/A'}</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+                    <DateRange sx={{ mr: 1, color: 'primary.main' }} /> Detalles de Evaluación
+                  </Typography>
+                  <Box sx={{ pl: 2 }}>
+                    <Typography><strong>Folio:</strong> {selectedFolio}</Typography>
+                    <Typography><strong>Fecha:</strong> {new Date().toLocaleDateString()}</Typography>
+                    <Typography><strong>Tipo de Auditoría:</strong> {auditorDetails?.tipoAuditoria || 'N/A'}</Typography>
+                    <Typography><strong>Duración:</strong> {auditorDetails?.duracion || 'N/A'}</Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Typography variant="body1" paragraph sx={{ mb: 4, fontStyle: 'italic', color: 'text.secondary' }}>
+              La siguiente evaluación deberá ser llenada por el Gerente de Gestión para la Calidad y será aplicada 
+              a partir de la ejecución de la primera auditoría con la finalidad de conocer el rango del auditor interno.
+            </Typography>
+
+            <Box sx={{ mb: 4 }}>
+              <HeaderTypography variant="h5">
+                <School sx={{ verticalAlign: 'middle', mr: 1 }} />
+                Evaluación de Cursos
+              </HeaderTypography>
+              
+              <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
+                <Table>
+                  <TableHead sx={{ backgroundColor: '#f5f7fa' }}>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600 }}>Curso</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Calificación (%)</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {Object.keys(evaluacion.cursos).map((curso) => (
+                      <TableRow key={curso} hover>
+                        <TableCell>{curso}</TableCell>
+                        <TableCell>
+                          <TextField
+                            type="number"
+                            name={`cursos.${curso}`}
+                            value={evaluacion.cursos[curso].calificacion}
+                            onChange={manejarCambio}
+                            inputProps={{ min: 0, max: 100 }}
+                            size="small"
+                            fullWidth
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {evaluacion.cursos[curso].aprobado ? 
+                            <Chip icon={<CheckCircle />} label="Aprobado" color="success" size="small" /> : 
+                            <Chip icon={<Cancel />} label="No aprobado" color="error" size="small" />
+                          }
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+
+            <Box sx={{ mb: 4 }}>
+              <HeaderTypography variant="h5">
+                <Work sx={{ verticalAlign: 'middle', mr: 1 }} />
+                Conocimientos y Habilidades
+              </HeaderTypography>
+              
+              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
+                Evalúe cada aspecto del 1 al 5, donde 1 es el mínimo y 5 el máximo
+              </Typography>
+              
+              <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
+                <Table>
+                  <TableHead sx={{ backgroundColor: '#f5f7fa' }}>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600 }}>Conocimiento/Habilidad</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Puntuación</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Nivel</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {Object.keys(evaluacion.conocimientos).map((conocimiento) => (
+                      <TableRow key={conocimiento} hover>
+                        <TableCell>{conocimiento}</TableCell>
+                        <TableCell>
+                          <TextField
+                            type="number"
+                            name={`conocimientos.${conocimiento}`}
+                            value={evaluacion.conocimientos[conocimiento]}
+                            onChange={manejarCambio}
+                            inputProps={{ min: 1, max: 5 }}
+                            size="small"
+                            fullWidth
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {renderStars(evaluacion.conocimientos[conocimiento] || 0)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+
+            <Box sx={{ mb: 4 }}>
+              <HeaderTypography variant="h5">
+                <HowToReg sx={{ verticalAlign: 'middle', mr: 1 }} />
+                Atributos y Cualidades Personales
+              </HeaderTypography>
+              
+              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
+                Evalúe cada aspecto del 1 al 5, donde 1 es el mínimo y 5 el máximo
+              </Typography>
+              
+              <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
+                <Table>
+                  <TableHead sx={{ backgroundColor: '#f5f7fa' }}>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600 }}>Atributo/Cualidad</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Puntuación</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Nivel</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {Object.keys(evaluacion.atributos).map((atributo) => (
+                      <TableRow key={atributo} hover>
+                        <TableCell>{atributo}</TableCell>
+                        <TableCell>
+                          <TextField
+                            type="number"
+                            name={`atributos.${atributo}`}
+                            value={evaluacion.atributos[atributo]}
+                            onChange={manejarCambio}
+                            inputProps={{ min: 1, max: 5 }}
+                            size="small"
+                            fullWidth
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {renderStars(evaluacion.atributos[atributo] || 0)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+
+            <Box sx={{ mb: 4 }}>
+              <HeaderTypography variant="h5">
+                <Work sx={{ verticalAlign: 'middle', mr: 1 }} />
+                Evaluación de Experiencia
+              </HeaderTypography>
+              
+              <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
+                <Table>
+                  <TableBody>
+                    <TableRow hover>
+                      <TableCell sx={{ fontWeight: 500 }}>Tiempo laborando en la planta:</TableCell>
+                      <TableCell>
+                        <Select
+                          name="experiencia.tiempoLaborando"
+                          value={evaluacion.experiencia.tiempoLaborando}
+                          onChange={manejarCambio}
+                          fullWidth
+                          size="small"
+                        >
+                          <MenuItem value="">Seleccione una opción</MenuItem>
+                          <MenuItem value="menos de 2 años">Menos de 2 años</MenuItem>
+                          <MenuItem value="de 2 a 5 años">De 2 a 5 años</MenuItem>
+                          <MenuItem value="más de 5 años">Más de 5 años</MenuItem>
+                        </Select>
+                      </TableCell>
+                    </TableRow>
+                    
+                    <TableRow hover>
+                      <TableCell sx={{ fontWeight: 500 }}>Forma parte del equipo de inocuidad:</TableCell>
+                      <TableCell>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              name="experiencia.equipoInocuidad"
+                              checked={evaluacion.experiencia.equipoInocuidad}
+                              onChange={manejarCambio}
+                              color="primary"
+                            />
+                          }
+                          label={evaluacion.experiencia.equipoInocuidad ? "Sí" : "No"}
+                        />
+                      </TableCell>
+                    </TableRow>
+                    
+                    <TableRow hover>
+                      <TableCell sx={{ fontWeight: 500 }}>Participación en auditorías internas:</TableCell>
+                      <TableCell>
+                        <Select
+                          name="experiencia.auditoriasInternas"
+                          value={evaluacion.experiencia.auditoriasInternas}
+                          onChange={manejarCambio}
+                          fullWidth
+                          size="small"
+                        >
+                          <MenuItem value="">Seleccione</MenuItem>
+                          <MenuItem value="4">4</MenuItem>
+                          <MenuItem value="3">3</MenuItem>
+                          <MenuItem value="2">2</MenuItem>
+                          <MenuItem value="1">1</MenuItem>
+                          <MenuItem value="0">0</MenuItem>
+                        </Select>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+
+            <Box sx={{ mb: 4 }}>
+  <HeaderTypography variant="h5">
+    <School sx={{ verticalAlign: 'middle', mr: 1 }} />
+    Formación Profesional
+  </HeaderTypography>
+  
+  <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
+                <Table>
+                  <TableHead sx={{ backgroundColor: '#f5f7fa' }}>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600 }}>Nivel de Estudios</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Especialidad</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Puntuación</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Comentarios</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <TableRow hover>
+                      <TableCell>
+                        <Select
+                          name="formacionProfesional.nivelEstudios"
+                          value={formacionProfesional.nivelEstudios}
+                          onChange={manejarCambio}
+                          fullWidth
+                        >
+                          <MenuItem value="">Selecciona</MenuItem>
+                          <MenuItem value="Profesional">Profesional</MenuItem>
+                          <MenuItem value="TSU">TSU</MenuItem>
+                          <MenuItem value="Preparatoria">Preparatoria</MenuItem>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          name="formacionProfesional.especialidad"
+                          value={formacionProfesional.especialidad}
+                          onChange={manejarCambio}
+                          fullWidth
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip label={formacionProfesional.puntuacion} color="primary" />
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          name="formacionProfesional.comentarios"
+                          value={formacionProfesional.comentarios}
+                          onChange={manejarCambio}
+                          fullWidth
+                        />
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+            <Box sx={{ mb: 4 }}>
+  <Typography variant="h4">Resultado Final: {resultadoFinal.toFixed(2)}%</Typography>
+  <ProgressBarWithLabel value={resultadoFinal} />
+  
+  <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+    <Button
+      variant="outlined"
+      startIcon={<Save />}
+      onClick={() => guardarEvaluacionConEstado('Incompleta')}
+    >
+      Guardar Cambios
+    </Button>
+    <Button
+      variant="contained"
+      startIcon={<Send />}
+      onClick={() => guardarEvaluacionConEstado('Completa')}
+    >
+      Guardar Evaluación
+    </Button>
+  </Box>
+</Box>
+          </>
         )}
-      </div>
-
-      {selectedAuditor && (
-        <>
-      <Box sx={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
-
-      <h1>Evaluación de Auditores Internos</h1>
-      <p>GCF070</p>
-      <p><strong>Departamento:</strong> {auditorDetails ? auditorDetails.Departamento : 'Seleccione un auditor'}</p>
-      <p><strong>Folio:</strong> {selectedFolio}</p>
-      <p><strong>Nombre:</strong> {auditorDetails ? auditorDetails.Nombre : 'Seleccione un auditor'}</p>
-      <p><strong>Fecha:</strong> {new Date().toLocaleDateString()}</p>
-      <p><strong>Fecha de Ingreso:</strong> {auditorDetails ? formatearFecha(auditorDetails.FechaIngreso) : 'N/A'}</p>
-      <p>La siguiente evaluación deberá ser llenada por el Gerente de Gestión para la Calidad y será aplicada a partir de la ejecución de la primera auditoría con la finalidad de conocer el rango del auditor interno.</p>
-
-          <Box sx={{ marginTop: '20px' }}>
-          <Typography variant="h6">Evaluación de Cursos</Typography>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Curso</TableCell>
-                  <TableCell>Calificación (%)</TableCell>
-                  <TableCell>Aprobado</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {Object.keys(evaluacion.cursos).map((curso) => (
-                  <TableRow key={curso}>
-                    <TableCell>{curso}</TableCell>
-                    <TableCell>
-                      <TextField
-                        type="number"
-                        name={`cursos.${curso}`}
-                        value={evaluacion.cursos[curso].calificacion}
-                        onChange={manejarCambio}
-                        inputProps={{ min: 0, max: 100 }}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{evaluacion.cursos[curso].aprobado ? 'Sí' : 'No'}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-
-        <Box sx={{ marginTop: '20px' }}>
-          <Typography variant="h6">Conocimientos y Habilidades</Typography>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Conocimiento/Habilidad</TableCell>
-                  <TableCell>Puntuación (1-5)</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {Object.keys(evaluacion.conocimientos).map((conocimientos) => (
-                  <TableRow key={conocimientos}>
-                    <TableCell>{conocimientos}</TableCell>
-                    <TableCell>
-                      <TextField
-                         type="number"
-                         name={`conocimientos.${conocimientos}`}
-                         value={evaluacion.conocimientos[conocimientos]}
-                         onChange={manejarCambio}
-                         inputProps={{
-                          min: 1,
-                          max: 5,
-                        }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-
-        <Box sx={{ marginTop: '20px' }}>
-          <Typography variant="h6">Atributos y Cualidades Personales</Typography>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Atributo/Cualidad</TableCell>
-                  <TableCell>Puntuación (1-5)</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {Object.keys(evaluacion.atributos).map((atributo) => (
-                  <TableRow key={atributo}>
-                    <TableCell>{atributo}</TableCell>
-                    <TableCell>
-                      <TextField
-                         type="number"
-                         name={`atributos.${atributo}`}
-                         value={evaluacion.atributos[atributo]}
-                         onChange={manejarCambio}
-                         inputProps={{
-                          min: 1,
-                          max: 5,
-                        }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-
-        <Box sx={{ marginTop: '20px' }}>
-          <Typography variant="h6">Evaluación de Experiencia</Typography>
-          <TableContainer>
-            <Table>
-              <TableBody>
-                  <TableRow >
-                    <TableCell>
-                    Tiempo laborando en la planta:
-                    </TableCell>
-                    <TableCell>
-                    <Select
-                    name="experiencia.tiempoLaborando"
-                    value={evaluacion.experiencia.tiempoLaborando}
-                    onChange={manejarCambio}
-                  >
-                    <MenuItem value="">Seleccione</MenuItem>
-                    <MenuItem value="menos de 2 años">Menos de 2 años</MenuItem>
-                    <MenuItem value="de 2 a 5 años">De 2 a 5 años</MenuItem>
-                    <MenuItem value="más de 5 años">Más de 5 años</MenuItem>
-                  </Select>
-                    </TableCell>
-                  </TableRow>
-
-                  <TableRow >
-                  <TableCell>
-                  Forma parte del equipo de inocuidad:
-                  </TableCell>
-                  <TableCell>
-                  <input
-                    type="checkbox"
-                    name="experiencia.equipoInocuidad"
-                    checked={evaluacion.experiencia.equipoInocuidad}
-                    onChange={manejarCambio}
-                  />
-                  </TableCell>
-                </TableRow>
-
-                <TableRow >
-                  <TableCell>
-                  Participación en auditorías internas:
-                  </TableCell>
-                  <TableCell>
-                  <Select
-                    name="experiencia.auditoriasInternas"
-                    value={evaluacion.experiencia.auditoriasInternas}
-                    onChange={manejarCambio}
-                  >
-                    <MenuItem value="">Seleccione</MenuItem>
-                    <MenuItem value="4">4</MenuItem>
-                    <MenuItem value="3">3</MenuItem>
-                    <MenuItem value="2">2</MenuItem>
-                    <MenuItem value="1">1</MenuItem>
-                    <MenuItem value="0">0</MenuItem>
-                  </Select>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-
-        <Box sx={{ marginTop: '20px' }}>
-          <Typography variant="h6">Formación Profesional</Typography>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Nivel de Estudios</TableCell>
-                  <TableCell>Especialidad</TableCell>
-                  <TableCell>Puntuación</TableCell>
-                  <TableCell>Comentarios</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                
-                  <TableRow >
-                    <TableCell>
-                    <Select
-                    name="formacionProfesional.nivelEstudios"
-                    value={formacionProfesional.nivelEstudios}
-                    onChange={manejarCambio}
-                  >
-                    <MenuItem value="">Selecciona</MenuItem>
-                    <MenuItem value="Profesional">Profesional</MenuItem>
-                    <MenuItem value="TSU">TSU</MenuItem>
-                    <MenuItem value="Preparatoria">Preparatoria</MenuItem>
-                  </Select>
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        label="Especialidad"
-                        name="formacionProfesional.especialidad"
-                        value={formacionProfesional.especialidad}
-                        onChange={manejarCambio}
-                        variant="standard" // También puedes usar "filled" o "standard"
-                        fullWidth
-                      />
-                    </TableCell>
-                    <TableCell>
-                    {formacionProfesional.puntuacion}
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        label="Comentario"
-                        name="formacionProfesional.comentarios"
-                        value={formacionProfesional.comentarios}
-                        onChange={manejarCambio}
-                        variant="standard" // También puedes usar "filled" o "standard"
-                        fullWidth
-                      />
-                    </TableCell>
-                  </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-        <h1>Resultado Final: {resultadoFinal.toFixed(2)}%</h1>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '16px',
-            marginTop: '20px',
-          }}
-        >
-
-          <Button
-            onClick={() => guardarEvaluacionConEstado('Incompleta')}
-            sx={{
-              backgroundColor: 'blue',
-              color: 'white',
-              fontWeight: 'bold',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              '&:hover': {
-                backgroundColor: 'darkred',
-              },
-            }}
-          >
-            Guardar Cambios
-          </Button>
-
-          <Button
-            onClick={() => guardarEvaluacionConEstado('Completa')}
-            sx={{
-              backgroundColor: 'green',
-              color: 'white',
-              fontWeight: 'bold',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              '&:hover': {
-                backgroundColor: 'darkred',
-              },
-            }}
-          >
-            Guardar Evaluación
-          </Button>
-        </Box>
-      </Box>
-      </>
-      )}
+      </ElegantPaper>
     </Box>
   );
 };

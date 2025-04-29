@@ -21,16 +21,18 @@ import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import Cargando from '../../../components/cargando/Cargando';
 
 const IshikawaRev = () => {
     const { userData } = useContext(UserContext);
+    const [loading, setLoading] = useState(false)
     const [ishikawas, setIshikawas] = useState([]);
     const [programa, setPrograma] = useState(null);
+    const [descripcion, setDescripcion] = useState(null);
     const [filteredIshikawas, setFilteredIshikawas] = useState([]);
     const { _id, id, nombre} = useParams();
     const [valorSeleccionado, setValorSeleccionado] = useState('');
     const [CorreoSeleccionado, setCorreoSeleccionado] = useState('');
-    const [, setDatos] = useState(null);
     const [selectedOption, setSelectedOption] = useState('');
     const [selectedField, setSelectedField] = useState(null); 
     const [imageModalOpen, setImageModalOpen] = useState(false);
@@ -114,9 +116,12 @@ const IshikawaRev = () => {
                 }
             });
 
+            console.log("id requisito", id);
+
             if (response.data) {
-                setDatos(response.data.datosFiltrados);
                 setPrograma(response.data.programaEncontrado);
+                setDescripcion(response.data.descripcionEncontrada);
+                console.log("Datos encontrados: ", response.data.descripcionEncontrada)
             }
         } catch (error) {
             console.error('Error al obtener los datos:', error);
@@ -204,137 +209,146 @@ useEffect(() => {
 }, [ishikawas, _id, id, nombre]);
 
 
-const handlePrintPDF = () => {
-    const showLoading = () => {
-        document.getElementById('loading-overlay').style.display = 'flex';
-    };
-
-    const hideLoading = () => {
-        document.getElementById('loading-overlay').style.display = 'none';
-    };
-
-    showLoading();
-
-    const part1 = document.getElementById('pdf-content-part1');
-    const part2 = document.getElementById('pdf-content-part2');
-    const part3 = document.getElementById('pdf-content-part3');
-
-    const convertTextAreasToDivs = (element) => {
-        const textareas = element.querySelectorAll('textarea');
-        textareas.forEach((textarea) => {
-            const div = document.createElement('div');
-            div.innerHTML = textarea.value.replace(/\n/g, '<br>');
-            div.className = textarea.className;
-            div.style.cssText = textarea.style.cssText;
-            textarea.parentNode.replaceChild(div, textarea);
-        });
-    };
-
-    const ensureImagesLoaded = (element) => {
-        const images = element.querySelectorAll('img');
-        const promises = Array.from(images).map((img) => {
-            return new Promise((resolve) => {
-                if (img.complete) {
-                    resolve();
-                } else {
-                    img.onload = resolve;
-                    img.onerror = resolve;
-                }
+const handlePrintPDF = async ({ download = true, id, participantes } = {}) => {
+        setLoading(true)
+    
+        const part1 = document.getElementById('pdf-content-part1');
+        const part2 = document.getElementById('pdf-content-part2');
+        const part3 = document.getElementById('pdf-content-part3');
+    
+        const convertTextAreasToDivs = (element) => {
+            const textareas = element.querySelectorAll('textarea');
+            textareas.forEach((textarea) => {
+                const div = document.createElement('div');
+                div.innerHTML = textarea.value.replace(/\n/g, '<br>');
+                div.className = textarea.className;
+                div.style.cssText = textarea.style.cssText;
+                textarea.parentNode.replaceChild(div, textarea);
             });
-        });
-        return Promise.all(promises);
-    };
-
-    const processRowAndImages = async (row, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
-        // Captura cada fila, incluyendo imágenes en celdas
-        const rowCanvas = await html2canvas(row, { scale: 2.5, useCORS: true });
-        const rowHeight = (rowCanvas.height * (pageWidth - marginLeft - marginRight)) / rowCanvas.width;
-
-        if (yOffset + rowHeight + bottomMargin > pageHeight) {
-            pdf.addPage(); // Agregar nueva página si la fila no cabe
-            yOffset = 0.5; // Reiniciar el offset en la nueva página
-        }
-
-        const rowImgData = rowCanvas.toDataURL('image/jpeg', 0.8); // Convertir a datos base64
-        pdf.addImage(rowImgData, 'JPEG', marginLeft, yOffset, pageWidth - marginLeft - marginRight, rowHeight);
-        yOffset += rowHeight;
-
-        return yOffset;
-    };
-
-    const processTableWithRowControl = async (tableElement, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
-        const rows = tableElement.querySelectorAll('tr');
-
-        for (const row of rows) {
-            // Procesar cada fila y sus imágenes
-            yOffset = await processRowAndImages(row, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
-        }
-
-        return yOffset;
-    }; 
-
-    const processPart3WithTableRows = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
-        convertTextAreasToDivs(element); // Convertir textareas a divs
-        await ensureImagesLoaded(element); // Asegurar que las imágenes estén completamente cargadas
-
-        const tables = element.querySelectorAll('table'); // Obtener todas las tablas en part3
-        if (tables.length > 0) {
-            for (const table of tables) {
-                yOffset = await processTableWithRowControl(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+        };
+    
+        const ensureImagesLoaded = (element) => {
+            const images = element.querySelectorAll('img');
+            const promises = Array.from(images).map((img) => {
+                return new Promise((resolve) => {
+                    if (img.complete) {
+                        resolve();
+                    } else {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    }
+                });
+            });
+            return Promise.all(promises);
+        };
+    
+        const processRowAndImages = async (row, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            // Captura cada fila, incluyendo imágenes en celdas
+            const rowCanvas = await html2canvas(row, { scale: 2.5, useCORS: true });
+            const rowHeight = (rowCanvas.height * (pageWidth - marginLeft - marginRight)) / rowCanvas.width;
+    
+            if (yOffset + rowHeight + bottomMargin > pageHeight) {
+                pdf.addPage(); // Agregar nueva página si la fila no cabe
+                yOffset = 0.5; // Reiniciar el offset en la nueva página
             }
-        }
-
-        return yOffset;
-    };
-
-    const processCanvas = (canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-
-        const imgWidth = pageWidth - marginLeft - marginRight;
-        const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
-
-        if (yOffset + imgHeight + bottomMargin > pageHeight) {
-            pdf.addPage();
-            yOffset = 0.5;
-        }
-
-        const imgData = canvas.toDataURL('image/jpeg', 0.8);
-        pdf.addImage(imgData, 'JPEG', marginLeft, yOffset, imgWidth, imgHeight);
-
-        return yOffset + imgHeight;
-    };
-
-    const pdf = new jsPDF('landscape', 'cm', 'letter');
-
-    let yOffset = 0.5;
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const marginLeft = 0;
-    const marginRight = 0;
-    const marginLeft3 = 2;
-    const marginRight3 = 2;
-    const bottomMargin = 1.0; // Establecer un margen inferior de 1 cm
-
-    convertTextAreasToDivs(part1); // Convertir textareas a divs
-
-    html2canvas(part1, { scale: 2.5, useCORS: true }).then((canvas) => {
-        yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
-
-        return html2canvas(part2, { scale: 2.5, useCORS: true });
-    }).then((canvas) => {
-        yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
-
-        // Procesar la parte 3 con tablas y manejo de filas
-        return processPart3WithTableRows(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, bottomMargin);
-    }).then(() => {
-        pdf.save("diagrama_ishikawa.pdf");
-        hideLoading();
-    }).catch((error) => {
-        console.error('Error generating PDF:', error);
-        hideLoading();
-    });
-}; 
+    
+            const rowImgData = rowCanvas.toDataURL('image/jpeg', 0.8); // Convertir a datos base64
+            pdf.addImage(rowImgData, 'JPEG', marginLeft, yOffset, pageWidth - marginLeft - marginRight, rowHeight);
+            yOffset += rowHeight;
+    
+            return yOffset;
+        };
+    
+        const processTableWithRowControl = async (tableElement, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            const rows = tableElement.querySelectorAll('tr');
+    
+            for (const row of rows) {
+                // Procesar cada fila y sus imágenes
+                yOffset = await processRowAndImages(row, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+            }
+    
+            return yOffset;
+        };
+    
+        const processPart3WithTableRows = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            convertTextAreasToDivs(element); // Convertir textareas a divs
+            await ensureImagesLoaded(element); // Asegurar que las imágenes estén completamente cargadas
+    
+            const tables = element.querySelectorAll('table'); // Obtener todas las tablas en part3
+            if (tables.length > 0) {
+                for (const table of tables) {
+                    yOffset = await processTableWithRowControl(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+                }
+            }
+    
+            return yOffset;
+        };
+    
+        const processCanvas = (canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+    
+            const imgWidth = pageWidth - marginLeft - marginRight;
+            const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
+    
+            if (yOffset + imgHeight + bottomMargin > pageHeight) {
+                pdf.addPage();
+                yOffset = 0.5;
+            }
+    
+            const imgData = canvas.toDataURL('image/jpeg', 0.8);
+            pdf.addImage(imgData, 'JPEG', marginLeft, yOffset, imgWidth, imgHeight);
+    
+            return yOffset + imgHeight;
+        };
+    
+        const pdf = new jsPDF('landscape', 'cm', 'letter');
+    
+        let yOffset = 0.5;
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const marginLeft = 0;
+        const marginRight = 0;
+        const marginLeft3 = 2;
+        const marginRight3 = 2;
+        const bottomMargin = 1.0; // Establecer un margen inferior de 1 cm
+    
+        try {
+            // 1) convertir textareas y esperar imágenes
+            convertTextAreasToDivs(part1);
+            await ensureImagesLoaded(part1);
+            // 2) capturar parte1, parte2 y procesar part3
+            const canvas1 = await html2canvas(part1, { scale: 2.5, useCORS: true });
+            yOffset = processCanvas(canvas1, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+            const canvas2 = await html2canvas(part2, { scale: 2.5, useCORS: true });
+            yOffset = processCanvas(canvas2, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
+            await processPart3WithTableRows(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, bottomMargin);
+        
+            // 3) generar blob
+            const pdfBlob = pdf.output('blob');
+        
+            if (download) {
+              // descarga local
+              pdf.save('diagrama_ishikawa.pdf');
+            } else {
+              // envío al backend
+              const file = new File([pdfBlob], 'diagrama_ishikawa.pdf', { type: 'application/pdf' });
+              const formData = new FormData();
+              formData.append('pdf', file);
+              formData.append('participantes', participantes);
+              await axios.post(
+                `${process.env.REACT_APP_BACKEND_URL}/ishikawa/enviar-pdf-dos`,
+                formData
+              );
+            }
+        } catch (error) {
+            console.error('Error generating or sending PDF:', error);
+            setLoading(false);
+            alert('Hubo un error al generar o enviar el PDF');
+          } finally {
+            setLoading(false);
+          }
+    }; 
 
 const handleCorreccionChange = (index, field, value) => {
         const nuevasCorrecciones = [...correcciones];
@@ -593,10 +607,7 @@ const handleCorreccionChange = (index, field, value) => {
                     programa: ishikawas[0].proName,
                     correo: ishikawas[0].correo
                 });
-        
-                fetchData();
-                verificarRegistro();
-        
+
                 // Mostrar alerta de éxito
                 Swal.fire({
                     icon: 'success',
@@ -606,6 +617,11 @@ const handleCorreccionChange = (index, field, value) => {
                     timer: 3000, // Cierra el alert automáticamente después de 3 segundos
                     timerProgressBar: true
                 });
+
+                await handlePrintPDF({ download: false, id, participantes: ishikawas[0].participantes});
+                await fetchData();
+                await verificarRegistro();
+        
             } catch (error) {
                 console.error('Error updating data:', error);
         
@@ -624,7 +640,7 @@ const handleCorreccionChange = (index, field, value) => {
               title: '¿Está seguro de querer aprobar este diagrama?',
               text: '¡Esta acción no se puede revertir!',
               icon: 'warning',
-              showCancelButton: true,
+              showCancelButton: true, 
               confirmButtonColor: '#3ccc37',
               cancelButtonColor: '#d33',
               confirmButtonText: 'Sí, Aprobar',
@@ -730,6 +746,8 @@ const verificarRegistro = async () => {
 };
 
 const handleSave = async () => {
+    const hallazgoAplanado = descripcion.Hallazgo.flat();
+    const hallazgoString = hallazgoAplanado.join(' ');
         try {
             const data = {
                 idRep: _id,
@@ -738,9 +756,9 @@ const handleSave = async () => {
                 fecha: '',
                 auditado: valorSeleccionado,
                 correo: CorreoSeleccionado,
-                problema: '',
-                requisito:'',
-                hallazgo:'',
+                problema: descripcion.Observacion,
+                requisito:descripcion.Requisito,
+                hallazgo:hallazgoString,
                 correccion: '',
                 causa: '',
                 diagrama: diagrama,
@@ -996,11 +1014,9 @@ const ocultarCargando = () => {
             </Backdrop>
 
             {/*Mensaje de generacion*/}
-            <div id="loading-overlay" style={{display:'none'}}>
-            <div className="loading-content">
-                Generando archivo PDF...
-            </div>
-            </div>
+            {loading && (
+                <Cargando fullScreen message="Generando PDF…" />
+            )}
                 {filteredIshikawas.map((ishikawa, index) => (
                 <div key={index}>
                      {ishikawa.estado === 'Asignado' && (

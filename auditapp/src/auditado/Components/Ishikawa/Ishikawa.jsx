@@ -8,7 +8,7 @@ import { UserContext } from '../../../App';
 import Swal from 'sweetalert2'; 
 import withReactContent from 'sweetalert2-react-content';
 import Busqueda from './Busqueda';
-import Chip from '@mui/material/Chip';
+import { Chip, TextField, Paper, List, ListItem } from '@mui/material';
 
 const Ishikawa = () => {
   const { userData } = useContext(UserContext);
@@ -23,13 +23,15 @@ const Ishikawa = () => {
   const [asignado,  setAsignado] = useState([]);
   const [revisado,  setRevisado] = useState([]);
   const [aprobado,  setAprobado] = useState([]);
-  const [showPart, setShowPart] = useState(true);
+  const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [rechazo,  setRechazo] = useState([]);
   const [problema, setProblema] = useState(''); // Almacena el valor del problema
   const [nota,  setNota] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [fechaElaboracion, setFechaElaboracion] = useState('');
   const [tempFechaCompromiso, setTempFechaCompromiso] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
   const [, setSelectedTextareas] = useState(new Set());
   const MySwal = withReactContent(Swal);
  
@@ -61,7 +63,7 @@ const Ishikawa = () => {
     text15: ''
    }]);
    
-  const [actividades, setActividades] = useState({ actividad: '', responsable: [], fechaCompromiso: [] });
+  const [actividades, setActividades] = useState([]);
 
   const idRep = _id;
 
@@ -122,6 +124,34 @@ const Ishikawa = () => {
     const textareas = document.querySelectorAll('textarea');
     textareas.forEach((textarea) => ajustarTamanoFuente(textarea));
 }, [proceso]);
+
+useEffect(() => {
+  if (formData.participantes) {
+    const participantesArray = formData.participantes.split(" / ").map((nombre) => ({ Nombre: nombre.trim() }));
+    setSelectedParticipants(participantesArray);
+  }
+}, [formData.participantes]);
+
+useEffect(() => {
+  // Solo realiza la búsqueda si hay al menos 3 caracteres
+  if (searchTerm.length < 3) {
+    setSuggestions([]);
+    return;
+  }
+
+  const delayDebounceFn = setTimeout(() => {
+    axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/search?search=${encodeURIComponent(searchTerm)}`)
+      .then(response => {
+        setSuggestions(response.data);
+        
+      })
+      .catch(error => {
+        console.error("Error al buscar participantes:", error);
+      });
+  }, 300); // 300ms de retraso
+
+  return () => clearTimeout(delayDebounceFn);
+}, [searchTerm]);
 
   const verificarRegistro = async () => {
     try {
@@ -625,6 +655,30 @@ const handleResponsableSelect = (index, user) => {
   setActividades(nuevasActividades);
 };
 
+const handleDelete = (participantToDelete) => {
+  const nuevosSeleccionados = selectedParticipants.filter(p => p.Nombre !== participantToDelete.Nombre);
+  setSelectedParticipants(nuevosSeleccionados);
+
+  const nuevosNombres = nuevosSeleccionados.map(p => p.Nombre).join(' / ');
+  setData({ ...formData, participantes: nuevosNombres });
+};
+
+const handleSelect = (participant) => {
+  // Evitar duplicados
+  if (selectedParticipants.some(p => p.Nombre === participant.Nombre)) return;
+
+  const nuevosSeleccionados = [...selectedParticipants, participant];
+  setSelectedParticipants(nuevosSeleccionados);
+
+  // Actualiza el formData (los almacena como cadena separados por "/")
+  const nuevosNombres = nuevosSeleccionados.map(p => p.Nombre).join(' / ');
+  setData({ ...formData, participantes: nuevosNombres });
+  console.log('usuarios: ',nuevosNombres);
+
+  setSearchTerm('');
+  setSuggestions([]);
+};
+
 const handleDeleteResponsable = (index, responsableIndex) => {
   const nuevasActividades = actividades.map((actividad, i) => {
     if (i === index) {
@@ -639,18 +693,17 @@ const handleDeleteResponsable = (index, responsableIndex) => {
   setActividades(nuevasActividades);
 };
  
-  if (proceso) {
-    return (
-      <div>
-        <div className='mss-proceso'>
-          <div style={{display:'flex', justifyContent:'center'}}>En proceso de revisión.</div>
-          <div style={{display:'flex',fontSize:'70px', justifyContent:'center'}}>📝</div>
-        </div>
-      </div>
-    );
-  } else if (rechazo || aprobado) {
+ if (rechazo || aprobado || proceso) {
     return (  
       <div>
+
+        {proceso && (<>
+        <div>
+          <div className='mss-proceso'>
+            <div style={{display:'flex', justifyContent:'center'}}>En proceso de revisión.</div>
+            <div style={{display:'flex',fontSize:'70px', justifyContent:'center'}}>📝</div>
+          </div>
+        </div></>)}
 
         {aprobado && (
           <>
@@ -677,7 +730,7 @@ const handleDeleteResponsable = (index, responsableIndex) => {
         <div className="image-container-auditado">
           <div className='button-cam'>
           {
-          (aprobado || revisado) ? null : (         
+          (aprobado || revisado || proceso) ? null : (         
           <button onClick={(e) => {
             e.preventDefault();
               handleSaveOrUpdate();
@@ -778,7 +831,6 @@ const handleDeleteResponsable = (index, responsableIndex) => {
              onDoubleClick={handleDoubleClick} maxLength={145}></textarea>
             </div>
           ))}
-
           {programa?.Descripcion && programa.Descripcion
             .filter(desc => desc.ID === id && programa.Nombre === nombre)
             .map((desc, index) => {
@@ -787,7 +839,49 @@ const handleDeleteResponsable = (index, responsableIndex) => {
              style={{ top: '27rem', left: '67.5rem',width:'8.5rem', height:'8rem' }}placeholder="Problema..." required disabled={revisado}></textarea>
             )})}
           </div>
-          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+          <div className='button-parti-ish-asg'>
+          <div style={{ width: '64rem' }}>
+            {/* Contenedor de chips y campo de busqueda */}
+              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+              <button className='button-part'> ⚇</button>
+                {selectedParticipants.map((participant, index) => (
+                  <Chip
+                    key={index}
+                    label={participant.Nombre}
+                    onDelete={() => handleDelete(participant)}
+                  />
+                ))}
+                {/* Campo de busqueda */}
+                <TextField
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar nombre..."
+                  variant="outlined"
+                  size="small"
+                  style={{ minWidth: '200px' }}
+                />
+              </div>
+
+              {/* Lista de sugerencias */}
+              {suggestions.length > 0 && (
+                <Paper style={{ maxHeight: '10rem', overflowY: 'auto', marginBottom: '1rem' }}>
+                  <List>
+                    {suggestions.map((participant, index) => (
+                      <ListItem
+                        button
+                        key={index}
+                        onClick={() => handleSelect(participant)}
+                      >
+                        {participant.Nombre}
+                      </ListItem>
+                    ))}
+                  </List>
+                </Paper>
+              )}
+            </div>
+            </div>
+          
   
           {programa?.Descripcion && programa.Descripcion
             .filter(desc => desc.ID === id && programa.Nombre === nombre)
@@ -795,20 +889,6 @@ const handleDeleteResponsable = (index, responsableIndex) => {
   
               return (
                 <div key={index}>
-                  <div className='cont-part-audi'>
-                  <button className='button-part-audi' onClick={(e) => {
-                      e.preventDefault();
-                      setShowPart(!showPart)
-                    }}>
-                    <span class="material-symbols-outlined" style={{color:'#ffffff', fontSize:'33px'}}>
-                      attribution
-                      </span>
-                  </button>
-                  {showPart && (
-                  <textarea type="text" name='participantes' value={formData.participantes} onChange={handleDatos}
-                      style={{ width:'64rem', color:'#000000', border:'none', backgroundColor:'#ffffff'}} placeholder="Agregar Participantes. . ." required disabled={revisado}></textarea>
-                    )}
-                  </div>
                   <div className='posicion-bo-audi'>
                     <h3>No conformidad:</h3>
                        <div style={{width:'70em', textAlign:'justify'}}>{desc.Requisito}</div>
@@ -925,7 +1005,7 @@ const handleDeleteResponsable = (index, responsableIndex) => {
                 </tbody>
               </table>
               {
-              (revisado || aprobado) ? null : ( 
+              (revisado || aprobado || proceso) ? null : ( 
               <button  onClick={(e) => {
                 e.preventDefault();
                 agregarFilaActividad();

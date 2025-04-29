@@ -4,6 +4,29 @@ import './css/datosv.css'; // Archivo CSS importado para los estilos
 const DatosV = () => {
   return (
     <div className="modal-body">
+
+      <h1>Versión 2.1.7 (Beta)</h1>
+
+      <ul>
+        <h3 className="modal-title">Lista de actividades</h3>
+        <li>Se agregó una lista de actividades en la cual el usuario podrá marcar aquella que ha realizado.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Correos de notificación</h3>
+        <li>Se agregaron correos de notificación para las actividades próximas a vencer.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Notificación de aprobación</h3>
+        <li>Se agregó el envío de correos avisando a todos los participantes de la aprobación de la auditoría, en la cual se adjunta el Ishikawa en formato PDF.</li>
+      </ul>
+
+      <ul>
+        <h3 className="modal-title">Nuevos estilos</h3>
+        <li>Se modificaron los estilos de gran parte de la aplicación.</li>
+      </ul>
+
       <h1>Versión 2.1.6 (Beta)</h1>
 
       <ul>

@@ -1,26 +1,48 @@
+.unique-header {
+  background-color: #dbdbdb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  position: relative;
+  border-bottom: 3px solid #929292;
+  z-index: 3;
+}
+
+/* nuevo estilo para el contenedor del logo */
+.logo-container {
+  flex-shrink: 0; /* evita que el logo se achique */
+}
+
+/* estilo de la imagen del logo */
+.logo {
+  height: 50px;     /* ajusta al tamaño que necesites */
+  width: auto;
+  cursor: pointer;
+}
+
 .superposicion{
-    z-index: 3;
-  }
+  z-index: 3;
+}
   
-  .user-icon {
-    display: inline-flex;
-    align-items: center; 
-    gap: 8px;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    cursor: pointer;
-    }
+.user-icon {
+  display: inline-flex;
+  align-items: center; 
+  gap: 8px;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
   
-  .migas-pan {
-    position: absolute;
-    top: 40px;
-    padding: 8px; 
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    z-index: 2;
-  }
+.migas-pan {
+  position: absolute;
+  top: 75px;
+  padding: 8px; 
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  z-index: 2;
+}
   
   .migas-pan .MuiBreadcrumbs-root {
     overflow: hidden; /* Ocultar contenido que se desborde */

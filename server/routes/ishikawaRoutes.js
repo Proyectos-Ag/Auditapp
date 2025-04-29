@@ -14,7 +14,9 @@ router.get('/por/:_id', ishikawaController.obtenerIshikawasId);
 router.get('/vac/por/:_id', ishikawaController.obtenerIshikawaPorId);
 router.get('/por/vista/:nombre', ishikawaController.obtenerIshikawaVista);
 router.get('/pordato/:_id', ishikawaController.obtenerIshikawaPorDato);
+router.get('/activities/:username', ishikawaController.getActivitiesByUsername);
 router.put('/fecha/:id', ishikawaController.actualizarFechaCompromiso);
+router.put('/actividad/concluido', ishikawaController.updateConcluido);
 router.put('/:id', ishikawaController.actualizarIshikawa);
 router.put('/fin/:id', ishikawaController.ishikawaFinalizado);
 router.put('/completo/:id', ishikawaController.actualizarIshikawaCompleto);
@@ -24,6 +26,7 @@ router.put('/eliminar-evidencia/:index/:idIsh/:idCorr', ishikawaController.elimi
 router.delete('/delete/:id', ishikawaController.deleteIshikawa);
 router.delete('/eliminar/:idRep', ishikawaController.eliminarIshikawasPorIdRep);
 router.post('/enviar-pdf', upload.single("pdf"), ishikawaController.enviarPDF);
+router.post('/enviar-pdf-dos', upload.single("pdf"), ishikawaController.enviarPDFDos);
 
 
 

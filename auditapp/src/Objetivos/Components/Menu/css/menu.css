@@ -112,7 +112,7 @@
   
   .menu-item {
     position: relative;
-    background: #33a0e9;
+    background: #2e7d32;
     color: #fff;
     padding: 20px;
     border-radius: 5px;
@@ -137,7 +137,7 @@
     left: 10px;
     right: -10px;
     bottom: -10px;
-    background: #277db6;
+    background: #2c6f2f;
     border-radius: 5px;
     z-index: -1;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);

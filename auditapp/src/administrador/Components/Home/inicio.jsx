@@ -190,7 +190,7 @@ const Inicio = () => {
         onClick={handleOpenModal}
       >
         <br />
-        v2.1.6(Beta)
+        v2.1.7(Beta)
     </span>
     </div>
 

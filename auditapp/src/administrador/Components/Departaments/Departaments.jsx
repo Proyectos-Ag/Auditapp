@@ -1,74 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Modal,
-  Box,
-  Typography,
-  Button,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
+  Box, Button, Typography, TextField, Dialog, DialogTitle,
+  DialogContent, DialogActions, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Paper, IconButton,
+  Modal, Divider, Chip, styled, Tooltip, LinearProgress
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
+import {
+  AddCircle, Delete, Edit, Close, 
+  Business, MeetingRoom, Add
+} from '@mui/icons-material';
 import Swal from 'sweetalert2';
-import './css/Departaments.css';
-import './css/areaModals.css'; // Nueva hoja de estilos para los modales
 
-const AreaForm = ({ nuevaArea, handleInputChange, handleAreaChange, areasInput, agregarAreaInput, eliminarAreaInput }) => (
-  <form>
-    <TextField
-      fullWidth
-      label="Departamento"
-      name="departamento"
-      value={nuevaArea.departamento}
-      onChange={handleInputChange}
-      margin="normal"
-      variant="outlined"
-    />
-    <div>
-      {areasInput.map((area, index) => (
-        <div key={index} className="area-input-group">
-          <TextField
-            fullWidth
-            label={`Área ${index + 1}`}
-            value={area}
-            onChange={(e) => handleAreaChange(e, index)}
-            margin="normal"
-            variant="outlined"
-          />
-          <IconButton
-            color="error"
-            onClick={() => eliminarAreaInput(index)}
-            size="small"
-            style={{ marginLeft: '10px' }}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </div>
-      ))}
-      <Button
-        onClick={agregarAreaInput}
-        variant="contained"
-        startIcon={<AddCircleIcon />}
-        style={{ marginTop: '10px' }}
-      >
-        Agregar otra área
-      </Button>
-    </div>
-  </form>
-);
+// Estilos personalizados
+const ElegantPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  borderRadius: '16px',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+  background: 'linear-gradient(to bottom right, #ffffff, #f8f9fa)',
+  border: '1px solid rgba(255,255,255,0.3)'
+}));
+
+const HeaderTypography = styled(Typography)(({ theme }) => ({
+  color: theme.palette.primary.dark,
+  fontWeight: 600,
+  marginBottom: theme.spacing(2),
+  position: 'relative',
+  '&:after': {
+    content: '""',
+    position: 'absolute',
+    bottom: -8,
+    left: 0,
+    width: '60px',
+    height: '4px',
+    backgroundColor: theme.palette.primary.main,
+    borderRadius: '2px'
+  }
+}));
+
+const AreaFormContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(2),
+  marginTop: theme.spacing(2)
+}));
+
+const AreaItem = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+  padding: theme.spacing(1),
+  borderRadius: theme.shape.borderRadius,
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover
+  }
+}));
 
 const Departaments = () => {
   const [areas, setAreas] = useState([]);
@@ -78,10 +63,11 @@ const Departaments = () => {
   const [valoresAreaSeleccionada, setValoresAreaSeleccionada] = useState({ departamento: '', areas: [] });
   const [mostrarModalActualizar, setMostrarModalActualizar] = useState(false);
   const [filtroArea, setFiltroArea] = useState('');
-  const [areasInput, setAreasInput] = useState(['']); // Inicializa con un área
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchAreas = async () => {
+      setLoading(true);
       try {
         const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/areas`);
         if (!response.ok) {
@@ -91,7 +77,14 @@ const Departaments = () => {
         setAreas(data);
       } catch (error) {
         console.error(error);
-        Swal.fire('Error', 'No se pudo obtener la lista de áreas', 'error');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo obtener la lista de áreas',
+          confirmButtonColor: '#1976d2'
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -106,20 +99,29 @@ const Departaments = () => {
     }));
   };
 
-  const handleAreaChange = (event, index) => {
-    const newAreas = [...areasInput];
-    newAreas[index] = event.target.value;
-    setAreasInput(newAreas);
-  };
-
   const agregarAreaInput = () => {
-    setAreasInput([...areasInput, '']);
+    setNuevaArea(prev => ({
+      ...prev,
+      areas: [...prev.areas, '']
+    }));
   };
 
   const eliminarAreaInput = (index) => {
-    const newAreas = [...areasInput];
+    const newAreas = [...nuevaArea.areas];
     newAreas.splice(index, 1);
-    setAreasInput(newAreas);
+    setNuevaArea(prev => ({
+      ...prev,
+      areas: newAreas
+    }));
+  };
+
+  const handleAreaChange = (event, index) => {
+    const newAreas = [...nuevaArea.areas];
+    newAreas[index] = event.target.value;
+    setNuevaArea(prev => ({
+      ...prev,
+      areas: newAreas
+    }));
   };
 
   const agregarArea = async () => {
@@ -131,7 +133,7 @@ const Departaments = () => {
         },
         body: JSON.stringify({
           ...nuevaArea,
-          areas: areasInput.filter(area => area.trim() !== '') // Eliminar áreas vacías
+          areas: nuevaArea.areas.filter(area => area.trim() !== '')
         }),
       });
 
@@ -142,41 +144,76 @@ const Departaments = () => {
       const data = await response.json();
       setAreas([...areas, data]);
       setNuevaArea({ departamento: '', areas: [] });
-      setAreasInput(['']); // Reinicia el área input
       setMostrarFormularioArea(false);
-      Swal.fire('Éxito', 'Área agregada correctamente', 'success');
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Éxito',
+        text: 'Área agregada correctamente',
+        confirmButtonColor: '#1976d2'
+      });
     } catch (error) {
       console.error('Error al agregar el área:', error);
-      Swal.fire('Error', 'No se pudo agregar el área', 'error');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo agregar el área',
+        confirmButtonColor: '#1976d2'
+      });
     }
   };
 
   const eliminarArea = async (areaId) => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/areas/${areaId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('No se pudo eliminar el área');
+    const result = await Swal.fire({
+      title: '¿Eliminar departamento?',
+      text: "Esta acción no se puede deshacer",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/areas/${areaId}`, {
+          method: 'DELETE',
+        });
+        
+        if (!response.ok) {
+          throw new Error('No se pudo eliminar el área');
+        }
+        
+        const nuevasAreas = areas.filter((area) => area._id !== areaId);
+        setAreas(nuevasAreas);
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Éxito',
+          text: 'Departamento eliminado correctamente',
+          confirmButtonColor: '#1976d2'
+        });
+      } catch (error) {
+        console.error(error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo eliminar el área',
+          confirmButtonColor: '#1976d2'
+        });
       }
-      const nuevasAreas = areas.filter((area) => area._id !== areaId);
-      setAreas(nuevasAreas);
-      Swal.fire('Éxito', 'Departamento eliminado correctamente', 'success');
-    } catch (error) {
-      console.error(error);
-      Swal.fire('Error', 'No se pudo eliminar el área', 'error');
     }
   };
 
   const abrirModalActualizar = (areaId) => {
-    setAreaSeleccionadaId(areaId);
     const areaSeleccionada = areas.find(area => area._id === areaId);
-    setValoresAreaSeleccionada(areaSeleccionada);
+    setAreaSeleccionadaId(areaId);
+    setValoresAreaSeleccionada({
+      departamento: areaSeleccionada.departamento,
+      areas: [...areaSeleccionada.areas]
+    });
     setMostrarModalActualizar(true);
-  };
-
-  const cerrarModalActualizar = () => {
-    setMostrarModalActualizar(false);
   };
 
   const actualizarArea = async () => {
@@ -190,214 +227,336 @@ const Departaments = () => {
           },
           body: JSON.stringify({
             ...valoresAreaSeleccionada,
-            areas: valoresAreaSeleccionada.areas.filter(area => area.trim() !== '') // Eliminar áreas vacías
+            areas: valoresAreaSeleccionada.areas.filter(area => area.trim() !== '')
           }),
         }
       );
+      
       if (!response.ok) {
         throw new Error('No se pudo actualizar el área');
       }
+      
       const data = await response.json();
       const index = areas.findIndex((a) => a._id === areaSeleccionadaId);
       const nuevasAreas = [...areas];
       nuevasAreas[index] = data;
       setAreas(nuevasAreas);
-      cerrarModalActualizar();
-      Swal.fire('Éxito', 'Área actualizada correctamente', 'success');
+      setMostrarModalActualizar(false);
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Éxito',
+        text: 'Área actualizada correctamente',
+        confirmButtonColor: '#1976d2'
+      });
     } catch (error) {
       console.error(error);
-      Swal.fire('Error', 'No se pudo actualizar el área', 'error');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo actualizar el área',
+        confirmButtonColor: '#1976d2'
+      });
     }
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Gestión de Departamentos y Áreas</h2>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => setMostrarFormularioArea(true)}
-          startIcon={<AddCircleIcon />}
-        >
-          Agregar Departamento
-        </Button>
-        <TextField
-          label="Filtrar Departamentos"
-          variant="outlined"
-          value={filtroArea}
-          onChange={(e) => setFiltroArea(e.target.value)}
-          size="small"
-        />
-      </div>
+    <Box sx={{ padding: '40px', marginTop: '3em' }}>
+      <ElegantPaper elevation={3}>
+        <HeaderTypography variant="h4" gutterBottom>
+          <Business sx={{ verticalAlign: 'middle', mr: 1 }} />
+          Gestión de Departamentos y Áreas
+        </HeaderTypography>
+        
+        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+          Administre los departamentos y sus áreas correspondientes
+        </Typography>
+        
+        <Divider sx={{ my: 3 }} />
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Departamento</TableCell>
-              <TableCell>Áreas</TableCell>
-              <TableCell>Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {areas
-              .filter((area) => area.departamento.toLowerCase().includes(filtroArea.toLowerCase()))
-              .map((area) => (
-                <TableRow key={area._id}>
-                  <TableCell>{area.departamento}</TableCell>
-                  <TableCell>{area.areas.join(', ')}</TableCell>
-                  <TableCell>
-                    <IconButton
-                      color="primary"
-                      onClick={() => abrirModalActualizar(area._id)}
-                      size="small"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => eliminarArea(area._id)}
-                      size="small"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Modal para agregar área */}
-      <Dialog open={mostrarFormularioArea} onClose={() => setMostrarFormularioArea(false)}>
-        <DialogTitle>Agregar Departamento</DialogTitle>
-        <DialogContent>
-          <AreaForm
-            nuevaArea={nuevaArea}
-            handleInputChange={handleInputChange}
-            areasInput={areasInput}
-            handleAreaChange={handleAreaChange}
-            agregarAreaInput={agregarAreaInput}
-            eliminarAreaInput={eliminarAreaInput}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setMostrarFormularioArea(false)} color="secondary">
-            Cancelar
-          </Button>
-          <Button onClick={agregarArea} variant="contained" color="primary">
-            Guardar
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/*Actualizar Area*/}
-      <Modal
-      open={mostrarModalActualizar}
-      onClose={cerrarModalActualizar}
-      aria-labelledby="modal-title"
-      aria-describedby="modal-description"
-    >
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          height:'80%',
-          overflowY: 'auto',
-          transform: 'translate(-50%, -50%)',
-          width: 400,
-          bgcolor: 'background.paper',
-          boxShadow: 24,
-          p: 4,
-          borderRadius: 2,
-        }}
-      >
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography id="modal-title" variant="h6" component="h2">
-            Actualizar Departamento
-          </Typography>
-          <IconButton onClick={cerrarModalActualizar}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-        <Box component="form" mt={2}>
-          <Typography variant="subtitle1" mb={1}>
-            Departamento
-          </Typography>
-          <TextField
-            fullWidth
-            variant="outlined"
-            name="departamento"
-            value={valoresAreaSeleccionada.departamento}
-            onChange={(e) =>
-              setValoresAreaSeleccionada({
-                ...valoresAreaSeleccionada,
-                departamento: e.target.value,
-              })
-            }
-          />
-          <Typography variant="subtitle1" mt={2} mb={1}>
-            Áreas
-          </Typography>
-          {valoresAreaSeleccionada.areas.map((area, index) => (
-            <Box display="flex" alignItems="center" mb={2} key={index}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                name={`area-${index}`}
-                value={area}
-                onChange={(e) => {
-                  const newAreas = [...valoresAreaSeleccionada.areas];
-                  newAreas[index] = e.target.value;
-                  setValoresAreaSeleccionada({
-                    ...valoresAreaSeleccionada,
-                    areas: newAreas,
-                  });
-                }}
-                placeholder={`Área ${index + 1}`}
-              />
-              <Button
-                color="error"
-                onClick={() => {
-                  const newAreas = [...valoresAreaSeleccionada.areas];
-                  newAreas.splice(index, 1);
-                  setValoresAreaSeleccionada({
-                    ...valoresAreaSeleccionada,
-                    areas: newAreas,
-                  });
-                }}
-                sx={{ ml: 2 }}
-              >
-                Eliminar
-              </Button>
-            </Box>
-          ))}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
           <Button
             variant="contained"
-            color="secondary"
-            onClick={() =>
-              setValoresAreaSeleccionada({
-                ...valoresAreaSeleccionada,
-                areas: [...valoresAreaSeleccionada.areas, ''],
-              })
-            }
+            startIcon={<AddCircle />}
+            onClick={() => setMostrarFormularioArea(true)}
           >
-            Agregar otra área
+            Nuevo Departamento
           </Button>
+          
+          <TextField
+            label="Buscar departamento"
+            variant="outlined"
+            size="small"
+            value={filtroArea}
+            onChange={(e) => setFiltroArea(e.target.value)}
+            sx={{ width: 300 }}
+          />
         </Box>
-        <Box display="flex" justifyContent="flex-end" mt={3}>
-          <Button onClick={cerrarModalActualizar} color="secondary" sx={{ mr: 2 }}>
-            Cancelar
-          </Button>
-          <Button variant="contained" color="primary" onClick={actualizarArea}>
-            Actualizar
-          </Button>
-        </Box>
-      </Box>
-    </Modal>
-    </div>
+
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <LinearProgress sx={{ width: '100%' }} />
+          </Box>
+        ) : (
+          <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
+            <Table>
+              <TableHead sx={{ backgroundColor: '#f5f7fa' }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>Departamento</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Áreas</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }} align="right">Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {areas
+                  .filter((area) => area.departamento.toLowerCase().includes(filtroArea.toLowerCase()))
+                  .map((area) => (
+                    <TableRow key={area._id} hover>
+                      <TableCell>
+                        <Typography fontWeight="medium">{area.departamento}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                          {area.areas.map((areaItem, idx) => (
+                            <Chip 
+                              key={idx} 
+                              label={areaItem} 
+                              size="small" 
+                              icon={<MeetingRoom fontSize="small" />}
+                            />
+                          ))}
+                        </Box>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Tooltip title="Editar">
+                          <IconButton
+                            color="primary"
+                            onClick={() => abrirModalActualizar(area._id)}
+                            size="small"
+                          >
+                            <Edit fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar">
+                          <IconButton
+                            color="error"
+                            onClick={() => eliminarArea(area._id)}
+                            size="small"
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+
+        {/* Modal para agregar área */}
+        <Dialog 
+          open={mostrarFormularioArea} 
+          onClose={() => setMostrarFormularioArea(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            <Box display="flex" alignItems="center">
+              <AddCircle color="primary" sx={{ mr: 1 }} />
+              Nuevo Departamento
+            </Box>
+          </DialogTitle>
+          <DialogContent dividers>
+            <TextField
+              fullWidth
+              label="Nombre del Departamento"
+              name="departamento"
+              value={nuevaArea.departamento}
+              onChange={handleInputChange}
+              margin="normal"
+              variant="outlined"
+              sx={{ mb: 3 }}
+            />
+            
+            <Typography variant="subtitle1" gutterBottom>
+              Áreas del Departamento
+            </Typography>
+            
+            <AreaFormContainer>
+              {nuevaArea.areas.map((area, index) => (
+                <AreaItem key={index}>
+                  <TextField
+                    fullWidth
+                    label={`Área ${index + 1}`}
+                    value={area}
+                    onChange={(e) => handleAreaChange(e, index)}
+                    variant="outlined"
+                    size="small"
+                  />
+                  <IconButton
+                    color="error"
+                    onClick={() => eliminarAreaInput(index)}
+                    size="small"
+                  >
+                    <Delete fontSize="small" />
+                  </IconButton>
+                </AreaItem>
+              ))}
+              
+              <Button
+                onClick={agregarAreaInput}
+                variant="outlined"
+                startIcon={<Add />}
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Agregar Área
+              </Button>
+            </AreaFormContainer>
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={() => {
+                setMostrarFormularioArea(false);
+                setNuevaArea({ departamento: '', areas: [] });
+              }}
+              color="secondary"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={agregarArea} 
+              variant="contained"
+              disabled={!nuevaArea.departamento || nuevaArea.areas.length === 0}
+            >
+              Guardar
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Modal para actualizar área */}
+        <Modal
+          open={mostrarModalActualizar}
+          onClose={() => setMostrarModalActualizar(false)}
+          aria-labelledby="modal-title"
+          aria-describedby="modal-description"
+        >
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: { xs: '90%', sm: '80%', md: '600px' },
+              bgcolor: 'background.paper',
+              boxShadow: 24,
+              borderRadius: 2,
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
+          >
+            <Box display="flex" justifyContent="space-between" alignItems="center" p={3} borderBottom={1} borderColor="divider">
+              <Typography id="modal-title" variant="h6" component="h2">
+                <Edit color="primary" sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Editar Departamento
+              </Typography>
+              <IconButton onClick={() => setMostrarModalActualizar(false)}>
+                <Close />
+              </IconButton>
+            </Box>
+            
+            <Box p={3}>
+              <TextField
+                fullWidth
+                label="Nombre del Departamento"
+                name="departamento"
+                value={valoresAreaSeleccionada.departamento}
+                onChange={(e) =>
+                  setValoresAreaSeleccionada({
+                    ...valoresAreaSeleccionada,
+                    departamento: e.target.value,
+                  })
+                }
+                margin="normal"
+                variant="outlined"
+                sx={{ mb: 3 }}
+              />
+              
+              <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+                Áreas del Departamento
+              </Typography>
+              
+              <AreaFormContainer>
+                {valoresAreaSeleccionada.areas.map((area, index) => (
+                  <AreaItem key={index}>
+                    <TextField
+                      fullWidth
+                      label={`Área ${index + 1}`}
+                      value={area}
+                      onChange={(e) => {
+                        const newAreas = [...valoresAreaSeleccionada.areas];
+                        newAreas[index] = e.target.value;
+                        setValoresAreaSeleccionada({
+                          ...valoresAreaSeleccionada,
+                          areas: newAreas,
+                        });
+                      }}
+                      variant="outlined"
+                      size="small"
+                    />
+                    <IconButton
+                      color="error"
+                      onClick={() => {
+                        const newAreas = [...valoresAreaSeleccionada.areas];
+                        newAreas.splice(index, 1);
+                        setValoresAreaSeleccionada({
+                          ...valoresAreaSeleccionada,
+                          areas: newAreas,
+                        });
+                      }}
+                      size="small"
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </AreaItem>
+                ))}
+                
+                <Button
+                  variant="outlined"
+                  startIcon={<Add />}
+                  onClick={() =>
+                    setValoresAreaSeleccionada({
+                      ...valoresAreaSeleccionada,
+                      areas: [...valoresAreaSeleccionada.areas, ''],
+                    })
+                  }
+                  sx={{ alignSelf: 'flex-start' }}
+                >
+                  Agregar Área
+                </Button>
+              </AreaFormContainer>
+            </Box>
+            
+            <Box display="flex" justifyContent="flex-end" p={2} borderTop={1} borderColor="divider">
+              <Button 
+                onClick={() => setMostrarModalActualizar(false)} 
+                color="secondary" 
+                sx={{ mr: 2 }}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                variant="contained" 
+                onClick={actualizarArea}
+                disabled={!valoresAreaSeleccionada.departamento || valoresAreaSeleccionada.areas.length === 0}
+              >
+                Guardar Cambios
+              </Button>
+            </Box>
+          </Box>
+        </Modal>
+      </ElegantPaper>
+    </Box>
   );
 };
 

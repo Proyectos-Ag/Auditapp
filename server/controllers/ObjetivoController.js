@@ -1,4 +1,76 @@
 const Objetivo = require("../models/ObjetivoModel");
+const nodemailer = require('nodemailer');
+const cron = require('node-cron');
+require('dotenv').config(); // Asegúrate de cargar las variables de entorno
+
+// Configuración de nodemailer
+const transporter = nodemailer.createTransport({
+  service: 'Gmail', // Usar 'Gmail' directamente
+  auth: {
+    user: process.env.EMAIL_USERNAME, // Usar EMAIL_USERNAME
+    pass: process.env.EMAIL_PASSWORD // Usar EMAIL_PASSWORD
+  }
+});
+
+// Tarea programada para notificaciones
+cron.schedule('0 8 * * *', async () => {
+  try {
+    console.log('Cron job ejecutándose...');
+    const objetivos = await Objetivo.find({});
+    const ahora = new Date();
+    console.log('Fecha actual:', ahora);
+
+    for (const objetivo of objetivos) {
+      for (const accion of objetivo.accionesCorrectivas) {
+        const fechaLimite = new Date(accion.fichaCompromiso);
+        const diasRestantes = Math.ceil((fechaLimite - ahora) / (1000 * 60 * 60 * 24));
+        console.log('Días restantes:', diasRestantes);
+
+        let urgencia = '';
+        if (diasRestantes <= 1) urgencia = 'inmediata';
+        else if (diasRestantes <= 3) urgencia = 'media';
+
+        if (urgencia && (!accion.ultimaNotificacion || 
+           (ahora - new Date(accion.ultimaNotificacion)) > 12 * 60 * 60 * 1000)) {
+          console.log('Enviando notificación a:', accion.responsable.email);
+
+          // Sumar 1 día a la fecha compromiso
+          const fechaLimiteMasUnDia = new Date(fechaLimite);
+          fechaLimiteMasUnDia.setDate(fechaLimiteMasUnDia.getDate() + 1);
+
+          // Formatear la fecha manualmente
+          const dia = fechaLimiteMasUnDia.getDate();
+          const mes = fechaLimiteMasUnDia.getMonth() + 1; // Los meses van de 0 a 11
+          const año = fechaLimiteMasUnDia.getFullYear();
+          const fechaFormateada = `${dia}/${mes}/${año}`; // Formato: día/mes/año
+
+          await transporter.sendMail({
+            from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
+            bcc: recipientEmails,
+            to: accion.responsable.email,
+            subject: `⏰ Alerta de Vencimiento (${urgencia.toUpperCase()})`,
+            html: `<h2>Acción Correctiva Pendiente</h2>
+                  <p><strong>Objetivo:</strong> ${accion.noObjetivo}</p>
+                  <p><strong>Acción:</strong> ${accion.acciones}</p>
+                  <p><strong>Fecha Límite:</strong> ${fechaFormateada}</p>
+                  <p><strong>Días Restantes:</strong> ${diasRestantes}</p>`
+          });
+
+          accion.notificaciones.push({
+            tipo: 'email',
+            fecha: ahora,
+            mensaje: `Alerta de ${urgencia} - ${diasRestantes} días restantes`,
+            urgencia: urgencia
+          });
+          accion.ultimaNotificacion = ahora;
+          await objetivo.save();
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error en tarea programada:', error);
+  }
+});
 
 // GET /api/objetivos?area=INGENIERIA
 const obtenerObjetivos = async (req, res) => {
@@ -28,6 +100,7 @@ const reprogramarFechaCompromiso = async (req, res) => {
     res.status(500).send(error.message);
   }
 };
+
 // POST /api/objetivos
 const crearObjetivo = async (req, res) => {
   try {
@@ -95,7 +168,7 @@ const agregarAccionCorrectiva = async (req, res) => {
 const getAccionesCorrectivasByArea = async (req, res) => {
   try {
     const { area } = req.query;
-    console.log('Area: ', area)
+    console.log('Area: ', area);
     if (!area) {
       return res.status(400).json({ error: "El parámetro 'area' es obligatorio." });
     }
@@ -105,13 +178,11 @@ const getAccionesCorrectivasByArea = async (req, res) => {
 
     // Reunir todas las acciones correctivas
     let acciones = [];
-    objetivos.forEach((objetivo, index) => {
+    objetivos.forEach((objetivo) => {
       if (objetivo.accionesCorrectivas && objetivo.accionesCorrectivas.length > 0) {
-        // Si lo deseas, puedes agregar datos adicionales a cada acción
         const accionesEnriquecidas = objetivo.accionesCorrectivas.map((accion) => ({
           ...accion.toObject(),
           idObjetivo: objetivo._id,
-          // Agrega más datos del objetivo si es necesario (por ejemplo, número u otro identificador)
         }));
         acciones = acciones.concat(accionesEnriquecidas);
       }

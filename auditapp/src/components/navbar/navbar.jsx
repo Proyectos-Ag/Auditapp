@@ -84,12 +84,13 @@ const Navbar = () => {
     if (
       event &&
       event.type === 'keydown' &&
-      (event.key === 'Tab' || event.key === 'Shift')
+      (event.key !== 'Escape')
     ) {
       return;
-    }
+    }    
     setIsOpen(open);
   };
+
 
   const handleLogoClick = () => {
     if (!userData?.TipoUsuario) {
@@ -114,7 +115,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Tab') {
+      if (event.key === 'Escape') {
         event.preventDefault();  // Evita el cambio de foco
         setIsOpen((prevIsOpen) => !prevIsOpen);  // Alterna el estado de isOpen
       }

@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Bar, Pie } from 'react-chartjs-2';
-import 'chart.js/auto';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import './css/Estadisticas.css';
+import { ResponsiveBar } from '@nivo/bar';
+import { ResponsivePie } from '@nivo/pie';
+import { ResponsiveLine } from '@nivo/line';
+
+// Register Chart.js components
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Estadisticas = () => {
   const [audits, setAudits] = useState([]);
@@ -12,6 +17,7 @@ const Estadisticas = () => {
   const [reviewedObservations, setReviewedObservations] = useState([]);
   const [selectedMonths, setSelectedMonths] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeVisualization, setActiveVisualization] = useState('bar'); // Cambiado de 'both' a 'bar'
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,6 +59,10 @@ const Estadisticas = () => {
     setMenuOpen(!menuOpen);
   };
 
+  const toggleVisualization = (type) => {
+    setActiveVisualization(type);
+  };
+
   const auditsByYear = audits.reduce((acc, audit) => {
     const year = new Date(audit.FechaInicio).getFullYear();
     if (!acc[year]) {
@@ -69,13 +79,11 @@ const Estadisticas = () => {
     return acc;
   }, {});
 
- 
-
   const criteriaCountByYear = Object.keys(filteredAuditsByYear).reduce((acc, year) => {
     const criteriaCount = filteredAuditsByYear[year].reduce((countAcc, audit) => {
       audit.Programa.forEach(program => {
         program.Descripcion.forEach(desc => {
-          if (['C', 'M', 'm'].includes(desc.Criterio)) {
+          if (['C', 'M', 'm','C'].includes(desc.Criterio)) {
             if (!countAcc[desc.Criterio]) {
               countAcc[desc.Criterio] = 0;
             }
@@ -108,30 +116,15 @@ const Estadisticas = () => {
   const getColorForCriteria = (criterio) => {
     switch (criterio) {
       case 'C':
-        return 'rgba(255, 99, 132, 0.6)';
+        return '#FF6384';
       case 'M':
-        return 'rgba(255, 165, 0, 0.6)';
+        return '#FFA500';
       case 'm':
-        return 'rgba(255, 255, 0, 0.6)';
+        return '#FFCE56';
       case 'Conforme':
-        return 'rgba(75, 192, 192, 0.6)';
+        return '#4BC0C0';
       default:
-        return 'rgba(75, 192, 192, 0.6)';
-    }
-  };
-
-  const getBorderColorForCriteria = (criterio) => {
-    switch (criterio) {
-      case 'C':
-        return 'rgba(255, 99, 132, 1)';
-      case 'M':
-        return 'rgba(255, 165, 0, 1)';
-      case 'm':
-        return 'rgba(255, 255, 0, 1)';
-      case 'Conforme':
-        return 'rgba(75, 192, 192, 1)';
-      default:
-        return 'rgba(75, 192, 192, 1)';
+        return '#36A2EB';
     }
   };
 
@@ -172,6 +165,50 @@ const Estadisticas = () => {
     return acc;
   }, {});
 
+  // Convert audit data to Nivo format
+  const prepareAuditsBarData = (year) => {
+    const data = Object.keys(auditsByMonthAndYear[year]).map(month => {
+      const monthlyAverage = parseFloat(calculateAverage(auditsByMonthAndYear[year][month]));
+      return {
+        month,
+        "Porcentaje Total": monthlyAverage
+      };
+    });
+    // Add average entry
+    data.push({
+      month: 'Promedio',
+      "Porcentaje Total": parseFloat(averageByYear[year])
+    });
+    return data;
+  };
+
+ 
+  // Convert criteria data to Nivo format
+  const prepareCriteriaData = (year) => {
+    return Object.entries(criteriaCountByYear[year].criteriaCount).map(([id, value]) => ({
+      id,
+      label: id,
+      value,
+      color: getColorForCriteria(id)
+    }));
+  };
+
+  // Convert monthly data to line chart format
+  const prepareMonthlyLineData = (year) => {
+    return [
+      {
+        id: "Porcentaje Mensual",
+        color: "hsl(211, 70%, 50%)",
+        data: Object.keys(auditsByMonthAndYear[year])
+          .filter(month => month !== 'Promedio') // Excluir "Promedio" del gráfico de línea
+          .map(month => ({
+            x: month,
+            y: parseFloat(calculateAverage(auditsByMonthAndYear[year][month]))
+          }))
+      }
+    ];
+  };
+
   const handlePrint = () => {
     const printContent = document.getElementById('print-content');
     const sections = printContent.querySelectorAll('.section');
@@ -201,18 +238,14 @@ const Estadisticas = () => {
 
         pdf.save('audits.pdf');
     });
-};
-
+  };
 
   return (
     <div className="audits-container">
-      <h2>Auditorías Finalizadas</h2>
-      <button onClick={handlePrint} className="print-button">Guardar en PDF</button>
+      <h2 className="audits-title">Auditorías Finalizadas</h2>
       <div id="print-content">
         <div className="dropdown">
-          <button onClick={toggleMenu} className="dropdown-togglede">
-            Seleccionar Meses
-          </button>
+         
           <div className={`dropdown-menu ${menuOpen ? 'show' : ''}`}>
             {months.map((month, index) => (
               <label key={index} className={`month-option ${selectedMonths.includes(month) ? 'selected' : ''}`}>
@@ -226,149 +259,531 @@ const Estadisticas = () => {
             ))}
           </div>
         </div>
+        
+        {/* Controles de visualización */}
+        <div className="visualization-controls">
+          <button 
+            onClick={() => toggleVisualization('bar')} 
+            className={activeVisualization === 'bar' ? 'active' : ''}
+          >
+            
+            Gráfico de Barras
+          </button>
+
+          <button 
+            onClick={() => toggleVisualization('line')} 
+            className={activeVisualization === 'line' ? 'active' : ''}
+          >
+            Gráfico de Línea
+          </button>
+         
+          <button 
+            onClick={() => toggleVisualization('both')} 
+            className={activeVisualization === 'both' ? 'active' : ''}
+          >
+            Ambos
+          </button>
+          <button onClick={handlePrint} className="print-button">Guardar en PDF</button>
+          <button onClick={toggleMenu} className="dropdown-togglede">
+            Seleccionar Meses
+          </button>
+        </div>
+
         {Object.keys(filteredAuditsByYear).map(year => (
           <div key={year} className="year-container">
-            <h3>Año: {year}</h3>
+            <h3 className="year-title">Año: {year}</h3>
             <div className="table-chart-container-audits">
-            <div className="section">
-                    <h3>Auditorías Realizadas en el año</h3>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Mes</th>
-                          <th>Tipo de Auditoría</th>
-                          <th>Porcentaje Total</th>
-                          <th>Promedio</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.keys(auditsByMonthAndYear[year]).map((month, monthIndex) => {
-                          const auditsInMonth = auditsByMonthAndYear[year][month];
-                          const monthAverage = calculateAverage(auditsInMonth);
-                          const auditTypes = auditsInMonth.map(audit => audit.TipoAuditoria).join(', ');
+              <div className="section">
+                <h3 className="section-title">Auditorías Realizadas en el año</h3>
+                <div className="table-responsive">
+                  <table className="professional-table">
+                    <thead>
+                      <tr>
+                        <th>Mes</th>
+                        <th>Tipo de Auditoría</th>
+                        <th>Porcentaje Total</th>
+                        <th>Promedio</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.keys(auditsByMonthAndYear[year]).map((month, monthIndex) => {
+                        const auditsInMonth = auditsByMonthAndYear[year][month];
+                        const monthAverage = calculateAverage(auditsInMonth);
+                        const auditTypes = auditsInMonth.map(audit => audit.TipoAuditoria).join(', ');
 
-                          return (
-                            <tr key={month}>
-                              <td>{month}</td>
-                              <td>{auditTypes}</td>
-                              <td>{monthAverage}</td>
-                              {monthIndex === 0 && (
-                                <td rowSpan={Object.keys(auditsByMonthAndYear[year]).length + 1}>
-                                  {averageByYear[year]}
-                                </td>
-                              )}
-                            </tr>
-                          );
-                        })}
-                        <tr>
-                          <td colSpan="3"><strong>Promedio</strong></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div className="chart-container-audits">
-                      <Bar
-                        data={{
-                          labels: [...Object.keys(auditsByMonthAndYear[year]), 'Promedio'],
-                          datasets: [
-                            {
-                              label: 'Porcentaje Total',
-                              data: [...Object.keys(auditsByMonthAndYear[year]).map(month => parseFloat(calculateAverage(auditsByMonthAndYear[year][month]))), parseFloat(averageByYear[year])],
-                              backgroundColor: [...new Array(Object.keys(auditsByMonthAndYear[year]).length).fill('rgba(75, 192, 192, 0.6)'), 'rgba(153, 102, 255, 0.6)'],
-                              borderColor: [...new Array(Object.keys(auditsByMonthAndYear[year]).length).fill('rgba(75, 192, 192, 1)'), 'rgba(153, 102, 255, 1)'],
-                              borderWidth: 1,
-                            },
-                          ],
+                        return (
+                          <tr key={month} className={monthIndex % 2 === 0 ? 'even-row' : 'odd-row'}>
+                            <td className="month-cell">{month}</td>
+                            <td>{auditTypes}</td>
+                            <td className="percentage-cell">{monthAverage}%</td>
+                            {monthIndex === 0 && (
+                              <td rowSpan={Object.keys(auditsByMonthAndYear[year]).length + 1} className="average-cell">
+                                {averageByYear[year]}%
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                      <tr className="summary-row">
+                        <td colSpan="3"><strong>Promedio</strong></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Contenedor combinado de visualización */}
+                <div className="combined-charts-container">
+                  {/* Gráfico combinado cuando activeVisualization es 'both' */}
+                  {activeVisualization === 'both' && (
+                    <div className="chart-container-audits" style={{ height: 400, width: '100%' }}>
+                      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                        {/* Gráfico de barras como capa base */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
+                          <ResponsiveBar
+                            data={prepareAuditsBarData(year)}
+                            keys={["Porcentaje Total"]}
+                            indexBy="month"
+                            margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
+                            padding={0.3}
+                            valueScale={{ type: 'linear' }}
+                            indexScale={{ type: 'band', round: true }}
+                            colors={{ scheme: 'nivo' }}
+                            defs={[
+                              {
+                                id: 'gradient',
+                                type: 'linearGradient',
+                                colors: [
+                                  { offset: 0, color: '#36A2EB' },
+                                  { offset: 100, color: '#4BC0C0' }
+                                ]
+                              }
+                            ]}
+                            fill={[{ match: { id: 'Porcentaje Total' }, id: 'gradient' }]}
+                            borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+                            axisTop={null}
+                            axisRight={null}
+                            axisBottom={{
+                              tickSize: 5,
+                              tickPadding: 5,
+                              tickRotation: -45,
+                              legend: 'Mes',
+                              legendPosition: 'middle',
+                              legendOffset: 40
+                            }}
+                            axisLeft={{
+                              tickSize: 5,
+                              tickPadding: 5,
+                              tickRotation: 0,
+                              legend: 'Porcentaje',
+                              legendPosition: 'middle',
+                              legendOffset: -40
+                            }}
+                            labelSkipWidth={12}
+                            labelSkipHeight={12}
+                            labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+                            legends={[
+                              {
+                                dataFrom: 'keys',
+                                anchor: 'bottom-right',
+                                direction: 'column',
+                                justify: false,
+                                translateX: 120,
+                                translateY: 0,
+                                itemsSpacing: 2,
+                                itemWidth: 100,
+                                itemHeight: 20,
+                                itemDirection: 'left-to-right',
+                                itemOpacity: 0.85,
+                                symbolSize: 20,
+                                symbolShape: 'square',
+                                effects: [
+                                  {
+                                    on: 'hover',
+                                    style: {
+                                      itemOpacity: 1
+                                    }
+                                  }
+                                ]
+                              }
+                            ]}
+                            role="application"
+                            ariaLabel="Auditorías por mes"
+                            barAriaLabel={e => e.id + ": " + e.formattedValue + " en mes: " + e.indexValue}
+                          />
+                        </div>
+                        
+                        {/* Gráfico de línea superpuesto */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2 }}>
+                          <ResponsiveLine
+                            data={prepareMonthlyLineData(year)}
+                            margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
+                            xScale={{ type: 'point' }}
+                            yScale={{
+                              type: 'linear',
+                              min: 0,
+                              max: 100,
+                              stacked: false,
+                              reverse: false
+                            }}
+                            yFormat=" >-.2f"
+                            curve="cardinal"
+                            axisTop={null}
+                            axisRight={null}
+                            axisBottom={null} // Ocultar eje para evitar duplicación
+                            axisLeft={null} // Ocultar eje para evitar duplicación
+                            enableGridX={false}
+                            enableGridY={false}
+                            pointSize={10}
+                            pointColor="#FF6384"
+                            pointBorderWidth={2}
+                            pointBorderColor="#FF6384"
+                            lineWidth={3}
+                            colors={["#FF6384"]} // Color específico para la línea
+                            enableSlices="x"
+                            useMesh={true}
+                            legends={[
+                              {
+                                anchor: 'bottom-right',
+                                direction: 'column',
+                                justify: false,
+                                translateX: 120,
+                                translateY: 40,
+                                itemsSpacing: 2,
+                                itemWidth: 100,
+                                itemHeight: 20,
+                                itemDirection: 'left-to-right',
+                                itemOpacity: 0.85,
+                                symbolSize: 20,
+                                symbolShape: 'circle',
+                                effects: [
+                                  {
+                                    on: 'hover',
+                                    style: {
+                                      itemOpacity: 1
+                                    }
+                                  }
+                                ]
+                              }
+                            ]}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Gráfico de barras - Visible solo si activeVisualization es 'bar' */}
+                  {activeVisualization === 'bar' && (
+                    <div className="chart-container-audits" style={{ height: 400, width: '100%' }}>
+                      <ResponsiveBar
+                        data={prepareAuditsBarData(year)}
+                        keys={["Porcentaje Total"]}
+                        indexBy="month"
+                        margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
+                        padding={0.3}
+                        valueScale={{ type: 'linear' }}
+                        indexScale={{ type: 'band', round: true }}
+                        colors={{ scheme: 'nivo' }}
+                        defs={[
+                          {
+                            id: 'dots',
+                            type: 'patternDots',
+                            background: 'inherit',
+                            color: '#38bcb2',
+                            size: 4,
+                            padding: 1,
+                            stagger: true
+                          },
+                          {
+                            id: 'gradient',
+                            type: 'linearGradient',
+                            colors: [
+                              { offset: 0, color: '#36A2EB' },
+                              { offset: 100, color: '#4BC0C0' }
+                            ]
+                          }
+                        ]}
+                        fill={[{ match: { id: 'Porcentaje Total' }, id: 'gradient' }]}
+                        borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+                        axisTop={null}
+                        axisRight={null}
+                        axisBottom={{
+                          tickSize: 5,
+                          tickPadding: 5,
+                          tickRotation: -45,
+                          legend: 'Mes',
+                          legendPosition: 'middle',
+                          legendOffset: 40
                         }}
-                        options={{
-                          maintainAspectRatio: false,
+                        axisLeft={{
+                          tickSize: 5,
+                          tickPadding: 5,
+                          tickRotation: 0,
+                          legend: 'Porcentaje',
+                          legendPosition: 'middle',
+                          legendOffset: -40
                         }}
+                        labelSkipWidth={12}
+                        labelSkipHeight={12}
+                        labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+                        legends={[
+                          {
+                            dataFrom: 'keys',
+                            anchor: 'bottom-right',
+                            direction: 'column',
+                            justify: false,
+                            translateX: 120,
+                            translateY: 0,
+                            itemsSpacing: 2,
+                            itemWidth: 100,
+                            itemHeight: 20,
+                            itemDirection: 'left-to-right',
+                            itemOpacity: 0.85,
+                            symbolSize: 20,
+                            effects: [
+                              {
+                                on: 'hover',
+                                style: {
+                                  itemOpacity: 1
+                                }
+                              }
+                            ]
+                          }
+                        ]}
+                        role="application"
+                        ariaLabel="Auditorías por mes"
+                        barAriaLabel={e => e.id + ": " + e.formattedValue + " en mes: " + e.indexValue}
                       />
                     </div>
-                  </div>
+                  )}
+                  
+                  {/* Gráfico de línea - Visible solo si activeVisualization es 'line' */}
+                  {activeVisualization === 'line' && (
+                    <div className="chart-container-audits" style={{ height: 400, width: '100%' }}>
+                      <ResponsiveLine
+                        data={prepareMonthlyLineData(year)}
+                        margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
+                        xScale={{ type: 'point' }}
+                        yScale={{
+                          type: 'linear',
+                          min: 0,
+                          max: 100,
+                          stacked: false,
+                          reverse: false
+                        }}
+                        yFormat=" >-.2f"
+                        curve="cardinal"
+                        axisTop={null}
+                        axisRight={null}
+                        axisBottom={{
+                          tickSize: 5,
+                          tickPadding: 5,
+                          tickRotation: -45,
+                          legend: 'Mes',
+                          legendOffset: 40,
+                          legendPosition: 'middle'
+                        }}
+                        axisLeft={{
+                          tickSize: 5,
+                          tickPadding: 5,
+                          tickRotation: 0,
+                          legend: 'Porcentaje',
+                          legendOffset: -40,
+                          legendPosition: 'middle'
+                        }}
+                        colors={{ scheme: 'category10' }}
+                        pointSize={10}
+                        pointColor={{ theme: 'background' }}
+                        pointBorderWidth={2}
+                        pointBorderColor={{ from: 'serieColor' }}
+                        pointLabelYOffset={-12}
+                        useMesh={true}
+                        legends={[
+                          {
+                            anchor: 'bottom-right',
+                            direction: 'column',
+                            justify: false,
+                            translateX: 100,
+                            translateY: 0,
+                            itemsSpacing: 0,
+                            itemDirection: 'left-to-right',
+                            itemWidth: 80,
+                            itemHeight: 20,
+                            itemOpacity: 0.75,
+                            symbolSize: 12,
+                            symbolShape: 'circle',
+                            symbolBorderColor: 'rgba(0, 0, 0, .5)',
+                            effects: [
+                              {
+                                on: 'hover',
+                                style: {
+                                  itemBackground: 'rgba(0, 0, 0, .03)',
+                                  itemOpacity: 1
+                                }
+                              }
+                            ]
+                          }
+                        ]}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              
               <div className="section">
-              <h4>Cantidad de Auditorías por Tipo</h4>
-            <table>
-              <thead>
-                <tr>
-                  <th>Tipo</th>
-                  <th>Cantidad</th>
-                  <th>Estatus</th>
-                </tr>
-              </thead>
-              <tbody>
-            {filteredAuditsByYear[year].map((audit, index) => (
-              <tr key={index}>
-                <td>{audit.TipoAuditoria}</td>
-                <td>{auditTypeCountByYear[year].auditTypeCount[audit.TipoAuditoria]}</td>
-                <td>{audit.Estado}</td> {/* Aquí se muestra el Estatus de cada auditoría */}
-              </tr>
-            ))}
-          </tbody>
-                </table>
-                <div className="chart-container-audits">
-                  <Bar
-                    data={{
-                      labels: Object.keys(auditTypeCountByYear[year].auditTypeCount),
-                      datasets: [{
-                        label: 'Cantidad de Auditorías',
-                        data: Object.values(auditTypeCountByYear[year].auditTypeCount),
-                        backgroundColor: Object.keys(auditTypeCountByYear[year].auditTypeCount).map(type => getColorForCriteria(type)),
-                        borderColor: Object.keys(auditTypeCountByYear[year].auditTypeCount).map(type => getBorderColorForCriteria(type)),
-                        borderWidth: 1
-                      }]
+                <h4 className="section-title">Cantidad de Auditorías por Tipo</h4>
+                <div className="table-responsive">
+                  <table className="professional-table audit-type-table">
+                    <thead>
+                      <tr>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Estatus</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(auditTypeCountByYear[year].auditTypeCount).map(([tipo, cantidad], index) => {
+                        const audit = filteredAuditsByYear[year].find(a => a.TipoAuditoria === tipo);
+                        return (
+                          <tr key={index} className={index % 2 === 0 ? 'even-row' : 'odd-row'}>
+                            <td>{tipo}</td>
+                            <td className="count-cell">{cantidad}</td>
+                            <td className={`status-cell status-${audit?.Estado?.toLowerCase()}`}>{audit?.Estado}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="chart-container-audits" style={{ height: 400 }}>
+                  <ResponsiveBar
+                    data={Object.entries(auditTypeCountByYear[year].auditTypeCount).map(([tipo, cantidad]) => ({
+                      tipo,
+                      cantidad
+                    }))}
+                    keys={['cantidad']}
+                    indexBy="tipo"
+                    margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
+                    padding={0.3}
+                    layout="vertical"
+                    valueScale={{ type: 'linear' }}
+                    indexScale={{ type: 'band', round: true }}
+                    colors={{ scheme: 'category10' }}
+                    defs={[
+                      {
+                        id: 'gradientA',
+                        type: 'linearGradient',
+                        colors: [
+                          { offset: 0, color: '#FF6384' },
+                          { offset: 100, color: '#FF9F40' }
+                        ]
+                      }
+                    ]}
+                    fill={[{ match: '*', id: 'gradientA' }]}
+                    borderRadius={4}
+                    borderWidth={1}
+                    borderColor={{ from: 'color', modifiers: [['darker', 0.8]] }}
+                    axisTop={null}
+                    axisRight={null}
+                    axisBottom={{
+                      tickSize: 5,
+                      tickPadding: 5,
+                      tickRotation: -45,
+                      legend: 'Tipo de Auditoría',
+                      legendPosition: 'middle',
+                      legendOffset: 40
                     }}
-                    options={{ maintainAspectRatio: false }}
+                    axisLeft={{
+                      tickSize: 5,
+                      tickPadding: 5,
+                      tickRotation: 0,
+                      legend: 'Cantidad',
+                      legendPosition: 'middle',
+                      legendOffset: -40
+                    }}
+                    labelSkipWidth={12}
+                    labelSkipHeight={12}
+                    labelTextColor={{ from: 'color', modifiers: [['darker', 3]] }}
+                    animate={true}
+                    motionStiffness={90}
+                    motionDamping={15}
                   />
                 </div>
               </div>
               <div className="section">
-                    <h3>Total de hallazgos de las auditorías</h3>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Hallazgos</th>
-                          <th>Cantidad</th>
-                          <th>Porcentaje</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>Hallazgos Totales</td>
-                          <td>{totalObservations}</td>
-                          <td>100%</td>
-                        </tr>
-                        <tr>
-                          <td>Hallazgos Revisados</td>
-                          <td>{reviewedObservationsCount}</td>
-                          <td>{((reviewedObservationsCount / totalObservations) * 100).toFixed(2)}%</td>
-                        </tr>
-                        <tr>
-                          <td>Hallazgos Faltantes</td>
-                          <td>{pendingObservationsCount}</td>
-                          <td>{((pendingObservationsCount / totalObservations) * 100).toFixed(2)}%</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div className="chart-container-audits">
-                      <Bar
-                        data={{
-                          labels: ['Observaciones Totales', 'Observaciones Revisadas', 'Observaciones Faltantes'],
-                          datasets: [
-                            {
-                              label: 'Cantidad',
-                              data: [totalObservations, reviewedObservationsCount, pendingObservationsCount],
-                              backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)'],
-                              borderColor: ['rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
-                              borderWidth: 2,
-                            },
-                          ],
-                        }}
-                        options={{
-                          maintainAspectRatio: false,
-                        }}
-                      />
-                    </div>
-                  </div>
+                <h3>Total de hallazgos de las auditorías</h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Hallazgos</th>
+                      <th>Cantidad</th>
+                      <th>Porcentaje</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Hallazgos Totales</td>
+                      <td>{totalObservations}</td>
+                      <td>100%</td>
+                    </tr>
+                    <tr>
+                      <td>Hallazgos Revisados</td>
+                      <td>{reviewedObservationsCount}</td>
+                      <td>{((reviewedObservationsCount / totalObservations) * 100).toFixed(2)}%</td>
+                    </tr>
+                    <tr>
+                      <td>Hallazgos Faltantes</td>
+                      <td>{pendingObservationsCount}</td>
+                      <td>{((pendingObservationsCount / totalObservations) * 100).toFixed(2)}%</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div className="chart-container-audits" style={{ height: 300 }}>
+                  <ResponsiveBar
+                    data={[
+                      { id: 'Hallazgos Faltantes', value: pendingObservationsCount, color: '#FF9F40' },
+                      { id: 'Hallazgos Revisadas', value: reviewedObservationsCount, color: '#9966FF' },
+                      { id: 'Hallazgos Totales', value: totalObservations, color: '#4BC0C0' }
+
+                    ]}
+                    keys={['value']}
+                    indexBy="id"
+                    margin={{ top: 50, right: 50, bottom: 50, left: 170 }}
+                    padding={0.3}
+                    layout="horizontal"
+                    valueScale={{ type: 'linear' }}
+                    indexScale={{ type: 'band', round: true }}
+                    colors={{ scheme: 'category10' }}
+                    colorBy="indexValue"
+                    borderRadius={4}
+                    borderWidth={1}
+                    borderColor={{ from: 'color', modifiers: [['darker', 0.8]] }}
+                    axisTop={null}
+                    axisRight={null}
+                    axisBottom={{
+                      tickSize: 5,
+                      tickPadding: 5,
+                      tickRotation: 0,
+                      legend: 'Cantidad',
+                      legendPosition: 'middle',
+                      legendOffset: 40
+                    }}
+                    axisLeft={{
+                      tickSize: 5,
+                      tickPadding: 5,
+                      tickRotation: 0,
+                      legend: 'Categoría',
+                      legendPosition: 'middle',
+                      legendOffset: -140
+                    }}
+                    labelSkipWidth={12}
+                    labelSkipHeight={12}
+                    labelTextColor="#ffffff"
+                    animate={true}
+                    motionStiffness={90}
+                    motionDamping={15}
+                  />
+                </div>
+              </div>
               <div className="section">
                 <h4>Cantidad de Criterios en las auditorías</h4>
                 <table>
@@ -387,19 +802,72 @@ const Estadisticas = () => {
                     ))}
                   </tbody>
                 </table>
-                <div className="pie-chart-container-audits">
-                  <Pie
-                    data={{
-                      labels: Object.keys(criteriaCountByYear[year].criteriaCount),
-                      datasets: [{
-                        label: 'Cantidad de Criterios',
-                        data: Object.values(criteriaCountByYear[year].criteriaCount),
-                        backgroundColor: Object.keys(criteriaCountByYear[year].criteriaCount).map(criteria => getColorForCriteria(criteria)),
-                        borderColor: Object.keys(criteriaCountByYear[year].criteriaCount).map(criteria => getBorderColorForCriteria(criteria)),
-                        borderWidth: 1
-                      }]
-                    }}
-                    options={{ maintainAspectRatio: false }}
+                <div className="pie-chart-container-audits" style={{ height: 400 }}>
+                  <ResponsivePie
+                    data={prepareCriteriaData(year)}
+                    margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
+                    innerRadius={0.5}
+                    padAngle={0.7}
+                    cornerRadius={3}
+                    activeOuterRadiusOffset={8}
+                    borderWidth={1}
+                    borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
+                    arcLinkLabelsSkipAngle={10}
+                    arcLinkLabelsTextColor="#333333"
+                    arcLinkLabelsThickness={2}
+                    arcLinkLabelsColor={{ from: 'color' }}
+                    arcLabelsSkipAngle={10}
+                    arcLabelsTextColor="#ffffff"
+                    defs={[
+                      {
+                        id: 'dots',
+                        type: 'patternDots',
+                        background: 'inherit',
+                        color: 'rgba(255, 255, 255, 0.3)',
+                        size: 4,
+                        padding: 1,
+                        stagger: true
+                      },
+                      {
+                        id: 'lines',
+                        type: 'patternLines',
+                        background: 'inherit',
+                        color: 'rgba(255, 255, 255, 0.3)',
+                        rotation: -45,
+                        lineWidth: 6,
+                        spacing: 10
+                      }
+                    ]}
+                    fill={[
+                      { match: { id: 'C' }, id: 'dots' },
+                      { match: { id: 'M' }, id: 'lines' },
+                      { match: { id: 'm' }, id: 'dots' }
+                    ]}
+                    legends={[
+                      {
+                        anchor: 'bottom',
+                        direction: 'row',
+                        justify: false,
+                        translateX: 0,
+                        translateY: 56,
+                        itemsSpacing: 0,
+                        itemWidth: 100,
+                        itemHeight: 18,
+                        itemTextColor: '#999',
+                        itemDirection: 'left-to-right',
+                        itemOpacity: 1,
+                        symbolSize: 18,
+                        symbolShape: 'circle',
+                        effects: [
+                          {
+                            on: 'hover',
+                            style: {
+                              itemTextColor: '#000'
+                            }
+                          }
+                        ]
+                      }
+                    ]}
                   />
                 </div>
               </div>

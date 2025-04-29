@@ -44,11 +44,11 @@ const Login = () => {
       console.log('informacion almacenada por user data: ',usuario);
 
       if (usuario.TipoUsuario === 'administrador') {
-        navigate('/admin');
+        navigate('/admin',    { state: { showModal: true } });
       } else if (usuario.TipoUsuario === 'auditado') {
-        navigate('/auditado');
+        navigate('/auditado', { state: { showModal: true } });
       } else if (usuario.TipoUsuario === 'auditor') {
-        navigate('/auditor');
+        navigate('/auditor',  { state: { showModal: true } });
       } else {
         Swal.fire({
           icon: 'error',
@@ -119,7 +119,7 @@ const Login = () => {
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <span>
             <br />
-            v2.1.6(Beta)
+            v2.1.7(Beta)
           </span>
         </div>
 

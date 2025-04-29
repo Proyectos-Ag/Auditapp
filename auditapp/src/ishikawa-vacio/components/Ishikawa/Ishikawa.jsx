@@ -32,6 +32,7 @@ const CreacionIshikawa = () => {
   const [formData, setFormData] = useState({
     problema: '',
     afectacion: '',
+    folio: '',
     requisito: '',
     auditado: userData.Nombre,
     hallazgo: '',
@@ -65,6 +66,26 @@ const CreacionIshikawa = () => {
   const [actividades, setActividades] = useState([{ actividad: '', responsable: [], fechaCompromiso: '' }]);
 
   const fechaElaboracion = new Date().toISOString();
+
+  //folio
+
+  const CONNECTORS = [
+    'de','del','la','las','los','y','e','o','u',
+    'en','al','por','para','con','sin','sobre','entre','a'
+  ];
+
+  const getInitials = (text = '') =>
+    text
+      .split(/\s+/)
+      .filter(w => w && !CONNECTORS.includes(w.toLowerCase()))
+      .map(w => w[0].toUpperCase())
+      .join('');
+
+  const generateFolio = (userData = {}) => {
+    const deptInitials = getInitials(userData.Departamento || 'DEP');
+    const areaInitials = getInitials(userData.area         || 'AREA');
+    return `${deptInitials}-${areaInitials}-`;
+  };
 
   //Modo lectura 
   const isReadOnly =
@@ -108,6 +129,7 @@ const CreacionIshikawa = () => {
       setFormData({
         problema: '',
         afectacion: '',
+        folio: '',
         requisito: '',
         auditado: userData.Nombre,
         hallazgo: '',
@@ -146,6 +168,7 @@ const CreacionIshikawa = () => {
         setFormData({
           problema: selectedRecord.problema || '',
           afectacion: selectedRecord.afectacion || '',
+          folio: selectedRecord.folio || '',
           requisito: selectedRecord.requisito || '',
           auditado: selectedRecord.auditado || '',
           hallazgo: selectedRecord.hallazgo || '',
@@ -247,6 +270,7 @@ const CreacionIshikawa = () => {
       // Se arma el objeto de datos con todos los campos inicialmente.
       const data = {
         fecha: formData.fecha,
+        folio: generateFolio(userData),
         problema: formData.problema,
         requisito: formData.requisito,
         auditado: userData.Nombre,
@@ -259,6 +283,7 @@ const CreacionIshikawa = () => {
         afectacion: formData.afectacion,
         actividades,
         estado: 'Incompleto',
+        tipo:'vacio',
         fechaElaboracion
       };
 
@@ -927,6 +952,7 @@ useEffect(() => {
                   style={{ marginTop: '0.4rem', color: '#000000' }} placeholder="Agregar afectación. . ." required 
                    onChange={handleFormDataChange} disabled={isReadOnly} />
             </h3>
+            <h3>Folio: {formData.folio}{console.log('folio: ', formData)}</h3>
           </div>
           <div>
             <img src={Ishikawa} alt="Diagrama de Ishikawa" className="responsive-image" />

@@ -1,4 +1,5 @@
 const Ishikawa = require('../models/ishikawaSchema');
+const Usuarios = require('../models/usuarioSchema');
 const transporter = require('../emailconfig');
 const multer = require("multer");
 const path = require('path');
@@ -10,51 +11,70 @@ const storage = multer.memoryStorage(); // Almacenar el archivo en memoria
 const upload = multer({ storage: storage });
 
 const crearIshikawa = async (req, res) => {
-    try {
-        const newIshikawa = new Ishikawa(req.body);
-        console.log(req.body);
-        
-        await newIshikawa.save();
+  try {
+    const { folio: prefixRaw, ...restBody } = req.body;
+    // Asegurar que el prefijo termine en '-'
+    const prefix = prefixRaw.endsWith('-') ? prefixRaw : `${prefixRaw}-`;
 
-        // Enviar correo para notificar la asignación de un diagrama
-        const auditado = newIshikawa.auditado;
-        const correo = newIshikawa.correo;
-        const proName = newIshikawa.proName;
-        
-        console.log('Auditado:', auditado, 'Correo:', correo, 'Programa:', proName);
+    // 1) Contar documentos con ese prefijo
+    const count = await Ishikawa.countDocuments({
+      folio: { $regex: `^${prefix}` }
+    });
 
-        const templatePathAsignacion = path.join(__dirname, 'templates', 'asignacion-ishikawa.html');
-        const emailTemplateAsignacion = fs.readFileSync(templatePathAsignacion, 'utf8');
-        const customizedTemplateAsignacion = emailTemplateAsignacion
+    // 2) Generar nuevo número incremental
+    const nextNumber = count + 1;
+
+    // 3) Formar folio completo
+    const fullFolio = `${prefix}${nextNumber}`;
+
+    // 4) Crear instancia y asignar folio
+    const newIshikawa = new Ishikawa({
+      ...restBody,
+      folio: fullFolio
+    });
+    console.log('Guardando Ishikawa con folio:', fullFolio);
+
+    // 5) Guardar en BD
+    await newIshikawa.save();
+
+    // 6) Enviar correo solo si 'tipo' no es 'vacio'
+    if (newIshikawa.tipo !== 'vacio') {
+      const auditado = newIshikawa.auditado;
+      const correo = newIshikawa.correo;
+      const proName = newIshikawa.proName;
+      console.log('Auditado:', auditado, 'Correo:', correo, 'Programa:', proName);
+
+      // Leer plantilla y personalizar
+      const templatePathAsignacion = path.join(__dirname, 'templates', 'asignacion-ishikawa.html');
+      const emailTemplateAsignacion = fs.readFileSync(templatePathAsignacion, 'utf8');
+      const customizedTemplateAsignacion = emailTemplateAsignacion
         .replace('{{usuario}}', auditado)
         .replace('{{programa}}', proName);
 
-        const mailOptionsAsignacion = {
-          from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
-          to: correo,
-          subject: 'Se te ha asignado un nuevo Ishikawa',
-          html: customizedTemplateAsignacion,
-          attachments: [
-            {
-              filename: 'logoAguida.png',
-              path: path.join(__dirname, '../assets/logoAguida-min.png'),
-              cid: 'logoAguida' 
-            }
-          ]
-        }; 
-        
-        transporter.sendMail(mailOptionsAsignacion, (error, info) => {
-          if (error) {
-            console.error('Error al enviar el correo electrónico:', error);
-          } else {
-            console.log('Correo electrónico enviado:', info.response);
-          }
-        });
-        
-        res.status(200).json(newIshikawa);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
+      const mailOptionsAsignacion = {
+        from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
+        to: correo,
+        subject: 'Se te ha asignado un nuevo Ishikawa',
+        html: customizedTemplateAsignacion,
+        attachments: [{
+          filename: 'logoAguida.png',
+          path: path.join(__dirname, '../assets/logoAguida-min.png'),
+          cid: 'logoAguida'
+        }]
+      };
+
+      transporter.sendMail(mailOptionsAsignacion, (error, info) => {
+        if (error) console.error('Error al enviar el correo:', error);
+        else console.log('Correo enviado:', info.response);
+      });
     }
+
+    // 7) Responder al cliente
+    res.status(200).json(newIshikawa);
+  } catch (error) {
+    console.error('Error en crearIshikawa:', error);
+    res.status(400).json({ error: error.message });
+  }
 };
 
 const obtenerIshikawas = async (req, res) => {
@@ -139,13 +159,10 @@ const actualizarIshikawaCompleto = async (req, res) => {
 
     // Verificar si el estado es "Rechazado"
     if (
-      updatedIshikawa.estado === 'Rechazado' &&
-      req.body.correo &&
-      req.body.correo.trim() !== ''
-    ) {
+      updatedIshikawa.estado === 'Rechazado') {
       const usuario = updatedIshikawa.auditado;
       const programa = req.body.programa;
-      const correo = req.body.correo;
+      const correo = updatedIshikawa.correo;
       const nota = req.body.notaRechazo;
 
       console.log('correo:', correo)
@@ -186,8 +203,8 @@ const actualizarIshikawaCompleto = async (req, res) => {
     // Verificar si el estado es "Aprobado"
     if (updatedIshikawa.estado === 'Aprobado') {
       const usuario = updatedIshikawa.auditado;
-      const programa = req.body.programa;
-      const correo = req.body.correo;
+      const programa = updatedIshikawa.programa;
+      const correo = updatedIshikawa.correo;
 
       const templatePathAprobado = path.join(__dirname, 'templates', 'aprobado-ishikawa.html');
       const emailTemplateAprobado = fs.readFileSync(templatePathAprobado, 'utf8');
@@ -598,6 +615,97 @@ const enviarPDF = async (req, res) => {
   }
 };
 
+const enviarPDFDos = async (req, res) => {
+  try {
+    const participantesStr = req.body.participantes;      // p.ej. "Mario Solís / Pedro Mata / José José"
+    const pdfFile       = req.file;                      // multer single( 'file' )
+    if (!participantesStr || !pdfFile) {
+      return res.status(400).json({ error: "Faltan datos (participantes o PDF)" });
+    }
+
+    // 1) Separamos por "/"
+    const rawParts = participantesStr.split('/').map(s => s.trim()).filter(s => s);
+    const emails = [];
+
+    // 2) Recorremos e intentamos encontrar cada nombre o combinación
+    for (let i = 0; i < rawParts.length; i++) {
+      let nombre = rawParts[i];
+      let user = await Usuarios.findOne({ Nombre: nombre });
+
+      // 2a) Si no existe y hay siguiente, probamos con la combinación "A / B"
+      if (!user && i + 1 < rawParts.length) {
+        const combinado = `${nombre} / ${rawParts[i + 1]}`;
+        user = await Usuarios.findOne({ Nombre: combinado });
+        if (user) {
+          emails.push(user.Correo);
+          i++; // saltamos el siguiente porque ya formó parte de la combinación
+          continue;
+        }
+      }
+
+      // 2b) Si lo encontramos, guardamos el correo
+      if (user) {
+        emails.push(user.Correo);
+      } else {
+        console.warn(`Usuario no encontrado en DB: "${nombre}"`);
+      }
+    }
+
+    if (emails.length === 0) {
+      return res.status(404).json({ error: "No se encontraron participantes válidos" });
+    }
+
+    // 3) Configuramos nodemailer
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD
+      }
+    });
+
+    const templatePathAsignacion = path.join(__dirname, 'templates', 'pdf-aprobado.html');
+      const emailTemplateAsignacion = fs.readFileSync(templatePathAsignacion, 'utf8');
+      const customizedTemplateAsignacion = emailTemplateAsignacion;
+
+    // 4) Preparamos el email con el PDF adjunto
+    const mailOptions = {
+      from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
+      to: emails,  // arreglo de correos
+      subject: "Ishikawa Aprobado",
+      html: customizedTemplateAsignacion,
+      attachments: [
+        {
+          filename: pdfFile.originalname || 'diagrama_ishikawa.pdf',
+          content: pdfFile.buffer,
+          contentType: 'application/pdf',
+          cid: 'pdfIshikawa',
+          contentDisposition: 'inline'
+        },
+        {
+          filename: 'logoAguida.png',
+          path: path.join(__dirname, '../assets/logoAguida-min.png'),
+          cid: 'logoAguida'
+        }
+      ]
+    };
+
+    // 5) Enviamos
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err) {
+        console.error("Error al enviar el correo:", err);
+        return res.status(500).json({ error: "Error al enviar correo" });
+      }
+      console.log("Correo enviado:", info.response);
+      res.status(200).json({ message: "Correo enviado exitosamente", enviadosA: emails });
+    });
+
+  } catch (error) {
+    console.error("Error en enviarPDF:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Controlador: actualizarAcceso
 const actualizarAcceso = async (req, res) => {
   const { id } = req.params;
@@ -696,7 +804,8 @@ const getActivitiesByUsername = async (req, res) => {
 
     // Buscamos todos los documentos que tengan al menos una actividad
     // cuyo responsable contenga el nombre buscado
-    const ishikawas = await Ishikawa.find({ 'actividades.responsable.nombre': username });
+    const ishikawas = await Ishikawa.find({ 
+      'actividades.responsable.nombre': username, estado: 'Aprobado' });
 
     // Array para acumular las actividades que cumplan la condición
     let actividadesFiltradas = [];
@@ -794,6 +903,7 @@ const updateConcluido = async (req, res) => {
     eliminarIshikawasPorIdRep,
     ishikawaFinalizado,
     enviarPDF,
+    enviarPDFDos,
     actualizarAcceso,
     deleteIshikawa,
     obtenerIshikawaEspInc,
