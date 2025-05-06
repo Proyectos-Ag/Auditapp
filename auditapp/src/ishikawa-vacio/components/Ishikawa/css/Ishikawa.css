@@ -1,34 +1,15 @@
-.button-generar-ish{
-    margin-top: 20px;
-    margin-bottom: 10px;
-    border-radius: 7px;
-    margin: 0 auto; 
-    padding: 10px;
-    width: 6rem;
-    font-size: 15px;
-    color: #ffffff;
-    border: none;
-    background-color: rgb(0, 216, 126);
-    cursor: pointer;
-}
-
-.button-generar-ish:hover{
-    background-color: rgb(34, 110, 79);
-}
-
-.button-guardar-camb-ish{
-    margin-top: 20px;
-    margin-bottom: 10px;
-    border-radius: 7px;
-    padding: 10px;
-    width: 6rem;
-    font-size: 15px;
-    color: #ffffff;
-    border: none;
-    margin: 0 auto; 
-    background-color: rgb(0, 76, 216);
-    cursor: pointer;
-}
+.acciones-ish-container {
+    display: flex;
+    flex-direction: row;           /* horizontal */
+    justify-content: space-between;/* uno junto al otro y repartidos */
+    align-items: center;           /* alineados verticalmente */
+    margin: 0 auto;
+    padding: 1.5rem;
+    max-width: 80rem;
+    background-color: rgba(1,29,88,0.84);
+    border-radius: 8px;
+  }
+  
 
 .posicion-en-3{
     position: absolute;
@@ -371,13 +352,15 @@
     padding: 10px;
     display: inline-flex;
 }
+
 .button-part{
     display: inline-flex;
     justify-content: center;
     align-items: center;
     padding: 5px 9px 10px 9px;
     border: none;
-    background-color: #71fc78;
+    background-color: #1cb87c;
+    color: #ffffff;
     border-radius: 25px;
     width: 2.5rem;
     height: 2.5rem;
@@ -391,6 +374,7 @@
 
 .button-parti-ish{
     margin-top: 37rem;
+    margin-right: 7rem;
     margin-bottom: 2rem;
 }
 
@@ -428,11 +412,6 @@ table, th, td {
     font-size: 1rem;
   }
 
-.button-perm{
-    background-color: #0426c0;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px;
-    cursor: pointer;
+.new-ishikawa{
+    margin-top: 20px;
 }

@@ -1,0 +1,192 @@
+/* Updated NewIsh.css */
+:root {
+    --central-line-height: 4px;
+    --spine-length: 15rem;
+    --sub-spine-length: 20%;
+    --label-offset: 50px;
+    --central-line-color: #1cb87c;
+    --sub-line-color: #7f8c8d;
+    --spine-angle: 45deg;
+  }
+  
+  .fishbone-container {
+    position: relative;
+    width: 100%;
+    min-height: 80vh;
+    margin: 2rem auto;
+    overflow: visible;
+  }
+  
+  .central-line {
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    top: 50%;
+    height: var(--central-line-height);
+    background: var(--central-line-color);
+    transform: translateY(-50%);
+  }
+  
+  .spine-group {
+    position: absolute;
+    top: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .main-spine {
+    position: relative;
+    width: var(--spine-length);
+    transform-origin: right center;
+  }
+  
+  .diagonal-line {
+    position: relative;              /* make wrapper relative */
+    width: 100%;
+    height: var(--central-line-height);
+    background: var(--central-line-color);
+    transform-origin: right center;
+  }
+  
+  /* distribute causes evenly along the diagonal */
+  .causes-wrapper {
+    position: relative;       /* antes era absolute con flex */
+    width: 100%;
+    height: 0;                /* no necesitamos altura fija */
+    top: 50%;
+    pointer-events: none;     /* para que el click “caiga” al botón si toca */
+  }
+  
+  .cause-line {
+    position: absolute;
+    top: -2rem;             /* para centrar verticalmente sobre la diagonal */
+    display: flex;
+    align-items: center;
+    transform-origin: right center;
+    pointer-events: auto;     /* para poder tipear en el textarea */
+  }
+  
+  .sub-line {
+    width: var(--sub-spine-length);
+    height: 0;
+    border-bottom: 1px dashed var(--sub-line-color);
+    margin-right: 0.5rem;
+  }
+  
+  .cause-input {
+    width: 21vw;
+    padding: 0.5rem;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    margin: 0;                       /* remove extra margins */
+  }
+  
+  .spine-label {
+    position: absolute;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #34495e;
+    white-space: nowrap;
+  }
+  
+  .spine-group.bottom .causes-wrapper {
+    top: calc(50% + 0.5rem);
+  }
+
+  /* Etiqueta al extremo de la diagonal */
+  .spine-end-label {
+    display: inline-block;             /* para que padding funcione bien */
+    white-space: nowrap;
+    font-size: 1rem;
+    font-weight: 600;
+    
+    /* estilo de “botón” */
+    background: var(--central-line-color);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    
+    pointer-events: none;
+  }
+
+  /* Botón fijo para añadir causa al lado izquierdo del label */
+.add-cause-fixed {
+  background: #3498db !important;
+  color: white !important;
+  /* si quieres un tamaño de “botón” consistente */
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+/* COLA: triángulo que forma la flecha de la cola */
+.fish-tail {
+  position: absolute;
+  left: 11%;           /* mismo inicio que central-line */
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-top: 4rem solid transparent;
+  border-bottom: 4rem solid transparent;
+  border-left: 6rem solid var(--central-line-color);
+  transform: translate(-100%, -50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ================================= */
+/*  CABEZA: cuadrado grande con borde */
+/* ================================= */
+.fish-head {
+  position: absolute;
+  right: 15%;
+  top: 50%;
+  width: 10rem;
+  height: 10rem;
+  background: var(--central-line-color);
+  pointer-events: none;              /* lo mantenemos */
+  transform: translate(100%, -50%);
+  z-index: 1;
+  border-top-right-radius: 5rem;
+  border-bottom-right-radius: 5rem;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+
+  /* clave: permitir que el textarea dentro reciba eventos */
+  /* (no afectará al resto de elementos dentro) */
+}
+.fish-head .problema-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  resize: none;               /* opcional: impide redimensionar manualmente */
+  padding: 0.5rem;            /* ajusta a tu gusto */
+  box-sizing: border-box;
+  border: none;
+  background: transparent;    /* si quieres que se vea el mismo fondo */
+  font-size: 1rem;            /* o tu valor por defecto */
+  overflow: auto;
+
+  /* esto hace que el textarea sí reciba clicks y foco */
+  pointer-events: auto;
+}
+
+
+/* Nuevos estilos para el wrapper */
+.ishikawa-wrapper {
+  position: relative;
+  width: 80em;
+  height: 100vh;
+  overflow: auto;
+  background: #fff;
+}
+
+/* Modifica el contenedor principal */
+.fishbone-container {
+  position: relative;
+  margin: 30px auto;
+  transform-origin: center;
+}
