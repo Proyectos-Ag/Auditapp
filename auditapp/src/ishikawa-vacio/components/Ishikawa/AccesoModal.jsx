@@ -4,6 +4,7 @@ import {
   Paper,
   List,
   ListItem,
+  ListItemText,
   Select,
   MenuItem,
   FormControl,
@@ -13,125 +14,148 @@ import {
   TextField,
   Button,
   Typography,
-  Chip
+  IconButton,
+  Divider,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
-import { UserContext } from '../../../App';
+import { UserContext } from "../../../App";
 
-const AccesoModal = ({ open, handleClose, idIshikawa, problemaIshikawa}) => {
-  // Estado para manejar la búsqueda de usuarios
+const AccesoModal = ({ open, handleClose, idIshikawa, problemaIshikawa, estado }) => {
+  const { userData } = useContext(UserContext);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-
-  const { userData } = useContext(UserContext);
-
-  // Estado para el nivel de acceso (se aplica al usuario que se selecciona)
-  const [nivelAcceso, setNivelAcceso] = useState(1);
-  // Array para almacenar los accesos a enviar (cada objeto contiene nombre, correo y nivelAcceso)
   const [accesos, setAccesos] = useState([]);
 
-  // Efecto para buscar usuarios cuando se escribe en el input
   useEffect(() => {
-    // Si ya se seleccionó un usuario, no mostrar sugerencias
-    if (selectedUser) {
+    if (!open) return;
+    // resetear estados
+    setSearchTerm("");
+    setSelectedUser(null);
+    setAccesos([]);
+
+    if (idIshikawa) {
+      // 2. cargar accesos existentes
+      axios
+        .get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/acceso/${idIshikawa}`)
+        .then(res => {
+          // asumo que el backend devuelve { acceso: [...] }
+          setAccesos(res.data.acceso || []);
+        })
+        .catch(err => {
+          console.error("Error cargando accesos:", err);
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "No fue posible cargar los accesos existentes."
+          });
+        });
+    }
+  }, [open, idIshikawa]);
+
+  // Cuando el estado es Finalizado/Aprobado, forzamos Solo Lectura
+  const soloLectura = ["Finalizado", "Aprobado"].includes(estado);
+
+  useEffect(() => { 
+    if (selectedUser || searchTerm.length < 3) {
       setSuggestions([]);
       return;
     }
-    if (searchTerm.length < 3) {
-      setSuggestions([]);
-      return;
-    }
-    const delayDebounceFn = setTimeout(() => {
+    const delay = setTimeout(() => {
       axios
         .get(
           `${process.env.REACT_APP_BACKEND_URL}/usuarios/search?search=${encodeURIComponent(
             searchTerm
           )}`
         )
-        .then((response) => {
-          setSuggestions(response.data);
-        })
-        .catch((error) => {
-          console.error("Error al buscar participantes:", error);
-        });
+        .then((res) => setSuggestions(res.data))
+        .catch((err) => console.error(err));
     }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
+    return () => clearTimeout(delay);
   }, [searchTerm, selectedUser]);
 
-  // Función para agregar un acceso al array cuando se selecciona un usuario
+  // Agrega o actualiza permiso
   const handleAddAcceso = (user) => {
-    const newAcceso = {
-      nombre: user.Nombre,
-      correo: user.Correo,
-      nivelAcceso: Number(nivelAcceso),
-      problema: problemaIshikawa
-    };
-
-    setAccesos([...accesos, newAcceso]);
+    const nivel = soloLectura ? 1 : 2;
+    setAccesos((prev) => {
+      const idx = prev.findIndex((a) => a.correo === user.Correo);
+      if (idx !== -1) {
+        // actualiza nivel existente
+        const updated = [...prev];
+        updated[idx].nivelAcceso = nivel;
+        return updated;
+      }
+      // agrega nuevo
+      return [
+        ...prev,
+        {
+          nombre: user.Nombre,
+          correo: user.Correo,
+          nivelAcceso: nivel,
+          problema: problemaIshikawa,
+        },
+      ];
+    });
     setSelectedUser(user);
     setSearchTerm("");
-    setSuggestions([]);
   };
 
-  // Permite remover un acceso del array
-  const handleRemoveAcceso = (indexToRemove) => {
-    const updatedAccesos = accesos.filter((_, index) => index !== indexToRemove);
-    setAccesos(updatedAccesos);
+  const handleRemoveAcceso = (correo) => {
+    setAccesos((prev) => prev.filter((a) => a.correo !== correo));
   };
 
-  // En el submit se envía el array de accesos
+  const handleNivelChange = (correo, nuevoNivel) => {
+    if (soloLectura) return;
+    setAccesos((prev) =>
+      prev.map((a) =>
+        a.correo === correo ? { ...a, nivelAcceso: Number(nuevoNivel) } : a
+      )
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    if (!idIshikawa || idIshikawa.trim() === "") {
-      handleClose();
+
+    if (!idIshikawa) {
       Swal.fire({
         icon: "warning",
         title: "Selecciona un Ishikawa",
         text: "Debes seleccionar un Ishikawa antes de asignar accesos.",
       });
-      return; // Evita que continúe con la solicitud
+      return;
     }
-
-    if (accesos.some(acceso => acceso.nombre === userData.Nombre)) {
-      handleClose();
+    if (accesos.some((a) => a.correo === userData.Correo)) {
       Swal.fire({
         icon: "warning",
         title: "Acceso denegado",
         text: "No puede darse acceso a sí mismo.",
       });
       return;
-    }    
-  
+    }
     try {
       await axios.put(
         `${process.env.REACT_APP_BACKEND_URL}/ishikawa/acceso/${idIshikawa}`,
         { acceso: accesos }
       );
-  
-      // Notificación de éxito
       Swal.fire({
         icon: "success",
         title: "Acceso actualizado",
         text: "Los permisos fueron asignados correctamente.",
-        timer: 3000,
+        timer: 2000,
         showConfirmButton: false,
       });
-  
-      handleClose(); // Cierra el modal después de guardar
+      handleClose();
     } catch (error) {
-      console.error("Error al actualizar el acceso:", error);
-  
-      // Notificación de error
+      console.error(error);
       Swal.fire({
         icon: "error",
         title: "Error",
         text: "Hubo un problema al actualizar el acceso.",
       });
     }
-  };  
+  };
 
   return (
     <Modal open={open} onClose={handleClose}>
@@ -141,78 +165,97 @@ const AccesoModal = ({ open, handleClose, idIshikawa, problemaIshikawa}) => {
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          width: 400,
+          width: 500,
           bgcolor: "background.paper",
           boxShadow: 24,
           p: 4,
-          borderRadius: 2
+          borderRadius: 2,
         }}
       >
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" mb={2}>
           Asignar Acceso
         </Typography>
         <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
+            label="Buscar usuario"
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              setSelectedUser(null); // Resetea el usuario seleccionado al cambiar el input
+              setSelectedUser(null);
             }}
-            placeholder="Buscar nombre..."
             margin="normal"
           />
 
           {suggestions.length > 0 && (
             <Paper
-              style={{
-                maxHeight: "10rem",
-                overflowY: "auto",
-                marginBottom: "1rem",
-                cursor: "pointer"
-              }}
+              sx={{ maxHeight: 200, overflowY: "auto", my: 1, cursor: "pointer" }}
             >
               <List>
-                {suggestions.map((participant, index) => (
+                {suggestions.map((u) => (
                   <ListItem
                     button
-                    key={index}
-                    onClick={() => handleAddAcceso(participant)}
+                    key={u.Correo}
+                    onClick={() => handleAddAcceso(u)}
                   >
-                    {participant.Nombre}
+                    <ListItemText primary={u.Nombre} secondary={u.Correo} />
                   </ListItem>
                 ))}
               </List>
             </Paper>
           )}
 
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Nivel de Acceso</InputLabel>
-            <Select
-              name="nivelAcceso"
-              value={nivelAcceso}
-              onChange={(e) => setNivelAcceso(e.target.value)}
+          {/* Lista de accesos */}
+          {accesos.length > 0 && (
+            <>
+              <Typography variant="subtitle1" mt={2}>
+                Usuarios con acceso
+              </Typography>
+              <List>
+                {accesos.map((a) => (
+                  <ListItem
+                    key={a.correo}
+                    secondaryAction={
+                      <IconButton edge="end" onClick={() => handleRemoveAcceso(a.correo)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    }
+                  >
+                    <ListItemText
+                      primary={a.nombre}
+                      secondary={a.correo}
+                    />
+                    <FormControl sx={{ minWidth: 140 }}>
+                      <InputLabel>Permiso</InputLabel>
+                      <Select
+                        value={a.nivelAcceso}
+                        label="Permiso"
+                        disabled={soloLectura}
+                        onChange={(e) =>
+                          handleNivelChange(a.correo, e.target.value)
+                        }
+                      >
+                        <MenuItem value={1}>Solo Lectura</MenuItem>
+                        <MenuItem value={2}>Editar</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </ListItem>
+                ))}
+              </List>
+              <Divider sx={{ my: 2 }} />
+            </>
+          )}
+
+          <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
+            <Button onClick={handleClose}>Cancelar</Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={accesos.length === 0}
             >
-              <MenuItem value={1}>Solo Lectura</MenuItem>
-              <MenuItem value={2}>Editar</MenuItem>
-            </Select>
-          </FormControl>
-
-          {/* Mostrar accesos acumulados como chips */}
-          <Box sx={{ mt: 2, mb: 2 }}>
-            {accesos.map((acc, index) => (
-              <Chip
-              key={index}
-              label={`${acc.nombre} (${acc.nivelAcceso === 1 ? 'Solo Lectura' : 'Editar'})`}
-              onDelete={() => handleRemoveAcceso(index)}
-              sx={{ mr: 1, mb: 1 }}
-            />            
-            ))}
+              Guardar
+            </Button>
           </Box>
-
-          <Button type="submit" variant="contained" color="primary" fullWidth>
-            Guardar
-          </Button>
         </form>
       </Box>
     </Modal>
