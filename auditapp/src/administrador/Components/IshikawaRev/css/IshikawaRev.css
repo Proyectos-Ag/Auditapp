@@ -32,15 +32,15 @@
     height: 10rem;
 }
 
-.buttons-g{
+.buttons-g-r{
     position: absolute;
-    top: 10rem;
+    top: 16rem;
     display: flex;
     margin-left: 50rem;
     gap: 10px;
 }
 
-.buttons-g button{
+.buttons-g-r button{
     margin-top: 10px;
     width: 10rem;
     padding: 10px;
@@ -53,7 +53,7 @@
     z-index: 2;
 }
 
-.buttons-g button:hover{
+.buttons-g-r button:hover{
     background-color: #00804f;
 }
 

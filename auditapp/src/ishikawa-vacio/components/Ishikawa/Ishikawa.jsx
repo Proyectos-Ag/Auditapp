@@ -1,5 +1,10 @@
 import React, { useEffect,useContext, useState } from 'react';
 import axios from 'axios';
+import ShareIcon from '@mui/icons-material/Share';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import SaveIcon from '@mui/icons-material/Save';
+import SendIcon from '@mui/icons-material/Send';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import './css/Ishikawa.css'
 import Logo from "../assets/img/logoAguida.png";
 import Ishikawa from '../assets/img/Ishikawa-transformed.png';
@@ -8,10 +13,13 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import CircularProgress from '@mui/material/CircularProgress';
 import AccesoModal from './AccesoModal';
+import GestorIsh from './GestorIsh';
 import Busqueda from './Busqueda';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../../App';
-import { Chip, TextField, Paper, List, ListItem } from '@mui/material';
+import { Stack, Button, Chip, TextField, Paper, List, ListItem, Box,
+   Avatar, Tooltip, Typography } from '@mui/material';
+import Diagrama from '../DiagramaRe/Diagrama';
 
 const CreacionIshikawa = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -28,6 +36,7 @@ const CreacionIshikawa = () => {
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   //Acceso Modal
   const [modalOpen, setModalOpen] = useState(false);
+  const [showDiagrama, setShowDiagrama] = useState(false);
 
   const [formData, setFormData] = useState({
     problema: '',
@@ -40,6 +49,7 @@ const CreacionIshikawa = () => {
     participantes: '',
     correccion: '',
     causa: '',
+    estado: '',
     acceso: ishikawaRecords.acceso,
     nivelAcceso: ishikawaRecords.nivelAcceso
   });
@@ -66,6 +76,11 @@ const CreacionIshikawa = () => {
   const [actividades, setActividades] = useState([{ actividad: '', responsable: [], fechaCompromiso: '' }]);
 
   const fechaElaboracion = new Date().toISOString();
+
+  const [openGestor, setOpenGestor] = useState(false);
+
+  const handleOpen = () => setOpenGestor(true);
+  const handleClose = () => setOpenGestor(false);
 
   //folio
 
@@ -101,11 +116,10 @@ const CreacionIshikawa = () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
       const filtered = response.data.filter(item => {
-        const estadoValido = ["Rechazado", "Incompleto"].includes(item.estado);
         const auditadoMatch = item.auditado?.toLowerCase() === userData.Nombre?.toLowerCase();
         const accesoMatch = Array.isArray(item.acceso) &&
           item.acceso.some(acc => acc.nombre?.toLowerCase() === userData.Nombre?.toLowerCase());
-        return estadoValido && (auditadoMatch || accesoMatch);
+        return (auditadoMatch || accesoMatch);
       });
       setIshikawaRecords(filtered);
     } catch (error) {
@@ -120,8 +134,7 @@ const CreacionIshikawa = () => {
   }, [userData.Nombre]);
   
 
-  const handleSelectRecord = (e) => {
-    const selectedId = e.target.value;
+  const handleSelectRecord = (selectedId) => {
   
     if (selectedId === "") {
       // Si selecciona "Nuevo...", limpiamos el formulario
@@ -136,7 +149,8 @@ const CreacionIshikawa = () => {
         fecha: '',
         participantes: '',
         correccion: '',
-        causa: ''
+        causa: '',
+        estado: '',
       });
   
       setDiagrama([{
@@ -162,8 +176,15 @@ const CreacionIshikawa = () => {
       setIsEditing(false); // Cambiamos el modo a "creación"
     } else {
       const selectedRecord = ishikawaRecords.find(record => record._id === selectedId);
-    
+
+      console.log('Estado: ', selectedRecord.estado);
       if (selectedRecord) {
+        if (selectedRecord.estado !== 'Incompleto'  && 
+          selectedRecord.estado !== 'Rechazado') {
+          setShowDiagrama(true);
+        } else {
+          setShowDiagrama(false);
+        }
         setSelectedRecordId(selectedId);
         setFormData({
           problema: selectedRecord.problema || '',
@@ -176,6 +197,7 @@ const CreacionIshikawa = () => {
           participantes: selectedRecord.participantes || '',
           correccion: selectedRecord.correccion || '',
           causa: selectedRecord.causa || '',
+          estado: selectedRecord.estado || '',
           notaRechazo: selectedRecord.notaRechazo || '',
           acceso: selectedRecord.acceso || '',
           nivelAcceso: selectedRecord.nivelAcceso || ''
@@ -201,11 +223,17 @@ const CreacionIshikawa = () => {
         }]);
     
         setActividades(selectedRecord.actividades || [{ actividad: '', responsable: [], fechaCompromiso: '' }]);
+        // Actualizar participantes seleccionados
+      const participantesArray = selectedRecord.participantes
+      ? selectedRecord.participantes.split(" / ").map((nombre) => ({ Nombre: nombre.trim() }))
+      : [];
+
+        setSelectedParticipants(participantesArray);
         setIsEditing(true); // Modo edición activado
+        setOpenGestor(false);
       }
     }
   };
-  
 
   const handleDiagrama = (e) => {
     const { name, value } = e.target;
@@ -256,7 +284,7 @@ const CreacionIshikawa = () => {
   
       // Solo procede si el usuario confirma
       if (result.isConfirmed) {
-        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/vac`, data);
         Swal.fire('Enviado', 'El diagrama ha sido enviado.', 'success');
         navigate('/diagramas');
       }
@@ -270,7 +298,6 @@ const CreacionIshikawa = () => {
       // Se arma el objeto de datos con todos los campos inicialmente.
       const data = {
         fecha: formData.fecha,
-        folio: generateFolio(userData),
         problema: formData.problema,
         requisito: formData.requisito,
         auditado: userData.Nombre,
@@ -301,7 +328,8 @@ const CreacionIshikawa = () => {
         Swal.fire('Cambios Actualizados', 'El registro ha sido actualizado.', 'success');
       } else {
         // Creando un nuevo registro
-        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+        data.folio = generateFolio(userData);
+        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/vac`, data);
         setSelectedRecordId(response.data._id);
         Swal.fire('Registro Guardado', 'El nuevo registro ha sido creado.', 'success');
       }
@@ -851,10 +879,37 @@ useEffect(() => {
     textareas.forEach((textarea) => ajustarTamanoFuente(textarea));
 }, [selectedRecordId]);
 
-  return (
-    <div>
+const puedeEditar = (
+  !formData.estado || 
+  formData.estado === 'Incompleto' || 
+  formData.estado === 'Rechazado'
+) && !isReadOnly;
 
-    <button className='button-pdf-imp' style={{top:'6em'}} onClick={handlePrintPDF}>Guardar en PDF</button>
+const handleCloseModal = async () => {
+  setModalOpen(false);
+  await fetchIshikawaRecords();
+};
+
+if (true) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }} >
+      <h1
+        style={{
+          fontSize: '3rem',
+          color: '#ff5252',
+          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)',
+          fontFamily: "'Arial Black', sans-serif",
+          animation: 'fadeIn 2s ease-in-out'
+        }}
+      >
+        🚧 En mantenimiento 🚧
+      </h1>
+    </div>
+  );
+}
+
+  return (
+    <div className="content-diagrama">
 
       <form onSubmit={(e) => {
           e.preventDefault(); // Prevenir el envío automático del formulario
@@ -866,29 +921,93 @@ useEffect(() => {
         }}>
           
       <div>
+        {console.log('estado seleccionado: ', formData.estado)}
+      <Stack
+        className="acciones-ish-container"
+        direction="row"
+        spacing={2}
+        justifyContent="space-between"
+        alignItems="center"
+      >
+        <Button
+          variant="text"
+          sx={{ color: 'white' }}
+          startIcon={<AccountTreeIcon />}
+          onClick={handleOpen}
+        >
+          Diagrama
+        </Button>
+
+        {!(Array.isArray(formData.acceso) &&
+          formData.acceso.some(acc => acc.nombre?.toLowerCase() === userData.Nombre?.toLowerCase())) && (
+          <Button
+            variant="text"
+            sx={{ color: 'white' }} 
+            startIcon={<ShareIcon />}
+            onClick={e => { e.preventDefault(); setModalOpen(true); }}
+          >
+            Compartir
+          </Button>
+        )}
+
+        <Button
+          variant="text"
+          sx={{ color: 'white' }}
+          startIcon={<PictureAsPdfIcon />}
+          onClick={handlePrintPDF}
+          disabled={formData.estado !== '' && 
+            formData.estado !== 'Aprobado' &&
+            formData.estado !== 'Finalizado'}
+        >
+          Generar PDF
+        </Button>
+
+        <Button
+          variant="text"
+          sx={{ color: 'white' }}
+          startIcon={<SaveIcon />}
+          onClick={e => { e.preventDefault(); handleSaveAdvance(); }}
+          disabled={!puedeEditar}
+        >
+          Guardar
+        </Button>
+
+        <Button
+          variant="text"
+          sx={{ color: 'white' }}
+          endIcon={<SendIcon />}
+          type="submit"
+          disabled={!puedeEditar}
+        >
+          Enviar
+        </Button>
+
+        {/* Modales y gestores */}
+        <GestorIsh
+          open={openGestor}
+          onClose={handleClose}
+          onSelect={handleSelectRecord}
+        />
+
+        <AccesoModal
+          open={modalOpen}
+          handleClose={handleCloseModal}
+          idIshikawa={selectedRecordId}
+          problemaIshikawa={formData.problema}
+          estado={formData.estado}
+        />
+      </Stack>
 
       {/*Mensaje de generacion*/}
-    {isLoading && (
-        <div className="loading-overlay">
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <CircularProgress variant="determinate" value={progress} />
-                <p>{progress}%</p>
-                <p>Generando PDF</p> {/* Muestra el porcentaje debajo del spinner */}
+        {isLoading && (
+            <div className="loading-overlay">
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <CircularProgress variant="determinate" value={progress} />
+                    <p>{progress}%</p>
+                    <p>Generando PDF</p> {/* Muestra el porcentaje debajo del spinner */}
+                </div>
             </div>
-         </div>
-    )}
-      
-      <div style={{textAlign:'center', marginTop: '7rem', marginBottom:'-5rem'}}>
-      <h2>Seleccionar un Registro de Ishikawa:</h2>
-        <select className='selector-ish' onChange={handleSelectRecord} value={selectedRecordId || ''}>
-          <option value="">Nuevo...</option>
-          {ishikawaRecords.map(record => (
-            <option key={record._id} value={record._id}>
-             {record.estado === 'Incompleto' ? `Continuar: ${record.problema}` : `Corregir: ${record.problema}`}
-            </option>
-          ))}
-        </select>
-        </div>
+        )}
 
         {formData.notaRechazo ? (
           <div className='th-comentario'>
@@ -896,35 +1015,52 @@ useEffect(() => {
           </div>
          ): ''}
 
-        <div className="content-diagrama">
-        <div>
-        {!(Array.isArray(formData.acceso) &&
-            formData.acceso.some(acc => acc.nombre?.toLowerCase() === userData.Nombre?.toLowerCase())) && (
-            <button className='button-perm' onClick={(e) => { e.preventDefault(); setModalOpen(true); }}>
-              Asignar Acceso
-            </button>
-          )}
-
-          <AccesoModal open={modalOpen} handleClose={() => setModalOpen(false)} idIshikawa={selectedRecordId} problemaIshikawa={formData.problema}/>
-        </div>
 
         {isReadOnly && (
         <div style={{ color: 'red', marginBottom: '1rem' }}>
           Modo lectura: no se permiten cambios.
         </div>
       )}
-         <p>
-          Acceso:{" "}
-          {formData.acceso && Array.isArray(formData.acceso) && formData.acceso.length > 0 ? (
-            formData.acceso.map((acc, index) => (
-              <span key={index}>
-                {acc.nombre} (Nivel: {acc.nivelAcceso}) {index < formData.acceso.length - 1 ? ", " : ""}
-              </span>
+         <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 1,
+            my: 2
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ mr: 1 }}>
+            Acceso:
+          </Typography>
+
+          {Array.isArray(formData.acceso) && formData.acceso.length > 0 ? (
+            formData.acceso.map((acc) => (
+              <Tooltip
+                key={acc.nombre}
+                title={`Nivel de acceso: ${acc.nivelAcceso}`}
+                arrow
+              >
+                <Chip
+                  avatar={<Avatar>{acc.nombre.charAt(0).toUpperCase()}</Avatar>}
+                  label={acc.nombre}
+                  variant="outlined"
+                  size="small"
+                />
+              </Tooltip>
             ))
           ) : (
-            "NA"
+            <Typography color="text.secondary" variant="body2">
+              NA
+            </Typography>
           )}
-        </p>
+        </Box>
+
+        {showDiagrama === true ? (
+          <Diagrama recordId={selectedRecordId} />
+        ) : (
+
+        <div className="edit-container">
 
         <div id='pdf-content-part1' className="image-container-dia" >
         <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
@@ -1154,13 +1290,9 @@ useEffect(() => {
             }} className='button-agregar' disabled={isReadOnly}>Agregar Fila</button>
           </div>
           </div>
-          <button type='submit'className='button-guardar-camb-ish'  onClick={(e) => {
-            e.preventDefault();handleSaveAdvance(); } } disabled={isReadOnly}>Guardar Cambios</button>
-          
-            <button type='submit' className='button-generar-ish'>Enviar</button>
-          
+          </div>
+        )}
         </div>
-      </div>
     </form>
     </div>
   );

@@ -1040,7 +1040,7 @@ const ocultarCargando = () => {
                                 </div>
                             )}
                             
-                            <div className='buttons-g'>
+                            <div className='buttons-g-r'>
                                 <button onClick={() => setShowNotaRechazo(!showNotaRechazo)}>
                                     {showNotaRechazo ? 'Ocultar Nota' : 'Nota'}
                                 </button>

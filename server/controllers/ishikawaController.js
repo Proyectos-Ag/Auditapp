@@ -12,6 +12,54 @@ const upload = multer({ storage: storage });
 
 const crearIshikawa = async (req, res) => {
   try {
+      const newIshikawa = new Ishikawa(req.body);
+      console.log(req.body);
+      
+      await newIshikawa.save();
+
+      // Enviar correo para notificar la asignación de un diagrama
+      const auditado = newIshikawa.auditado;
+      const correo = newIshikawa.correo;
+      const proName = newIshikawa.proName;
+      
+      console.log('Auditado:', auditado, 'Correo:', correo, 'Programa:', proName);
+
+      const templatePathAsignacion = path.join(__dirname, 'templates', 'asignacion-ishikawa.html');
+      const emailTemplateAsignacion = fs.readFileSync(templatePathAsignacion, 'utf8');
+      const customizedTemplateAsignacion = emailTemplateAsignacion
+      .replace('{{usuario}}', auditado)
+      .replace('{{programa}}', proName);
+
+      const mailOptionsAsignacion = {
+        from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
+        to: correo,
+        subject: 'Se te ha asignado un nuevo Ishikawa',
+        html: customizedTemplateAsignacion,
+        attachments: [
+          {
+            filename: 'logoAguida.png',
+            path: path.join(__dirname, '../assets/logoAguida-min.png'),
+            cid: 'logoAguida' 
+          }
+        ]
+      }; 
+      
+      transporter.sendMail(mailOptionsAsignacion, (error, info) => {
+        if (error) {
+          console.error('Error al enviar el correo electrónico:', error);
+        } else {
+          console.log('Correo electrónico enviado:', info.response);
+        }
+      });
+      
+      res.status(200).json(newIshikawa);
+  } catch (error) {
+      res.status(400).json({ error: error.message });
+  }
+};
+
+const crearIshikawa2 = async (req, res) => {
+  try {
     const { folio: prefixRaw, ...restBody } = req.body;
     // Asegurar que el prefijo termine en '-'
     const prefix = prefixRaw.endsWith('-') ? prefixRaw : `${prefixRaw}-`;
@@ -341,7 +389,6 @@ const actualizarFechaCompromiso = async (req, res) => {
 };
 
 
-
   const obtenerIshikawaPorDato = async (req, res) => {
     try {
       const { _id } = req.params;
@@ -361,7 +408,47 @@ const actualizarFechaCompromiso = async (req, res) => {
   } catch (error) {
       res.status(500).json({ error: error.message });
   }
-  };  
+  }; 
+  
+  //Nuevo Gestor de registros Ishikawa
+  const obtenerIshikawaVacioEsp = async (req, res) => {
+    try {
+      const { nombre } = req.query;
+      console.log(`nombre: ${nombre}`);
+      // Filtrar los Ishikawas donde idRep sea igual al id de la URL
+      const ishikawas = await Ishikawa.find({ tipo: 'vacio',
+        $or: [
+          { auditado: nombre },                 // el usuario es dueño
+          { 'acceso.nombre': nombre }           // el usuario está en el array de acceso
+        ]
+       }, 
+      '_id problema auditado acceso estado createdAt');
+
+      if (ishikawas.length === 0) {
+          return res.status(200).json([]); // Devuelve un array vacío
+      }
+
+      // Devolver los registros encontrados
+      res.status(200).json(ishikawas);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+  };
+
+  const getAccesosByIshikawa = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      console.log(`ID de Ishikawa recibido: ${req.params.id}`);
+      const ishikawa = await Ishikawa.findById(id).select('acceso');
+      if (!ishikawa) {
+        return res.status(404).json({ message: 'Ishikawa no encontrado' });
+      }
+      // suponemos que el campo en tu schema es 'acceso'
+      res.json({ acceso: ishikawa.acceso || [] });
+    } catch (err) {
+      next(err);
+    }
+  };
 
   const obtenerIshikawaVista = async (req, res) => {
     try {
@@ -431,7 +518,8 @@ const obtenerIshikawaEspInc = async (req, res) => {
 const obtenerIshikawaEsp = async (req, res) => {
   try {
     // Selecciona solo los campos que desean incluir en la respuesta
-    const ishikawas = await Ishikawa.find({ tipo: 'vacio' },'_id auditado fecha estado'); 
+    const ishikawas = await Ishikawa.find({ tipo: 'vacio', estado: { $ne: 'Incompleto' }
+    },'_id auditado fecha estado'); 
 
     res.status(200).json(ishikawas);
   } catch (error) {
@@ -709,74 +797,79 @@ const enviarPDFDos = async (req, res) => {
 // Controlador: actualizarAcceso
 const actualizarAcceso = async (req, res) => {
   const { id } = req.params;
-  const { acceso: accesosEmail } = req.body;    // renombramos aquí
-
-  console.log('Datos recibidos para acceso:', accesosEmail);
+  const { acceso: accesosEmail = [] } = req.body;
 
   if (!Array.isArray(accesosEmail)) {
-    return res.status(400).json({ message: "El campo acceso debe ser un array" });
+    return res.status(400).json({ message: 'El campo acceso debe ser un array' });
   }
 
-  // Preparo lo que realmente voy a guardar en Mongo
+  // Preparo la data que quiero guardar en DB
   const accesosParaDB = accesosEmail.map(a => ({
-    nombre:     a.nombre,
-    correo:     a.correo,
-    nivelAcceso:Number(a.nivelAcceso)
+    nombre: a.nombre,
+    correo: a.correo,
+    nivelAcceso: Number(a.nivelAcceso)
   }));
 
   try {
-    const ishikawa = await Ishikawa.findByIdAndUpdate(
-      id,
-      { $push: { acceso: { $each: accesosParaDB } } },
-      { new: true }
-    );
-
-    if (!ishikawa) {
-      return res.status(404).json({ message: "Registro no encontrado" });
+    // 1) Obtengo el registro previo para comparar
+    const ishikawaPrevio = await Ishikawa.findById(id).select('acceso problema');
+    if (!ishikawaPrevio) {
+      return res.status(404).json({ message: 'Registro no encontrado' });
     }
 
-    // Cargo la plantilla de correo
-    const templatePath   = path.join(__dirname, 'templates', 'notificacion-acceso.html');
-    const emailTemplate  = fs.readFileSync(templatePath, 'utf8');
+    const prevAccesos = ishikawaPrevio.acceso.map(a => ({ correo: a.correo, nivelAcceso: a.nivelAcceso }));
+    const problema = ishikawaPrevio.problema;
 
-    // Envío un correo por cada acceso nuevo
-    accesosEmail.forEach(({ nombre, correo, nivelAcceso, problema }) => {
-      const nivelTexto = Number(nivelAcceso) === 1
-        ? "Solo Lectura"
-        : "Editor";
+    // 2) Reemplazo todo el array de acceso
+    ishikawaPrevio.acceso = accesosParaDB;
+    const ishikawaActualizado = await ishikawaPrevio.save();
 
-      const customized = emailTemplate
-        .replace('{{usuario}}',     nombre)
-        .replace('{{problema}}',    problema || '')
-        .replace('{{nivelAcceso}}', nivelTexto);
-
-      const mailOptions = {
-        from:    `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
-        to:      correo,
-        subject: "Se te ha otorgado acceso a un Ishikawa",
-        html:    customized,
-        attachments: [{
-          filename: 'logoAguida.png',
-          path:     path.join(__dirname, '../assets/logoAguida-min.png'),
-          cid:      'logoAguida'
-        }]
-      };
-
-      transporter.sendMail(mailOptions, (err, info) => {
-        if (err) console.error(`Error al enviar a ${correo}:`, err);
-        else     console.log(`Correo enviado a ${correo}:`, info.response);
-      });
+    // 3) Comparo antiguos vs nuevos:
+    // Usuarios nuevos: en accesosParaDB pero no en prevAccesos
+    const nuevos = accesosParaDB.filter(a => !prevAccesos.some(o => o.correo === a.correo));
+    // Usuarios que cambiaron nivel: en ambos pero con nivel distinto
+    const nivelCambiado = accesosParaDB.filter(a => {
+      const old = prevAccesos.find(o => o.correo === a.correo);
+      return old && old.nivelAcceso !== a.nivelAcceso;
     });
 
-    return res
-      .status(200)
-      .json({ message: "Acceso actualizado y correos enviados", ishikawa });
+    // Cargo plantilla de correo
+    const templatePath = path.join(__dirname, 'templates', 'notificacion-acceso.html');
+    const emailTemplate = fs.readFileSync(templatePath, 'utf8');
 
+    // Función para enviar un correo personalizado
+    const sendNotification = ({ nombre, correo, nivelAcceso }, motivo) => {
+      const nivelTexto = nivelAcceso === 1 ? 'Solo Lectura' : 'Editor';
+      let customized = emailTemplate
+        .replace('{{usuario}}', nombre)
+        .replace('{{problema}}', problema || '')
+        .replace('{{nivelAcceso}}', nivelTexto)
+        .replace('{{motivo}}', motivo);
+
+      transporter.sendMail({
+        from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
+        to: correo,
+        subject: 'Notificación de acceso a Ishikawa',
+        html: customized,
+        attachments: [{
+          filename: 'logoAguida.png',
+          path: path.join(__dirname, '../assets/logoAguida-min.png'),
+          cid: 'logoAguida'
+        }]
+      }, (err, info) => {
+        if (err) console.error(`Error al enviar a ${correo}:`, err);
+        else console.log(`Correo enviado a ${correo}:`, info.response);
+      });
+    };
+
+    // 4) Envío correos solo a nuevos y a quienes subieron/bajaron nivel
+    nuevos.forEach(acc => sendNotification(acc, 'te han otorgado acceso'));
+    nivelCambiado.forEach(acc => sendNotification(acc, 'se ha modificado tu nivel de acceso'));
+
+    return res.status(200).json({ message: 'Accesos sincronizados', ishikawa: ishikawaActualizado });
   } catch (error) {
-    console.error("Error al actualizar el acceso:", error);
-    return res
-      .status(500)
-      .json({ message: "Error al actualizar", error: error.message });
+    console.error('Error al actualizar el acceso:', error);
+    return res.status(500).json({ message: 'Error interno', error: error.message });
   }
 };
 
@@ -908,5 +1001,8 @@ const updateConcluido = async (req, res) => {
     deleteIshikawa,
     obtenerIshikawaEspInc,
     getActivitiesByUsername,
-    updateConcluido
+    updateConcluido,
+    obtenerIshikawaVacioEsp,
+    getAccesosByIshikawa,
+    crearIshikawa2
   };

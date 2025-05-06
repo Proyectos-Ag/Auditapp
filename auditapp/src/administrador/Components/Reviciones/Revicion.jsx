@@ -374,15 +374,20 @@ const Reporte = () => {
 
                     dato.Programa.forEach(programa => {
                         programa.Descripcion.forEach(desc => {
-                            if (desc.Criterio && desc.Criterio !== 'NA') {
-                                if (!conteo[desc.Criterio]) {
-                                    conteo[desc.Criterio] = 0;
-                                }
-                                conteo[desc.Criterio]++;
-                                total++;
-                            }
+                          const crit = desc.Criterio;
+                          // Solo contamos si no es undefined/null, no es 'NA' y no es 'O'/'o'
+                          if (
+                            crit &&
+                            crit !== 'NA' &&
+                            crit.toLowerCase() !== 'o'
+                          ) {
+                            // Conteo por criterio (incluye cualquier otra letra distinta de 'O'/'o')
+                            conteo[crit] = (conteo[crit] || 0) + 1;
+                            // Sólo incrementamos el total si pasa esas mismas condiciones
+                            total++;
+                          }
                         });
-                    });
+                      });
 
                     const puntosObtenidos = calcularPuntosTotales(conteo);
                     const conteoCriteriosTabla = conteoCriteriosOcultos[periodIdx] || { m: 0, M: 0, C: 0 };
