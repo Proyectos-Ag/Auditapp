@@ -116,7 +116,7 @@ const IshikawaRev = () => {
                 }
             });
 
-            console.log("id requisito", id);
+            console.log("Datos usados:", _id, id, nombre);
 
             if (response.data) {
                 setPrograma(response.data.programaEncontrado);
@@ -748,6 +748,7 @@ const verificarRegistro = async () => {
 const handleSave = async () => {
     const hallazgoAplanado = descripcion.Hallazgo.flat();
     const hallazgoString = hallazgoAplanado.join(' ');
+    console.log('Hallazgo:', hallazgoString);
         try {
             const data = {
                 idRep: _id,

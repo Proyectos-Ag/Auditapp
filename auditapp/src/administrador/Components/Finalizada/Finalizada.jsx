@@ -274,7 +274,7 @@ const Finalizada = () => {
                                         <div className="grupo-derecha">
                                         {dato.Cliente && (
                                             <div className="dato-right">
-                                                <span className="bold-text">Fecha de evaluación de auditoría:</span> {formatDate(dato.FechaEvaluacion)}
+                                                <span className="bold-text">Fecha de evaluación de auditoría:</span> {(dato.FechaEvaluacion)}
                                             </div>
                                             )}
                                             <div className="dato-right">

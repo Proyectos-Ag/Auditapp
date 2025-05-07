@@ -164,7 +164,7 @@ const CargaMasiva = () => {
           FechaFin: convertExcelDateToJSDate(mainData.FechaFin),
           Duracion: mainData.Duracion,
           Cliente: mainData.Cliente,
-          FechaEvaluacion: convertExcelDateToJSDate(mainData.FechaEvaluacion),
+          FechaEvaluacion: mainData.FechaAuditoria,
           Departamento: mainData.Departamento,
           Alcance: mainData.Alcance,
           Auditados: [],
@@ -207,14 +207,19 @@ const CargaMasiva = () => {
           }
 
           if (row.Programa_Nombre) {
+            // Normalizamos el ID: sustituimos saltos de línea (\r, \n) por espacios simples
+            const cleanID = String(row.Programa_ID || '')
+              .replace(/[\r\n]+/g, ' ')  // todos los saltos de línea → espacios
+              .trim();                   // quitamos espacios al principio/final
+          
             programa.Descripcion.push({
-              ID: row.Programa_ID,
+              ID: cleanID,
               Criterio: row.Programa_Criterio,
               Requisito: row.Programa_Descripcion_Requisito,
               Observacion: row.Programa_Observacion || row.Programa_problema || '',
               Hallazgo: row.Programa_Hallazgo || '',
             });
-          }
+          }          
 
           if (row.EquipoAuditor_Nombre && row.EquipoAuditor_Correo) {
             currentAudit.EquipoAuditor.push({
