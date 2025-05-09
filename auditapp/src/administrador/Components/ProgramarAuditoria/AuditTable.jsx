@@ -232,8 +232,17 @@ const AuditTable = () => {
     }
   };
 
-  const audits2024 = audits.filter((audit) => new Date(audit.fechaInicio).getFullYear() === 2024);
-  const audits2025 = audits.filter((audit) => new Date(audit.fechaInicio).getFullYear() === 2025);
+  // Función para ordenar las auditorías por mes de forma ascendente
+  const sortAuditsByMonth = (auditsArray) => {
+    return auditsArray.sort((a, b) => {
+      const dateA = new Date(a.fechaInicio);
+      const dateB = new Date(b.fechaInicio);
+      return dateA.getMonth() - dateB.getMonth() || dateA.getDate() - dateB.getDate();
+    });
+  };
+
+  const audits2024 = sortAuditsByMonth(audits.filter((audit) => new Date(audit.fechaInicio).getFullYear() === 2024));
+  const audits2025 = sortAuditsByMonth(audits.filter((audit) => new Date(audit.fechaInicio).getFullYear() === 2025));
 
   return (
     <div className="audit-table-container">
@@ -288,7 +297,21 @@ const AuditTable = () => {
                   {audits2024.map((audit) => (
                     <tr key={audit._id}>
                       <td>{audit.cliente}</td>
-                      <td>{audit.fechaInicio} - {audit.fechaFin}</td>
+                      <td>
+                        {new Intl.DateTimeFormat("es-ES", {
+                          timeZone: "UTC",
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        }).format(new Date(audit.fechaInicio))}
+                        {" - "}
+                        {new Intl.DateTimeFormat("es-ES", {
+                          timeZone: "UTC",
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        }).format(new Date(audit.fechaFin))}
+                      </td>
                       <td>{audit.modalidad}</td>
                       <td className={`status ${audit.status.toLowerCase().replace(/ /g, '-')}`}>
                         {audit.status}
@@ -343,7 +366,7 @@ const AuditTable = () => {
                     <option value="Programada">Programada</option>
                     <option value="Por Confirmar">Por Confirmar</option>
                     <option value="En Curso">En Curso</option>
-                    <option value="Cancelada">Cancelada</option>
+                    <option value="No ejecutada">No ejecutada</option>
                   </select>
                 ) : (
                   audit.status
@@ -409,7 +432,7 @@ const AuditTable = () => {
                 <option value="Programada">Programada</option>
                 <option value="Por Confirmar">Por Confirmar</option>
                 <option value="En Curso">En Curso</option>
-                <option value="Cancelada">Cancelada</option>
+                <option value="No ejecutada">No ejecutada</option>
               </select>
             </td>
             <td>
