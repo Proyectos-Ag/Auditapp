@@ -277,46 +277,56 @@ const [auditToDelete, setAuditToDelete] = useState(null);
   };
 
   const registerAudit = async () => {
-    if (!newAudit.cliente || !newAudit.fechaInicio || !newAudit.fechaFin) {
-      setSuccessMessage('⚠️ Complete todos los campos requeridos');
-      return;
-    }
-  
-    if (new Date(newAudit.fechaInicio) > new Date(newAudit.fechaFin)) {
-      setSuccessMessage('⚠️ Fecha inicio no puede ser posterior a fecha fin');
-      return;
-    }
-  
-    const tempId = Date.now().toString();
-    const newAuditEntry = { ...newAudit, _id: tempId };
-    setAudits([...audits, newAuditEntry]);
-  
-    try {
-      setLoading(true);
-      const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits`,
-        newAudit
-      );
-      
-      setAudits(prev => prev.map(audit => audit._id === tempId ? response.data : audit));
-      setSuccessMessage('✅ Auditoría registrada correctamente');
-      
-      setNewAudit({
-        cliente: "",
-        fechaInicio: "",
-        fechaFin: "",
-        modalidad: "Presencial",
-        status: "Realizada",
-      });
-    } catch (error) {
-      console.error("Error al agregar auditoría:", error);
-      setAudits(audits.filter(audit => audit._id !== tempId));
-      setSuccessMessage('❌ Error al registrar auditoría');
-    } finally {
-      setLoading(false);
-    }
+  if (!newAudit.cliente || !newAudit.fechaInicio || !newAudit.fechaFin) {
+    setSuccessMessage('⚠️ Complete todos los campos requeridos');
+    return;
+  }
+
+  // Convertir fechas a UTC para evitar problemas de zona horaria
+  const fechaInicioUTC = new Date(newAudit.fechaInicio);
+  const fechaFinUTC = new Date(newAudit.fechaFin);
+
+  if (fechaInicioUTC > fechaFinUTC) {
+    setSuccessMessage('⚠️ Fecha inicio no puede ser posterior a fecha fin');
+    return;
+  }
+
+  // Ajustar las fechas para que se guarden correctamente en la base de datos
+  const auditData = {
+    ...newAudit,
+    fechaInicio: fechaInicioUTC.toISOString().split('T')[0],
+    fechaFin: fechaFinUTC.toISOString().split('T')[0]
   };
 
+  const tempId = Date.now().toString();
+  const newAuditEntry = { ...auditData, _id: tempId };
+  setAudits([...audits, newAuditEntry]);
+
+  try {
+    setLoading(true);
+    const response = await axios.post(
+      `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits`,
+      auditData
+    );
+    
+    setAudits(prev => prev.map(audit => audit._id === tempId ? response.data : audit));
+    setSuccessMessage('✅ Auditoría registrada correctamente');
+    
+    setNewAudit({
+      cliente: "",
+      fechaInicio: "",
+      fechaFin: "",
+      modalidad: "Presencial",
+      status: "Realizada",
+    });
+  } catch (error) {
+    console.error("Error al agregar auditoría:", error);
+    setAudits(audits.filter(audit => audit._id !== tempId));
+    setSuccessMessage('❌ Error al registrar auditoría');
+  } finally {
+    setLoading(false);
+  }
+};
   const handleEditClick = (auditId) => {
     const audit = audits.find(a => a._id === auditId);
     setEditStatus({
@@ -403,13 +413,17 @@ const [auditToDelete, setAuditToDelete] = useState(null);
     new Date(audit.fechaInicio).getFullYear() === 2025
   ));
 
-  const formatDate = (dateString) => {
-    return new Intl.DateTimeFormat("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric"
-    }).format(new Date(dateString));
-  };
+ const formatDate = (dateString) => {
+  // Asegurarse de que la fecha se interpreta correctamente
+  const date = new Date(dateString);
+  // Ajustar por zona horaria
+  const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(adjustedDate);
+};
 
   return (
     <ThemeProvider theme={theme}>
