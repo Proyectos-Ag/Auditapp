@@ -1,25 +1,95 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { IconButton } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import AutoGrowTextarea from '../../../resources/AutoGrowTextarea';
 import './css/NewIsh.css';
 
-export default function NewIshikawa({ diagrama, setDiagrama, problema, ID }) {
+export default function NewIshikawa({ diagrama, setDiagrama, problema, ID, onCausaChange, causa }) {
   const MAX_CAUSES = 3;
 
-  // Las claves de cada espina en el objeto diagrama[0]
-  const spineKeys = [
-    ['text10','text12','text14'],   // Materiales
-    ['text11','text13','text15'],   // Mano de obra
-    ['text7','text4','text1'],      // Máquinas
-    ['text8','text5','text2'],      // Medio ambiente
-    ['text9','text6','text3'],      // Métodos
-  ];
+  // Memoiza las claves de cada espina para que su identidad no cambie en cada render
+  const spineKeys = useMemo(
+    () => [
+      ['text10','text12','text14'],   // Materiales
+      ['text11','text13','text15'],   // Mano de obra
+      ['text7','text4','text1'],      // Máquinas
+      ['text8','text5','text2'],      // Medio ambiente
+      ['text9','text6','text3'],      // Métodos
+    ],
+    [] // solo calcular al montar
+  );
 
   // Estado local de listados de causas por espina
   const [causes, setCauses] = useState(spineKeys.map(() => []));
   const [formData, setFormData] = useState({ problema: problema || '', causa: '' });
   const [currentId, setCurrentId] = useState(null);
+  // Para almacenar textareas seleccionados
+  const [selectedTextareas, setSelectedTextareas] = useState(new Set());
+  const wrapperRef = useRef(null);
+
+  // Handler de doble clic para seleccionar/deseleccionar causa
+  useEffect(() => {
+    if (!wrapperRef.current) return;
+
+    // Primero desenfondo todo lo marcado antes
+    selectedTextareas.forEach(txt => {
+      txt.style.backgroundColor = '';
+      txt.style.borderRadius = '';
+    });
+    const nuevaSeleccion = new Set();
+    console.log('Causa: ', causa);
+
+    // Partimos el string recibido
+    const valores = causa
+      .split(';')
+      .map(v => v.trim())
+      .filter(v => v);
+
+    // Recorremos todos los inputs de causa
+    const nodes = wrapperRef.current.querySelectorAll('textarea.cause-input');
+    nodes.forEach(node => {
+      if (valores.includes(node.value.trim())) {
+        node.style.backgroundColor = '#f1fc5e9f';
+        node.style.borderRadius = '10px';
+        nuevaSeleccion.add(node);
+      }
+    });
+
+    // Actualizamos el set para que tu handleDoubleClick respete la selección
+    setSelectedTextareas(nuevaSeleccion);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [causes, causa]);
+
+  const handleDoubleClick = (e) => {
+    const textarea = e.target;
+
+    setSelectedTextareas(prev => {
+      const nuevoSet = new Set(prev);
+
+      if (nuevoSet.has(textarea)) {
+        nuevoSet.delete(textarea);
+        textarea.style.backgroundColor = '';
+        textarea.style.borderRadius = '';
+      } else {
+        nuevoSet.add(textarea);
+        textarea.style.backgroundColor = '#f1fc5e9f';
+        textarea.style.borderRadius = '10px';
+      }
+
+      const arr = Array.from(nuevoSet)
+        .map(t => t.value.trim())
+        .filter(v => v);
+      const nuevaCausaStr = Array.from(new Set(arr)).join('; ');
+
+      setFormData(fd => ({ ...fd, causa: nuevaCausaStr }));
+      onCausaChange(nuevaCausaStr);
+
+      return nuevoSet;
+    });
+
+    textarea.select();
+  };
 
   // Cuando cambie de registro (ID o diagrama), re-inicializamos desde el nuevo diagrama
   useEffect(() => {
@@ -39,13 +109,32 @@ export default function NewIshikawa({ diagrama, setDiagrama, problema, ID }) {
 
       // Y problema
       setFormData({ problema: record.problema || '', causa: '' });
+      // Limpiar selección al cambiar de registro
+      setSelectedTextareas(new Set());
     }
-  }, [diagrama, ID, currentId, spineKeys]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [diagrama, ID, currentId]);
 
   // Si cambia la prop problema, actualizamos campo local
   useEffect(() => {
     setFormData(fd => ({ ...fd, problema: problema || '' }));
   }, [problema]);
+
+  // Ajusta el font-size dinámicamente para cajas fijas
+  useEffect(() => {
+    if (!wrapperRef.current) return;
+    wrapperRef.current.querySelectorAll('textarea.cause-input').forEach(el => {
+      const parent = el.closest('.spine-group');
+      const count = parent.querySelectorAll('.cause-input').length;
+      if (count > 1) {
+        let size = parseFloat(window.getComputedStyle(el).fontSize);
+        while (el.scrollHeight > el.clientHeight && size > 8) {
+          size -= 1;
+          el.style.fontSize = `${size}px`;
+        }
+      }
+    });
+  }, [causes]);
 
   // Aplica siempre el array completo de causas de la espina i al diagrama padre
   function syncSpineToDiagrama(spineIdx, newCauses) {
@@ -77,16 +166,6 @@ export default function NewIshikawa({ diagrama, setDiagrama, problema, ID }) {
     });
   };
 
-  // Para ajustar el tamaño de fuente según longitud
-  const computeFontSize = v => {
-    if (v.length > 125) return '10.3px';
-    if (v.length > 100) return '11px';
-    if (v.length > 88) return '12px';
-    if (v.length > 78) return '13px';
-    if (v.length > 65) return '14px';
-    return '15px';
-  };
-
   // Dibujo
   const spinePositions = [
     { position: 'bottom', angle: -60, left: '30%' },
@@ -95,32 +174,24 @@ export default function NewIshikawa({ diagrama, setDiagrama, problema, ID }) {
     { position: 'top',    angle:  60, left: '50%' },
     { position: 'top',    angle:  60, left: '75%' },
   ];
-  const spineNames = ['Materiales','Mano de obra','Máquinas','Medio ambiente','Métodos'];
+  const spineNames = ['Medio ambiente','Métodos','Materiales','Mano de obra','Maquinaria'];
 
   return (
-    <div className="ishikawa-wrapper">
+    <div className="ishikawa-wrapper" ref={wrapperRef}>
       <div className="fishbone-container">
         <div className="fish-tail" />
         <div className="central-line" />
         <div className="fish-head">
-          <textarea
-            className="text-area problema-input"
-            name="problema"
-            placeholder="Problema..."
-            maxLength={145}
-            value={formData.problema}
-            onChange={e => {
-              const p = e.target.value;
-              setFormData(fd => ({ ...fd, problema: p }));
-              setDiagrama([{ ...diagrama[0], problema: p }]);
-            }}
-          />
+        <div className="problema-display" style={{ fontSize: '15px' }}>
+            {formData.problema}
+          </div>
         </div>
 
         {spinePositions.map((pos, i) => {
           const group = causes[i] || [];
           const count = group.length;
           const spacing = 100 / (Math.max(count, 1) + 1);
+
 
           return (
             <div key={i} className={`spine-group ${pos.position}`} style={{ left: pos.left }}>
@@ -132,28 +203,36 @@ export default function NewIshikawa({ diagrama, setDiagrama, problema, ID }) {
                         key={ci}
                         className="cause-line"
                         style={{
-                          transform: `rotate(${-pos.angle}deg)`,
-                          right: `${(ci + 1) * spacing}%`
-                        }}
+                            /* centrar antes de rotar */
+                            transform: `translateY(-50%) rotate(${-pos.angle}deg)`,
+                            right: `${(ci + 1) * spacing}%`
+                          }}
                       >
                         <IconButton size="small" color="error" onClick={() => handleRemoveCause(i, ci)}>
                           <RemoveCircleOutlineIcon />
                         </IconButton>
-                        <textarea
+                        <AutoGrowTextarea
                           className="cause-input"
-                          placeholder={`Causa ${ci + 1}`}
+                          placeholder={`Causa ${ci+1}`}
                           maxLength={145}
                           value={text}
-                          style={{ fontSize: computeFontSize(text) }}
                           onChange={e => {
                             const v = e.target.value;
                             setCauses(prev => {
-                              const next = [...prev];
-                              next[i][ci] = v;
-                              syncSpineToDiagrama(i, next[i]);
-                              return next;
+                              const nxt = [...prev];
+                              nxt[i][ci] = v;
+                              syncSpineToDiagrama(i, nxt[i]);
+                              return nxt;
                             });
                           }}
+                          onDoubleClick={handleDoubleClick}
+                          // Ajustamos props para shrinkable y expandable según conteo
+                          shrinkable={count > 1}
+                          expandable={count === 1}
+                          maxHeight={count === 1 ? null : 45}
+                          minFontSize={8}
+                          baseFontIncrement={1}
+                          style={{ height: count === 1 ? 'auto' : '45px' }}
                         />
                         <div className="sub-line" />
                       </div>

@@ -53,6 +53,9 @@ import Reporte from './auditado/Components/Reportes/Reporte.jsx';
 import DiagramaIshVac from './ishikawa-vacio/components/DiagramaRe/Diagrama.jsx';
 import IshikawaVac from './ishikawa-vacio/components/Ishikawa/Ishikawa.jsx';
 import InicioIsh from './ishikawa-vacio/components/Home/inicio.jsx';
+import GestorIsh from './ishikawa-vacio/components/Ishikawa/GestorIsh.jsx';
+import NewIshikawa from './ishikawa-vacio/components/Ishikawa/NewIshikawa.jsx';
+import CreacionIshikawa2 from './ishikawa-vacio/components/Ishikawa/IshikawaNewBeta.jsx';
 
 //Objetivos 
 import Menu from './Objetivos/Components/Menu/elmenu.jsx';
@@ -145,8 +148,10 @@ export const UserContext = createContext(null);
               {/*Ishikawas vacios*/}
 
               <Route path="/ishikawavacio" element={<ProtectedRoute><DiagramaIshVac/></ProtectedRoute>}/>
-              <Route path="/diagramas" element={<ProtectedRoute><IshikawaVac/></ProtectedRoute>}/>
+              <Route path="/diagramas" element={<ProtectedRoute><CreacionIshikawa2/></ProtectedRoute>}/>
               <Route path="/inicio-ishvac" element={<ProtectedRoute><InicioIsh/></ProtectedRoute>}/>
+              <Route path="/ish-vac-esp" element={<ProtectedRoute><GestorIsh/></ProtectedRoute>}/>
+              <Route path="/new" element={<ProtectedRoute><NewIshikawa/></ProtectedRoute>}/>
 
                 {/*Objetivos*/}
 
@@ -173,7 +178,7 @@ export const UserContext = createContext(null);
   };
 
 function App() {
-  const [appVersion] = useState('2.1.7');
+  const [appVersion] = useState('2.1.8');
 
 
   useEffect(() => {

@@ -16,4 +16,8 @@ router.post("/audits/send-email", upload.single("tablaImagen"), auditController.
 // Ruta para actualizar el estado de realizada o programada
 router.put('/audits/:id', auditController.updateAuditStatus);
 
+
+// Add this to your server routes
+router.delete('/audits/:id', auditController.deleteAudit);  // Quita programas-anuales/
+
 module.exports = router;

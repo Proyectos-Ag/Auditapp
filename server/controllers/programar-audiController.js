@@ -5,6 +5,7 @@ const transporter = require('../emailconfig');
 const path = require('path');
 const fs = require('fs');
 const multer = require("multer");
+const sharp = require('sharp'); // Añadimos sharp para compresión de imágenes
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -21,6 +22,32 @@ exports.getAudits = async (req, res) => {
   }
 };
 
+
+exports.deleteAudit = async (req, res) => {
+  try {
+    const deletedAudit = await Audit.findByIdAndDelete(req.params.id);
+    
+    if (!deletedAudit) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Auditoría no encontrada' 
+      });
+    }
+    
+    res.json({ 
+      success: true,
+      message: 'Auditoría eliminada correctamente', 
+      data: deletedAudit 
+    });
+    
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: 'Error al eliminar auditoría',
+      error: error.message 
+    });
+  }
+};
 /**
  * POST /programas-anuales/audits
  * Crea una nueva auditoría y envía correo con captura de pantalla.
@@ -48,10 +75,6 @@ exports.createAudit = async (req, res) => {
     });
     const savedAudit = await newAudit.save();
 
-    // Se podría almacenar el archivo en la BD si se requiere, o dejarlo para el otro controlador
-    // Por ejemplo, guardar el nombre del archivo o alguna referencia.
-
-    // Responder con la auditoría creada
     res.status(201).json(savedAudit);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -60,11 +83,28 @@ exports.createAudit = async (req, res) => {
 
 exports.sendAuditEmail = async (req, res) => {
   try {
-    // Acceder al archivo enviado en la solicitud (imagen o PDF)
-    const pdfBuffer = req.file ? req.file.buffer : null;
-    if (!pdfBuffer) {
+    // Acceder al archivo enviado en la solicitud
+    const imageBuffer = req.file ? req.file.buffer : null;
+    if (!imageBuffer) {
       return res.status(400).json({ message: 'No se recibió la imagen.' });
     }
+
+    // Comprimir y redimensionar la imagen
+    const compressedImage = await sharp(imageBuffer)
+      .resize({
+        width: 1100,
+        height: 1100,
+        fit: sharp.fit.inside,
+        withoutEnlargement: true,
+        kernel: sharp.kernel.lanczos3 // Usar kernel de alta calidad para redimensionado
+      })
+      .png({
+        quality: 100, // Aumentamos la calidad al 90%
+        compressionLevel: 1, // Nivel de compresión medio (1-9)
+        adaptiveFiltering: true, // Filtrado adaptativo para mejor calidad
+        force: true // Forzar formato PNG incluso si es menos eficiente
+      })
+      .toBuffer();
 
     // Definir los destinatarios del correo
     const recipientEmails = `
@@ -114,7 +154,7 @@ exports.sendAuditEmail = async (req, res) => {
 
     const customizedTemplate = emailTemplate;
 
-    // Configurar las opciones del correo, incluyendo el adjunto (la imagen)
+    // Configurar las opciones del correo
     const mailOptions = {
       from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
       bcc: recipientEmails,
@@ -122,8 +162,8 @@ exports.sendAuditEmail = async (req, res) => {
       html: customizedTemplate,
       attachments: [
         {
-          filename: 'captura.png', // Puedes cambiar el nombre si lo deseas
-          content: pdfBuffer,
+          filename: 'captura.png',
+          content: compressedImage, // Usamos la imagen comprimida
           cid: 'tabla'
         },
         {

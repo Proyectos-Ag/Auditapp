@@ -2,7 +2,6 @@ import React, { useEffect, useState,useCallback,useContext } from 'react';
 import Logo from "../assets/img/logoAguida.png";
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import IshikawaImg from '../assets/img/Ishikawa-transformed.webp';
 import { UserContext } from '../../../App';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
@@ -21,6 +20,7 @@ import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import NewIshikawaFin from '../../../ishikawa-vacio/components/Ishikawa/NewIshikawaFin';
 import Cargando from '../../../components/cargando/Cargando';
 
 const IshikawaRev = () => {
@@ -878,22 +878,6 @@ const handleSelectChangeAud = (event) => {
     }
   };  
 
-    function verificarCoincidencia(textAreaValue, causa) {
-  // Verificar que los valores no sean undefined o null
-  if (typeof textAreaValue !== 'string' || typeof causa !== 'string') {
-      return false;
-  }
-
-  const trimmedTextAreaValue = textAreaValue.trim();
-  const trimmedCausaParts = causa.trim().split(';').map(part => part.trim());
-
-  if (trimmedTextAreaValue === '') {
-      return false;
-  }
-
-  return trimmedCausaParts.some(part => part === trimmedTextAreaValue);
-}
-
 const handleOpenModal = (fieldKey) => {
     setSelectedField(fieldKey);
     setModalOpen(true);
@@ -979,12 +963,6 @@ const EliminarEv = async (index, idIsh, idCorr) => {
         handleEliminarEvidencia(index, idIsh, idCorr);
       }
     });
-};
-
-const obtenerEstiloTextarea = (texto, causa) => {
-    return verificarCoincidencia(texto, causa) 
-    ? { backgroundColor: '#f1fc5e9f', borderRadius: '10px' } 
-    : {};
 };
 
 const mostrarCargando = () => {
@@ -1094,43 +1072,13 @@ const ocultarCargando = () => {
                     <h3>Fecha: {ishikawa.fecha}</h3>
                     </div>
                     <div>
-                    <img src={IshikawaImg} alt="Diagrama de Ishikawa" className="responsive-image" />
-                    {ishikawa.diagrama.map((item, i) => (
-                        <div key={i}>
-                        <textarea className="text-area" 
-                            style={{ top: '19.1rem', left: '8.7rem', ...obtenerEstiloTextarea(item.text1, ishikawa.causa) }} disabled>{item.text1}</textarea>
-                        <textarea className="text-area"
-                            style={{ top: '19.1rem', left: '25.4rem', ...obtenerEstiloTextarea(item.text2, ishikawa.causa)  }} disabled>{item.text2}</textarea>
-                        <textarea className="text-area"
-                            style={{ top: '19.1rem', left: '41.2rem', ...obtenerEstiloTextarea(item.text3, ishikawa.causa)  }} disabled>{item.text3}</textarea>
-                        <textarea className="text-area"
-                            style={{ top: '23.2rem', left: '12.2rem', ...obtenerEstiloTextarea(item.text4, ishikawa.causa)  }} disabled>{item.text4}</textarea>
-                        <textarea className="text-area"
-                            style={{ top: '23.2rem', left: '28.8rem', ...obtenerEstiloTextarea(item.text5, ishikawa.causa) }} disabled>{item.text5}</textarea>
-                        <textarea className="text-area"
-                            style={{ top: '23.2rem', left: '45rem', ...obtenerEstiloTextarea(item.text6, ishikawa.causa)  }} disabled>{item.text6}</textarea>
-                        <textarea className="text-area"
-                            style={{ top: '27.2rem', left: '15.5rem', ...obtenerEstiloTextarea(item.text7, ishikawa.causa)  }} disabled>{item.text7}</textarea>
-                        <textarea className="text-area"
-                            style={{ top: '27.2rem', left: '32.3rem', ...obtenerEstiloTextarea(item.text8, ishikawa.causa)  }} disabled>{item.text8}</textarea>
-                        <textarea className="text-area"
-                            style={{ top: '27.2rem', left: '48.1rem', ...obtenerEstiloTextarea(item.text9, ishikawa.causa)  }} disabled>{item.text9}</textarea>
-                        <textarea className="text-area" value={item.text10}
-                            style={{ top: '31rem', left: '23rem', ...obtenerEstiloTextarea(item.text10, ishikawa.causa)  }} disabled></textarea>
-                        <textarea className="text-area" name='text11' value={item.text11}
-                            style={{ top: '31rem', left: '39.4rem', ...obtenerEstiloTextarea(item.text11, ishikawa.causa)  }} disabled></textarea>
-                        <textarea className="text-area" value={item.text12}
-                            style={{ top: '35rem', left: '19.7rem', ...obtenerEstiloTextarea(item.text12, ishikawa.causa)  }} disabled></textarea>
-                        <textarea className="text-area" name='text13' value={item.text13}
-                            style={{ top: '35rem', left: '36rem', ...obtenerEstiloTextarea(item.text13, ishikawa.causa)  }} disabled></textarea>
-                        <textarea className="text-area" name='text14' value={item.text14}
-                            style={{ top: '39rem', left: '16.6rem', ...obtenerEstiloTextarea(item.text14, ishikawa.causa)  }} disabled></textarea>
-                        <textarea className="text-area" name='text15' value={item.text15}
-                            style={{ top: '39rem', left: '32.8rem', ...obtenerEstiloTextarea(item.text15, ishikawa.causa)  }} disabled></textarea>
-                        <textarea className="text-area"
-                            style={{ top: '27rem', left: '67.5rem', width: '7.9rem', height: '8rem' }} value={ishikawa.problema? ishikawa.problema : item.problema}></textarea>
-                        </div>
-                    ))}
+                    <NewIshikawaFin
+                        key={id}
+                        diagrama={ishikawa.diagrama}
+                        problema={ishikawa.problema}
+                        causa={ishikawa.causa}
+                        ID={id}
+                    />
                     </div>
                 
                     <div className='button-pasti'>

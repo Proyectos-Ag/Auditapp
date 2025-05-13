@@ -1,10 +1,9 @@
-/* Updated NewIsh.css */
 :root {
     --central-line-height: 4px;
     --spine-length: 15rem;
     --sub-spine-length: 20%;
     --label-offset: 50px;
-    --central-line-color: #1cb87c;
+    --central-line-color: #179e6a;
     --sub-line-color: #7f8c8d;
     --spine-angle: 45deg;
   }
@@ -50,7 +49,6 @@
   /* distribute causes evenly along the diagonal */
   .causes-wrapper {
     position: relative;       /* antes era absolute con flex */
-    width: 100%;
     height: 0;                /* no necesitamos altura fija */
     top: 50%;
     pointer-events: none;     /* para que el click “caiga” al botón si toca */
@@ -58,8 +56,9 @@
   
   .cause-line {
     position: absolute;
-    top: -2rem;             /* para centrar verticalmente sobre la diagonal */
+    top: -0.3rem;             /* para centrar verticalmente sobre la diagonal */
     display: flex;
+    left: auto;
     align-items: center;
     transform-origin: right center;
     pointer-events: auto;     /* para poder tipear en el textarea */
@@ -73,14 +72,16 @@
   }
   
   .cause-input {
-    width: 21vw;
-    padding: 0.5rem;
-    border: 1px solid #bdc3c7;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    margin: 0;                       /* remove extra margins */
-  }
-  
+  min-height: 51px;
+  width: 21vw !important;
+  line-height: 1.2;
+  box-sizing: border-box;
+  overflow: hidden !important;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
   .spine-label {
     position: absolute;
     font-size: 1.1rem;
@@ -138,41 +139,45 @@
 /* ================================= */
 /*  CABEZA: cuadrado grande con borde */
 /* ================================= */
+/* 1) Cabeza fija, flex centrado y sin overflow */
 .fish-head {
   position: absolute;
   right: 15%;
   top: 50%;
+
   width: 10rem;
   height: 10rem;
   background: var(--central-line-color);
-  pointer-events: none;              /* lo mantenemos */
-  transform: translate(100%, -50%);
-  z-index: 1;
   border-top-right-radius: 5rem;
   border-bottom-right-radius: 5rem;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 
-  /* clave: permitir que el textarea dentro reciba eventos */
-  /* (no afectará al resto de elementos dentro) */
-}
-.fish-head .problema-input {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  resize: none;               /* opcional: impide redimensionar manualmente */
-  padding: 0.5rem;            /* ajusta a tu gusto */
-  box-sizing: border-box;
-  border: none;
-  background: transparent;    /* si quieres que se vea el mismo fondo */
-  font-size: 1rem;            /* o tu valor por defecto */
-  overflow: auto;
+  /* RESTAURA ESTA LÍNEA para mantener la posición original */
+  transform: translate(100%, -50%);
 
-  /* esto hace que el textarea sí reciba clicks y foco */
-  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.5rem;
+  box-sizing: border-box;
+  pointer-events: none;
 }
+
+
+/* 2) El contenedor del texto usa el fontSize calculado y no hace scroll */
+.fish-head .problema-display {
+  pointer-events: auto;     /* para que siga recibiendo clicks si lo necesitas */
+  text-align: center;
+  white-space: pre-wrap;    /* respeta saltos de línea */
+  word-wrap: break-word;    /* quiebra palabras largas */
+  max-width: 100%;
+  max-height: 100%;
+  overflow: visible;
+  line-height: 1.2;         /* buena legibilidad */
+}
+
 
 
 /* Nuevos estilos para el wrapper */

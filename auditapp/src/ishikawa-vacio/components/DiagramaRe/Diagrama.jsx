@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './css/Diagrama.css'
 import Logo from "../assets/img/logoAguida.png";
-import Ishikawa from '../assets/img/Ishikawa-transformed.png';
+import NewIshikawaFin from '../Ishikawa/NewIshikawaFin';
 
 const Diagrama = ({ recordId }) =>  {
     const [ishikawa, setIshikawa] = useState([]);
@@ -88,30 +88,18 @@ const Diagrama = ({ recordId }) =>  {
                         <div className='posicion-en-2'>
                             <h3>Fecha: {ishikawa.fecha}</h3>
                         </div>
-                        <div>
-                            <img src={Ishikawa} alt="Diagrama de Ishikawa" className="responsive-image" />
-                            {ishikawa.diagrama && ishikawa.diagrama.map((item, i) => (
-                                <div key={i}>
-                                    <textarea className="text-area" style={{ top: '19.1rem', left: '8.7rem' }} disabled>{item.text1}</textarea>
-                                    <textarea className="text-area" style={{ top: '19.1rem', left: '25.4rem' }} disabled>{item.text2}</textarea>
-                                    <textarea className="text-area" style={{ top: '19.1rem', left: '41.2rem' }} disabled>{item.text3}</textarea>
-                                    <textarea className="text-area" style={{ top: '23.2rem', left: '12.2rem' }} disabled>{item.text4}</textarea>
-                                    <textarea className="text-area" style={{ top: '23.2rem', left: '28.8rem' }} disabled>{item.text5}</textarea>
-                                    <textarea className="text-area" style={{ top: '23.2rem', left: '45rem' }} disabled>{item.text6}</textarea>
-                                    <textarea className="text-area" style={{ top: '27.2rem', left: '15.5rem' }} disabled>{item.text7}</textarea>
-                                    <textarea className="text-area" style={{ top: '27.2rem', left: '32.3rem' }} disabled>{item.text8}</textarea>
-                                    <textarea className="text-area" style={{ top: '27.2rem', left: '48.1rem' }} disabled>{item.text9}</textarea>
-                                    <textarea className="text-area" value={item.text10} style={{ top: '31rem', left: '23rem' }} disabled></textarea>
-                                    <textarea className="text-area" name='text11' value={item.text11} style={{ top: '31rem', left: '39.4rem' }} disabled></textarea>
-                                    <textarea className="text-area" value={item.text12} style={{ top: '35rem', left: '19.7rem' }} disabled></textarea>
-                                    <textarea className="text-area" name='text13' value={item.text13} style={{ top: '35rem', left: '36rem' }} disabled></textarea>
-                                    <textarea className="text-area" name='text14' value={item.text14} style={{ top: '39rem', left: '16.6rem' }} disabled></textarea>
-                                    <textarea className="text-area" name='text15' value={item.text15} style={{ top: '39rem', left: '32.8rem' }} disabled></textarea>
-                                    <textarea className="text-area" style={{ top: '27rem', left: '67.5rem', width: '8.5rem', height: '8rem' }} value={ishikawa.problema} disabled></textarea>
-                                </div>
-                            ))}
-                        </div>
-                        <div className='button-pasti-dia'>
+                        <div className='new-ishikawa'>
+                        {/* en tu Diagrama.jsx */}
+                            <NewIshikawaFin
+                            key={recordId}
+                            diagrama={ishikawa.diagrama}
+                            problema={ishikawa.problema}
+                            causa={ishikawa.causa}
+                            ID={recordId}
+                            />
+
+                         </div> 
+                        <div className='button-parti-dia'>
                             <div className='cont-part'>
                         <button className='button-part' onClick={(e) => {
                             e.preventDefault();

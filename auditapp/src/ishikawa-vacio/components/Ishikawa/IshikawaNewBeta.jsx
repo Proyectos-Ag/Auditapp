@@ -5,9 +5,10 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import SaveIcon from '@mui/icons-material/Save';
 import SendIcon from '@mui/icons-material/Send';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import './css/Ishikawa.css'
 import Logo from "../assets/img/logoAguida.png";
-import Ishikawa from '../assets/img/Ishikawa-transformed.png';
+import { Alert, AlertTitle } from '@mui/material';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -18,18 +19,23 @@ import Busqueda from './Busqueda';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../../App';
 import { Stack, Button, Chip, TextField, Paper, List, ListItem, Box,
-   Avatar, Tooltip, Typography } from '@mui/material';
+   Avatar, Tooltip, Typography, IconButton, Dialog, DialogTitle, DialogContent,
+   DialogActions, } from '@mui/material';
 import Diagrama from '../DiagramaRe/Diagrama';
 import NewIshikawa from './NewIshikawa';
+//import { useLocation } from 'react-router-dom';
+import AutoGrowTextarea from '../../../resources/AutoGrowTextarea';
 
 const CreacionIshikawa2 = () => {
   const [isEditing, setIsEditing] = useState(false);
+  //const { state } = useLocation();
+  //const ishikawaId = state?.ishikawaId;
   const { userData } = useContext(UserContext);
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
   // const [showPart, setShowPart] = useState(true);
   const [ishikawaRecords, setIshikawaRecords] = useState([]); // Almacena los registros filtrados
   const [selectedRecordId, setSelectedRecordId] = useState(null);
-  const [, setSelectedTextareas] = useState(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -137,7 +143,7 @@ const CreacionIshikawa2 = () => {
 
   const handleSelectRecord = (selectedId) => {
   
-    if (selectedId === "") {
+    if (selectedId === null) {
       // Si selecciona "Nuevo...", limpiamos el formulario
       setSelectedRecordId(null); // Reseteamos el ID seleccionado
       setFormData({
@@ -174,7 +180,11 @@ const CreacionIshikawa2 = () => {
       }]);
   
       setActividades([{ actividad: '', responsable: [], fechaCompromiso: '' }]);
-      setIsEditing(false); // Cambiamos el modo a "creación"
+      setIsEditing(false);
+      setShowDiagrama(false);
+      setSelectedParticipants([]);
+      setOpenGestor(false);
+    return;
     } else {
       const selectedRecord = ishikawaRecords.find(record => record._id === selectedId);
 
@@ -234,15 +244,6 @@ const CreacionIshikawa2 = () => {
         setOpenGestor(false);
       }
     }
-  };
-  
-
-  const handleDiagrama = (e) => {
-    const { name, value } = e.target;
-    setDiagrama((prevState) => [{
-      ...prevState[0],
-      [name]: value
-    }]);
   };
 
   const handleFormDataChange = (e) => {
@@ -383,47 +384,6 @@ const CreacionIshikawa2 = () => {
     }
   };
 
-  const handleDoubleClick = (e) => {
-    const textarea = e.target;
-  
-    setSelectedTextareas((prevSelected) => {
-      const newSelected = new Set(prevSelected);
-  
-      if (newSelected.has(textarea)) {
-        // Si el textarea ya está seleccionado, deseleccionarlo
-        newSelected.delete(textarea);
-        textarea.style.backgroundColor = '';
-      } else {
-        // Si el textarea no está seleccionado, seleccionarlo
-        newSelected.add(textarea);
-        textarea.style.backgroundColor = '#f1fc5e9f';
-        textarea.style.borderRadius = '10px';
-      }
-  
-      // Actualizar los textos seleccionados en el campo 'causa'
-      setFormData((prevState) => {
-        // Si ya existe un valor en causa, separamos sus partes
-        const currentValues = prevState.causa 
-          ? prevState.causa.split('; ').filter(v => v) 
-          : [];
-        
-        // Obtenemos los valores de los textareas seleccionados
-        const selectedValues = Array.from(newSelected).map(t => t.value);
-        
-        // Fusionamos ambos arrays, eliminando duplicados
-        const mergedValues = [...new Set([...currentValues, ...selectedValues])];
-        
-        return {
-          ...prevState,
-          causa: mergedValues.join('; ')
-        };
-      });
-      
-    });
-  
-    textarea.select(); // Selecciona el texto dentro del textarea
-  };
-
   const Guardar = async () => {
     if (
       !formData.hallazgo ||
@@ -451,7 +411,6 @@ const CreacionIshikawa2 = () => {
       !formData.correccion ||
       !formData.fecha ||
       !formData.causa ||
-      diagrama.some(dia => !dia.text1 || !dia.text2 || !dia.text3 || !dia.text10 || !dia.text11) ||
       actividades.some(act => !act.actividad || !act.responsable || !act.fechaCompromiso)
     ) {
       console.log('Por favor, complete todos los campos requeridos antes de guardar.');
@@ -469,105 +428,6 @@ const CreacionIshikawa2 = () => {
     setActividades(nuevasActividades);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    // Define el tamaño de fuente según el rango de caracteres
-    let fontSize;
-    if (value.length > 125) {
-      fontSize = '10.3px'; // Menos de 78 caracteres
-    } else if (value.length > 100) {
-      fontSize = '11px'; // Menos de 62 caracteres
-    } else if (value.length > 88) {
-      fontSize = '12px'; // Menos de 62 caracteres
-    } else if (value.length > 78) {
-      fontSize = '13px'; // Menos de 62 caracteres
-    } else if (value.length > 65) {
-      fontSize = '14px'; // Menos de 62 caracteres
-    } else {
-      fontSize = '15px'; // Por defecto
-    }
-  
-    // Actualiza el estado del diagrama
-    setDiagrama(prevState => [{
-      ...prevState[0],
-      [name]: value
-    }]);
-  
-    // Aplica el nuevo tamaño de fuente al textarea
-    e.target.style.fontSize = fontSize;
-  };
-
-  // Mapas para guardar los elementos originales y sus valores
-// Mapas para guardar los elementos originales y sus valores
-const originalInputs = [];
-const originalTextareas = [];
-
-// Convierte inputs y textareas a divs
-const convertToDivs = (element) => {
-    // Procesar inputs
-    const inputs = element.querySelectorAll('input');
-    inputs.forEach((input) => {
-        const div = document.createElement('div');
-        div.textContent = input.value;
-        div.className = input.className;
-        div.style.cssText = input.style.cssText;
-        div.style.display = 'inline-block';
-        div.style.padding = '0';
-        div.style.border = 'none';
-        div.setAttribute("data-replaced", "true"); // Agregar atributo identificador
-
-        // Guardar el estado original
-        originalInputs.push({ parent: input.parentNode, element: input, sibling: input.nextSibling });
-
-        // Reemplazar el input con el div
-        input.parentNode.replaceChild(div, input);
-    });
-
-    // Procesar textareas
-    const textareas = element.querySelectorAll('textarea');
-    textareas.forEach((textarea) => {
-        const div = document.createElement('div');
-        div.innerHTML = textarea.value.replace(/\n/g, '<br>');
-        div.className = textarea.className;
-        div.style.cssText = textarea.style.cssText;
-        div.setAttribute("data-replaced", "true"); // Agregar atributo identificador
-
-        // Guardar el estado original
-        originalTextareas.push({ parent: textarea.parentNode, element: textarea, sibling: textarea.nextSibling });
-
-        // Reemplazar el textarea con el div
-        textarea.parentNode.replaceChild(div, textarea);
-    });
-};
-
-const restoreElements = () => {
-    // Restaurar inputs y eliminar los divs generados
-    originalInputs.forEach(({ parent, element, sibling }) => {
-        // Buscar y eliminar todos los divs generados
-        parent.querySelectorAll('div[data-replaced="true"]').forEach(div => div.remove());
-
-        // Restaurar el input en su posición original
-        if (sibling && sibling.parentNode === parent) {
-            parent.insertBefore(element, sibling);
-        } else {
-            parent.appendChild(element);
-        }
-    });
-    originalInputs.length = 0; // Limpiar el array
-
-    // Restaurar textareas y eliminar los divs generados
-    originalTextareas.forEach(({ parent, element, sibling }) => {
-        parent.querySelectorAll('div[data-replaced="true"]').forEach(div => div.remove());
-
-        if (sibling && sibling.parentNode === parent) {
-            parent.insertBefore(element, sibling);
-        } else {
-            parent.appendChild(element);
-        }
-    });
-    originalTextareas.length = 0; // Limpiar el array
-};
-
   const handlePrintPDF = () => {
     setIsLoading(true);
     setProgress(0);
@@ -580,10 +440,16 @@ const restoreElements = () => {
     const part2 = document.getElementById('pdf-content-part2');
     const part3 = document.getElementById('pdf-content-part3');
 
-    // Convertir inputs y textareas a divs
-    convertToDivs(part1);
-    convertToDivs(part2);
-    convertToDivs(part3);
+    const convertTextAreasToDivs = (element) => {
+            const textareas = element.querySelectorAll('textarea');
+            textareas.forEach((textarea) => {
+                const div = document.createElement('div');
+                div.innerHTML = textarea.value.replace(/\n/g, '<br>');
+                div.className = textarea.className;
+                div.style.cssText = textarea.style.cssText;
+                textarea.parentNode.replaceChild(div, textarea);
+            });
+        };
   
 
     const ensureImagesLoaded = (element) => {
@@ -631,19 +497,87 @@ const restoreElements = () => {
         return yOffset;
     };
 
-    const processPart3WithTableRows = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
-        await ensureImagesLoaded(element); // Asegurar que las imágenes estén completamente cargadas
+    const processPart3WithTableRows = async (
+      element,
+      pdf,
+      yOffset,
+      pageWidth,
+      pageHeight,
+      marginLeft,
+      marginRight,
+      bottomMargin
+    ) => {
+      await ensureImagesLoaded(element);
 
-        const tables = element.querySelectorAll('table');
-                if (tables.length > 0) {
-            for (const table of tables) {
-                yOffset = await processTableWithRowControl(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
-              }
+      // Selecciona tablas, pero las procesaremos en dos grupos:
+      const tables = Array.from(element.querySelectorAll('table'));
+
+      if (tables.length > 0) {
+        // 1) Renderizar encabezado “SOLUCIÓN”
+        const header1 = element.querySelector('h3:nth-of-type(1)');
+        if (header1) {
+          const canvasH1 = await html2canvas(header1, { scale: 2.5, useCORS: true });
+          yOffset = processCanvas(
+            canvasH1,
+            pdf,
+            yOffset,
+            pageWidth,
+            pageHeight,
+            marginLeft,
+            marginRight,
+            bottomMargin
+          );
         }
 
-        updateProgress(20);
-        return yOffset;
+        // 2) Procesar sólo la primera tabla (SOLUCIÓN)
+        const tableSolucion = tables[0];
+        yOffset = await processTableWithRowControl(
+          tableSolucion,
+          pdf,
+          yOffset,
+          pageWidth,
+          pageHeight,
+          marginLeft,
+          marginRight,
+          bottomMargin
+        );
+
+        // 3) Renderizar encabezado “EFECTIVIDAD”
+        const header2 = element.querySelector('h3:nth-of-type(2)');
+        if (header2) {
+          const canvasH2 = await html2canvas(header2, { scale: 2.5, useCORS: true });
+          yOffset = processCanvas(
+            canvasH2,
+            pdf,
+            yOffset,
+            pageWidth,
+            pageHeight,
+            marginLeft,
+            marginRight,
+            bottomMargin
+          );
+        }
+
+        // 4) Procesar la(s) tabla(s) restantes (EFECTIVIDAD)
+        //    Empieza desde el índice 1 para saltar la primera tabla ya procesada
+        for (let i = 1; i < tables.length; i++) {
+          yOffset = await processTableWithRowControl(
+            tables[i],
+            pdf,
+            yOffset,
+            pageWidth,
+            pageHeight,
+            marginLeft,
+            marginRight,
+            bottomMargin
+          );
+        }
+      }
+
+      updateProgress(20);
+      return yOffset;
     };
+
 
     const processCanvas = (canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
         const canvasWidth = canvas.width;
@@ -682,12 +616,13 @@ const restoreElements = () => {
     }).then((canvas) => {
         yOffset = processCanvas(canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
 
-        setProgress(100);
-        setIsLoading(false);
-        // Procesar la parte 3 con tablas y manejo de filas
-        return processPart3WithTableRows(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, bottomMargin);
+        convertTextAreasToDivs(part3);
+    return ensureImagesLoaded(part3)
+      .then(() => processPart3WithTableRows(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, bottomMargin));
         
       }).then(() => {
+        setProgress(100);
+        setIsLoading(false);
         pdf.save('diagrama_ishikawa.pdf'); //Descarga de PDF
 
             // **Preguntar si se desea enviar por correo**
@@ -739,7 +674,6 @@ const restoreElements = () => {
               Swal.fire('Error', 'Hubo un problema al generar el PDF', 'error');
           }).finally(() => {
             setIsLoading(false);
-            restoreElements();
         });
 };
 
@@ -816,28 +750,6 @@ const ajustarTamanoFuente = (textarea) => {
   }
 };
 
-function verificarCoincidencia(textAreaValue, causa) {
-  // Verificar que los valores no sean undefined o null
-  if (typeof textAreaValue !== 'string' || typeof causa !== 'string') {
-      return false;
-  }
-
-  const trimmedTextAreaValue = textAreaValue.trim();
-  const trimmedCausaParts = causa.trim().split(';').map(part => part.trim());
-
-  if (trimmedTextAreaValue === '') {
-      return false;
-  }
-
-  return trimmedCausaParts.some(part => part === trimmedTextAreaValue);
-}
-
-const obtenerEstiloTextarea = (texto, causa) => {
-  return verificarCoincidencia(texto, causa) 
-  ? { backgroundColor: '#f1fc5e9f', borderRadius: '10px' } 
-  : {};
-};
-
 const handleResponsableSelect = (index, user) => {
   const nuevasActividades = actividades.map((actividad, i) => {
     if (i === index) {
@@ -892,6 +804,10 @@ const handleCloseModal = async () => {
   await fetchIshikawaRecords();
 };
 
+const handleCausaChange = nuevaCausa => {
+  setFormData(fd => ({ ...fd, causa: nuevaCausa }));
+};
+
 
   return (
     <div className="content-diagrama">
@@ -940,9 +856,7 @@ const handleCloseModal = async () => {
           sx={{ color: 'white' }}
           startIcon={<PictureAsPdfIcon />}
           onClick={handlePrintPDF}
-          disabled={formData.estado !== '' && 
-            formData.estado !== 'Aprobado' &&
-            formData.estado !== 'Finalizado'}
+          disabled={!(formData.estado === 'Aprobado' || formData.estado === 'Finalizado')}
         >
           Generar PDF
         </Button>
@@ -983,6 +897,59 @@ const handleCloseModal = async () => {
         />
       </Stack>
 
+      {Array.isArray(formData.acceso) &&
+          formData.acceso.some(acc => acc.nombre?.toLowerCase() === userData.Nombre?.toLowerCase()) && (
+            <Alert severity="info" sx={{ my: 2 }}>
+              <AlertTitle>Acceso Compartido</AlertTitle>
+              Este diagrama ha sido compartido contigo. 
+              {formData.acceso.find(acc => acc.nombre?.toLowerCase() === userData.Nombre?.toLowerCase())?.nivelAcceso === 1
+                ? 'Tiene acceso de Solo Lectura (no se permiten cambios).'
+                : 'Tiene acceso como Editor.'}
+              <br />
+              <strong>Nivel de acceso:</strong> {
+                formData.acceso.find(acc => acc.nombre?.toLowerCase() === userData.Nombre?.toLowerCase())?.nivelAcceso
+              }
+            </Alert>
+              )}
+
+      {formData.estado === '' && (
+        <Alert severity="warning" sx={{ my: 2 }}>
+          <AlertTitle>Generación de PDF deshabilitada</AlertTitle>
+          La generación de PDFs permanecerá desactivada hasta que el administrador apruebe el diagrama.
+        </Alert>
+      )}        
+
+      {formData.estado === 'Rechazado' && (
+        <Alert severity="error" sx={{ my: 2 }}>
+          <AlertTitle>Estado: Rechazado</AlertTitle>
+          Este diagrama ha sido rechazado. Por favor, revise la nota de rechazo y realize los ajustes necesarios.
+          Nota: {formData.notaRechazo}
+        </Alert>
+      )}
+
+      {formData.estado === 'Aprobado' && (
+        <Alert severity="success" sx={{ my: 2 }}>
+          <AlertTitle>Estado: Aprobado</AlertTitle>
+          Este diagrama ha sido aprobado. Puede generar el PDF si es necesario.
+        </Alert>
+      )}
+
+      {formData.estado === 'Hecho' && (
+        <Alert severity="warning" sx={{ my: 2 }}>
+          <AlertTitle>En revisión</AlertTitle>
+          El diagrama está siendo revisado. Espere a que el administrador dé su veredicto.
+          Se le notificará por correo electrónico.
+        </Alert>
+      )}
+
+      {formData.estado === 'Finalizado' && (
+        <Alert severity="info" sx={{ my: 2 }}>
+          <AlertTitle>Estado: Finalizado</AlertTitle>
+          El proceso ha sido finalizado. Ya no se permiten modificaciones.
+        </Alert>
+      )}
+
+
       {/*Mensaje de generacion*/}
         {isLoading && (
             <div className="loading-overlay">
@@ -1000,12 +967,6 @@ const handleCloseModal = async () => {
           </div>
          ): ''}
 
-
-        {isReadOnly && (
-        <div style={{ color: 'red', marginBottom: '1rem' }}>
-          Modo lectura: no se permiten cambios.
-        </div>
-      )}
          <Box
           sx={{
             display: 'flex',
@@ -1070,15 +1031,21 @@ const handleCloseModal = async () => {
           <div className='posicion-en-2'>
             <h3>Fecha: 
             <input type="date" name='fecha' value={formData.fecha}
-                  style={{ marginTop: '0.4rem', color: '#000000' }} placeholder="Agregar afectación. . ." required 
+                  style={{ marginTop: '0.4rem', color: '#000000', padding: '6px 32px 6px 8px' }} placeholder="Agregar afectación. . ." required 
                    onChange={handleFormDataChange} disabled={isReadOnly} />
             </h3>
             <h3>Folio: {formData.folio}{console.log('folio: ', formData)}</h3>
           </div>
 
           <div className='new-ishikawa'>
-          <NewIshikawa diagrama={diagrama} setDiagrama={setDiagrama} 
-          problema={formData.problema} ID={selectedRecordId}/>
+          <NewIshikawa
+            diagrama={diagrama}
+            setDiagrama={setDiagrama}
+            problema={formData.problema}
+            causa={formData.causa}
+            ID={selectedRecordId}
+            onCausaChange={handleCausaChange}
+          />
           </div> 
 
           <div className='button-parti-ish'>
@@ -1130,20 +1097,20 @@ const handleCloseModal = async () => {
           <div>
             <div className='posicion-bo' style={{ marginRight: '5rem' }}>
               <h3>No conformidad:</h3>
-              <textarea type="text" className="textarea-acc" name='requisito'
-                style={{ width: '72em', textAlign: 'justify' }} placeholder="Agregar Acción. . ." 
+              <AutoGrowTextarea type="text" className="textarea-acc" name='requisito'
+                style={{textAlign: 'justify' }} placeholder="Agregar Acción. . ." 
                 value={formData.requisito} onChange={handleFormDataChange} required disabled={isReadOnly} />
               <h3>Hallazgo:</h3>
-              <textarea type="text" className="textarea-acc" name='hallazgo'
-                style={{ width: '72em', color: '#000000' }} placeholder="Agregar Hallazgo. . ." 
+              <AutoGrowTextarea type="text" className="textarea-acc" name='hallazgo'
+                style={{color: '#000000' }} placeholder="Agregar Hallazgo. . ." 
                 value={formData.hallazgo} onChange={handleFormDataChange} required disabled={isReadOnly}/>
               <h3>Acción inmediata o corrección:</h3>
-              <textarea type="text" className="textarea-acc" name='correccion'
-                style={{ width: '72em', color: '#000000' }} placeholder="Agregar Acción. . ." 
+              <AutoGrowTextarea type="text" className="textarea-acc" name='correccion'
+                style={{color: '#000000' }} placeholder="Agregar Acción. . ." 
                 value={formData.correccion} onChange={handleFormDataChange} required disabled={isReadOnly}/>
               <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
-              <textarea type="text" className="textarea-acc" name='causa'
-                 style={{ marginBottom: '20px', width:'72em', overflowWrap: 'break-word' }} 
+              <AutoGrowTextarea type="text" className="textarea-acc" name='causa'
+                 style={{ marginBottom: '20px', overflowWrap: 'break-word' }} 
                  placeholder="Seleccione la causa desde el diagrama"  onKeyDown={(e) => e.preventDefault()} 
                   value={formData.causa} onChange={handleFormDataChange} required disabled={isReadOnly}/>
             </div>
@@ -1165,49 +1132,92 @@ const handleCloseModal = async () => {
                 {actividades.map((actividad, index) => (
                   <tr key={index}>
                     <td>
-                      <textarea
-                        className='table-input'
-                        type="text"
-                        placeholder='Agregar actividad. . .'
-                        value={actividad.actividad}
-                        onChange={(e) => {
-                          const newActividades = [...actividades];
-                          newActividades[index].actividad = e.target.value;
-                          setActividades(newActividades);
+                    <AutoGrowTextarea
+                      key={index}
+                      className="table-input"
+                      placeholder="Agregar actividad..."
+                      value={actividad.actividad}
+                      onChange={e => {
+                        const newActividades = [...actividades];
+                        newActividades[index].actividad = e.target.value;
+                        setActividades(newActividades);
                         }}
                         required
                         disabled={isReadOnly}
                       />
-                    </td>
-                    <td>
-                      {actividad?.responsable && actividad.responsable.map((resp, idx) => (
-                        <Chip
-                          key={idx}
-                          label={`${resp.nombre}`}
-                          onDelete={() => handleDeleteResponsable(index, idx)}
-                          style={{ margin: '0.2rem' }}
-                          variant="outlined"
-                        />
-                      ))}
-              
-                      <Busqueda onSelect={(user) => handleResponsableSelect(index, user)} />
-
                       </td>
+                      <td>
+                        <Box sx={{
+                          gap: 0.5,
+                          m: '-4px -4em',
+                        }}>
+                        {actividad.responsable.map((resp, idx) => (
+                          <Chip
+                          key={idx}
+                          size="medium"
+                          label={resp.nombre}
+                          onDelete={() => handleDeleteResponsable(index, idx)}
+                          sx={{ mr: 0.5, mb: 0.5 }}    // margen *solo* en chips
+                            variant="outlined"
+                          />
+                        ))}
+
+                        <IconButton
+                          size="small"
+                          onClick={() => setOpen(true)}
+                          aria-label="Agregar responsable"
+                          sx={{
+                            color: '#2979FF',
+                            '&:hover': {
+                              backgroundColor: 'rgba(41, 121, 255, 0.1)',
+                            }
+                          }}
+                        >
+                          <AddCircleOutlineIcon fontSize="medium" />
+                        </IconButton>
+
+                      </Box>
+
+                      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
+                        <DialogTitle>Seleccionar responsable</DialogTitle>
+                        <DialogContent>
+                          <Busqueda
+                            onSelect={(user) => {
+                              handleResponsableSelect(index, user);
+                              setOpen(false);
+                            }}
+                          />
+                        </DialogContent>
+                        <DialogActions>
+                          <Button onClick={() => setOpen(false)}>Cancelar</Button>
+                        </DialogActions>
+                      </Dialog>
+                    </td>
+
                     <td>
-                      <div>
+                      <div
+                      >
                         <input
                           type="date"
                           value={actividad.fechaCompromiso}
-                          onChange={(e) => {
+                          onChange={e => {
                             const newActividades = [...actividades];
                             newActividades[index].fechaCompromiso = e.target.value;
                             setActividades(newActividades);
                           }}
                           required
                           disabled={isReadOnly}
+                          style={{
+                            padding: '6px 32px 6px 8px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            boxSizing: 'border-box',
+                            appearance: 'none'
+                          }}
                         />
-                      </div>
+                       </div>
                     </td>
+
                     <td className='cancel-acc'>
                       <button type='button' onClick={() => eliminarFilaActividad(index)} disabled={isReadOnly}>Eliminar</button>
                     </td>

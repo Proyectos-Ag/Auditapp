@@ -904,6 +904,9 @@ if (true) {
       >
         🚧 En mantenimiento 🚧
       </h1>
+      <h2>
+        Del 06/05/2025 al 08/05/2025
+      </h2>
     </div>
   );
 }

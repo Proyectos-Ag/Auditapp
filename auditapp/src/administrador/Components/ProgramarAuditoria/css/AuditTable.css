@@ -9,6 +9,38 @@
     margin-top: 7em;
 }
 
+/* En tu archivo AuditTable.css */
+.audit-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.audit-table th, .audit-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  background-color: white !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.audit-table th {
+  background-color: #f8f9fa !important;
+  font-weight: bold;
+}
+
+/* Asegurar que los estatus se vean bien en la imagen */
+.status-realizada {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+.status-programada {
+  background-color: #2196f3 !important;
+  color: white !important;
+}
+
+/* ...otros estilos de status... */
+
 .loading-overlay {
     position: fixed;
     top: 0;

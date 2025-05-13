@@ -428,6 +428,8 @@ const actualizarFechaCompromiso = async (req, res) => {
           return res.status(200).json([]); // Devuelve un array vacío
       }
 
+      console.log('Ishikawas: ',ishikawas);
+
       // Devolver los registros encontrados
       res.status(200).json(ishikawas);
   } catch (error) {
@@ -912,11 +914,15 @@ const getActivitiesByUsername = async (req, res) => {
         if (responsableEncontrado) {
           // Agregamos la actividad, fecha de compromiso, id del ishikawa y id de la actividad al array de resultados
           actividadesFiltradas.push({
+            proName: doc.proName,
+            idRep: doc.idRep,
+            idReq: doc.idReq,
             ishikawaId: doc._id,
             actividadId: actividad._id,
             actividad: actividad.actividad,
             fechaCompromiso: actividad.fechaCompromiso,
-            concluido: actividad.concluido
+            concluido: actividad.concluido,
+            tipo: doc.tipo
           });
         }
       });
