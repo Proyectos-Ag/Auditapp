@@ -7,8 +7,7 @@ import { UserContext } from '../../../App';
 import Swal from 'sweetalert2'; 
 import withReactContent from 'sweetalert2-react-content';
 import Busqueda from './Busqueda';
-import { Stack, Button, Chip, TextField, Paper, List, ListItem } from '@mui/material';
-import { Alert, AlertTitle } from '@mui/material';
+import { Stack, Button, Chip, TextField, Paper, List, ListItem, Alert, AlertTitle } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import SendIcon from '@mui/icons-material/Send';
 import NewIshikawa from '../../../ishikawa-vacio/components/Ishikawa/NewIshikawa';
@@ -613,44 +612,6 @@ const handleCausaChange = nuevaCausa => {
     return (  
       <div className='content-diagrama'>
 
-        {proceso && (
-        <Alert severity="info" icon={<span style={{ fontSize: 40 }}>📝</span>} sx={{ my: 2 }}>
-          <AlertTitle>En proceso de revisión</AlertTitle>
-          Tu diagrama está siendo evaluado por el administrador.
-        </Alert>
-      )}
-
-      {/* — Aprobado — */}
-      {aprobado && (
-        <Alert severity="success" icon={<span style={{ fontSize: 40 }}>🎉</span>} sx={{ my: 2 }}>
-          <AlertTitle>¡Aprobado!</AlertTitle>
-          El diagrama ha sido aprobado. Ya puedes generar el PDF si lo necesitas.
-        </Alert>
-      )}
-
-      {/* — Rechazado con nota — */}
-      {formData.notaRechazo && !aprobado && !revisado && (
-        <Alert severity="error" sx={{ my: 2 }}>
-          <AlertTitle>Estado: Rechazado</AlertTitle>
-          {nota}
-        </Alert>
-      )}
-
-      {/* — Mensajes fallback según estado — */}
-      {formData.estado === '' && !proceso && !aprobado && !formData.notaRechazo && (
-        <Alert severity="warning" sx={{ my: 2 }}>
-          <AlertTitle>Generación de PDF deshabilitada</AlertTitle>
-          La generación de PDFs permanecerá desactivada hasta que el administrador apruebe el diagrama.
-        </Alert>
-      )}
-
-      {formData.estado === 'Finalizado' && !proceso && !aprobado && (
-        <Alert severity="info" sx={{ my: 2 }}>
-          <AlertTitle>Estado: Finalizado</AlertTitle>
-          El proceso ha sido finalizado. Ya no se permiten modificaciones.
-        </Alert>
-      )}
-
         <form onSubmit={(e) => {
           e.preventDefault(); // Prevenir el envío automático del formulario
           if (isEditing || asignado) {
@@ -673,8 +634,8 @@ const handleCausaChange = nuevaCausa => {
               variant="text"
               sx={{ color: 'white' }}
               startIcon={<SaveIcon />}
-              onClick={e => { e.preventDefault(); handleSaveAdvance(); }}
-              disabled={revisado}
+              onClick={e => { e.preventDefault(); handleSaveOrUpdate(); }}
+              disabled={!proceso && !asignado && !rechazo}
             >
               Guardar
             </Button>
@@ -684,12 +645,49 @@ const handleCausaChange = nuevaCausa => {
               sx={{ color: 'white' }}
               endIcon={<SendIcon />}
               type="submit"
-              disabled={revisado}
+              disabled={!proceso && !asignado && !rechazo}
             >
               Enviar
             </Button>
             
           </Stack>
+
+          {proceso && (
+        <Alert severity="info" icon={<span style={{ fontSize: 40 }}>📝</span>} sx={{ my: 2 }}>
+          <AlertTitle>En proceso de revisión</AlertTitle>
+          Su diagrama está siendo evaluado por el administrador.
+        </Alert>
+      )}
+
+      {/* — Aprobado — */}
+      {aprobado && (
+        <Alert severity="success" icon={<span style={{ fontSize: 40 }}>🎉</span>} sx={{ my: 2 }}>
+          <AlertTitle>¡Aprobado!</AlertTitle>
+          El diagrama ha sido aprobado. Se ha enviado el diagrama en formato PDF a su correo electronico.
+        </Alert>
+      )}
+
+      {/* — Rechazado con nota — */}
+      {rechazo && (
+        <Alert severity="error" sx={{ my: 2 }}>
+          <AlertTitle>Diagrama Rechazado</AlertTitle>
+          Nota: <strong>{nota}</strong>
+        </Alert>
+      )}
+
+      {asignado && (
+        <Alert severity="info" sx={{ my: 2 }}>
+          <AlertTitle>Ishikawa Asignado</AlertTitle>
+          Realice el llenado del diagrama y envíelo para su revisión. Se le notificará el resultado de la revisión.
+        </Alert>
+      )}
+
+      {formData.estado === 'Finalizado' && !proceso && !aprobado && (
+        <Alert severity="info" sx={{ my: 2 }}>
+          <AlertTitle>Estado: Finalizado</AlertTitle>
+          El proceso ha sido finalizado. Ya no se permiten modificaciones.
+        </Alert>
+      )}
         <div className="image-container-auditado">
 
           <img src={Logo} alt="Logo Aguida" className='logo-empresa' />

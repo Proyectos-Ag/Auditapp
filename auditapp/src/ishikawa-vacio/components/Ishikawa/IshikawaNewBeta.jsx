@@ -23,13 +23,13 @@ import { Stack, Button, Chip, TextField, Paper, List, ListItem, Box,
    DialogActions, } from '@mui/material';
 import Diagrama from '../DiagramaRe/Diagrama';
 import NewIshikawa from './NewIshikawa';
-//import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import AutoGrowTextarea from '../../../resources/AutoGrowTextarea';
 
 const CreacionIshikawa2 = () => {
   const [isEditing, setIsEditing] = useState(false);
-  //const { state } = useLocation();
-  //const ishikawaId = state?.ishikawaId;
+  const { state } = useLocation();
+  const ishikawaId = state?.ishikawaId;
   const { userData } = useContext(UserContext);
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -134,11 +134,20 @@ const CreacionIshikawa2 = () => {
     }
   };
 
-  // 2️⃣ Lo usamos en el useEffect como antes
   useEffect(() => {
     fetchIshikawaRecords();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData.Nombre]);
+
+  useEffect(() => {
+  if (ishikawaId && ishikawaRecords.length > 0) {
+    handleSelectRecord(ishikawaId);
+
+    // reemplazo la entrada en el historial sin state
+    navigate('.', { replace: true, state: {} });
+  }
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [ishikawaId, ishikawaRecords, navigate]);
   
 
   const handleSelectRecord = (selectedId) => {

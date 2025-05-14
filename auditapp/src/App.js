@@ -51,7 +51,7 @@ import Reporte from './auditado/Components/Reportes/Reporte.jsx';
 
 //Ishikawas Vacios
 import DiagramaIshVac from './ishikawa-vacio/components/DiagramaRe/Diagrama.jsx';
-import IshikawaVac from './ishikawa-vacio/components/Ishikawa/Ishikawa.jsx';
+//import IshikawaVac from './ishikawa-vacio/components/Ishikawa/Ishikawa.jsx';
 import InicioIsh from './ishikawa-vacio/components/Home/inicio.jsx';
 import GestorIsh from './ishikawa-vacio/components/Ishikawa/GestorIsh.jsx';
 import NewIshikawa from './ishikawa-vacio/components/Ishikawa/NewIshikawa.jsx';

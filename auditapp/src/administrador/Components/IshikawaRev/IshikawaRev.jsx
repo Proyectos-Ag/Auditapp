@@ -5,6 +5,8 @@ import axios from 'axios';
 import { UserContext } from '../../../App';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import html2canvas from 'html2canvas';
 import withReactContent from 'sweetalert2-react-content';
 import Fotos from './Foto'; 
@@ -16,9 +18,18 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import { storage } from '../../../firebase';
 import {ref, uploadBytes, getDownloadURL} from 'firebase/storage';
+import {
+  Stack,
+  Box,
+  Typography,
+  Divider,
+  Button, Alert,AlertTitle
+} from '@mui/material';
 import Backdrop from '@mui/material/Backdrop';
+import SaveIcon from '@mui/icons-material/Save';
 import CircularProgress from '@mui/material/CircularProgress';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import DoneIcon from '@mui/icons-material/Done';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import NewIshikawaFin from '../../../ishikawa-vacio/components/Ishikawa/NewIshikawaFin';
 import Cargando from '../../../components/cargando/Cargando';
@@ -48,7 +59,7 @@ const IshikawaRev = () => {
     const [showPart, setShowPart] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(null);
     const [activeReprogramarId, setActiveReprogramarId] = useState(null);
-    const [showNotaRechazo, setShowNotaRechazo] = useState(false);
+    const [showNotaRechazo] = useState(false);
     const [tempFechaCompromiso, setTempFechaCompromiso] = useState('');
     const [actividades] = useState([{ actividad: '', responsable: [], fechaCompromiso: [] }]);
     const [correcciones, setCorrecciones] = useState([{ actividad: '', responsable: '', fechaCompromiso: null, cerrada: '', evidencia: ''}]);
@@ -539,6 +550,7 @@ const handleCorreccionChange = (index, field, value) => {
                 icon: 'success',
                 confirmButtonText: 'Aceptar',
             }).then(() => {
+                fetchData();
                 verificarRegistro();
               });
             } catch (error) {
@@ -652,60 +664,68 @@ const handleCorreccionChange = (index, field, value) => {
             });
           };
 
-          const handleGuardarRechazo = async () => {
-            try {
-                const { _id } = filteredIshikawas[0];
-                console.log('Aver :', ishikawas[0].auditado, ishikawas[0].proName);
-        
-                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
-                    estado: 'Rechazado',
-                    notaRechazo,
-                    usuario: ishikawas[0].auditado,
-                    programa: ishikawas[0].proName,
-                    correo: ishikawas[0].correo
-                });
-        
-                fetchData();
-        
-                // Mostrar alerta de rechazo exitoso
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Rechazo registrado',
-                    text: 'El ishikawa fue rechazado correctamente.',
-                    confirmButtonText: 'Aceptar',
-                    timer: 3000, // Cierra automáticamente después de 3 segundos
-                    timerProgressBar: true
-                });
-            } catch (error) {
-                console.error('Error updating data:', error);
-        
-                // Mostrar alerta de error
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Hubo un error al registrar el rechazo.',
-                    confirmButtonText: 'Aceptar'
-                });
-            }
-        };
-        
+const handleGuardarRechazo = async (nota) => {
+  try {
+    const { _id: registroId, auditado, proName, correo } = filteredIshikawas[0];
 
-    const Rechazar = async (id, porcentaje) => {
-        Swal.fire({
-          title: '¿Está seguro de querer rechazar este diagrama?',
-          text: '¡El diagrama será devuelto!',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3ccc37',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'Sí, rechazar',
-          cancelButtonText: 'Cancelar'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            handleGuardarRechazo ();
-          }
-        });
-      };
+    await axios.put(
+      `${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${registroId}`,
+      {
+        estado: 'Rechazado',
+        notaRechazo: nota,       // aquí uso la nota recibida por parámetro
+        usuario: auditado,
+        programa: proName,
+        correo
+      }
+    );
+
+    fetchData();
+
+    MySwal.fire({
+      icon: 'success',
+      title: 'Rechazo registrado',
+      text: 'El diagrama fue rechazado correctamente.',
+      timer: 3000,
+      timerProgressBar: true,
+      showConfirmButton: false
+    });
+  } catch (error) {
+    console.error('Error updating data:', error);
+    MySwal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Hubo un problema al registrar el rechazo.',
+      confirmButtonText: 'Aceptar'
+    });
+  }
+};
+
+const Rechazar = () => {
+  MySwal.fire({
+    title: 'Rechazar diagrama',
+    input: 'textarea',
+    inputLabel: 'Escriba la nota de rechazo',
+    inputPlaceholder: 'Comentario…',
+    inputAttributes: {
+      'aria-label': 'Nota de rechazo'
+    },
+    showCancelButton: true,
+    confirmButtonText: 'Rechazar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#d33',
+    inputValidator: (value) => {
+      if (!value) {
+        return 'La nota de rechazo es obligatoria';
+      }
+    }
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Llamamos a guardar pasando directamente el contenido del textarea
+      handleGuardarRechazo(result.value);
+    }
+  });
+};
+
       
 const handleEliminarFila = (index) => {
     const nuevasCorrecciones = [...correcciones];
@@ -926,7 +946,6 @@ const handleUploadFile = (fieldKey) => {
     document.body.appendChild(input);
     input.click();
 
-    // Limpia el input después de usarlo
     document.body.removeChild(input);
 };
 
@@ -981,8 +1000,9 @@ const ocultarCargando = () => {
 };
 
     return (
-        <div>
-            <div className='contenedor-ishikawa-vacio'>
+        <div className='content-diagrama'>
+           
+            <div>
             {/*Carga*/}
             <Backdrop
                 sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
@@ -1018,40 +1038,144 @@ const ocultarCargando = () => {
                                     />
                                 </div>
                             )}
-                            
-                            <div className='buttons-g-r'>
-                                <button onClick={() => setShowNotaRechazo(!showNotaRechazo)}>
-                                    {showNotaRechazo ? 'Ocultar Nota' : 'Nota'}
-                                </button>
-                                <button onClick={Rechazar} className='boton-rechazar' >Rechazar</button>
-                                <button onClick={Aprobar} >Aprobar</button>
-                            </div>
                         </> 
                     )}
-                    
-                    <div className='opciones'>
-                        <h3>Cambiar estado de ishikawa:</h3>
-                    <FormControl variant='filled' sx={{ m: 1, minWidth: 120 }} size="small">
-                        <InputLabel id="estado-select">Seleccione</InputLabel>
-                        <Select
-                            name="estado"
-                            id="estado-select"
-                            label="Age"
-                            onChange={handleSelectChangeEstado}
-                        >
-                            <MenuItem value={'Rechazado'}>Regresar al Auditado</MenuItem>
-                            <MenuItem value={'Aprobado'}>Marcar como "Aprobado"</MenuItem>
-                            <MenuItem value={'Revisado'}>Marcar como "Revisado"</MenuItem>
-                        </Select>
-                        </FormControl>
 
-                    {/* Solo mostramos el botón si se ha seleccionado una opción */}
-                    {selectedOption && (
-                        <button onClick={() =>CambiarEstado(ishikawa._id)}>Cambiar</button>
-                    )}
-                    
-                    </div>
-                    <button className='button-pdf-imp' onClick={handlePrintPDF}>Guardar en PDF</button>
+                    <form onSubmit={(event) => Finalizar(event, selectedIndex)}>
+
+                     <Stack
+                        className="acciones-ish-container"
+                        direction="row"
+                        spacing={3}
+                        alignItems="center"
+                        width="96%"
+                        >
+                        {/* Zona de cambio de estado */}
+                        <Box sx={{ flexGrow: 1 }}>
+                            <Typography variant="subtitle1" color="white" gutterBottom>
+                            Cambiar estado de Ishikawa:
+                            </Typography>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                            <FormControl variant="filled" size="small" sx={{ minWidth: 160,  bgcolor: 'background.paper'  }}>
+                                <InputLabel id="estado-select-label"
+                                >Seleccione</InputLabel>
+                                <Select
+                                labelId="estado-select-label"
+                                id="estado-select"
+                                name="estado"
+                                value={selectedOption}
+                                label="Seleccione"
+                                onChange={handleSelectChangeEstado}
+                                sx={{ bgcolor: 'background.paper' }}
+                                >
+                                <MenuItem value="Rechazado">Regresar al Auditado</MenuItem>
+                                <MenuItem value="Aprobado">Marcar como “Aprobado”</MenuItem>
+                                <MenuItem value="Revisado">Marcar como “Revisado”</MenuItem>
+                                </Select>
+                            </FormControl>
+
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                disabled={!selectedOption}
+                                onClick={() => CambiarEstado(ishikawa._id)}
+                            >
+                                Cambiar
+                            </Button>
+                            </Stack>
+                        </Box>
+
+                        {/* Separador */}
+                        <Divider orientation="vertical" flexItem sx={{ borderColor: 'grey.700' }} />
+
+                        {/* Botones de acción */}
+                        <Stack direction="row" spacing={2} alignItems="center">
+                            {/* Siempre muestro el botón de PDF */}
+                            <Button
+                                variant="text"
+                                sx={{ color: 'white' }}
+                                startIcon={<PictureAsPdfIcon sx={{ color: 'white' }} />}
+                                onClick={handlePrintPDF}
+                            >
+                                Generar PDF
+                            </Button>
+
+                            {ishikawa.estado === 'En revisión' && (
+                                <>
+                                <Button
+                                    variant="text"
+                                    sx={{ color: 'white' }}
+                                    startIcon={<ThumbDownIcon sx={{ color: theme => theme.palette.error.main }} />}
+                                    onClick={Rechazar}
+                                >
+                                    Rechazar
+                                </Button>
+
+                                <Button
+                                    variant="text"
+                                    sx={{ color: 'white' }}
+                                    startIcon={<ThumbUpIcon sx={{ color: theme => theme.palette.success.main }} />}
+                                    onClick={Aprobar}
+                                >
+                                    Aprobar
+                                </Button>
+                                </>
+                            )}
+
+                            {ishikawa.estado === 'Aprobado' && (
+                                <>
+                                <Button
+                                    variant="text"
+                                    sx={{ color: 'white' }}
+                                    startIcon={<SaveIcon />}
+                                    onClick={(e) => {e.preventDefault(); handleGuardarCambios2(selectedIndex);} }
+                                    >
+                                    Guardar
+                                </Button>
+
+                                <Button
+                                variant="text"
+                                sx={{ color: 'white' }}
+                                type="submit"
+                                endIcon={<DoneIcon />}
+                                >
+                                Finalizar
+                                </Button>
+                                </>
+                            )}
+
+                            </Stack>
+
+                        </Stack>
+
+                        {ishikawa.estado === 'En revisión' && (
+                            <Alert severity="info" icon={<span style={{ fontSize: 40 }}>📝</span>} sx={{ my: 2 }}>
+                            <AlertTitle>En estado de revisión</AlertTitle>
+                                Revise el diagrama enviado por <strong>{ishikawa.auditado}</strong> y haga clic en "Aprobar" o "Rechazar" según corresponda.
+                            </Alert>
+                        )}
+
+                        {ishikawa.estado === 'Rechazado' && (
+                            <Alert severity="error" sx={{ my: 2 }}>
+                                <AlertTitle>Estado: Rechazado</AlertTitle>
+                                Este diagrama ha sido rechazado debido a: <strong>{ishikawa.notaRechazo}</strong>
+                            </Alert>
+                        )}
+
+                        {ishikawa.estado === 'Aprobado' && (
+                            <Alert severity="success" icon={<span style={{ fontSize: 40 }}>🎉</span>} sx={{ my: 2 }}>
+                                <AlertTitle>Estado: Aprobado</AlertTitle>
+                                Ha marcado el diagrama como aprobado. Se ha notificado a los participantes mediante correo electrónico.
+                            </Alert>
+                        )}
+
+                        {ishikawa.estado === 'Revisado' && (
+                            <Alert severity="info" sx={{ my: 2 }}>
+                                <AlertTitle>Estado: Finalizado</AlertTitle>
+                                El proceso ha sido finalizado. Ya no se permiten modificaciones.
+                            </Alert>
+                        )}
+
                     <div id='pdf-content-part1' className="image-container">
                     <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
                     <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
@@ -1071,7 +1195,7 @@ const ocultarCargando = () => {
                     <div className='posicion-en-2'>
                     <h3>Fecha: {ishikawa.fecha}</h3>
                     </div>
-                    <div>
+                    <div style={{ marginTop: '-1em'}}>
                     <NewIshikawaFin
                         key={id}
                         diagrama={ishikawa.diagrama}
@@ -1223,11 +1347,12 @@ const ocultarCargando = () => {
                             {aprobado && (
                             <button
                                 className='button-repro'
-                                onClick={() =>
+                                onClick={(e) => {
+                                    e.preventDefault();
                                 setActiveReprogramarId(
                                     activeReprogramarId === actividad._id ? null : actividad._id
-                                )
-                                }
+                                );
+                                }}
                             >
                                 {activeReprogramarId === actividad._id ? 'Cancelar' : 'Reprogramar'}
                             </button>
@@ -1239,7 +1364,6 @@ const ocultarCargando = () => {
                         </tbody>
                     </table>
 
-                    <form onSubmit={(event) => Finalizar(event, selectedIndex)}>
                     {
                     (!aprobado && !revisado) ? null : (
                         <>
@@ -1415,25 +1539,11 @@ const ocultarCargando = () => {
                             </button>
                         </div>
                     )}
-
-                    {/* Botón "Guardar Cambios" */}
-                    {aprobado && selectedIndex !== null && (
-                            <button className='button-agregar'
-                            onClick={(e) => {e.preventDefault(); handleGuardarCambios2(selectedIndex);}}>
-                                Guardar Cambios
-                            </button>
-                    )}
-
-                    <div className='button-final'>
-                        {/* Botón "Finalizar" */}
-                        {aprobado && (
-                            <button type='submit'>Finalizar</button>
-                        )}
-                    </div>
-                    </form>
+                    
                     <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
                     </div>
                     </div> 
+                    </form>
                 </div>
                 ))}
             </div>

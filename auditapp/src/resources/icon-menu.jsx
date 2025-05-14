@@ -7,7 +7,8 @@ import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
-import { Box, IconButton, Stack, Badge } from '@mui/material';
+import {IconButton, Stack, Badge } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import ListIcon from '@mui/icons-material/List';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Swal from "sweetalert2";
@@ -154,20 +155,37 @@ const IconMenu = () => {
 
             {/* Modal con ActivList */}
             {openList && (
-              <Box
-                onClick={handleCloseList}
-                sx={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', bgcolor: 'rgba(0,0,0,0.5)', zIndex: 1500, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              <Dialog
+                open={openList}
+                onClose={handleCloseList}
+                TransitionComponent={Grow}           // animación popup
+                transitionDuration={300}
+                keepMounted                         // mejora performance
+                fullWidth
+                maxWidth="sm"
+                PaperProps={{
+                  sx: {
+                    borderRadius: 2,
+                    p: 2,
+                    boxShadow: 6
+                  }
+                }}
               >
-                <Box
-                  onClick={e => e.stopPropagation()}
-                  sx={{ width: 400, maxHeight: '80vh', overflowY: 'auto', bgcolor: 'background.paper', borderRadius: 1, boxShadow: 24, p: 4 }}
-                >
-                  <ActivList />
-                  <Box textAlign="right" mt={2}>
-                    <button onClick={handleCloseList}>Cerrar</button>
-                  </Box>
-                </Box>
-              </Box>
+                <DialogTitle>Mis Actividades</DialogTitle>
+
+                <DialogContent dividers sx={{ p: 1 }}>
+                  {/*  ⚠️ Alerta informativa */}
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    Haz clic en cualquier actividad para navegar directamente al diagrama.
+                  </Alert>
+
+                  <ActivList onNavigate={handleCloseList} />
+                </DialogContent>
+
+                <DialogActions>
+                  <Button onClick={handleCloseList}>Cerrar</Button>
+                </DialogActions>
+              </Dialog>
             )}
           </div>
         </div>

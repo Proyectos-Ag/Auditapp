@@ -25,11 +25,9 @@ import {
   Switch,
   FormControlLabel,
   Grid,
-  Divider,
   Chip,
   Paper,
   Collapse,
-  Tooltip,
   List,
   ListItem,
   ListItemText,
@@ -50,7 +48,6 @@ import {
   Star as StarIcon,
   Assignment as AssignmentIcon,
   Security as SecurityIcon,
-  Lock as LockIcon,
   ArrowUpward as ArrowUpwardIcon,
   ArrowDownward as ArrowDownwardIcon,
   BusinessCenter as BusinessCenterIcon,
@@ -143,13 +140,6 @@ const styles = {
     margin: 1,
   },
   userTypeChip: (theme, type) => {
-     const colorMap = {
-    auditor: 'primary',
-    auditado: 'secondary',
-    Administrador: 'success',
-    empleado: 'info'
-  };
-  
     let color = 'default';
     switch (type) {
       case 'auditor':
@@ -873,13 +863,31 @@ const UserCard = ({
   // Determinar si el usuario es auditor/administrador/empleado y tiene información adicional
   const tieneInfoAdicional = ['auditor', 'Administrador', 'empleado'].includes(user.TipoUsuario);
 
+  const [openFoto, setOpenFoto] = useState(false);
+
+  const handleAvatarClick = () => {
+    if (user.Foto) {
+      setOpenFoto(true);
+    }
+  };
+  const handleClose = () => setOpenFoto(false);
+
   return (
     <Card sx={styles.userCard}>
       <CardHeader
         avatar={
-          <Avatar sx={styles.avatar}>
-            {user.Nombre ? user.Nombre.charAt(0).toUpperCase() : 'U'}
-          </Avatar>
+          user.Foto ? (
+            <Avatar
+              src={user.Foto}
+              alt={user.Nombre}
+              sx={{ ...styles.avatar, cursor: 'pointer' }}
+              onClick={handleAvatarClick}
+            />
+          ) : (
+            <Avatar sx={styles.avatar}>
+              {user.Nombre ? user.Nombre.charAt(0).toUpperCase() : 'U'}
+            </Avatar>
+          )
         }
         action={
           <IconButton aria-label="settings" onClick={handleMenuClick}>
@@ -911,6 +919,25 @@ const UserCard = ({
           />
         }
       />
+
+      <Dialog
+        open={openFoto}
+        onClose={handleClose}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogContent sx={{ p: 0 }}>
+          <img
+            src={user.Foto}
+            alt={`Foto de ${user.Nombre}`}
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+            }}
+          />
+        </DialogContent>
+      </Dialog>
       
       <CardContent>
         <Box sx={styles.infoItem}>

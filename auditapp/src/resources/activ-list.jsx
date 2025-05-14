@@ -3,19 +3,16 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Typography,
-  Paper,
   List,
   ListSubheader,
-  ListItem,
   Checkbox,
-  FormControlLabel,
-  Divider
+  Divider,
+  ListItemButton,
+  ListItemText,
 } from '@mui/material';
 import { UserContext } from '../App';
 
-export default function ActivList() {
+export default function ActivList({ onNavigate }) {
   const { userData } = useContext(UserContext);
   const [activities, setActivities] = useState([]);
   const navigate = useNavigate();
@@ -65,100 +62,71 @@ export default function ActivList() {
   const completedActivities = activities.filter(a => a.concluido);
 
   return (
-    <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Mis Actividades Ishikawa
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Una vez completes una actividad, márcala como completada. El administrador recibirá una notificación para su verificación.
-        </Typography>
-      </Box>
+    <List disablePadding>
 
-      {activities.length === 0 ? (
-        <Typography variant="body1" color="text.secondary">
-          No tienes actividades asignadas.
-        </Typography>
-      ) : (
-        <>
-          <List
-            component="nav"
-            subheader={
-              <ListSubheader component="div" sx={{ bgcolor: 'background.paper', fontWeight: 'bold' }}>
-                Pendientes ({pendingActivities.length})
-              </ListSubheader>
-            }
+      {/* ——— PENDIENTES ——— */}
+      <ListSubheader sx={{ bgcolor: 'inherit', fontWeight: 'bold', px: 1, py: 0.5 }}>
+        Pendientes ({pendingActivities.length})
+      </ListSubheader>
+
+      {pendingActivities.map((act, i) => (
+        <React.Fragment key={act.actividadId || i}>
+
+          <ListItemButton
+            onClick={() => {
+              onNavigate();
+              const path = act.tipo === 'vacio'
+                ? '/diagramas'
+                : `/auditado/ishikawa/${act.idRep}/${act.idReq}/${act.proName}`;
+              navigate(path, { state: { ishikawaId: act.ishikawaId } });
+            }}
+            sx={{ px: 1, py: 0.75 }}
           >
-            {pendingActivities.map((act, i) => (
-              <ListItem
-                key={act.actividadId || i}
-                sx={{ pl: 0 }}
-                secondaryAction={
-                  <Checkbox
-                    checked={act.concluido}
-                    onChange={e => handleCheck(act.ishikawaId, act.actividadId, e, activities.indexOf(act))}
-                  />
-                }
-              >
-                <Box
-                  onClick={() => {
-                    if (act.tipo === 'vacio') {
-                      navigate('/new2', { state: { ishikawaId: act.ishikawaId } });
-                    } else {
-                      navigate(
-                        `/auditado/ishikawa/${act.idRep}/${act.idReq}/${act.proName}`,
-                        { state: { ishikawaId: act.ishikawaId } }
-                      );
-                    }
-                  }}
-                  sx={{ cursor: 'pointer' }}
-                >
-                  <Typography variant="body1" fontWeight="medium" color="primary.main">
-                    {act.actividad}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Fecha compromiso: {Array.isArray(act.fechaCompromiso)
-                      ? act.fechaCompromiso.join(', ')
-                      : act.fechaCompromiso}
-                  </Typography>
-                </Box>
-              </ListItem>
+            <Checkbox
+              edge="start"
+              checked={act.concluido}
+              onClick={e => e.stopPropagation()}
+              onChange={e => handleCheck(act.ishikawaId, act.actividadId, e, i)}
+            />
+            <ListItemText
+              primary={act.actividad}
+              primaryTypographyProps={{ fontWeight: 'medium', color: 'primary.main' }}
+              secondary={`Fecha compromiso: ${
+                Array.isArray(act.fechaCompromiso)
+                  ? act.fechaCompromiso.join(', ')
+                  : act.fechaCompromiso
+              }`}
+            />
+          </ListItemButton>
 
-            ))}
-          </List>
+          {/* separador solo entre ítems */}
+          {i < pendingActivities.length - 1 && <Divider component="li" />}
+        </React.Fragment>
+      ))}
 
-          <Divider sx={{ my: 2 }} />
+      {/* ——— DIVIDER GENERAL ——— */}
+      <Divider sx={{ my: 1 }} component="li" />
 
-          <List
-            component="nav"
-            subheader={
-              <ListSubheader component="div" sx={{ bgcolor: 'background.paper', fontWeight: 'bold' }}>
-                Completadas ({completedActivities.length})
-              </ListSubheader>
-            }
-          >
-            {completedActivities.map((act, i) => (
-              <ListItem key={act.actividadId || i} sx={{ pl: 0 }}>
-                <FormControlLabel
-                  control={<Checkbox checked disabled />}
-                  label={
-                    <Box>
-                      <Typography variant="body1" sx={{ textDecoration: 'line-through', color: 'text.secondary' }}>
-                        {act.actividad}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Fecha compromiso: {Array.isArray(act.fechaCompromiso)
-                          ? act.fechaCompromiso.join(', ')
-                          : act.fechaCompromiso}
-                      </Typography>
-                    </Box>
-                  }
-                />
-              </ListItem>
-            ))}
-          </List>
-        </>
-      )}
-    </Paper>
+      {/* ——— COMPLETADAS ——— */}
+      <ListSubheader sx={{ bgcolor: 'inherit', fontWeight: 'bold', px: 1, py: 0.5 }}>
+        Completadas ({completedActivities.length})
+      </ListSubheader>
+
+      {completedActivities.map((act, i) => (
+        <ListItemButton key={act.actividadId || i} disabled sx={{ px: 1, py: 0.75 }}>
+          <Checkbox checked disabled edge="start" />
+          <ListItemText
+            primary={act.actividad}
+            primaryTypographyProps={{ sx: { textDecoration: 'line-through', color: 'text.secondary' } }}
+            secondary={`Fecha compromiso: ${
+              Array.isArray(act.fechaCompromiso)
+                ? act.fechaCompromiso.join(', ')
+                : act.fechaCompromiso
+            }`}
+          />
+        </ListItemButton>
+      ))}
+
+    </List>
   );
 }
