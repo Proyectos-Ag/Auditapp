@@ -75,9 +75,10 @@ export default function ActivList({ onNavigate }) {
           <ListItemButton
             onClick={() => {
               onNavigate();
+              const safeProName = encodeURIComponent(act.proName);
               const path = act.tipo === 'vacio'
                 ? '/diagramas'
-                : `/auditado/ishikawa/${act.idRep}/${act.idReq}/${act.proName}`;
+                : `/auditado/ishikawa/${act.idRep}/${act.idReq}/${safeProName}`;
               navigate(path, { state: { ishikawaId: act.ishikawaId } });
             }}
             sx={{ px: 1, py: 0.75 }}
