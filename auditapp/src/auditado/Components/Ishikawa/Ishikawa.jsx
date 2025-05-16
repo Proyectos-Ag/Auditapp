@@ -203,6 +203,28 @@ const handleTempFechaChange = (value) => {
 
   const handleUpdate = async () => {
     try {
+      //Validar que haya al menos un participante
+    if (!formData.participantes || formData.participantes.length === 0) {
+      Swal.fire({
+        title: 'Faltan participantes',
+        text: 'Debes agregar al menos un participante antes de enviar.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+    const faltaResponsable = actividades.find(
+      (act) => !act.responsable || act.responsable.length === 0
+    );
+    if (faltaResponsable) {
+      Swal.fire({
+        title: 'Faltan responsables',
+        text: `La actividad "${faltaResponsable.actividad || '(sin descripción)'}" necesita al menos un responsable.`,
+        icon: 'warning',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
       // Verificar que `rechazo` no esté vacío
       if (rechazo.length === 0) {
         alert('No hay datos para actualizar');
@@ -346,6 +368,28 @@ const handleTempFechaChange = (value) => {
 
   const handleSave = async () => {
     try {
+      if (!formData.participantes || formData.participantes.length === 0) {
+      Swal.fire({
+        title: 'Faltan participantes',
+        text: 'Debes agregar al menos un participante antes de enviar.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    const faltaResponsable = actividades.find(
+      (act) => !act.responsable || act.responsable.length === 0
+    );
+    if (faltaResponsable) {
+      Swal.fire({
+        title: 'Faltan responsables',
+        text: `La actividad "${faltaResponsable.actividad || '(sin descripción)'}" necesita al menos un responsable.`,
+        icon: 'warning',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
       const data = {
         idRep:_id,
         idReq: id,
@@ -545,7 +589,7 @@ useEffect(() => {
 const handleResponsableSelect = (index, user) => {
   const nuevasActividades = actividades.map((actividad, i) => {
     if (i === index) {
-      // Validamos si el responsable ya está en el array (comparamos por nombre, por ejemplo)
+      // Validamos si el responsable ya está en el array
       const yaExiste = actividad.responsable.some(
         (resp) => resp.nombre === user.Nombre
       );
