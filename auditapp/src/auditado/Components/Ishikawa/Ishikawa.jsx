@@ -25,8 +25,9 @@ const Ishikawa = () => {
   const [asignado,  setAsignado] = useState([]);
   const [revisado,  setRevisado] = useState([]);
   const [aprobado,  setAprobado] = useState([]);
+  const [rechazo, setRechazo] = useState([]);
   const [selectedParticipants, setSelectedParticipants] = useState([]);
-  const [rechazo,  setRechazo] = useState([]);
+  const [registro, setRegistro] = useState([]);
   const [problema, setProblema] = useState(''); // Almacena el valor del problema
   const [nota,  setNota] = useState([]);
   const [ishikawaRegistro, setIshikawaRegistro] = useState(null);
@@ -36,6 +37,7 @@ const Ishikawa = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const MySwal = withReactContent(Swal);
+  
  
   const [formData,setData] = useState({
     problema: '',
@@ -174,7 +176,8 @@ const verificarRegistro = async () => {
       setAprobado(registro.estado === 'Aprobado');
       setRevisado(registro.estado === 'Revisado');
       setEnProceso(registro.estado === 'En revisión');
-      setRechazo([registro]);
+      setRechazo(registro.estado === 'Rechazado');
+      setRegistro([registro]);
 
         setData({
           problema: registro.problema,
@@ -225,13 +228,13 @@ const handleTempFechaChange = (value) => {
       });
       return;
     }
-      // Verificar que `rechazo` no esté vacío
-      if (rechazo.length === 0) {
+      // Verificar que `registro` no esté vacío
+      if (registro.length === 0) {
         alert('No hay datos para actualizar');
         return;
       }
-      // Obtener el `_id` del primer elemento de `rechazo`
-      const { _id } = rechazo[0];
+      // Obtener el `_id` del primer elemento de `registro`
+      const { _id } = registro[0];
   
       const data = {
         idRep: idRep.idRepo,
@@ -284,14 +287,14 @@ const handleTempFechaChange = (value) => {
 
   const handleUpdateAdvance = async () => {
     try {
-      // Verificar que `rechazo` no esté vacío
-      if (rechazo.length === 0) { 
+      // Verificar que `registro` no esté vacío
+      if (registro.length === 0) { 
         alert('No hay datos para actualizar');
         return;
       }
   
-      // Obtener el `_id` del primer elemento de `rechazo`
-      const { _id } = rechazo[0];
+      // Obtener el `_id` del primer elemento de `registro`
+      const { _id } = registro[0];
   
       const data = {
         idRep: idRep.idRepo,
@@ -332,7 +335,7 @@ const handleTempFechaChange = (value) => {
   };
 
   const handleSaveAdvance = async () => {
-    try {
+    try {      
       const data = {
         idRep:_id,
         idReq: id,
@@ -441,7 +444,6 @@ const handleTempFechaChange = (value) => {
       !formData.correccion ||
       !formData.causa ||
       !formData.participantes ||
-      diagrama.some(dia => !dia.problema || !dia.text1 || !dia.text2 || !dia.text3 || !dia.text10 || !dia.text11) ||
       actividades.some(act => !act.actividad || !act.responsable || !act.fechaCompromiso)
     ) {
       console.log('Por favor, complete todos los campos requeridos antes de guardar.');
@@ -537,7 +539,7 @@ const ajustarTamanoFuente = (textarea) => {
         actividades: updatedActividades
       };
   
-      const { _id } = rechazo[0];
+      const { _id } = registro[0];
   
       const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/fecha/${_id}`, updatedData);
       console.log('Datos actualizados:', response.data);
@@ -652,7 +654,7 @@ const handleCausaChange = nuevaCausa => {
   setData(fd => ({ ...fd, causa: nuevaCausa }));
 };
  
- if (rechazo || aprobado || proceso) {
+ if (registro || aprobado || proceso) {
     return (  
       <div className='content-diagrama'>
 
@@ -679,7 +681,7 @@ const handleCausaChange = nuevaCausa => {
               sx={{ color: 'white' }}
               startIcon={<SaveIcon />}
               onClick={e => { e.preventDefault(); handleSaveOrUpdate(); }}
-              disabled={!proceso && !asignado && !rechazo}
+              disabled={!asignado && !rechazo}
             >
               Guardar
             </Button>
@@ -689,7 +691,7 @@ const handleCausaChange = nuevaCausa => {
               sx={{ color: 'white' }}
               endIcon={<SendIcon />}
               type="submit"
-              disabled={!proceso && !asignado && !rechazo}
+              disabled={!asignado && !rechazo}
             >
               Enviar
             </Button>

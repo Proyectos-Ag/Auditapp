@@ -442,3 +442,24 @@
     text-transform: uppercase;
     border: 2px solid #ffffff;
 }
+
+/* Estilos para la versión PDF */
+.cont-part-pdf {
+  padding: 20px;
+  border: 1px solid #ddd;
+  margin: 10px;
+}
+
+.part-div-pdf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.participante-pdf {
+  background: #f0f0f0;
+  padding: 5px 10px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+}

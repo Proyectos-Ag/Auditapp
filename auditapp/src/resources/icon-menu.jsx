@@ -15,11 +15,13 @@ import Swal from "sweetalert2";
 import { UserContext } from '../App';
 import { useNavigate, useLocation } from "react-router-dom";
 import ActivList from './activ-list';
+import Avisos from "./Avisos";
 import logo from '../assets/img/logoAguida.png';
 
 const IconMenu = () => {
   const [open, setOpen] = useState(false);
   const [openList, setOpenList] = useState(false);
+  const [openAvisos, setOpenAvisos] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const anchorRef = useRef(null);
   const navigate = useNavigate();
@@ -47,15 +49,21 @@ const IconMenu = () => {
   }, [userData]);
 
   useEffect(() => {
-    if (showOnLogin && pendingCount > 0) {
-      setOpenList(true);
-      // opcional: resetear showOnLogin para que no vuelva a dispararse
+    if (showOnLogin) {
+      setOpenAvisos(true);
       setShowOnLogin(false);
     }
-  }, [showOnLogin, pendingCount]);
+  }, [showOnLogin]);
 
   const handleOpen = () => setOpenList(true);
   const handleCloseList = () => setOpenList(false);
+
+  const handleCloseAvisos = () => {
+    setOpenAvisos(false);
+    if (pendingCount > 0) {
+      setOpenList(true);
+    }
+  };
 
   const handleToggle = () => setOpen(prev => !prev);
   const handleClose = event => {
@@ -152,6 +160,10 @@ const IconMenu = () => {
                 <ListIcon />
               </IconButton>
             </Badge>
+
+            {openAvisos && (
+          <Avisos open={openAvisos} onClose={handleCloseAvisos} />
+         )}
 
             {/* Modal con ActivList */}
             {openList && (

@@ -1,13 +1,11 @@
-import React, { useEffect, useState,useCallback,useContext } from 'react';
+import React, { useEffect, useState,useCallback,useContext, useRef } from 'react';
 import Logo from "../assets/img/logoAguida.png";
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { UserContext } from '../../../App';
 import Swal from 'sweetalert2';
-import jsPDF from 'jspdf';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
-import html2canvas from 'html2canvas';
 import withReactContent from 'sweetalert2-react-content';
 import Fotos from './Foto'; 
 import './css/Modal.css';
@@ -32,11 +30,10 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DoneIcon from '@mui/icons-material/Done';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import NewIshikawaFin from '../../../ishikawa-vacio/components/Ishikawa/NewIshikawaFin';
-import Cargando from '../../../components/cargando/Cargando';
+import IshPDF from './IshPDF';
 
 const IshikawaRev = () => {
     const { userData } = useContext(UserContext);
-    const [loading, setLoading] = useState(false)
     const [ishikawas, setIshikawas] = useState([]);
     const [programa, setPrograma] = useState(null);
     const [descripcion, setDescripcion] = useState(null);
@@ -219,147 +216,14 @@ useEffect(() => {
     }
 }, [ishikawas, _id, id, nombre]);
 
+    const pdfRef = useRef();
 
-const handlePrintPDF = async ({ download = true, id, participantes } = {}) => {
-        setLoading(true)
-    
-        const part1 = document.getElementById('pdf-content-part1');
-        const part2 = document.getElementById('pdf-content-part2');
-        const part3 = document.getElementById('pdf-content-part3');
-    
-        const convertTextAreasToDivs = (element) => {
-            const textareas = element.querySelectorAll('textarea');
-            textareas.forEach((textarea) => {
-                const div = document.createElement('div');
-                div.innerHTML = textarea.value.replace(/\n/g, '<br>');
-                div.className = textarea.className;
-                div.style.cssText = textarea.style.cssText;
-                textarea.parentNode.replaceChild(div, textarea);
-            });
-        };
-    
-        const ensureImagesLoaded = (element) => {
-            const images = element.querySelectorAll('img');
-            const promises = Array.from(images).map((img) => {
-                return new Promise((resolve) => {
-                    if (img.complete) {
-                        resolve();
-                    } else {
-                        img.onload = resolve;
-                        img.onerror = resolve;
-                    }
-                });
-            });
-            return Promise.all(promises);
-        };
-    
-        const processRowAndImages = async (row, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
-            // Captura cada fila, incluyendo imágenes en celdas
-            const rowCanvas = await html2canvas(row, { scale: 2.5, useCORS: true });
-            const rowHeight = (rowCanvas.height * (pageWidth - marginLeft - marginRight)) / rowCanvas.width;
-    
-            if (yOffset + rowHeight + bottomMargin > pageHeight) {
-                pdf.addPage(); // Agregar nueva página si la fila no cabe
-                yOffset = 0.5; // Reiniciar el offset en la nueva página
-            }
-    
-            const rowImgData = rowCanvas.toDataURL('image/jpeg', 0.8); // Convertir a datos base64
-            pdf.addImage(rowImgData, 'JPEG', marginLeft, yOffset, pageWidth - marginLeft - marginRight, rowHeight);
-            yOffset += rowHeight;
-    
-            return yOffset;
-        };
-    
-        const processTableWithRowControl = async (tableElement, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
-            const rows = tableElement.querySelectorAll('tr');
-    
-            for (const row of rows) {
-                // Procesar cada fila y sus imágenes
-                yOffset = await processRowAndImages(row, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
-            }
-    
-            return yOffset;
-        };
-    
-        const processPart3WithTableRows = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
-            convertTextAreasToDivs(element); // Convertir textareas a divs
-            await ensureImagesLoaded(element); // Asegurar que las imágenes estén completamente cargadas
-    
-            const tables = element.querySelectorAll('table'); // Obtener todas las tablas en part3
-            if (tables.length > 0) {
-                for (const table of tables) {
-                    yOffset = await processTableWithRowControl(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
-                }
-            }
-    
-            return yOffset;
-        };
-    
-        const processCanvas = (canvas, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-    
-            const imgWidth = pageWidth - marginLeft - marginRight;
-            const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
-    
-            if (yOffset + imgHeight + bottomMargin > pageHeight) {
-                pdf.addPage();
-                yOffset = 0.5;
-            }
-    
-            const imgData = canvas.toDataURL('image/jpeg', 0.8);
-            pdf.addImage(imgData, 'JPEG', marginLeft, yOffset, imgWidth, imgHeight);
-    
-            return yOffset + imgHeight;
-        };
-    
-        const pdf = new jsPDF('landscape', 'cm', 'letter');
-    
-        let yOffset = 0.5;
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const marginLeft = 0;
-        const marginRight = 0;
-        const marginLeft3 = 2;
-        const marginRight3 = 2;
-        const bottomMargin = 1.0; // Establecer un margen inferior de 1 cm
-    
-        try {
-            // 1) convertir textareas y esperar imágenes
-            convertTextAreasToDivs(part1);
-            await ensureImagesLoaded(part1);
-            // 2) capturar parte1, parte2 y procesar part3
-            const canvas1 = await html2canvas(part1, { scale: 2.5, useCORS: true });
-            yOffset = processCanvas(canvas1, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
-            const canvas2 = await html2canvas(part2, { scale: 2.5, useCORS: true });
-            yOffset = processCanvas(canvas2, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
-            await processPart3WithTableRows(part3, pdf, yOffset, pageWidth, pageHeight, marginLeft3, marginRight3, bottomMargin);
-        
-            // 3) generar blob
-            const pdfBlob = pdf.output('blob');
-        
-            if (download) {
-              // descarga local
-              pdf.save('diagrama_ishikawa.pdf');
-            } else {
-              // envío al backend
-              const file = new File([pdfBlob], 'diagrama_ishikawa.pdf', { type: 'application/pdf' });
-              const formData = new FormData();
-              formData.append('pdf', file);
-              formData.append('participantes', participantes);
-              await axios.post(
-                `${process.env.REACT_APP_BACKEND_URL}/ishikawa/enviar-pdf-dos`,
-                formData
-              );
-            }
-        } catch (error) {
-            console.error('Error generating or sending PDF:', error);
-            setLoading(false);
-            alert('Hubo un error al generar o enviar el PDF');
-          } finally {
-            setLoading(false);
-          }
-    }; 
+// 2) Función para imprimir/enviar PDF
+ const handlePrintPDF2 = async ({ download = true, participantes }) => {
+    if (pdfRef.current) {
+      await pdfRef.current.generatePDF({ download, participantes });
+    }
+  };
 
 const handleCorreccionChange = (index, field, value) => {
         const nuevasCorrecciones = [...correcciones];
@@ -630,7 +494,7 @@ const handleCorreccionChange = (index, field, value) => {
                     timerProgressBar: true
                 });
 
-                await handlePrintPDF({ download: false, id, participantes: ishikawas[0].participantes});
+                await handlePrintPDF2({ download: false, id, participantes: ishikawas[0].participantes});
                 await fetchData();
                 await verificarRegistro();
         
@@ -1012,10 +876,6 @@ const ocultarCargando = () => {
                 <CircularProgress color="inherit" />
             </Backdrop>
 
-            {/*Mensaje de generacion*/}
-            {loading && (
-                <Cargando fullScreen message="Generando PDF…" />
-            )}
                 {filteredIshikawas.map((ishikawa, index) => (
                 <div key={index}>
                      {ishikawa.estado === 'Asignado' && (
@@ -1082,6 +942,7 @@ const ocultarCargando = () => {
                             >
                                 Cambiar
                             </Button>
+                           
                             </Stack>
                         </Box>
 
@@ -1091,14 +952,19 @@ const ocultarCargando = () => {
                         {/* Botones de acción */}
                         <Stack direction="row" spacing={2} alignItems="center">
                             {/* Siempre muestro el botón de PDF */}
-                            <Button
-                                variant="text"
-                                sx={{ color: 'white' }}
-                                startIcon={<PictureAsPdfIcon sx={{ color: 'white' }} />}
-                                onClick={handlePrintPDF}
-                            >
-                                Generar PDF
-                            </Button>
+                             <IshPDF
+                                ref={pdfRef}    
+                                ishikawa={ishikawa}
+                                programa={programa}
+                                id={id}
+                                logo={Logo}
+                                download={true}
+                                participantesC={
+                                    ishikawa.participantes
+                                    .split('/')
+                                    .map(p => p.trim())
+                                }
+                                />
 
                             {ishikawa.estado === 'En revisión' && (
                                 <>

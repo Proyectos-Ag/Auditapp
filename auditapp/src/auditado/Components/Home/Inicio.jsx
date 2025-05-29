@@ -3,7 +3,6 @@ import BotonesRol from "../../../resources/botones-rol";
 import './css/Inicio.css';
 import videoFile from '../assets/img/UpscaleVideo_1_20240628.webm';
 import pez from "../assets/img/Ishikawa-mini.png";
-import usuario from "../assets/img/usuario.png";
 import finalizado from "../assets/img/finalizado.png"
 import { useNavigate } from "react-router-dom";
 import Event from "../../../resources/event";
@@ -53,12 +52,12 @@ const Inicio = () => {
        <br/><br/>
         <img src={finalizado} alt="finalizado" style={{width:'80%'}} className='imagen-mini' />
       </div>
-      <div className="card-home" onClick={() => navigate("/auditado/informacion")}>
-        Usuario
-        <br />
-        <br />
-        <img src={usuario} alt="usuario" className='imagen-mini' />
-      </div>
+            <div className="card-home" onClick={() => navigate("/diagramas")}>
+              Generar Ishikawa
+              <br/><br/>
+              <img src={pez} alt="pez" className='imagen-mini' />
+              
+            </div>
     </div>
     </div>
     </div>

@@ -28,7 +28,6 @@ const BotonesRol = () => {
       { label: "Administrador", path: "/admin" },
       { label: "Auditor", path: "/auditor" },
       { label: "Auditado", path: "/auditado" },
-      { label: "Ishikawas", path: "/inicio-ishvac" },
       { label: "Objetivos", path: "/objetivos" }
     ],
     auditor: [

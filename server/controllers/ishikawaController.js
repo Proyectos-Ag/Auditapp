@@ -707,45 +707,64 @@ const enviarPDF = async (req, res) => {
 
 const enviarPDFDos = async (req, res) => {
   try {
-    const participantesStr = req.body.participantes;      // p.ej. "Mario Solís / Pedro Mata / José José"
-    const pdfFile       = req.file;                      // multer single( 'file' )
+    const participantesStr = req.body.participantes;
+    const pdfFile       = req.file;                      // multer single('file')
+    const responsablesRaw = req.body.correoResponsable;
+
     if (!participantesStr || !pdfFile) {
       return res.status(400).json({ error: "Faltan datos (participantes o PDF)" });
     }
 
     // 1) Separamos por "/"
-    const rawParts = participantesStr.split('/').map(s => s.trim()).filter(s => s);
-    const emails = [];
+    const rawParts = participantesStr
+      .split('/')
+      .map(s => s.trim())
+      .filter(s => s);
 
-    // 2) Recorremos e intentamos encontrar cada nombre o combinación
+    // 2) Buscamos los correos de participantes
+    const emailsParticipantes = [];
     for (let i = 0; i < rawParts.length; i++) {
       let nombre = rawParts[i];
       let user = await Usuarios.findOne({ Nombre: nombre });
 
-      // 2a) Si no existe y hay siguiente, probamos con la combinación "A / B"
+      // si no existe y hay siguiente, probamos con la combinación "A / B"
       if (!user && i + 1 < rawParts.length) {
         const combinado = `${nombre} / ${rawParts[i + 1]}`;
         user = await Usuarios.findOne({ Nombre: combinado });
         if (user) {
-          emails.push(user.Correo);
-          i++; // saltamos el siguiente porque ya formó parte de la combinación
+          emailsParticipantes.push(user.Correo);
+          i++; // saltamos el siguiente
           continue;
         }
       }
 
-      // 2b) Si lo encontramos, guardamos el correo
       if (user) {
-        emails.push(user.Correo);
+        emailsParticipantes.push(user.Correo);
       } else {
         console.warn(`Usuario no encontrado en DB: "${nombre}"`);
       }
     }
 
-    if (emails.length === 0) {
+    if (emailsParticipantes.length === 0) {
       return res.status(404).json({ error: "No se encontraron participantes válidos" });
     }
 
-    // 3) Configuramos nodemailer
+    // 3) Procesamos correosResponsable (puede venir como string o array)
+    let emailsResponsables = [];
+    if (responsablesRaw) {
+      if (Array.isArray(responsablesRaw)) {
+        emailsResponsables = responsablesRaw.filter(Boolean);
+      } else {
+        emailsResponsables = [responsablesRaw];
+      }
+    }
+
+    // 4) Unimos ambos arrays y eliminamos duplicados
+    const todosLosEmails = Array.from(
+      new Set([ ...emailsParticipantes, ...emailsResponsables ])
+    );
+
+    // 5) Configuramos nodemailer
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -755,15 +774,14 @@ const enviarPDFDos = async (req, res) => {
     });
 
     const templatePathAsignacion = path.join(__dirname, 'templates', 'pdf-aprobado.html');
-      const emailTemplateAsignacion = fs.readFileSync(templatePathAsignacion, 'utf8');
-      const customizedTemplateAsignacion = emailTemplateAsignacion;
+    const emailTemplateAsignacion = fs.readFileSync(templatePathAsignacion, 'utf8');
 
-    // 4) Preparamos el email con el PDF adjunto
+    // 6) Preparamos el email con el PDF adjunto
     const mailOptions = {
       from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
-      to: emails,  // arreglo de correos
+      to: todosLosEmails,  // ya sin duplicados
       subject: "Ishikawa Aprobado",
-      html: customizedTemplateAsignacion,
+      html: emailTemplateAsignacion,
       attachments: [
         {
           filename: pdfFile.originalname || 'diagrama_ishikawa.pdf',
@@ -780,18 +798,21 @@ const enviarPDFDos = async (req, res) => {
       ]
     };
 
-    // 5) Enviamos
+    // 7) Enviamos
     transporter.sendMail(mailOptions, (err, info) => {
       if (err) {
         console.error("Error al enviar el correo:", err);
         return res.status(500).json({ error: "Error al enviar correo" });
       }
       console.log("Correo enviado:", info.response);
-      res.status(200).json({ message: "Correo enviado exitosamente", enviadosA: emails });
+      res.status(200).json({ 
+        message: "Correo enviado exitosamente", 
+        enviadosA: todosLosEmails 
+      });
     });
 
   } catch (error) {
-    console.error("Error en enviarPDF:", error);
+    console.error("Error en enviarPDFDos:", error);
     res.status(500).json({ error: error.message });
   }
 };
