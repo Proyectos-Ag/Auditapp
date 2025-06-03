@@ -970,12 +970,6 @@ const handleCausaChange = nuevaCausa => {
             </div>
         )}
 
-        {formData.notaRechazo ? (
-          <div className='th-comentario'>
-             <div style={{padding:'15px'}}>{formData.notaRechazo}</div>
-          </div>
-         ): ''}
-
          <Box
           sx={{
             display: 'flex',
