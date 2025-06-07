@@ -61,12 +61,26 @@ const IshPDF = forwardRef(({
       logging: true,
       backgroundColor: '#ffffff',
       ignoreElements: el => el.tagName === 'BUTTON',
-      onclone: clonedDoc => clonedDoc.querySelectorAll('*').forEach(el => {
+      onclone: (clonedDoc) => {
+      clonedDoc.querySelectorAll('*').forEach(el => {
         el.style.visibility = 'visible';
         el.style.boxShadow = 'none';
-      })
-    });
-  };
+      });
+
+      // Convertir textareas en divs con saltos de línea
+      clonedDoc.querySelectorAll('textarea').forEach(textarea => {
+        const div = clonedDoc.createElement('div');
+        div.className = textarea.className;
+        div.style.cssText = textarea.style.cssText;
+        div.style.whiteSpace = 'pre-wrap'; // Mantener saltos de línea
+        div.style.overflow = 'hidden';
+        div.innerHTML = textarea.value.replace(/\n/g, '<br>'); // Convertir \n a <br>
+        
+        textarea.parentNode.replaceChild(div, textarea);
+      });
+    }
+  });
+};
 
   const generatePaginatedTable = (doc, headers, rows, startX, startY, columnWidths, pageHeight, margin, headerHeight = 20) => {
   let y = startY;
@@ -239,7 +253,10 @@ const IshPDF = forwardRef(({
       .text('Afectación:', margin, yOffset);
     const afectLines = doc.splitTextToSize(`  ${id} ${programa.Nombre || ''}`, pageWidth - 260);
     doc.setFont('helvetica','normal').setFontSize(textSize).setTextColor(0)
-      .text(afectLines, 140, yOffset);
+      .text(afectLines, 140, yOffset, {
+      align: 'left',
+      maxWidth: pageWidth - 260
+    });
     doc.setFontSize(textSize).setTextColor(0)
       .text(`Fecha: ${ishikawa.fecha || ''}`, pageWidth - margin, yOffset, { align: 'right' });
     yOffset += Math.max(afectLines.length * (textSize + 2), textSize + 2);
@@ -281,7 +298,7 @@ const IshPDF = forwardRef(({
       const lines = doc.splitTextToSize(normalized, availableWidth);
       doc.setFont('helvetica','normal').setFontSize(12).setTextColor(0)
         .text(lines, margin, yOffset + lineHeight, {
-    align:    'justify',
+    align:'justify',
     maxWidth: availableWidth,
     lineHeightFactor
   });

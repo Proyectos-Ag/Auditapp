@@ -212,7 +212,7 @@ export default function NewIshikawa({ diagrama, setDiagrama, problema, ID, onCau
                           <RemoveCircleOutlineIcon />
                         </IconButton>
                         <AutoGrowTextarea
-                          className="cause-input"
+                          className="cause-input editable-textarea"
                           placeholder={`Causa ${ci+1}`}
                           maxLength={145}
                           value={text}
