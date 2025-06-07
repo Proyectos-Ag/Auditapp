@@ -6,6 +6,7 @@ import NewIshikawaFin from '../../../ishikawa-vacio/components/Ishikawa/NewIshik
 import './css/IshikawaRev.css';
 import axios from 'axios';
 import Button from '@mui/material/Button';
+import Logo from "../assets/img/logoAguida.png";
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 // Función auxiliar para procesar responsable
@@ -39,7 +40,6 @@ const IshPDF = forwardRef(({
   ishikawa = {},
   programa = {},
   id = '',
-  logo,
   download,
   participantesC = []
 }, ref) =>{
@@ -216,9 +216,7 @@ const IshPDF = forwardRef(({
     const margin = 2 * cmToPt; 
     const availableWidth = pageWidth - 2 * margin;
 
-    if (logo) {
-      try { doc.addImage(logo, 'PNG', margin, yOffset, 100, 40); } catch {};
-    }
+    try { doc.addImage(Logo, 'PNG', margin, yOffset, 100, 40); } catch {};
 
     doc.setFont('helvetica','normal').setFontSize(10).setTextColor(0)
       .text('GCF015', pageWidth - margin, yOffset + 5, { align: 'right' });

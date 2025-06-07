@@ -957,7 +957,6 @@ const ocultarCargando = () => {
                                 ishikawa={ishikawa}
                                 programa={programa}
                                 id={id}
-                                logo={Logo}
                                 download={true}
                                 participantesC={
                                     ishikawa.participantes
