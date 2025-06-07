@@ -275,7 +275,7 @@ const TablaObjetivosArea = () => {
 
   const periodos = [
     {
-      titulo: 'FRECUENCIA TRIMESTRAL I',
+      titulo: 'FRECUENCIA CUATRIMESTRAL I',
       meses: [
         { nombre: 'ENERO', campo: 'indicadorENEABR' },
         { nombre: 'FEBRERO', campo: 'indicadorFEB' },
@@ -284,7 +284,7 @@ const TablaObjetivosArea = () => {
       ],
     },
     {
-      titulo: 'FRECUENCIA TRIMESTRAL II',
+      titulo: 'FRECUENCIA CUATRIMESTRAL II',
       meses: [
         { nombre: 'MAYO', campo: 'indicadorMAYOAGO' },
         { nombre: 'JUNIO', campo: 'indicadorJUN' },
@@ -293,7 +293,7 @@ const TablaObjetivosArea = () => {
       ],
     },
     {
-      titulo: 'FRECUENCIA TRIMESTRAL III',
+      titulo: 'FRECUENCIA CUATRIMESTRAL III',
       meses: [
         { nombre: 'SEPTIEMBRE', campo: 'indicadorSEPDIC' },
         { nombre: 'OCTUBRE', campo: 'indicadorOCT' },
