@@ -271,7 +271,7 @@ const AuditTable = () => {
   };
 
   const registerAudit = async () => {
-  if (!newAudit.cliente || !newAudit.fechaInicio || !newAudit.fechaFin) {Add commentMore actions
+  if (!newAudit.cliente || !newAudit.fechaInicio || !newAudit.fechaFin) {
     setSuccessMessage('⚠️ Complete todos los campos requeridos');
     return;
   }
@@ -422,7 +422,7 @@ const AuditTable = () => {
     new Date(audit.fechaInicio).getFullYear() === 2025
   ));
 
-  const formatDate = (dateString) => {Add commentMore actions
+   const formatDate = (dateString) => {
   // Asegurarse de que la fecha se interpreta correctamente
   const date = new Date(dateString);
   // Ajustar por zona horaria
