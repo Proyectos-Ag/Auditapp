@@ -108,7 +108,44 @@ exports.sendAuditEmail = async (req, res) => {
 
     // Definir los destinatarios del correo
     const recipientEmails = `
-      fredyesparza08@gmail.com`
+      aaranda@aguida.com,
+      almacen@aguida.com,
+      amartinez@aguida.com,
+      cgarciae@aguida.com,
+      comedor@aguida.com,
+      controlycuidadoambiental@aguida.com,
+      coord.seghigiene@aguida.com,
+      coordalmpt@aguida.com,
+      fjflores@aguida.com,
+      golvera@aguida.com,
+      jagranados@aguida.com,
+      jcarriaga@aguida.com,
+      jefelaboratorio@aguida.com,
+      jefeproduccion@aguida.com,
+      jloyolac@aguida.com,
+      jpsalinas@aguida.com,
+      jrhernandez@aguida.com,
+      jsarriaga@aguida.com,
+      ljalvarez@aguida.com,
+      materiasprimas@aguida.com,
+      rcruces@aguida.com,
+      rgutierrez@aguida.com,
+      rloyola@aguida.com,
+      rmendez@aguida.com,
+      supervisores@aguida.com,
+      validacionproceso@aguida.com,
+      jessica@aguida.com,
+      inventariosmp@aguida.com,
+      reclutamiento@aguida.com,
+      itzelcardenas@aguida.com,
+      paulesparza@aguida.com,
+      jefemantenimientotp@aguida.com,
+      nbgarcia@aguida.com,
+      jrivera@aguida.com,
+      cpadron@aguida.com,
+      vbarron@aguida.com
+      vbarron@aguida.com,
+      soleje2862004@gmail.com`
     .trim();
 
     // Leer la plantilla HTML para el correo
