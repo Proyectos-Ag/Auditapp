@@ -190,19 +190,31 @@ exports.sendAuditEmail = async (req, res) => {
  */
 exports.updateAuditStatus = async (req, res) => {
   const { id } = req.params;
-  const { field, value } = req.body;
+  const updateData = req.body; // Recibe todo el objeto de auditoría
 
   try {
+    // Validar que exista la auditoría
     const audit = await Audit.findById(id);
     if (!audit) {
       return res.status(404).json({ message: 'Auditoría no encontrada' });
     }
-    // Actualiza el campo dinámicamente
-    audit[field] = value;
-    await audit.save();
 
-    res.status(200).json(audit);
+    // Actualizar todos los campos recibidos
+    Object.keys(updateData).forEach(key => {
+      if (key !== '_id') { // Evitar actualizar el ID
+        audit[key] = updateData[key];
+      }
+    });
+
+    // Guardar los cambios
+    const updatedAudit = await audit.save();
+
+    res.status(200).json(updatedAudit);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error al actualizar auditoría:", error);
+    res.status(500).json({ 
+      message: 'Error al actualizar auditoría',
+      error: error.message 
+    });
   }
 };
