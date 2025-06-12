@@ -92,8 +92,8 @@ exports.sendAuditEmail = async (req, res) => {
     // Comprimir y redimensionar la imagen
     const compressedImage = await sharp(imageBuffer)
       .resize({
-        width: 1100,
-        height: 1100,
+        width: 1000,
+        height: 1000,
         fit: sharp.fit.inside,
         withoutEnlargement: true,
         kernel: sharp.kernel.lanczos3 // Usar kernel de alta calidad para redimensionado
