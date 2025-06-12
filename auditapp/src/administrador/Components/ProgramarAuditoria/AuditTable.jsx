@@ -88,45 +88,42 @@ const theme = createTheme({
 const StatusCell = styled(TableCell)(({ status }) => {
   const statusStyles = {
     'Realizada': {
-      backgroundColor: '#4caf50', // Verde vibrante
+      backgroundColor: '#4caf50', // Verde
       color: 'white',
     },
     'Programada': {
-      backgroundColor: '#2196f3', // Azul brillante
+      backgroundColor: '#2196f3', // Azul
       color: 'white',
     },
     'Por Confirmar': {
-      backgroundColor: '#ff9800', // Naranja intenso
+      backgroundColor: '#ff9800', // Naranja
       color: 'white',
     },
     'En Curso': {
-      backgroundColor: '#9c27b0', // Púrpura vibrante
+      backgroundColor: '#9c27b0', // Morado
       color: 'white',
     },
     'No ejecutada': {
-      backgroundColor: '#f44336', // Rojo intenso
+      backgroundColor: '#f44336', // Rojo
       color: 'white',
     },
     'CANCELADA': {
-      backgroundColor: '#f44336', // Rojo intenso
+      backgroundColor: '#f44336', // Rojo
       color: 'white',
     }
   };
 
-   return {
-    ...statusStyles[status],
+  return {
+    ...(statusStyles[status] || {}), // Aplica estilos según el estado
     fontWeight: 500,
     textAlign: 'center',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
     fontSize: '0.75rem',
-    borderLeft: '2px solid rgba(255,255,255,0.2)',
-    borderRight: '2px solid rgba(255,255,255,0.2)',
-    padding: '8px 16px', // Asegurar el padding adecuado
-    '&:hover': {
-      opacity: 0.9,
-      transform: 'scale(1.02)'
-    }
+    borderRadius: '4px',
+    padding: '8px 12px',
+    display: 'inline-block',
+    minWidth: '100px'
   };
 });
 
@@ -187,61 +184,132 @@ const AuditTable = () => {
     });
   };
 
-  const captureTableImage = async () => {
-    const table = document.querySelector(".MuiTableContainer-root");
-    if (!table) return null;
+ const captureTableImage = async () => {
+  const table = document.querySelector(".MuiTableContainer-root");
+  if (!table) return null;
+  
+  // Clonar la tabla y aplicar estilos
+  const tableClone = table.cloneNode(true);
+  tableClone.style.position = 'absolute';
+  tableClone.style.left = '-9999px';
+  tableClone.style.width = table.offsetWidth + 'px';
+  tableClone.style.backgroundColor = '#ffffff';
+  document.body.appendChild(tableClone);
+  
+  // Ocultar columnas de acciones
+  const actionColumns = tableClone.querySelectorAll('th:last-child, td:last-child');
+  actionColumns.forEach(col => col.style.display = 'none');
+  
+  // Ocultar última fila (formulario de nueva auditoría)
+  const lastRow = tableClone.querySelector('tbody tr:last-child');
+  if (lastRow) lastRow.style.display = 'none';
+  
+  // SOLUCIÓN: Aplicar estilos directamente a las celdas de estado
+  const statusCells = tableClone.querySelectorAll('tbody tr');
+  statusCells.forEach((row, index) => {
+    // Skip the last row (new audit form)
+    if (index === statusCells.length - 1) return;
     
-    const tableClone = table.cloneNode(true);
-    tableClone.style.position = 'absolute';
-    tableClone.style.left = '-9999px';
-    tableClone.style.top = '-9999px';
-    tableClone.style.width = table.offsetWidth + 'px';
-    document.body.appendChild(tableClone);
-    
-    const actionColumns = tableClone.querySelectorAll('th:nth-last-child(1), td:nth-last-child(1)');
-    actionColumns.forEach(col => {
-      col.style.display = 'none';
-    });
-    
-    const lastRow = tableClone.querySelector('tbody tr:last-child');
-    if (lastRow) {
-      lastRow.style.display = 'none';
-    }
-    
-    tableClone.querySelectorAll('.MuiTableCell-body').forEach(cell => {
-      if (cell.textContent === 'Realizada') {
-        cell.style.backgroundColor = '#4caf50';
-        cell.style.color = 'white';
-      } else if (cell.textContent === 'Programada') {
-        cell.style.backgroundColor = '#2196f3';
-        cell.style.color = 'white';
-      } else if (cell.textContent === 'Por Confirmar') {
-        cell.style.backgroundColor = '#ff9800';
-        cell.style.color = 'white';
-      } else if (cell.textContent === 'En Curso') {
-        cell.style.backgroundColor = '#9c27b0';
-        cell.style.color = 'white';
-      } else if (cell.textContent === 'No ejecutada') {
-        cell.style.backgroundColor = '#f44336';
-        cell.style.color = 'white';
+    const statusCell = row.querySelector('td:nth-child(4)'); // 4ta columna es STATUS
+    if (statusCell) {
+      const status = statusCell.textContent.trim();
+      
+      // Limpiar estilos existentes y aplicar nuevos
+      statusCell.style.cssText = '';
+      statusCell.style.fontWeight = '500';
+      statusCell.style.textAlign = 'center';
+      statusCell.style.textTransform = 'uppercase';
+      statusCell.style.letterSpacing = '0.5px';
+      statusCell.style.fontSize = '0.75rem';
+      statusCell.style.borderRadius = '4px';
+      statusCell.style.padding = '8px 12px';
+      statusCell.style.minWidth = '100px';
+      statusCell.style.color = 'white';
+      statusCell.style.border = '1px solid #ddd';
+      
+      // Aplicar color según el estado
+      const colorMap = {
+        'Realizada': '#4caf50',
+        'Programada': '#2196f3', 
+        'Por Confirmar': '#ff9800',
+        'En Curso': '#9c27b0',
+        'No ejecutada': '#f44336',
+        'CANCELADA': '#f44336'
+      };
+      
+      if (colorMap[status]) {
+        statusCell.style.backgroundColor = colorMap[status];
+        // Agregar el texto del estado si no está visible
+        statusCell.innerHTML = `<span style="color: white; font-weight: 500;">${status}</span>`;
       }
-    });
-    
-    const canvas = await html2canvas(tableClone, { 
-      scale: 2,
-      backgroundColor: '#ffffff',
-      logging: true,
-      useCORS: true,
-      allowTaint: true
-    });
-    
-    document.body.removeChild(tableClone);
-    
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), "image/png", 1.0);
-    });
-  };
+    }
+  });
+  
+const tableElement = tableClone.querySelector('table');
+  if (tableElement) {
+    tableElement.style.borderCollapse = 'collapse';
+    tableElement.style.width = '100%';
+    tableElement.style.backgroundColor = '#ffffff';
+  }
+  
+  // Estilos para encabezados
+  const headers = tableClone.querySelectorAll('th');
+  headers.forEach(header => {
+    header.style.backgroundColor = '#1a237e';
+    header.style.color = 'white';
+    header.style.fontWeight = '600';
+    header.style.padding = '12px';
+    header.style.border = '1px solid #ddd';
+  });
 
+   const cells = tableClone.querySelectorAll('td');
+  cells.forEach(cell => {
+    if (!cell.querySelector('span')) { // No aplicar a celdas de estado que ya tienen span
+      cell.style.padding = '12px';
+      cell.style.border = '1px solid #ddd';
+      cell.style.backgroundColor = '#ffffff';
+    }
+  });
+
+  // Capturar la imagen
+    const canvas = await html2canvas(tableClone, {
+    scale: 2,
+    backgroundColor: '#ffffff',
+    logging: false,
+    useCORS: true,
+    allowTaint: true,
+    removeContainer: true,
+    imageTimeout: 0,
+    onclone: (clonedDoc) => {
+      // Asegurar que los estilos se apliquen en el documento clonado
+      const clonedStatusCells = clonedDoc.querySelectorAll('tbody tr td:nth-child(4)');
+      clonedStatusCells.forEach(cell => {
+        const status = cell.textContent.trim();
+        const colorMap = {
+          'Realizada': '#4caf50',
+          'Programada': '#2196f3',
+          'Por Confirmar': '#ff9800', 
+          'En Curso': '#9c27b0',
+          'No ejecutada': '#f44336',
+          'CANCELADA': '#f44336'
+        };
+        
+        if (colorMap[status]) {
+          cell.style.backgroundColor = colorMap[status];
+          cell.style.color = 'white';
+          cell.style.fontWeight = '500';
+          cell.style.textAlign = 'center';
+        }
+      });
+    }
+  });
+  
+  document.body.removeChild(tableClone);
+  
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), "image/png", 1.0);
+  });
+};
   const sendAuditEmail = async (auditId) => {
     const tableImageBlob = await captureTableImage();
   
@@ -422,7 +490,7 @@ const AuditTable = () => {
     new Date(audit.fechaInicio).getFullYear() === 2025
   ));
 
-   const formatDate = (dateString) => {
+  const formatDate = (dateString) => {
   // Asegurarse de que la fecha se interpreta correctamente
   const date = new Date(dateString);
   // Ajustar por zona horaria
