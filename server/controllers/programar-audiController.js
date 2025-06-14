@@ -10,9 +10,7 @@ const sharp = require('sharp'); // Añadimos sharp para compresión de imágenes
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-/**
- * GET /programas-anuales/audits
- */
+
 exports.getAudits = async (req, res) => {
   try {
     const audits = await Audit.find();
