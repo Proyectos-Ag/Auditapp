@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+//a ver si es cierto
 const auditSchema = new mongoose.Schema({
     cliente: { type: String, required: true },
     fechaInicio: { type: String, required: true },
