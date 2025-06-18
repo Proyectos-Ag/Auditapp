@@ -88,45 +88,42 @@ const theme = createTheme({
 const StatusCell = styled(TableCell)(({ status }) => {
   const statusStyles = {
     'Realizada': {
-      backgroundColor: '#4caf50', // Verde vibrante
+      backgroundColor: '#4caf50', // Verde
       color: 'white',
     },
     'Programada': {
-      backgroundColor: '#2196f3', // Azul brillante
+      backgroundColor: '#2196f3', // Azul
       color: 'white',
     },
     'Por Confirmar': {
-      backgroundColor: '#ff9800', // Naranja intenso
+      backgroundColor: '#ff9800', // Naranja
       color: 'white',
     },
     'En Curso': {
-      backgroundColor: '#9c27b0', // Púrpura vibrante
+      backgroundColor: '#9c27b0', // Morado
       color: 'white',
     },
     'No ejecutada': {
-      backgroundColor: '#f44336', // Rojo intenso
+      backgroundColor: '#f44336', // Rojo
       color: 'white',
     },
     'CANCELADA': {
-      backgroundColor: '#f44336', // Rojo intenso
+      backgroundColor: '#f44336', // Rojo
       color: 'white',
     }
   };
 
-   return {
-    ...statusStyles[status],
+  return {
+    ...(statusStyles[status] || {}), // Aplica estilos según el estado
     fontWeight: 500,
     textAlign: 'center',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
     fontSize: '0.75rem',
-    borderLeft: '2px solid rgba(255,255,255,0.2)',
-    borderRight: '2px solid rgba(255,255,255,0.2)',
-    padding: '8px 16px', // Asegurar el padding adecuado
-    '&:hover': {
-      opacity: 0.9,
-      transform: 'scale(1.02)'
-    }
+    borderRadius: '4px',
+    padding: '8px 12px',
+    display: 'inline-block',
+    minWidth: '100px'
   };
 });
 
@@ -151,7 +148,7 @@ const AuditTable = () => {
     status: 'Realizada',
   });
 
-  const [editStatus, setEditStatus] = useState({});
+  const [editingAudit, setEditingAudit] = useState(null);
   const [loading, setLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -160,7 +157,7 @@ const AuditTable = () => {
   const [selectedAudit, setSelectedAudit] = useState(null);
   const currentYear = new Date().getFullYear();
   const [confirmOpen, setConfirmOpen] = useState(false);
-const [auditToDelete, setAuditToDelete] = useState(null);
+  const [auditToDelete, setAuditToDelete] = useState(null);
 
   useEffect(() => {
     fetchAudits();
@@ -187,67 +184,132 @@ const [auditToDelete, setAuditToDelete] = useState(null);
     });
   };
 
-  const captureTableImage = async () => {
-    // Crear un clon de la tabla para manipularlo sin afectar la UI
-    const table = document.querySelector(".MuiTableContainer-root");
-    if (!table) return null;
+ const captureTableImage = async () => {
+  const table = document.querySelector(".MuiTableContainer-root");
+  if (!table) return null;
+  
+  // Clonar la tabla y aplicar estilos
+  const tableClone = table.cloneNode(true);
+  tableClone.style.position = 'absolute';
+  tableClone.style.left = '-9999px';
+  tableClone.style.width = table.offsetWidth + 'px';
+  tableClone.style.backgroundColor = '#ffffff';
+  document.body.appendChild(tableClone);
+  
+  // Ocultar columnas de acciones
+  const actionColumns = tableClone.querySelectorAll('th:last-child, td:last-child');
+  actionColumns.forEach(col => col.style.display = 'none');
+  
+  // Ocultar última fila (formulario de nueva auditoría)
+  const lastRow = tableClone.querySelector('tbody tr:last-child');
+  if (lastRow) lastRow.style.display = 'none';
+  
+  // SOLUCIÓN: Aplicar estilos directamente a las celdas de estado
+  const statusCells = tableClone.querySelectorAll('tbody tr');
+  statusCells.forEach((row, index) => {
+    // Skip the last row (new audit form)
+    if (index === statusCells.length - 1) return;
     
-    const tableClone = table.cloneNode(true);
-    tableClone.style.position = 'absolute';
-    tableClone.style.left = '-9999px';
-    tableClone.style.top = '-9999px';
-    tableClone.style.width = table.offsetWidth + 'px';
-    document.body.appendChild(tableClone);
-    
-    // Ocultar columnas de acciones y formulario de agregar
-    const actionColumns = tableClone.querySelectorAll('th:nth-last-child(1), td:nth-last-child(1)');
-    actionColumns.forEach(col => {
-      col.style.display = 'none';
-    });
-    
-    // Ocultar la última fila (formulario de agregar)
-    const lastRow = tableClone.querySelector('tbody tr:last-child');
-    if (lastRow) {
-      lastRow.style.display = 'none';
-    }
-    
-    // Asegurar que los estilos de estado se apliquen correctamente
-    tableClone.querySelectorAll('.MuiTableCell-body').forEach(cell => {
-      if (cell.textContent === 'Realizada') {
-        cell.style.backgroundColor = '#4caf50';
-        cell.style.color = 'white';
-      } else if (cell.textContent === 'Programada') {
-        cell.style.backgroundColor = '#2196f3';
-        cell.style.color = 'white';
-      } else if (cell.textContent === 'Por Confirmar') {
-        cell.style.backgroundColor = '#ff9800';
-        cell.style.color = 'white';
-      } else if (cell.textContent === 'En Curso') {
-        cell.style.backgroundColor = '#9c27b0';
-        cell.style.color = 'white';
-      } else if (cell.textContent === 'No ejecutada') {
-        cell.style.backgroundColor = '#f44336';
-        cell.style.color = 'white';
+    const statusCell = row.querySelector('td:nth-child(4)'); // 4ta columna es STATUS
+    if (statusCell) {
+      const status = statusCell.textContent.trim();
+      
+      // Limpiar estilos existentes y aplicar nuevos
+      statusCell.style.cssText = '';
+      statusCell.style.fontWeight = '500';
+      statusCell.style.textAlign = 'center';
+      statusCell.style.textTransform = 'uppercase';
+      statusCell.style.letterSpacing = '0.5px';
+      statusCell.style.fontSize = '0.75rem';
+      statusCell.style.borderRadius = '4px';
+      statusCell.style.padding = '8px 12px';
+      statusCell.style.minWidth = '100px';
+      statusCell.style.color = 'white';
+      statusCell.style.border = '1px solid #ddd';
+      
+      // Aplicar color según el estado
+      const colorMap = {
+        'Realizada': '#4caf50',
+        'Programada': '#2196f3', 
+        'Por Confirmar': '#ff9800',
+        'En Curso': '#9c27b0',
+        'No ejecutada': '#f44336',
+        'CANCELADA': '#f44336'
+      };
+      
+      if (colorMap[status]) {
+        statusCell.style.backgroundColor = colorMap[status];
+        // Agregar el texto del estado si no está visible
+        statusCell.innerHTML = `<span style="color: white; font-weight: 500;">${status}</span>`;
       }
-    });
-    
-    // Capturar la imagen
-    const canvas = await html2canvas(tableClone, { 
-      scale: 2,
-      backgroundColor: '#ffffff',
-      logging: true,
-      useCORS: true,
-      allowTaint: true
-    });
-    
-    // Eliminar el clon
-    document.body.removeChild(tableClone);
-    
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), "image/png", 1.0);
-    });
-  };
+    }
+  });
+  
+const tableElement = tableClone.querySelector('table');
+  if (tableElement) {
+    tableElement.style.borderCollapse = 'collapse';
+    tableElement.style.width = '100%';
+    tableElement.style.backgroundColor = '#ffffff';
+  }
+  
+  // Estilos para encabezados
+  const headers = tableClone.querySelectorAll('th');
+  headers.forEach(header => {
+    header.style.backgroundColor = '#1a237e';
+    header.style.color = 'white';
+    header.style.fontWeight = '600';
+    header.style.padding = '12px';
+    header.style.border = '1px solid #ddd';
+  });
 
+   const cells = tableClone.querySelectorAll('td');
+  cells.forEach(cell => {
+    if (!cell.querySelector('span')) { // No aplicar a celdas de estado que ya tienen span
+      cell.style.padding = '12px';
+      cell.style.border = '1px solid #ddd';
+      cell.style.backgroundColor = '#ffffff';
+    }
+  });
+
+  // Capturar la imagen
+    const canvas = await html2canvas(tableClone, {
+    scale: 2,
+    backgroundColor: '#ffffff',
+    logging: false,
+    useCORS: true,
+    allowTaint: true,
+    removeContainer: true,
+    imageTimeout: 0,
+    onclone: (clonedDoc) => {
+      // Asegurar que los estilos se apliquen en el documento clonado
+      const clonedStatusCells = clonedDoc.querySelectorAll('tbody tr td:nth-child(4)');
+      clonedStatusCells.forEach(cell => {
+        const status = cell.textContent.trim();
+        const colorMap = {
+          'Realizada': '#4caf50',
+          'Programada': '#2196f3',
+          'Por Confirmar': '#ff9800', 
+          'En Curso': '#9c27b0',
+          'No ejecutada': '#f44336',
+          'CANCELADA': '#f44336'
+        };
+        
+        if (colorMap[status]) {
+          cell.style.backgroundColor = colorMap[status];
+          cell.style.color = 'white';
+          cell.style.fontWeight = '500';
+          cell.style.textAlign = 'center';
+        }
+      });
+    }
+  });
+  
+  document.body.removeChild(tableClone);
+  
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), "image/png", 1.0);
+  });
+};
   const sendAuditEmail = async (auditId) => {
     const tableImageBlob = await captureTableImage();
   
@@ -327,66 +389,81 @@ const [auditToDelete, setAuditToDelete] = useState(null);
     setLoading(false);
   }
 };
-  const handleEditClick = (auditId) => {
-    const audit = audits.find(a => a._id === auditId);
-    setEditStatus({
-      ...editStatus,
-      [auditId]: { editing: true, newStatus: audit.status }
-    });
+  const handleDeleteClick = (id) => {
+    setAuditToDelete(id);
+    setConfirmOpen(true);
   };
 
-  const handleSaveStatus = async (auditId) => {
+  const handleEditClick = (audit) => {
+    setEditingAudit({ ...audit });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingAudit.cliente || !editingAudit.fechaInicio || !editingAudit.fechaFin) {
+      setSuccessMessage('⚠️ Complete todos los campos requeridos');
+      return;
+    }
+
+    if (new Date(editingAudit.fechaInicio) > new Date(editingAudit.fechaFin)) {
+      setSuccessMessage('⚠️ Fecha inicio no puede ser posterior a fecha fin');
+      return;
+    }
+
     try {
-      const newStatus = editStatus[auditId].newStatus;
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits/${auditId}`, {
-        status: newStatus
-      });
+      setLoading(true);
+      await axios.put(
+        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits/${editingAudit._id}`,
+        editingAudit
+      );
       
       setAudits(prev => prev.map(audit => 
-        audit._id === auditId ? { ...audit, status: newStatus } : audit
+        audit._id === editingAudit._id ? editingAudit : audit
       ));
       
-      setEditStatus(prev => {
-        const newState = { ...prev };
-        delete newState[auditId];
-        return newState;
-      });
-      
-      setSuccessMessage('✅ Estado actualizado correctamente');
+      setEditingAudit(null);
+      setSuccessMessage('✅ Auditoría actualizada correctamente');
     } catch (error) {
-      console.error("Error al actualizar estado:", error);
-      setSuccessMessage('❌ Error al actualizar estado');
+      console.error("Error al actualizar auditoría:", error);
+      setSuccessMessage('❌ Error al actualizar auditoría');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingAudit(null);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditingAudit({
+      ...editingAudit,
+      [name]: value
+    });
   };
 
   const deleteAudit = async (auditId) => {
-  try {
-    setLoading(true);
-    
-    const response = await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits/${auditId}`
-    );
-    
-    if (response.data.success) {
-      setAudits(audits.filter(audit => audit._id !== auditId));
-      setSuccessMessage('✅ Auditoría eliminada correctamente');
-    } else {
-      setSuccessMessage('⚠️ ' + response.data.message);
+    try {
+      setLoading(true);
+      
+      const response = await axios.delete(
+        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits/${auditId}`
+      );
+      
+      if (response.data.success) {
+        setAudits(audits.filter(audit => audit._id !== auditId));
+        setSuccessMessage('✅ Auditoría eliminada correctamente');
+      } else {
+        setSuccessMessage('⚠️ ' + response.data.message);
+      }
+      
+    } catch (error) {
+      console.error("Error al eliminar auditoría:", error);
+      setSuccessMessage('❌ Error al eliminar auditoría: ' + 
+        (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
     }
-    
-  } catch (error) {
-    console.error("Error al eliminar auditoría:", error);
-    setSuccessMessage('❌ Error al eliminar auditoría: ' + 
-      (error.response?.data?.message || error.message));
-  } finally {
-    setLoading(false);
-  }
-};
-  const handleCancelEdit = (auditId) => {
-    setEditStatus(prev => {
-      const newState = { ...prev };
-      delete newState[auditId];
-      return newState;
-    });
   };
 
   const handleOpenDialog = (audit) => {
@@ -413,7 +490,7 @@ const [auditToDelete, setAuditToDelete] = useState(null);
     new Date(audit.fechaInicio).getFullYear() === 2025
   ));
 
- const formatDate = (dateString) => {
+  const formatDate = (dateString) => {
   // Asegurarse de que la fecha se interpreta correctamente
   const date = new Date(dateString);
   // Ajustar por zona horaria
@@ -430,7 +507,7 @@ const [auditToDelete, setAuditToDelete] = useState(null);
       <Paper elevation={0} sx={{ 
         padding: '20px 30px', 
         margin: '0 auto', 
-        marginTop: 6 ,
+        marginTop: 6,
         maxWidth: '95%',
         backgroundColor: theme.palette.background.default
       }}>
@@ -607,136 +684,162 @@ const [auditToDelete, setAuditToDelete] = useState(null);
             <TableBody>
               {audits2025.map((audit) => (
                 <StyledTableRow key={audit._id} hover>
-                  <TableCell sx={{ fontWeight: 500 }}>{audit.cliente}</TableCell>
-                  <TableCell>
-                    <Tooltip title="Ver detalles">
-                      <Button
-                        startIcon={<CalendarIcon />}
-                        onClick={() => handleOpenDialog(audit)}
-                        sx={{
-                          textTransform: 'none',
-                          color: theme.palette.primary.main,
-                          fontWeight: 500
-                        }}
-                      >
-                        {formatDate(audit.fechaInicio)} - {formatDate(audit.fechaFin)}
-                      </Button>
-                    </Tooltip>
+                  {/* Cliente */}
+                  <TableCell sx={{ fontWeight: 500 }}>
+                    {editingAudit?._id === audit._id ? (
+                      <TextField
+                        fullWidth
+                        size="small"
+                        variant="outlined"
+                        name="cliente"
+                        value={editingAudit.cliente}
+                        onChange={handleEditChange}
+                      />
+                    ) : (
+                      audit.cliente
+                    )}
                   </TableCell>
-                  <TableCell>{audit.modalidad}</TableCell>
-                 {editStatus[audit._id]?.editing ? (
-  <TableCell
-    sx={{
-      padding: 0, // Quitar padding para que el Select ocupe toda la celda
-      backgroundColor: editStatus[audit._id].newStatus === 'Realizada' ? '#4caf50' : 
-                      editStatus[audit._id].newStatus === 'Programada' ? '#2196f3' :
-                      editStatus[audit._id].newStatus === 'Por Confirmar' ? '#ff9800' :
-                      editStatus[audit._id].newStatus === 'En Curso' ? '#9c27b0' : '#f44336',
-      color: 'white',
-    }}
-  >
-    <FormControl fullWidth size="small" sx={{ m: 0 }}>
-      <Select
-        value={editStatus[audit._id].newStatus}
-        onChange={(e) => setEditStatus({
-          ...editStatus,
-          [audit._id]: {
-            ...editStatus[audit._id],
-            newStatus: e.target.value
-          }
-        })}
-        sx={{
-          color: 'white',
-          height: '100%',
-          '& .MuiSelect-icon': {
-            color: 'white'
-          },
-          '&:before, &:after': {
-            borderBottom: 'none'
-          },
-          '& .MuiSelect-select': {
-            padding: '6px 32px 6px 12px',
-            textAlign: 'center',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            fontSize: '0.75rem',
-            fontWeight: 500
-          }
-        }}
-        MenuProps={{
-          PaperProps: {
-            sx: {
-              '& .MuiMenuItem-root': {
-                fontSize: '0.75rem',
-                fontWeight: 500
-              }
-            }
-          }
-        }}
-      >
-        <MenuItem value="Realizada" sx={{ color: '#4caf50' }}>Realizada</MenuItem>
-        <MenuItem value="Programada" sx={{ color: '#2196f3' }}>Programada</MenuItem>
-        <MenuItem value="Por Confirmar" sx={{ color: '#ff9800' }}>Por Confirmar</MenuItem>
-        <MenuItem value="En Curso" sx={{ color: '#9c27b0' }}>En Curso</MenuItem>
-        <MenuItem value="No ejecutada" sx={{ color: '#f44336' }}>No ejecutada</MenuItem>
-      </Select>
-    </FormControl>
-  </TableCell>
-) : (
-  <StatusCell status={audit.status}>
-    {audit.status}
-  </StatusCell>
-)}
-{/* Reemplaza este código en tu celda de tabla */}
-<TableCell>
-  {editStatus[audit._id]?.editing ? (
-    <div style={{ display: 'flex', gap: '8px' }}>
-      <Tooltip title="Guardar">
-        <IconButton
-          onClick={() => handleSaveStatus(audit._id)}
-          color="primary"
-          size="small"
-        >
-          <SaveIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Cancelar">
-        <IconButton
-          onClick={() => handleCancelEdit(audit._id)}
-          color="error"
-          size="small"
-        >
-          <CancelIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    </div>
-  ) : (
-    <div style={{ display: 'flex', gap: '8px' }}>
-      <Tooltip title="Editar estado">
-        <IconButton
-          onClick={() => handleEditClick(audit._id)}
-          color="primary"
-          size="small"
-        >
-          <EditIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Eliminar auditoría">
-        <IconButton
-          onClick={() => {
-            setAuditToDelete(audit._id);
-            setConfirmOpen(true);
-          }}
-          color="error"
-          size="small"
-          disabled={loading}
-        >
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    </div>
-  )}
-</TableCell>
+                  
+                  {/* Fechas */}
+                  <TableCell>
+                    {editingAudit?._id === audit._id ? (
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <TextField
+                          size="small"
+                          type="date"
+                          variant="outlined"
+                          name="fechaInicio"
+                          value={editingAudit.fechaInicio}
+                          onChange={handleEditChange}
+                          InputLabelProps={{ shrink: true }}
+                        />
+                        <TextField
+                          size="small"
+                          type="date"
+                          variant="outlined"
+                          name="fechaFin"
+                          value={editingAudit.fechaFin}
+                          onChange={handleEditChange}
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      </div>
+                    ) : (
+                      <Tooltip title="Ver detalles">
+                        <Button
+                          startIcon={<CalendarIcon />}
+                          onClick={() => handleOpenDialog(audit)}
+                          sx={{
+                            textTransform: 'none',
+                            color: theme.palette.primary.main,
+                            fontWeight: 500
+                          }}
+                        >
+                          {formatDate(audit.fechaInicio)} - {formatDate(audit.fechaFin)}
+                        </Button>
+                      </Tooltip>
+                    )}
+                  </TableCell>
+                  
+                  {/* Modalidad */}
+                  <TableCell>
+                    {editingAudit?._id === audit._id ? (
+                      <FormControl fullWidth size="small">
+                        <Select
+                          name="modalidad"
+                          value={editingAudit.modalidad}
+                          onChange={handleEditChange}
+                        >
+                          <MenuItem value="Presencial">Presencial</MenuItem>
+                          <MenuItem value="Virtual">Virtual</MenuItem>
+                          <MenuItem value="Mixta">Mixta</MenuItem>
+                        </Select>
+                      </FormControl>
+                    ) : (
+                      audit.modalidad
+                    )}
+                  </TableCell>
+                  
+                  {/* Estado */}
+                  <TableCell>
+                    {editingAudit?._id === audit._id ? (
+                      <FormControl fullWidth size="small">
+                        <Select
+                          name="status"
+                          value={editingAudit.status}
+                          onChange={handleEditChange}
+                          sx={{
+                            backgroundColor: 
+                              editingAudit.status === 'Realizada' ? '#4caf50' : 
+                              editingAudit.status === 'Programada' ? '#2196f3' :
+                              editingAudit.status === 'Por Confirmar' ? '#ff9800' :
+                              editingAudit.status === 'En Curso' ? '#9c27b0' : '#f44336',
+                            color: 'white',
+                            '& .MuiSelect-icon': {
+                              color: 'white'
+                            }
+                          }}
+                        >
+                          <MenuItem value="Realizada">Realizada</MenuItem>
+                          <MenuItem value="Programada">Programada</MenuItem>
+                          <MenuItem value="Por Confirmar">Por Confirmar</MenuItem>
+                          <MenuItem value="En Curso">En Curso</MenuItem>
+                          <MenuItem value="No ejecutada">No ejecutada</MenuItem>
+                        </Select>
+                      </FormControl>
+                    ) : (
+                      <StatusCell status={audit.status}>
+                        {audit.status}
+                      </StatusCell>
+                    )}
+                  </TableCell>
+                  
+                  {/* Acciones */}
+                  <TableCell>
+                    {editingAudit?._id === audit._id ? (
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <Tooltip title="Guardar">
+                          <IconButton
+                            onClick={handleSaveEdit}
+                            color="primary"
+                            size="small"
+                          >
+                            <SaveIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Cancelar">
+                          <IconButton
+                            onClick={handleCancelEdit}
+                            color="error"
+                            size="small"
+                          >
+                            <CancelIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <Tooltip title="Editar auditoría">
+                          <IconButton
+                            onClick={() => handleEditClick(audit)}
+                            color="primary"
+                            size="small"
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar auditoría">
+                          <IconButton
+                            onClick={() => handleDeleteClick(audit._id)}
+                            color="error"
+                            size="small"
+                            disabled={loading}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
+                    )}
+                  </TableCell>
                 </StyledTableRow>
               ))}
 
@@ -832,46 +935,47 @@ const [auditToDelete, setAuditToDelete] = useState(null);
             </TableBody>
           </Table>
         </TableContainer>
+        
         {/* Diálogo de confirmación para eliminar */}
-<Dialog
-  open={confirmOpen}
-  onClose={() => setConfirmOpen(false)}
-  aria-labelledby="alert-dialog-title"
-  aria-describedby="alert-dialog-description"
->
-  <DialogTitle id="alert-dialog-title" sx={{ 
-    backgroundColor: theme.palette.error.main,
-    color: 'white',
-    fontWeight: 600
-  }}>
-    CONFIRMAR ELIMINACIÓN
-  </DialogTitle>
-  <DialogContent sx={{ padding: '20px', mt: 2 }}>
-    <Typography variant="body1">
-      ¿Está seguro que desea eliminar esta auditoría? Esta acción no se puede deshacer.
-    </Typography>
-  </DialogContent>
-  <DialogActions sx={{ padding: '16px 24px' }}>
-    <Button 
-      onClick={() => setConfirmOpen(false)}
-      color="primary"
-      variant="outlined"
-    >
-      CANCELAR
-    </Button>
-    <Button 
-      onClick={() => {
-        deleteAudit(auditToDelete);
-        setConfirmOpen(false);
-      }}
-      color="error"
-      variant="contained"
-      autoFocus
-    >
-      ELIMINAR
-    </Button>
-  </DialogActions>
-</Dialog>
+        <Dialog
+          open={confirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title" sx={{ 
+            backgroundColor: theme.palette.error.main,
+            color: 'white',
+            fontWeight: 600
+          }}>
+            CONFIRMAR ELIMINACIÓN
+          </DialogTitle>
+          <DialogContent sx={{ padding: '20px', mt: 2 }}>
+            <Typography variant="body1">
+              ¿Está seguro que desea eliminar esta auditoría? Esta acción no se puede deshacer.
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ padding: '16px 24px' }}>
+            <Button 
+              onClick={() => setConfirmOpen(false)}
+              color="primary"
+              variant="outlined"
+            >
+              CANCELAR
+            </Button>
+            <Button 
+              onClick={() => {
+                deleteAudit(auditToDelete);
+                setConfirmOpen(false);
+              }}
+              color="error"
+              variant="contained"
+              autoFocus
+            >
+              ELIMINAR
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Diálogo de detalles */}
         <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
