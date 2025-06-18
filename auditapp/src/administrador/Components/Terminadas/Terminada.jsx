@@ -332,19 +332,19 @@ const Terminada = () => {
                         const sumaNC = totalNC.menor + totalNC.mayor + totalNC.critica;
                         const puntosObtenidos = calcularPuntosTotales(conteo);
     
-                        // Calcular estadosRevisados independientemente para cada tabla
-                        let estadosRevisados = 0;
-                        const ishikawasFiltradas = ishikawas.filter(ishikawa =>
-                            ishikawa.idRep === dato._id && 
-                            (ishikawa.estado === 'En revisión' || ishikawa.estado === 'Aprobado'|| 
-                            ishikawa.estado === 'Revisado' || ishikawa.estado === 'Rechazado')
+                        // 1) Contamos sólo los que pertenecen a este reporte:
+                        const ishikawasDelReporte = ishikawas.filter(i => i.idRep === dato._id);
+
+                        // 2) De ellos, cuántos ya están revisados:
+                        const estadosRevisados = ishikawasDelReporte.reduce(
+                        (cnt, i) => cnt + (i.estado === 'Revisado' ? 1 : 0),
+                        0
                         );
-    
-                        ishikawasFiltradas.forEach(ishikawa => {
-                            if (ishikawa.estado === 'Revisado') estadosRevisados++;
-                        });
-    
-                        const porcentaje = (estadosRevisados > 0 && sumaNC > 0) ? (estadosRevisados * 100) / sumaNC : 0;
+
+                        // 3) Porcentaje respecto al total que esperas (sumaNC):
+                        const porcentaje = sumaNC > 0
+                        ? (estadosRevisados * 100) / sumaNC
+                        : 0;
     
                         return (
                             <div key={periodIdx}>
