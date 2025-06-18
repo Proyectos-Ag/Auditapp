@@ -310,7 +310,7 @@ const Terminada = () => {
                     {datos.map((dato, periodIdx) => {
                         let conteo = {};
                         let total = 0;
-                        let totalNC = { menor: 0, mayor: 0, critica: 0 };
+                        let totalNC = { menor: 0, mayor: 0, critica: 0, observaciones: 0 };
     
                         dato.Programa.forEach(programa => {
                             programa.Descripcion.forEach(desc => {
@@ -325,11 +325,12 @@ const Terminada = () => {
                                     if (desc.Criterio === 'm') totalNC.menor++;
                                     if (desc.Criterio === 'M') totalNC.mayor++;
                                     if (desc.Criterio === 'C') totalNC.critica++;
+                                    if (desc.Criterio === 'O') totalNC.observaciones++;
                                 }
                             });
                         });
     
-                        const sumaNC = totalNC.menor + totalNC.mayor + totalNC.critica;
+                        const sumaNC = totalNC.menor + totalNC.mayor + totalNC.critica + totalNC.observaciones;
                         const puntosObtenidos = calcularPuntosTotales(conteo);
     
                         // 1) Contamos sólo los que pertenecen a este reporte:
