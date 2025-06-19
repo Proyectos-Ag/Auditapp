@@ -1,16 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
+import { UserContext } from '../../../App';
 import './concentrado.css'; // Asegúrate de importar el archivo CSS actualizado
 
 const ObjetivosComponent = () => {
   const [objetivos, setObjetivos] = useState([]);
-  const [userData, setUserData] = useState({});
-
-  // Obtener datos del usuario desde el almacenamiento local
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("userData")) || {};
-    setUserData(user);
-  }, []);
+  const { userData } = useContext(UserContext);
 
   useEffect(() => {
     const fetchObjetivos = async () => {
@@ -18,6 +13,8 @@ const ObjetivosComponent = () => {
         // Suponiendo que el endpoint de los objetivos está en esta ruta
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos`);
         let data = response.data;
+
+        console.log("Area: ", userData.area);
 
         // Obtener área del usuario
         const areaUsuario = userData?.area?.trim() || userData?.Departamento?.trim() || "";

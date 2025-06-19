@@ -70,7 +70,9 @@ const MigasPan = () => {
     '/menu':'Menú',
     '/acciones':'Agregar Acción',
     '/inicio-ishvac': 'Ishikawa Independientes',
-    '/diagramas': 'Generar Ishikawa'
+    '/diagramas': 'Generar Ishikawa',
+    '/concentradon': 'Concentrado',
+    '/saefty-goals2': 'Safety Goals',
   };
 
   const getDynamicBreadcrumbName = (path) => {
