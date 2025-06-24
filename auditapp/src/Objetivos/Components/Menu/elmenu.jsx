@@ -77,7 +77,7 @@ const menuItems = [
   { label: "SEGURIDAD E HIGIENE Y SANIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["SEGURIDAD E HIGIENE Y SANIDAD", "CONTROL DE PLAGAS", "Seguridad e Higiene y Sanidad"] },
   { label: "INGENIERÍA", roles: ["administrador", "auditor", "auditado"], areas: ["INGENIERÍA", "Ingeniería"] },
   { label: "COORDINADOR DE MATERIA PRIMA", roles: ["administrador", "auditor", "auditado"], areas: ["COORDINADOR DE MATERIA PRIMA", "MATERIA PRIMA"] },
-  { label: "GERENCIA PLANEACIÓN Y LOGÍSTICA", roles: ["administrador", "auditor", "auditado"], areas: ["GERENCIA PLANEACIÓN Y LOGÍSTICA", "Planeación y Logística"] },
+  { label: "GERENCIA PLANEACIÓN Y LOGÍSTICA", roles: ["administrador", "auditor", "auditado"], areas: ["GERENCIA PLANEACIÓN Y LOGÍSTICA", "Planeación y Logística", "PL MATERIA PRIMA"] },
   { label: "MANTENIMIENTO TETRA PAK", roles: ["administrador", "auditor", "auditado"], areas: ["MANTENIMIENTO TETRA PAK", "Mantenimiento Tetra"] },
   { label: "CONTROL DE PLAGAS", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL DE PLAGAS", "SEGURIDAD E HIGIENE Y SANIDAD", "Seguridad e Higiene y Sanidad"] },
   { label: "AGUIDA", roles: ["administrador", "auditor", "auditado"], areas: ["AGUIDA"] },
