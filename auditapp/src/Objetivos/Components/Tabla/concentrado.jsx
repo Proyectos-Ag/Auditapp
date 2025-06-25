@@ -1,11 +1,16 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { UserContext } from '../../../App';
 import './concentrado.css'; // Asegúrate de importar el archivo CSS actualizado
 
 const ObjetivosComponent = () => {
   const [objetivos, setObjetivos] = useState([]);
-  const { userData } = useContext(UserContext);
+  const [userData, setUserData] = useState({});
+
+  // Obtener datos del usuario desde el almacenamiento local
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("userData")) || {};
+    setUserData(user);
+  }, []);
 
   useEffect(() => {
     const fetchObjetivos = async () => {
@@ -13,8 +18,6 @@ const ObjetivosComponent = () => {
         // Suponiendo que el endpoint de los objetivos está en esta ruta
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos`);
         let data = response.data;
-
-        console.log("Area: ", userData.area);
 
         // Obtener área del usuario
         const areaUsuario = userData?.area?.trim() || userData?.Departamento?.trim() || "";
@@ -38,38 +41,36 @@ const ObjetivosComponent = () => {
     fetchObjetivos();
   }, [userData]);
 
-  // Función para calcular el promedio de las semanas (solo promedia si hay valores)
-  const calcularPromedioSemana = (semana) => {
-    const valores = ["S1", "S2", "S3", "S4", "S5"].map((key) => parseFloat(semana[key]) || 0);
-    const semanasConDatos = valores.filter((valor) => valor > 0); // Filtra solo los valores positivos
-
-    // Si no hay datos en ninguna semana, retornar 0
-    if (semanasConDatos.length === 0) return 0;
-
-    const suma = semanasConDatos.reduce((acc, curr) => acc + curr, 0);
-    return suma / semanasConDatos.length;
+  // Función para calcular promedio por trimestre (igual que en el segundo componente)
+  const calcularPromedioTrimestre = (objetivo, campos) => {
+    const semanas = ["S1", "S2", "S3", "S4", "S5"];
+    let todosLosValores = [];
+    
+    campos.forEach(campo => {
+      if (objetivo[campo]) {
+        semanas.forEach(semana => {
+          const valor = objetivo[campo][semana];
+          if (valor !== undefined && valor !== null && valor !== "") {
+            todosLosValores.push(parseFloat(valor) || 0);
+          }
+        });
+      }
+    });
+    
+    if (todosLosValores.length === 0) return 0;
+    return (todosLosValores.reduce((acc, val) => acc + val, 0) / todosLosValores.length).toFixed(2);
   };
 
-  // Función para calcular el promedio de los indicadores ENEABR, MAYOAGO, SEPDIC
-  const calcularPromedioIndicador = (indicador) => {
-    return calcularPromedioSemana(indicador);
-  };
+  // Función para calcular el promedio anual (promedio de los promedios trimestrales)
+  const calcularPromedioAnual = (objetivo) => {
+    const eneAbr = parseFloat(calcularPromedioTrimestre(objetivo, ['indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR']));
+    const mayoAgo = parseFloat(calcularPromedioTrimestre(objetivo, ['indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO']));
+    const sepDic = parseFloat(calcularPromedioTrimestre(objetivo, ['indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC']));
 
-  // Función para calcular el promedio anual (promedio de los promedios semanales de cada indicador)
-  const calcularPromedioAnual = (indicadores) => {
-    const eneAbr = calcularPromedioIndicador(indicadores.indicadorENEABR);
-    const mayoAgo = calcularPromedioIndicador(indicadores.indicadorMAYOAGO);
-    const sepDic = calcularPromedioIndicador(indicadores.indicadorSEPDIC);
+    const valores = [eneAbr, mayoAgo, sepDic].filter(v => !isNaN(v) && v > 0);
+    if (valores.length === 0) return 0;
 
-    const valores = [eneAbr, mayoAgo, sepDic];
-
-    // Si no hay datos válidos, retornar 0
-    const suma = valores.reduce((acc, curr) => acc + curr, 0);
-    const validos = valores.filter((v) => v > 0).length;
-
-    if (validos === 0) return 0;
-
-    return suma / validos;
+    return (valores.reduce((acc, curr) => acc + curr, 0) / valores.length).toFixed(2);
   };
 
   // Agrupar los objetivos por área
@@ -103,24 +104,24 @@ const ObjetivosComponent = () => {
               </tr>
             </thead>
             <tbody>
-            {objetivosPorArea[area].map((objetivo, index) => {
-  const isFirstInArea = index === 0 || objetivo.area !== objetivosPorArea[area][index - 1].area;
+              {objetivosPorArea[area].map((objetivo, index) => {
+                const isFirstInArea = index === 0 || objetivo.area !== objetivosPorArea[area][index - 1].area;
 
-  return (
-    <tr key={objetivo._id}>
-      {/* Solo renderiza la celda "Departamento" en la primera fila del área */}
-      {isFirstInArea ? (
-        <td rowSpan={objetivosPorArea[area].length}>{objetivo.area}</td>
-      ) : null}
-      {/* Número del objetivo */}
-      <td>{index + 1}</td>
-      <td>{calcularPromedioIndicador(objetivo.indicadorENEABR).toFixed(2)}%</td>
-      <td>{calcularPromedioIndicador(objetivo.indicadorMAYOAGO).toFixed(2)}%</td>
-      <td>{calcularPromedioIndicador(objetivo.indicadorSEPDIC).toFixed(2)}%</td>
-      <td>{calcularPromedioAnual(objetivo).toFixed(2)}%</td>
-    </tr>
-  );
-})}
+                return (
+                  <tr key={objetivo._id}>
+                    {/* Solo renderiza la celda "Departamento" en la primera fila del área */}
+                    {isFirstInArea ? (
+                      <td rowSpan={objetivosPorArea[area].length}>{objetivo.area}</td>
+                    ) : null}
+                    {/* Número del objetivo */}
+                    <td>{index + 1}</td>
+                    <td>{calcularPromedioTrimestre(objetivo, ['indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR'])}%</td>
+                    <td>{calcularPromedioTrimestre(objetivo, ['indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO'])}%</td>
+                    <td>{calcularPromedioTrimestre(objetivo, ['indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC'])}%</td>
+                    <td>{calcularPromedioAnual(objetivo)}%</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           <hr className="area-separator-line" />
