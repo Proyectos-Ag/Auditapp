@@ -1,16 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import './concentrado.css'; // Asegúrate de importar el archivo CSS actualizado
+import { UserContext } from '../../../App';
+
 
 const ObjetivosComponent = () => {
   const [objetivos, setObjetivos] = useState([]);
-  const [userData, setUserData] = useState({});
+    const { userData } = useContext(UserContext);
 
-  // Obtener datos del usuario desde el almacenamiento local
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("userData")) || {};
-    setUserData(user);
-  }, []);
+  
 
   useEffect(() => {
     const fetchObjetivos = async () => {
