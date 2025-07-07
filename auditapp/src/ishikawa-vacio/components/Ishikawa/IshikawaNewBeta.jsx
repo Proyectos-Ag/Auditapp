@@ -879,16 +879,6 @@ const pdfRef = useRef();
         <Button
           variant="text"
           sx={{ color: 'white' }}
-          startIcon={<PictureAsPdfIcon />}
-          onClick={handlePrintPDF}
-          
-        >
-          Generar PDF
-        </Button>
-
-        <Button
-          variant="text"
-          sx={{ color: 'white' }}
           startIcon={<SaveIcon />}
           onClick={e => { e.preventDefault(); handleSaveAdvance(); }}
           disabled={!puedeEditar}
