@@ -47,28 +47,25 @@ const ObjetivosComponent = () => {
     fetchObjetivos();
   }, [areaUsuario, esAdmin]);
 
-  // Función para calcular el promedio de los indicadores
-  const calcularPromedio = (indicador) => {
-    if (!indicador || Object.keys(indicador).length === 0) return 0; // Si el objeto está vacío, devuelve 0
-  
+  // Función para calcular promedio por trimestre (igual que en ObjetivosTabla)
+  const calcularPromedioTrimestre = (objetivo, campos) => {
     const semanas = ["S1", "S2", "S3", "S4", "S5"];
-    const valores = semanas
-      .map((semana) => parseFloat(indicador[semana]) || 0) // Convertir los valores a números, usando 0 si no son válidos
-      .filter((valor) => valor !== 0); // Filtrar solo los valores válidos
-  
-    if (valores.length === 0) return 0; // Si no hay valores válidos, devuelve 0
-  
-    // Calcular el promedio de los valores
-    const suma = valores.reduce((acc, val) => acc + val, 0);
-    const promedio = suma / valores.length;
-  
-    // Verificar si los valores parecen estar en porcentaje (mayores que 1), si es así, no multiplicar por 100
-    const esPorcentaje = promedio > 1;
-  
-    // Si es un porcentaje, no lo multiplicamos por 100
-    return (esPorcentaje ? promedio : promedio * 100).toFixed(2); // Redondeamos a dos decimales
+    let todosLosValores = [];
+    
+    campos.forEach(campo => {
+      if (objetivo[campo]) {
+        semanas.forEach(semana => {
+          const valor = objetivo[campo][semana];
+          if (valor !== undefined && valor !== null && valor !== "") {
+            todosLosValores.push(parseFloat(valor) || 0);
+          }
+        });
+      }
+    });
+    
+    if (todosLosValores.length === 0) return 0;
+    return (todosLosValores.reduce((acc, val) => acc + val, 0) / todosLosValores.length).toFixed(2);
   };
-  
 
   // Agrupar los objetivos por área
   const objetivosPorArea = objetivos.reduce((acc, objetivo) => {
@@ -107,10 +104,10 @@ const ObjetivosComponent = () => {
                     <td>{objetivo.objetivo}</td>
                     <td>{objetivo.recursos}</td>
                     <td>{objetivo.metaFrecuencia}</td>
-                    {/* Calcular el promedio de los indicadores */}
-                    <td>{calcularPromedio(objetivo.indicadorENEABR)}%</td>
-                    <td>{calcularPromedio(objetivo.indicadorMAYOAGO)}%</td>
-                    <td>{calcularPromedio(objetivo.indicadorSEPDIC)}%</td>
+                    {/* Calcular el promedio de los indicadores usando la misma lógica */}
+                    <td>{calcularPromedioTrimestre(objetivo, ['indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR'])}%</td>
+                    <td>{calcularPromedioTrimestre(objetivo, ['indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO'])}%</td>
+                    <td>{calcularPromedioTrimestre(objetivo, ['indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC'])}%</td>
                   </tr>
                 ))}
               </tbody>

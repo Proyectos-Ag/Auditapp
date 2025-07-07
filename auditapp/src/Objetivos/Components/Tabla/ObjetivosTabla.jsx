@@ -14,14 +14,24 @@ const ObjetivosTabla = () => {
   const [modoEdicion, setModoEdicion] = useState({});
   const [loading, setLoading] = useState(true);
 
-  const calcularPromedio = (indicador) => {
-    if (!indicador || Object.keys(indicador).length === 0) return 0;
+  // Función para calcular promedio por trimestre
+  const calcularPromedioTrimestre = (objetivo, campos) => {
     const semanas = ["S1", "S2", "S3", "S4", "S5"];
-    const valores = semanas
-      .map((semana) => parseFloat(indicador[semana]) || 0)
-      .filter((valor) => valor !== 0);
-    if (valores.length === 0) return 0;
-    return (valores.reduce((acc, val) => acc + val, 0) / valores.length).toFixed(2);
+    let todosLosValores = [];
+    
+    campos.forEach(campo => {
+      if (objetivo[campo]) {
+        semanas.forEach(semana => {
+          const valor = objetivo[campo][semana];
+          if (valor !== undefined && valor !== null && valor !== "") {
+            todosLosValores.push(parseFloat(valor) || 0);
+          }
+        });
+      }
+    });
+    
+    if (todosLosValores.length === 0) return 0;
+    return (todosLosValores.reduce((acc, val) => acc + val, 0) / todosLosValores.length).toFixed(2);
   };
 
   const fetchObjetivos = async () => {
@@ -33,9 +43,9 @@ const ObjetivosTabla = () => {
 
       const objetivosData = response.data.map((objetivo) => ({
         ...objetivo,
-        promedioENEABR: calcularPromedio(objetivo.indicadorENEABR),
-        promedioMAYOAGO: calcularPromedio(objetivo.indicadorMAYOAGO),
-        promedioSEPDIC: calcularPromedio(objetivo.indicadorSEPDIC),
+        promedioENEABR: calcularPromedioTrimestre(objetivo, ['indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR']),
+        promedioMAYOAGO: calcularPromedioTrimestre(objetivo, ['indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO']),
+        promedioSEPDIC: calcularPromedioTrimestre(objetivo, ['indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC']),
       }));
 
       setTablaData(objetivosData);
@@ -91,8 +101,17 @@ const ObjetivosTabla = () => {
       recursos: "",
       metaFrecuencia: "",
       indicadorENEABR: {},
+      indicadorFEB: {},
+      indicadorMAR: {},
+      indicadorABR: {},
       indicadorMAYOAGO: {},
+      indicadorJUN: {},
+      indicadorJUL: {},
+      indicadorAGO: {},
       indicadorSEPDIC: {},
+      indicadorOCT: {},
+      indicadorNOV: {},
+      indicadorDIC: {},
       observaciones: "",
     };
 
@@ -151,7 +170,7 @@ const ObjetivosTabla = () => {
 
     try {
       if (id.startsWith("temp-")) {
-        const { _id, ...filaSinId } = fila;
+        const { _id, promedioENEABR, promedioMAYOAGO, promedioSEPDIC, ...filaSinId } = fila;
         const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos`, filaSinId);
         const objetivoCreado = response.data;
 
@@ -163,7 +182,8 @@ const ObjetivosTabla = () => {
           return { ...rest, [objetivoCreado._id]: false };
         });
       } else {
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos/${id}`, fila);
+        const { promedioENEABR, promedioMAYOAGO, promedioSEPDIC, ...filaParaGuardar } = fila;
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos/${id}`, filaParaGuardar);
         setModoEdicion((prev) => ({ ...prev, [id]: false }));
       }
 
@@ -173,6 +193,9 @@ const ObjetivosTabla = () => {
         text: "El objetivo se ha guardado correctamente.",
         confirmButtonColor: "#3085d6",
       });
+      
+      // Recalcular promedios después de guardar
+      await fetchObjetivos();
     } catch (error) {
       Swal.fire({
         icon: "error",

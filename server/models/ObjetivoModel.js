@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+//Hola nuevos cambios
 const SemanaSchema = new mongoose.Schema({
   S1: { type: String, default: "" },
   S2: { type: String, default: "" },
