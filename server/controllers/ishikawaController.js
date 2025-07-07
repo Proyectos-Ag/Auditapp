@@ -60,25 +60,13 @@ const crearIshikawa = async (req, res) => {
 
 const crearIshikawa2 = async (req, res) => {
   try {
-    const { folio: prefixRaw, ...restBody } = req.body;
-    // Asegurar que el prefijo termine en '-'
-    const prefix = prefixRaw.endsWith('-') ? prefixRaw : `${prefixRaw}-`;
-
-    // 1) Contar documentos con ese prefijo
-    const count = await Ishikawa.countDocuments({
-      folio: { $regex: `^${prefix}` }
-    });
-
-    // 2) Generar nuevo número incremental
-    const nextNumber = count + 1;
-
-    // 3) Formar folio completo
-    const fullFolio = `${prefix}${nextNumber}`;
+    const { folio: prefixRaw, tipo, ...restBody } = req.body;
 
     // 4) Crear instancia y asignar folio
     const newIshikawa = new Ishikawa({
-      ...restBody,
-      folio: fullFolio
+       ...restBody,
+      folio: prefixRaw,
+      tipo
     });
     console.log('Guardando Ishikawa con folio:', fullFolio);
 
@@ -251,7 +239,7 @@ const actualizarIshikawaCompleto = async (req, res) => {
     // Verificar si el estado es "Aprobado"
     if (updatedIshikawa.estado === 'Aprobado') {
       const usuario = updatedIshikawa.auditado;
-      const programa = updatedIshikawa.programa;
+      const programa = req.body.programa;
       const correo = updatedIshikawa.correo;
 
       const templatePathAprobado = path.join(__dirname, 'templates', 'aprobado-ishikawa.html');

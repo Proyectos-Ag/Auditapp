@@ -1,4 +1,4 @@
-import React, { useEffect,useContext, useState } from 'react';
+import React, { useEffect,useContext, useState, useRef } from 'react';
 import axios from 'axios';
 import ShareIcon from '@mui/icons-material/Share';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -25,6 +25,7 @@ import Diagrama from '../DiagramaRe/Diagrama';
 import NewIshikawa from './NewIshikawa';
 import { useLocation } from 'react-router-dom';
 import AutoGrowTextarea from '../../../resources/AutoGrowTextarea';
+import IshPDF from '../../../administrador/Components/IshikawaRev/IshPDF';
 
 const CreacionIshikawa2 = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -105,8 +106,7 @@ const CreacionIshikawa2 = () => {
 
   const generateFolio = (userData = {}) => {
     const deptInitials = getInitials(userData.Departamento || 'DEP');
-    const areaInitials = getInitials(userData.area         || 'AREA');
-    return `${deptInitials}-${areaInitials}-`;
+    return deptInitials;
   };
 
   //Modo lectura 
@@ -254,6 +254,8 @@ const CreacionIshikawa2 = () => {
       }
     }
   };
+
+  const selectedRecord = ishikawaRecords.find(record => record._id === selectedRecordId);
 
   const handleFormDataChange = (e) => {
     const { name, value } = e.target;
@@ -817,6 +819,7 @@ const handleCausaChange = nuevaCausa => {
   setFormData(fd => ({ ...fd, causa: nuevaCausa }));
 };
 
+const pdfRef = useRef();
 
   return (
     <div className="content-diagrama">
@@ -860,12 +863,25 @@ const handleCausaChange = nuevaCausa => {
           </Button>
         )}
 
+        <IshPDF
+          ref={pdfRef}    
+          ishikawa={selectedRecord }
+          programa={formData.afectacion}
+          id={formData._id}
+          download={true}
+          participantesC={
+            typeof selectedParticipants.participantes === "string"
+              ? selectedParticipants.participantes.split('/').map(p => p.trim())
+              : []
+          }
+        />
+
         <Button
           variant="text"
           sx={{ color: 'white' }}
           startIcon={<PictureAsPdfIcon />}
           onClick={handlePrintPDF}
-          disabled={!(formData.estado === 'Aprobado' || formData.estado === 'Finalizado')}
+          
         >
           Generar PDF
         </Button>

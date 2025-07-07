@@ -1,5 +1,5 @@
-// ishikawa.js
 const mongoose = require('mongoose');
+const Counter = require('./counterSchema'); // Asegúrate de que la ruta sea correcta
 
 const diagramaSchema = new mongoose.Schema({
     problema: String,
@@ -49,30 +49,45 @@ const accesoSchema = new mongoose.Schema({
 });
 
 const ishikawaSchema = new mongoose.Schema({
-    idRep: String,
-    idReq: String,
-    proName: String,
-    problema: String,
-    afectacion: String,
-    fecha: String,
-    folio: String,
-    auditado: String,
-    correo: String,
-    requisito: String,
-    hallazgo: String,
-    correccion: String,
-    causa: String,
-    diagrama:[diagramaSchema],
-    participantes: String,
-    actividades: [actividadSchema],
-    correcciones: [correccionSchema],
-    estado: String,
-    tipo: String,
-    notaRechazo: String,
-    fechaElaboracion: String,
-    acceso: [accesoSchema]
+  idRep: String,
+  idReq: String,
+  proName: String,
+  problema: String,
+  afectacion:String,
+  fecha: String,
+  folio: String,
+  auditado: String,
+  correo: String,
+  requisito:String,
+  hallazgo:String,
+  correccion:String,
+  causa:String,
+  diagrama:[diagramaSchema],
+  participantes:String,
+  actividades:[actividadSchema],
+  correcciones:[correccionSchema],
+  estado:String,
+  tipo:String,
+  notaRechazo:String,
+  fechaElaboracion:String,
+  acceso:[accesoSchema]
 }, { timestamps: true });
 
-const Ishikawa = mongoose.model('Ishikawa', ishikawaSchema);
+// Hook pre-validate: genera folio solo si es nuevo y tipo==='vacio'
+ishikawaSchema.pre('validate', async function(next) {
+  if (this.isNew && this.tipo === 'vacio') {
+    let prefix = this.folio;
+    if (!prefix.endsWith('-')) prefix += '-';
 
-module.exports = Ishikawa;
+    const counter = await Counter.findOneAndUpdate(
+      { _id: prefix },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    const padded = String(counter.seq).padStart(4, '0');
+    this.folio = `${prefix}${padded}`;
+  }
+  next();
+});
+
+module.exports = mongoose.model('Ishikawa', ishikawaSchema);
