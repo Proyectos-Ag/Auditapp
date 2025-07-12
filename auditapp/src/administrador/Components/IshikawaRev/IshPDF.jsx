@@ -285,7 +285,7 @@ const IshPDF = forwardRef(({
       cropCanvas.height = cropHeight;
 
       // Dibujar el canvas original recortando 100px de arriba
-      ctx.drawImage(canvas, 0, 250, canvas.width, cropHeight, 0, 0, canvas.width, cropHeight);
+      ctx.drawImage(canvas, 0, 150, canvas.width, cropHeight, 0, 0, canvas.width, cropHeight);
 
       const imgData = cropCanvas.toDataURL('image/png');
       const imgW = pageWidth - 80;
