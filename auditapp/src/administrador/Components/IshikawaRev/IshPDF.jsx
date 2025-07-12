@@ -85,7 +85,7 @@ const IshPDF = forwardRef(({
   const generatePaginatedTable = (doc, headers, rows, startX, startY, columnWidths, pageHeight, margin, headerHeight = 20) => {
   let y = startY;
   const tableWidth = columnWidths.reduce((a, b) => a + b, 0);
-  const lineHeight = 12;
+  const lineHeight = 21;
   const padding = 4;
   
   // Dibujar encabezado solo en la primera página
@@ -151,7 +151,7 @@ const IshPDF = forwardRef(({
     // Dibujar contenido de celdas
     x = startX;
     cellLines.forEach((lines, i) => {
-      doc.setFont('helvetica','normal').setFontSize(12).setTextColor(0, 0, 0);
+      doc.setFont('helvetica','normal').setFontSize(14).setTextColor(0, 0, 0);
       
       if (i === 4 && lines[0].startsWith('data:image') && imgDims) {
         try {
@@ -247,26 +247,49 @@ const IshPDF = forwardRef(({
     const problemaLines = doc.splitTextToSize(ishikawa.problema || '', pageWidth - 180);
     doc.setFont('helvetica','normal').setFontSize(textSize).setTextColor(0)
       .text(problemaLines, 140, yOffset);
+
+    // Coordenada inicial para Fecha y Folio (alineación vertical al lado derecho)
+    const infoX = pageWidth - margin;
+    let infoYOffset = yOffset;
+    doc.setFontSize(textSize).setTextColor(0)
+      .text(`Fecha: ${ishikawa.fecha || ''}`, infoX, infoYOffset, { align: 'right' });
+    infoYOffset += textSize + 4;
+    if (ishikawa.folio) {
+      doc.text(`Folio: ${ishikawa.folio}`, infoX, infoYOffset, { align: 'right' });
+      infoYOffset += textSize + 4;
+    }
+
     yOffset += problemaLines.length * (textSize + 2) + 10;
 
     doc.setFont('helvetica','bold').setFontSize(labelSize).setTextColor(0)
       .text('Afectación:', margin, yOffset);
-    const afectLines = doc.splitTextToSize(`  ${id} ${programa.Nombre || ''}`, pageWidth - 260);
+    const afectLines = doc.splitTextToSize(`  ${id} ${programa.Nombre || programa || ''}`, pageWidth - 260);
     doc.setFont('helvetica','normal').setFontSize(textSize).setTextColor(0)
-      .text(afectLines, 140, yOffset, {
-      align: 'left',
-      maxWidth: pageWidth - 260
-    });
-    doc.setFontSize(textSize).setTextColor(0)
-      .text(`Fecha: ${ishikawa.fecha || ''}`, pageWidth - margin, yOffset, { align: 'right' });
-    yOffset += Math.max(afectLines.length * (textSize + 2), textSize + 2);
+      .text(afectLines, 140, yOffset, { align: 'left' });
+
+    yOffset += afectLines.length * (textSize + 2) + 10;
+    
+    yOffset += textSize - 20;
 
     if (newIshikawaRef.current) {
       const canvas = await captureNode(newIshikawaRef.current);
-      const imgData = canvas.toDataURL('image/png');
+
+      // Crear un nuevo canvas más pequeño (recorte)
+      const cropHeight = canvas.height - 100; // ← altura nueva
+      const cropCanvas = document.createElement('canvas');
+      const ctx = cropCanvas.getContext('2d');
+
+      cropCanvas.width = canvas.width;
+      cropCanvas.height = cropHeight;
+
+      // Dibujar el canvas original recortando 100px de arriba
+      ctx.drawImage(canvas, 0, 250, canvas.width, cropHeight, 0, 0, canvas.width, cropHeight);
+
+      const imgData = cropCanvas.toDataURL('image/png');
       const imgW = pageWidth - 80;
-      const imgH = (canvas.height * imgW) / canvas.width;
-      doc.addImage(imgData,'PNG',margin,yOffset,imgW,imgH);
+      const imgH = (cropHeight * imgW) / canvas.width;
+
+      doc.addImage(imgData, 'PNG', margin, yOffset, imgW, imgH);
       yOffset += imgH + 20;
     }
 
@@ -281,8 +304,9 @@ const IshPDF = forwardRef(({
     }
 
     const fontSize         = 12;
-    const lineHeightFactor = 1.5;
-    const lineHeight       = fontSize * lineHeightFactor;
+    //Solo parav el calculo de 1.5 x 12
+    //const lineHeightFactor = 1.2;
+    const lineHeight       = 21;
 
     const sections = [
       ['No conformidad:', ishikawa.requisito],
@@ -296,12 +320,11 @@ const IshPDF = forwardRef(({
         .text(label, margin, yOffset);
       const normalized = (text || '').replace(/\r?\n|\r/g, ' ');
       const lines = doc.splitTextToSize(normalized, availableWidth);
-      doc.setFont('helvetica','normal').setFontSize(12).setTextColor(0)
+      doc.setFont('helvetica','normal').setFontSize(14).setTextColor(0)
         .text(lines, margin, yOffset + lineHeight, {
-    align:'justify',
-    maxWidth: availableWidth,
-    lineHeightFactor
-  });
+  align: 'justify',  // Cambiar de justify a left
+  maxWidth: availableWidth,
+});
      const blockHeight = lines.length * lineHeight;
   yOffset += blockHeight + 30;
     });
@@ -316,7 +339,7 @@ const IshPDF = forwardRef(({
 
    // Tabla SOLUCIÓN
 if (yOffset > pageHeight - 200) { doc.addPage(); yOffset = 40; }
-doc.setFont('helvetica','bold').setFontSize(12).setTextColor(0)
+doc.setFont('helvetica','bold').setFontSize(14).setTextColor(0)
   .text('SOLUCIÓN', margin, yOffset);
 yOffset += 20;
 
@@ -348,7 +371,7 @@ if (ishikawa.correcciones?.length > 0) {
 
 // Tabla EFECTIVIDAD
 if (yOffset > pageHeight - 200) { doc.addPage(); yOffset = 40; }
-doc.setFont('helvetica','bold').setFontSize(12).setTextColor(0)
+doc.setFont('helvetica','bold').setFontSize(14).setTextColor(0)
   .text('EFECTIVIDAD', margin, yOffset);
 yOffset += 20;
 
