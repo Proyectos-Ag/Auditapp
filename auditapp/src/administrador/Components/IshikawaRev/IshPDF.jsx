@@ -263,7 +263,9 @@ const IshPDF = forwardRef(({
 
     doc.setFont('helvetica','bold').setFontSize(labelSize).setTextColor(0)
       .text('Afectación:', margin, yOffset);
-    const afectLines = doc.splitTextToSize(`  ${id} ${programa.Nombre || programa || ''}`, pageWidth - 260);
+    // SOLUCIÓN 1: Eliminar espacios innecesarios en afectación
+    const afectText = `${id} ${programa.Nombre || programa || ''}`.replace(/\s+/g, ' ');
+    const afectLines = doc.splitTextToSize(afectText, pageWidth - 260);
     doc.setFont('helvetica','normal').setFontSize(textSize).setTextColor(0)
       .text(afectLines, 140, yOffset, { align: 'left' });
 
@@ -304,8 +306,6 @@ const IshPDF = forwardRef(({
     }
 
     const fontSize         = 12;
-    //Solo parav el calculo de 1.5 x 12
-    //const lineHeightFactor = 1.2;
     const lineHeight       = 21;
 
     const sections = [
@@ -318,15 +318,17 @@ const IshPDF = forwardRef(({
       if (yOffset > pageHeight - 100) { doc.addPage(); yOffset = 40; }
       doc.setFont('helvetica','bold').setFontSize(14).setTextColor(0)
         .text(label, margin, yOffset);
-      const normalized = (text || '').replace(/\r?\n|\r/g, ' ');
+      // SOLUCIÓN 2: Eliminar espacios innecesarios y reducir separación
+      const normalized = (text || '').replace(/\s+/g, ' ');
       const lines = doc.splitTextToSize(normalized, availableWidth);
       doc.setFont('helvetica','normal').setFontSize(14).setTextColor(0)
         .text(lines, margin, yOffset + lineHeight, {
-  align: 'justify',  // Cambiar de justify a left
-  maxWidth: availableWidth,
-});
-     const blockHeight = lines.length * lineHeight;
-  yOffset += blockHeight + 30;
+          align: 'left',
+          maxWidth: availableWidth,
+        });
+      const blockHeight = lines.length * lineHeight;
+      // Reducir espacio entre secciones de 30 a 15
+      yOffset += blockHeight + 15;
     });
 
     yOffset += 20;
@@ -353,8 +355,12 @@ const solRows = ishikawa.actividades?.map(act => {
   ];
 }) || [];
 
-// repartimos el ancho disponible entre las 3 columnas
-const solCols = solHeaders.map(() => availableWidth / solHeaders.length);
+// SOLUCIÓN 3: Ajustar anchos de columna proporcionalmente
+const solCols = [
+  availableWidth * 0.4, // Actividad (60%)
+  availableWidth * 0.3, // Responsable (20%)
+  availableWidth * 0.3  // Fecha Compromiso (20%)
+];
 
 yOffset = generatePaginatedTable(
     doc,
@@ -387,10 +393,8 @@ const effRows = await Promise.all(ishikawa.correcciones.map(async c => {
 
   if (c.evidencia) {
     if (c.evidencia.includes('.pdf')) {
-      // Conserva "url || nombre.pdf"
       evidenciaContent = c.evidencia;
     } else {
-      // Convierte imagen a dataURL
       try {
         const img = new Image();
         img.crossOrigin = 'Anonymous';
@@ -423,8 +427,14 @@ const effRows = await Promise.all(ishikawa.correcciones.map(async c => {
   ];
 }));
 
-// repartimos el ancho disponible entre las 5 columnas
-const effCols = effHeaders.map(() => availableWidth / effHeaders.length);
+// SOLUCIÓN 3: Ajustar anchos de columna proporcionalmente
+const effCols = [
+  availableWidth * 0.3, // Actividad
+  availableWidth * 0.2, // Responsable
+  availableWidth * 0.15, // Fecha Verificación
+  availableWidth * 0.15, // Acción Correctiva Cerrada
+  availableWidth * 0.2   // Evidencia
+];
 
  yOffset = generatePaginatedTable(
     doc,
@@ -441,19 +451,15 @@ const effCols = effHeaders.map(() => availableWidth / effHeaders.length);
 }
 
     if (dl === true) {
-      // descarga local
       doc.save(`Ishikawa-${id}.pdf`);
     } else {
-      // Envío al backend
         const pdfBlob = doc.output('blob');
         const file = new File([pdfBlob], `Ishikawa-${id}.pdf`, { type: 'application/pdf' });
         const formData = new FormData();
         formData.append('pdf', file);
         formData.append('participantes', participantesC.join('/'));
 
-        // Extraer correos de responsables de actividades
         (ishikawa.actividades || []).forEach(act => {
-          // correos de los responsables
           if (Array.isArray(act.responsable)) {
             act.responsable.forEach(resp => {
               if (resp.correo) {
@@ -491,11 +497,10 @@ useImperativeHandle(ref, () => ({
       />
       <div className="button-pasti">
         <div className="cont-part">
-          {/* Aquí reemplazamos el <button> por un <div> */}
           <div
             className="button-part"
-            onClick={generatePDF}      // si quieres que sea clicable
-            role="button"             // accesibilidad
+            onClick={generatePDF}
+            role="button"
             tabIndex={0}
             onKeyPress={e => { if (e.key === 'Enter') generatePDF(); }}
           >
