@@ -85,13 +85,13 @@ const IshPDF = forwardRef(({
   const generatePaginatedTable = (doc, headers, rows, startX, startY, columnWidths, pageHeight, margin, headerHeight = 20) => {
   let y = startY;
   const tableWidth = columnWidths.reduce((a, b) => a + b, 0);
-  const lineHeight = 21;
+  const lineHeight = 12; // Reducido para mejor ajuste
   const padding = 4;
   
   // Dibujar encabezado solo en la primera página
   doc.setFillColor('#179e6a');
   doc.rect(startX, y, tableWidth, headerHeight, 'F');
-  doc.setFont('helvetica', 'bold').setFontSize(11).setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold').setFontSize(10).setTextColor(255, 255, 255); // Tamaño reducido
   
   let x = startX;
   headers.forEach((text, i) => {
@@ -115,6 +115,7 @@ const IshPDF = forwardRef(({
       if (i === 4 && typeof cell === 'string' && (cell.startsWith('data:image') || cell.includes('.pdf'))) {
         return [cell];
       }
+      // Usar tamaño de fuente más pequeño para mejor ajuste
       return doc.splitTextToSize(cell?.toString() || '', columnWidths[i] - padding * 2);
     });
 
@@ -151,7 +152,8 @@ const IshPDF = forwardRef(({
     // Dibujar contenido de celdas
     x = startX;
     cellLines.forEach((lines, i) => {
-      doc.setFont('helvetica','normal').setFontSize(14).setTextColor(0, 0, 0);
+      // Tamaño de fuente reducido para mejor ajuste
+      doc.setFont('helvetica','normal').setFontSize(10).setTextColor(0, 0, 0);
       
       if (i === 4 && lines[0].startsWith('data:image') && imgDims) {
         try {
@@ -169,7 +171,7 @@ const IshPDF = forwardRef(({
       } 
       else if (i === 4 && lines[0].includes('.pdf')) {
         const [url, filename] = lines[0].split('||').map(s => s.trim());
-        doc.setFontSize(12).setTextColor(0, 0, 255);
+        doc.setFontSize(10).setTextColor(0, 0, 255); // Tamaño reducido
         const maxW = columnWidths[i] - padding * 2;
         const textLines = doc.splitTextToSize(filename, maxW);
         
@@ -263,9 +265,11 @@ const IshPDF = forwardRef(({
 
     doc.setFont('helvetica','bold').setFontSize(labelSize).setTextColor(0)
       .text('Afectación:', margin, yOffset);
-    // SOLUCIÓN 1: Eliminar espacios innecesarios en afectación
-    const afectText = `${id} ${programa.Nombre || programa || ''}`.replace(/\s+/g, ' ');
-    const afectLines = doc.splitTextToSize(afectText, pageWidth - 260);
+    
+    // SOLUCIÓN DEFINITIVA PARA PROBLEMA DE ESPACIADO
+    const afectText = `${id} ${programa.Nombre || programa || ''}`;
+    // Usar un ancho mayor para evitar división innecesaria
+    const afectLines = doc.splitTextToSize(afectText, pageWidth - 140);
     doc.setFont('helvetica','normal').setFontSize(textSize).setTextColor(0)
       .text(afectLines, 140, yOffset, { align: 'left' });
 
@@ -285,7 +289,7 @@ const IshPDF = forwardRef(({
       cropCanvas.height = cropHeight;
 
       // Dibujar el canvas original recortando 100px de arriba
-      ctx.drawImage(canvas, 0, 150, canvas.width, cropHeight, 0, 0, canvas.width, cropHeight);
+      ctx.drawImage(canvas, 0, 100, canvas.width, cropHeight, 0, 0, canvas.width, cropHeight);
 
       const imgData = cropCanvas.toDataURL('image/png');
       const imgW = pageWidth - 80;
@@ -305,8 +309,8 @@ const IshPDF = forwardRef(({
       yOffset += imgH + 20;
     }
 
-    const fontSize         = 12;
-    const lineHeight       = 21;
+    const fontSize = 12;
+    const lineHeight = 14; // Reducido para mejor espaciado
 
     const sections = [
       ['No conformidad:', ishikawa.requisito],
@@ -314,141 +318,156 @@ const IshPDF = forwardRef(({
       ['Acción inmediata o corrección:', ishikawa.correccion],
       ['Causa del problema (Ishikawa, TGN, W-W, DCR):', ishikawa.causa]
     ];
+    
+    // SOLUCIÓN PARA ESPACIADO ENTRE SECCIONES
     sections.forEach(([label, text]) => {
-      if (yOffset > pageHeight - 100) { doc.addPage(); yOffset = 40; }
+      if (yOffset > pageHeight - 100) { 
+        doc.addPage(); 
+        yOffset = 40; 
+      }
       doc.setFont('helvetica','bold').setFontSize(14).setTextColor(0)
         .text(label, margin, yOffset);
-      // SOLUCIÓN 2: Eliminar espacios innecesarios y reducir separación
+      
+      // Normalizar espacios y mantener saltos de línea
       const normalized = (text || '').replace(/\s+/g, ' ');
       const lines = doc.splitTextToSize(normalized, availableWidth);
-      doc.setFont('helvetica','normal').setFontSize(14).setTextColor(0)
-        .text(lines, margin, yOffset + lineHeight, {
+      
+      doc.setFont('helvetica','normal').setFontSize(12).setTextColor(0) // Tamaño reducido
+        .text(lines, margin, yOffset + 16, { // Espaciado vertical reducido
           align: 'left',
           maxWidth: availableWidth,
         });
+      
       const blockHeight = lines.length * lineHeight;
-      // Reducir espacio entre secciones de 30 a 15
-      yOffset += blockHeight + 15;
+      yOffset += blockHeight + 30; // Espacio reducido entre secciones
     });
 
-    yOffset += 20;
+    yOffset += 30; // Espacio reducido
 
     const formatDate = isoString => {
-  if (!isoString) return '';
-  const [year, month, day] = isoString.split('-');
-  return `${day}/${month}/${year}`;
-};
+      if (!isoString) return '';
+      const [year, month, day] = isoString.split('-');
+      return `${day}/${month}/${year}`;
+    };
 
-   // Tabla SOLUCIÓN
-if (yOffset > pageHeight - 200) { doc.addPage(); yOffset = 40; }
-doc.setFont('helvetica','bold').setFontSize(14).setTextColor(0)
-  .text('SOLUCIÓN', margin, yOffset);
-yOffset += 20;
-
-const solHeaders = ['Actividad','Responsable','Fecha Compromiso'];
-const solRows = ishikawa.actividades?.map(act => {
-  const raw = act.fechaCompromiso?.slice(-1)[0] || '';
-  return [
-    act.actividad,
-    getResponsable(act.responsable).join(', '),
-    formatDate(raw)
-  ];
-}) || [];
-
-// SOLUCIÓN 3: Ajustar anchos de columna proporcionalmente
-const solCols = [
-  availableWidth * 0.4, // Actividad (60%)
-  availableWidth * 0.3, // Responsable (20%)
-  availableWidth * 0.3  // Fecha Compromiso (20%)
-];
-
-yOffset = generatePaginatedTable(
-    doc,
-    solHeaders,
-    solRows,
-    margin,
-    yOffset,
-    solCols,
-    pageHeight,
-    margin
-  ) + 20;
-
-if (ishikawa.correcciones?.length > 0) {
-
-// Tabla EFECTIVIDAD
-if (yOffset > pageHeight - 200) { doc.addPage(); yOffset = 40; }
-doc.setFont('helvetica','bold').setFontSize(14).setTextColor(0)
-  .text('EFECTIVIDAD', margin, yOffset);
-yOffset += 20;
-
-const effHeaders = [
-  'Actividad',
-  'Responsable',
-  'Fecha Verificación',
-  'Acción Correctiva Cerrada',
-  'Evidencia'
-];
-const effRows = await Promise.all(ishikawa.correcciones.map(async c => {
-  let evidenciaContent = 'N/A';
-
-  if (c.evidencia) {
-    if (c.evidencia.includes('.pdf')) {
-      evidenciaContent = c.evidencia;
-    } else {
-      try {
-        const img = new Image();
-        img.crossOrigin = 'Anonymous';
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        await new Promise((resolve, reject) => {
-          img.onload = () => {
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-            resolve();
-          };
-          img.onerror = reject;
-          img.src = c.evidencia;
-        });
-        evidenciaContent = canvas.toDataURL('image/jpeg', 0.7);
-      } catch {
-        evidenciaContent = '🚫 Error cargando imagen';
-      }
+    // Tabla SOLUCIÓN
+    if (yOffset > pageHeight - 200) { 
+      doc.addPage(); 
+      yOffset = 40; 
     }
-  }
+    
+    doc.setFont('helvetica','bold').setFontSize(14).setTextColor(0)
+      .text('SOLUCIÓN', margin, yOffset);
+    yOffset += 20;
 
-  const rawDate = c.fechaCompromiso?.slice(-1)[0] || '';
-  return [
-    c.actividad,
-    getResponsable(c.responsable).join(', '),
-    formatDate(rawDate),
-    c.cerrada || '',
-    evidenciaContent
-  ];
-}));
+    const solHeaders = ['Actividad','Responsable','Fecha Compromiso'];
+    const solRows = ishikawa.actividades?.map(act => {
+      const raw = act.fechaCompromiso?.slice(-1)[0] || '';
+      return [
+        act.actividad,
+        getResponsable(act.responsable).join(', '),
+        formatDate(raw)
+      ];
+    }) || [];
 
-// SOLUCIÓN 3: Ajustar anchos de columna proporcionalmente
-const effCols = [
-  availableWidth * 0.3, // Actividad
-  availableWidth * 0.2, // Responsable
-  availableWidth * 0.15, // Fecha Verificación
-  availableWidth * 0.15, // Acción Correctiva Cerrada
-  availableWidth * 0.2   // Evidencia
-];
+    // ANCHOS MEJORADOS PARA TABLAS
+    const solCols = [
+      availableWidth * 0.50, // Actividad (50%)
+      availableWidth * 0.25, // Responsable (25%)
+      availableWidth * 0.25  // Fecha Compromiso (25%)
+    ];
 
- yOffset = generatePaginatedTable(
-    doc,
-    effHeaders,
-    effRows,
-    margin,
-    yOffset,
-    effCols,
-    pageHeight,
-    margin,
-    30
-  ) + 20;
+    yOffset = generatePaginatedTable(
+        doc,
+        solHeaders,
+        solRows,
+        margin,
+        yOffset,
+        solCols,
+        pageHeight,
+        margin
+      ) + 20;
 
-}
+    if (ishikawa.correcciones?.length > 0) {
+
+      // Tabla EFECTIVIDAD
+      if (yOffset > pageHeight - 200) { 
+        doc.addPage(); 
+        yOffset = 40; 
+      }
+      
+      doc.setFont('helvetica','bold').setFontSize(14).setTextColor(0)
+        .text('EFECTIVIDAD', margin, yOffset);
+      yOffset += 20;
+
+      const effHeaders = [
+        'Actividad',
+        'Responsable',
+        'Fecha Verificación',
+        'Acción Correctiva Cerrada',
+        'Evidencia'
+      ];
+      
+      const effRows = await Promise.all(ishikawa.correcciones.map(async c => {
+        let evidenciaContent = 'N/A';
+
+        if (c.evidencia) {
+          if (c.evidencia.includes('.pdf')) {
+            evidenciaContent = c.evidencia;
+          } else {
+            try {
+              const img = new Image();
+              img.crossOrigin = 'Anonymous';
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              await new Promise((resolve, reject) => {
+                img.onload = () => {
+                  canvas.width = img.width;
+                  canvas.height = img.height;
+                  ctx.drawImage(img, 0, 0);
+                  resolve();
+                };
+                img.onerror = reject;
+                img.src = c.evidencia;
+              });
+              evidenciaContent = canvas.toDataURL('image/jpeg', 0.7);
+            } catch {
+              evidenciaContent = '🚫 Error cargando imagen';
+            }
+          }
+        }
+
+        const rawDate = c.fechaCompromiso?.slice(-1)[0] || '';
+        return [
+          c.actividad,
+          getResponsable(c.responsable).join(', '),
+          formatDate(rawDate),
+          c.cerrada || '',
+          evidenciaContent
+        ];
+      }));
+
+      // ANCHOS MEJORADOS PARA TABLAS
+      const effCols = [
+        availableWidth * 0.25, // Actividad (25%)
+        availableWidth * 0.15, // Responsable (15%)
+        availableWidth * 0.15, // Fecha Verificación (15%)
+        availableWidth * 0.15, // Acción Correctiva Cerrada (15%)
+        availableWidth * 0.30  // Evidencia (30%)
+      ];
+
+      yOffset = generatePaginatedTable(
+          doc,
+          effHeaders,
+          effRows,
+          margin,
+          yOffset,
+          effCols,
+          pageHeight,
+          margin,
+          30
+        ) + 20;
+    }
 
     if (dl === true) {
       doc.save(`Ishikawa-${id}.pdf`);
