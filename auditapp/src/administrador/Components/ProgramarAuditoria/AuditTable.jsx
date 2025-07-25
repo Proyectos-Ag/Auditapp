@@ -36,10 +36,11 @@ import {
   Add as AddIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
-  CalendarToday as CalendarIcon
+  CalendarToday as CalendarIcon,
+  Notes as NotesIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Delete as DeleteIcon } from '@mui/icons-material';
 
 // Tema profesional con colores corporativos
 const theme = createTheme({
@@ -146,6 +147,7 @@ const AuditTable = () => {
     fechaFin: '',
     modalidad: 'Presencial',
     status: 'Realizada',
+    notas: ''
   });
 
   const [editingAudit, setEditingAudit] = useState(null);
@@ -158,6 +160,10 @@ const AuditTable = () => {
   const currentYear = new Date().getFullYear();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [auditToDelete, setAuditToDelete] = useState(null);
+  const [notesDialogOpen, setNotesDialogOpen] = useState(false);
+  const [currentNotes, setCurrentNotes] = useState('');
+  const [currentAuditId, setCurrentAuditId] = useState('');
+  const [currentAuditClient, setCurrentAuditClient] = useState('');
 
   useEffect(() => {
     fetchAudits();
@@ -184,132 +190,122 @@ const AuditTable = () => {
     });
   };
 
- const captureTableImage = async () => {
-  const table = document.querySelector(".MuiTableContainer-root");
-  if (!table) return null;
-  
-  // Clonar la tabla y aplicar estilos
-  const tableClone = table.cloneNode(true);
-  tableClone.style.position = 'absolute';
-  tableClone.style.left = '-9999px';
-  tableClone.style.width = table.offsetWidth + 'px';
-  tableClone.style.backgroundColor = '#ffffff';
-  document.body.appendChild(tableClone);
-  
-  // Ocultar columnas de acciones
-  const actionColumns = tableClone.querySelectorAll('th:last-child, td:last-child');
-  actionColumns.forEach(col => col.style.display = 'none');
-  
-  // Ocultar última fila (formulario de nueva auditoría)
-  const lastRow = tableClone.querySelector('tbody tr:last-child');
-  if (lastRow) lastRow.style.display = 'none';
-  
-  // SOLUCIÓN: Aplicar estilos directamente a las celdas de estado
-  const statusCells = tableClone.querySelectorAll('tbody tr');
-  statusCells.forEach((row, index) => {
-    // Skip the last row (new audit form)
-    if (index === statusCells.length - 1) return;
+  const captureTableImage = async () => {
+    const table = document.querySelector(".MuiTableContainer-root");
+    if (!table) return null;
     
-    const statusCell = row.querySelector('td:nth-child(4)'); // 4ta columna es STATUS
-    if (statusCell) {
-      const status = statusCell.textContent.trim();
+    const tableClone = table.cloneNode(true);
+    tableClone.style.position = 'absolute';
+    tableClone.style.left = '-9999px';
+    tableClone.style.width = table.offsetWidth + 'px';
+    tableClone.style.backgroundColor = '#ffffff';
+    document.body.appendChild(tableClone);
+    
+    const actionColumns = tableClone.querySelectorAll('th:last-child, td:last-child');
+    actionColumns.forEach(col => col.style.display = 'none');
+    
+    const lastRow = tableClone.querySelector('tbody tr:last-child');
+    if (lastRow) lastRow.style.display = 'none';
+    
+    const statusCells = tableClone.querySelectorAll('tbody tr');
+    statusCells.forEach((row, index) => {
+      if (index === statusCells.length - 1) return;
       
-      // Limpiar estilos existentes y aplicar nuevos
-      statusCell.style.cssText = '';
-      statusCell.style.fontWeight = '500';
-      statusCell.style.textAlign = 'center';
-      statusCell.style.textTransform = 'uppercase';
-      statusCell.style.letterSpacing = '0.5px';
-      statusCell.style.fontSize = '0.75rem';
-      statusCell.style.borderRadius = '4px';
-      statusCell.style.padding = '8px 12px';
-      statusCell.style.minWidth = '100px';
-      statusCell.style.color = 'white';
-      statusCell.style.border = '1px solid #ddd';
-      
-      // Aplicar color según el estado
-      const colorMap = {
-        'Realizada': '#4caf50',
-        'Programada': '#2196f3', 
-        'Por Confirmar': '#ff9800',
-        'En Curso': '#9c27b0',
-        'No ejecutada': '#f44336',
-        'CANCELADA': '#f44336'
-      };
-      
-      if (colorMap[status]) {
-        statusCell.style.backgroundColor = colorMap[status];
-        // Agregar el texto del estado si no está visible
-        statusCell.innerHTML = `<span style="color: white; font-weight: 500;">${status}</span>`;
-      }
-    }
-  });
-  
-const tableElement = tableClone.querySelector('table');
-  if (tableElement) {
-    tableElement.style.borderCollapse = 'collapse';
-    tableElement.style.width = '100%';
-    tableElement.style.backgroundColor = '#ffffff';
-  }
-  
-  // Estilos para encabezados
-  const headers = tableClone.querySelectorAll('th');
-  headers.forEach(header => {
-    header.style.backgroundColor = '#1a237e';
-    header.style.color = 'white';
-    header.style.fontWeight = '600';
-    header.style.padding = '12px';
-    header.style.border = '1px solid #ddd';
-  });
-
-   const cells = tableClone.querySelectorAll('td');
-  cells.forEach(cell => {
-    if (!cell.querySelector('span')) { // No aplicar a celdas de estado que ya tienen span
-      cell.style.padding = '12px';
-      cell.style.border = '1px solid #ddd';
-      cell.style.backgroundColor = '#ffffff';
-    }
-  });
-
-  // Capturar la imagen
-    const canvas = await html2canvas(tableClone, {
-    scale: 2,
-    backgroundColor: '#ffffff',
-    logging: false,
-    useCORS: true,
-    allowTaint: true,
-    removeContainer: true,
-    imageTimeout: 0,
-    onclone: (clonedDoc) => {
-      // Asegurar que los estilos se apliquen en el documento clonado
-      const clonedStatusCells = clonedDoc.querySelectorAll('tbody tr td:nth-child(4)');
-      clonedStatusCells.forEach(cell => {
-        const status = cell.textContent.trim();
+      const statusCell = row.querySelector('td:nth-child(4)');
+      if (statusCell) {
+        const status = statusCell.textContent.trim();
+        
+        statusCell.style.cssText = '';
+        statusCell.style.fontWeight = '500';
+        statusCell.style.textAlign = 'center';
+        statusCell.style.textTransform = 'uppercase';
+        statusCell.style.letterSpacing = '0.5px';
+        statusCell.style.fontSize = '0.75rem';
+        statusCell.style.borderRadius = '4px';
+        statusCell.style.padding = '8px 12px';
+        statusCell.style.minWidth = '100px';
+        statusCell.style.color = 'white';
+        statusCell.style.border = '1px solid #ddd';
+        
         const colorMap = {
           'Realizada': '#4caf50',
-          'Programada': '#2196f3',
-          'Por Confirmar': '#ff9800', 
+          'Programada': '#2196f3', 
+          'Por Confirmar': '#ff9800',
           'En Curso': '#9c27b0',
           'No ejecutada': '#f44336',
           'CANCELADA': '#f44336'
         };
         
         if (colorMap[status]) {
-          cell.style.backgroundColor = colorMap[status];
-          cell.style.color = 'white';
-          cell.style.fontWeight = '500';
-          cell.style.textAlign = 'center';
+          statusCell.style.backgroundColor = colorMap[status];
+          statusCell.innerHTML = `<span style="color: white; font-weight: 500;">${status}</span>`;
         }
-      });
+      }
+    });
+    
+    const tableElement = tableClone.querySelector('table');
+    if (tableElement) {
+      tableElement.style.borderCollapse = 'collapse';
+      tableElement.style.width = '100%';
+      tableElement.style.backgroundColor = '#ffffff';
     }
-  });
-  
-  document.body.removeChild(tableClone);
-  
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), "image/png", 1.0);
-  });
-};
+    
+    const headers = tableClone.querySelectorAll('th');
+    headers.forEach(header => {
+      header.style.backgroundColor = '#1a237e';
+      header.style.color = 'white';
+      header.style.fontWeight = '600';
+      header.style.padding = '12px';
+      header.style.border = '1px solid #ddd';
+    });
+
+    const cells = tableClone.querySelectorAll('td');
+    cells.forEach(cell => {
+      if (!cell.querySelector('span')) {
+        cell.style.padding = '12px';
+        cell.style.border = '1px solid #ddd';
+        cell.style.backgroundColor = '#ffffff';
+      }
+    });
+
+    const canvas = await html2canvas(tableClone, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      logging: false,
+      useCORS: true,
+      allowTaint: true,
+      removeContainer: true,
+      imageTimeout: 0,
+      onclone: (clonedDoc) => {
+        const clonedStatusCells = clonedDoc.querySelectorAll('tbody tr td:nth-child(4)');
+        clonedStatusCells.forEach(cell => {
+          const status = cell.textContent.trim();
+          const colorMap = {
+            'Realizada': '#4caf50',
+            'Programada': '#2196f3',
+            'Por Confirmar': '#ff9800', 
+            'En Curso': '#9c27b0',
+            'No ejecutada': '#f44336',
+            'CANCELADA': '#f44336'
+          };
+          
+          if (colorMap[status]) {
+            cell.style.backgroundColor = colorMap[status];
+            cell.style.color = 'white';
+            cell.style.fontWeight = '500';
+            cell.style.textAlign = 'center';
+          }
+        });
+      }
+    });
+    
+    document.body.removeChild(tableClone);
+    
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), "image/png", 1.0);
+    });
+  };
+
   const sendAuditEmail = async (auditId) => {
     const tableImageBlob = await captureTableImage();
   
@@ -339,56 +335,56 @@ const tableElement = tableClone.querySelector('table');
   };
 
   const registerAudit = async () => {
-  if (!newAudit.cliente || !newAudit.fechaInicio || !newAudit.fechaFin) {
-    setSuccessMessage('⚠️ Complete todos los campos requeridos');
-    return;
-  }
+    if (!newAudit.cliente || !newAudit.fechaInicio || !newAudit.fechaFin) {
+      setSuccessMessage('⚠️ Complete todos los campos requeridos');
+      return;
+    }
 
-  // Convertir fechas a UTC para evitar problemas de zona horaria
-  const fechaInicioUTC = new Date(newAudit.fechaInicio);
-  const fechaFinUTC = new Date(newAudit.fechaFin);
+    const fechaInicioUTC = new Date(newAudit.fechaInicio);
+    const fechaFinUTC = new Date(newAudit.fechaFin);
 
-  if (fechaInicioUTC > fechaFinUTC) {
-    setSuccessMessage('⚠️ Fecha inicio no puede ser posterior a fecha fin');
-    return;
-  }
+    if (fechaInicioUTC > fechaFinUTC) {
+      setSuccessMessage('⚠️ Fecha inicio no puede ser posterior a fecha fin');
+      return;
+    }
 
-  // Ajustar las fechas para que se guarden correctamente en la base de datos
-  const auditData = {
-    ...newAudit,
-    fechaInicio: fechaInicioUTC.toISOString().split('T')[0],
-    fechaFin: fechaFinUTC.toISOString().split('T')[0]
+    const auditData = {
+      ...newAudit,
+      fechaInicio: fechaInicioUTC.toISOString().split('T')[0],
+      fechaFin: fechaFinUTC.toISOString().split('T')[0]
+    };
+
+    const tempId = Date.now().toString();
+    const newAuditEntry = { ...auditData, _id: tempId };
+    setAudits([...audits, newAuditEntry]);
+
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits`,
+        auditData
+      );
+      
+      setAudits(prev => prev.map(audit => audit._id === tempId ? response.data : audit));
+      setSuccessMessage('✅ Auditoría registrada correctamente');
+      
+      setNewAudit({
+        cliente: "",
+        fechaInicio: "",
+        fechaFin: "",
+        modalidad: "Presencial",
+        status: "Realizada",
+        notas: ""
+      });
+    } catch (error) {
+      console.error("Error al agregar auditoría:", error);
+      setAudits(audits.filter(audit => audit._id !== tempId));
+      setSuccessMessage('❌ Error al registrar auditoría');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const tempId = Date.now().toString();
-  const newAuditEntry = { ...auditData, _id: tempId };
-  setAudits([...audits, newAuditEntry]);
-
-  try {
-    setLoading(true);
-    const response = await axios.post(
-      `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits`,
-      auditData
-    );
-    
-    setAudits(prev => prev.map(audit => audit._id === tempId ? response.data : audit));
-    setSuccessMessage('✅ Auditoría registrada correctamente');
-    
-    setNewAudit({
-      cliente: "",
-      fechaInicio: "",
-      fechaFin: "",
-      modalidad: "Presencial",
-      status: "Realizada",
-    });
-  } catch (error) {
-    console.error("Error al agregar auditoría:", error);
-    setAudits(audits.filter(audit => audit._id !== tempId));
-    setSuccessMessage('❌ Error al registrar auditoría');
-  } finally {
-    setLoading(false);
-  }
-};
   const handleDeleteClick = (id) => {
     setAuditToDelete(id);
     setConfirmOpen(true);
@@ -476,6 +472,56 @@ const tableElement = tableClone.querySelector('table');
     setSelectedAudit(null);
   };
 
+  // Funciones para manejar las notas
+  const handleOpenNotesDialog = async (auditId, cliente) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits/${auditId}/notas`
+      );
+      
+      setCurrentNotes(response.data.notas || '');
+      setCurrentAuditId(auditId);
+      setCurrentAuditClient(cliente);
+      setNotesDialogOpen(true);
+    } catch (error) {
+      console.error("Error al obtener notas:", error);
+      setSuccessMessage('❌ Error al cargar las notas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCloseNotesDialog = () => {
+    setNotesDialogOpen(false);
+    setCurrentNotes('');
+    setCurrentAuditId('');
+    setCurrentAuditClient('');
+  };
+
+  const handleSaveNotes = async () => {
+    try {
+      setLoading(true);
+      await axios.put(
+        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits/${currentAuditId}/notas`,
+        { notas: currentNotes }
+      );
+      
+      // Actualizar el estado local con las nuevas notas
+      setAudits(prev => prev.map(audit => 
+        audit._id === currentAuditId ? { ...audit, notas: currentNotes } : audit
+      ));
+      
+      setSuccessMessage('✅ Notas guardadas correctamente');
+      setNotesDialogOpen(false);
+    } catch (error) {
+      console.error("Error al guardar notas:", error);
+      setSuccessMessage('❌ Error al guardar las notas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const sortAuditsByDate = (auditsArray) => {
     return auditsArray.sort((a, b) => 
       new Date(a.fechaInicio) - new Date(b.fechaInicio)
@@ -491,16 +537,14 @@ const tableElement = tableClone.querySelector('table');
   ));
 
   const formatDate = (dateString) => {
-  // Asegurarse de que la fecha se interpreta correctamente
-  const date = new Date(dateString);
-  // Ajustar por zona horaria
-  const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
-  return new Intl.DateTimeFormat("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric"
-  }).format(adjustedDate);
-};
+    const date = new Date(dateString);
+    const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+    return new Intl.DateTimeFormat("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    }).format(adjustedDate);
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -827,6 +871,15 @@ const tableElement = tableClone.querySelector('table');
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
+                        <Tooltip title="Agregar/Ver notas">
+                          <IconButton
+                            onClick={() => handleOpenNotesDialog(audit._id, audit.cliente)}
+                            color="info"
+                            size="small"
+                          >
+                            <NotesIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip title="Eliminar auditoría">
                           <IconButton
                             onClick={() => handleDeleteClick(audit._id)}
@@ -1052,6 +1105,53 @@ const tableElement = tableClone.querySelector('table');
               </DialogActions>
             </>
           )}
+        </Dialog>
+
+        {/* Diálogo de notas */}
+        <Dialog open={notesDialogOpen} onClose={handleCloseNotesDialog} maxWidth="md" fullWidth>
+          <DialogTitle sx={{ 
+            backgroundColor: theme.palette.primary.main,
+            color: 'white',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            <NotesIcon />
+            NOTAS PARA: {currentAuditClient}
+          </DialogTitle>
+          <DialogContent sx={{ padding: '20px', mt: 2 }}>
+            <TextField
+              multiline
+              rows={8}
+              fullWidth
+              variant="outlined"
+              value={currentNotes}
+              onChange={(e) => setCurrentNotes(e.target.value)}
+              placeholder="Escribe aquí las notas para esta auditoría..."
+              inputProps={{ maxLength: 1000 }}
+            />
+            <Typography variant="caption" sx={{ mt: 1, display: 'block', textAlign: 'right' }}>
+              {currentNotes.length}/1000 caracteres
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ padding: '16px 24px' }}>
+            <Button 
+              onClick={handleCloseNotesDialog}
+              color="primary"
+              variant="outlined"
+            >
+              CANCELAR
+            </Button>
+            <Button 
+              onClick={handleSaveNotes}
+              color="primary"
+              variant="contained"
+              disabled={loading}
+            >
+              GUARDAR NOTAS
+            </Button>
+          </DialogActions>
         </Dialog>
       </Paper>
     </ThemeProvider>
