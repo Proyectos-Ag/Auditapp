@@ -5,12 +5,14 @@ const transporter = require('../emailconfig');
 const path = require('path');
 const fs = require('fs');
 const multer = require("multer");
-const sharp = require('sharp'); // Añadimos sharp para compresión de imágenes
+const sharp = require('sharp');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-
+/**
+ * GET /programas-anuales/audits
+ */
 exports.getAudits = async (req, res) => {
   try {
     const audits = await Audit.find();
@@ -19,7 +21,6 @@ exports.getAudits = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 exports.deleteAudit = async (req, res) => {
   try {
@@ -46,12 +47,13 @@ exports.deleteAudit = async (req, res) => {
     });
   }
 };
+
 /**
  * POST /programas-anuales/audits
  * Crea una nueva auditoría y envía correo con captura de pantalla.
  */
 exports.createAudit = async (req, res) => {
-  const { cliente, fechaInicio, fechaFin, modalidad, status, realizada, programada } = req.body;
+  const { cliente, fechaInicio, fechaFin, modalidad, status, realizada, programada, notas } = req.body;
 
   // Validar campos requeridos
   if (!cliente || !fechaInicio || !fechaFin || !modalidad || !status) {
@@ -70,6 +72,7 @@ exports.createAudit = async (req, res) => {
       status,
       realizada: realizada || false,
       programada: programada || false,
+      notas: notas || '' // Incluir notas
     });
     const savedAudit = await newAudit.save();
 
@@ -94,59 +97,19 @@ exports.sendAuditEmail = async (req, res) => {
         height: 1000,
         fit: sharp.fit.inside,
         withoutEnlargement: true,
-        kernel: sharp.kernel.lanczos3 // Usar kernel de alta calidad para redimensionado
+        kernel: sharp.kernel.lanczos3
       })
       .png({
-        quality: 100, // Aumentamos la calidad al 90%
-        compressionLevel: 1, // Nivel de compresión medio (1-9)
-        adaptiveFiltering: true, // Filtrado adaptativo para mejor calidad
-        force: true // Forzar formato PNG incluso si es menos eficiente
+        quality: 100,
+        compressionLevel: 1,
+        adaptiveFiltering: true,
+        force: true
       })
       .toBuffer();
 
     // Definir los destinatarios del correo
     const recipientEmails = `
-      aaranda@aguida.com,
-      almacen@aguida.com,
-      amartinez@aguida.com,
-      cgarciae@aguida.com,
-      comedor@aguida.com,
-      controlycuidadoambiental@aguida.com,
-      coord.seghigiene@aguida.com,
-      coordalmpt@aguida.com,
-      fjflores@aguida.com,
-      golvera@aguida.com,
-      jagranados@aguida.com,
-      jcarriaga@aguida.com,
-      jefelaboratorio@aguida.com,
-      jefeproduccion@aguida.com,
-      jloyolac@aguida.com,
-      enfermeria@aguida.com,
-      almrefacciones@aguida.com,
-      almrefacciones2@aguida.com,
-      jpsalinas@aguida.com,
-      jrhernandez@aguida.com,
-      jsarriaga@aguida.com,
-      ljalvarez@aguida.com,
-      materiasprimas@aguida.com,
-      rcruces@aguida.com,
-      rgutierrez@aguida.com,
-      rloyola@aguida.com,
-      rmendez@aguida.com,
-      supervisores@aguida.com,
-      validacionproceso@aguida.com,
-      jessica@aguida.com,
-      inventariosmp@aguida.com,
-      reclutamiento@aguida.com,
-      itzelcardenas@aguida.com,
-      paulesparza@aguida.com,
-      jefemantenimientotp@aguida.com,
-      nbgarcia@aguida.com,
-      jrivera@aguida.com,
-      cpadron@aguida.com,
-      vbarron@aguida.com
-      vbarron@aguida.com,
-      soleje2862004@gmail.com`
+      fredyesparza08@gmail.com`
     .trim();
 
     // Leer la plantilla HTML para el correo
@@ -164,7 +127,7 @@ exports.sendAuditEmail = async (req, res) => {
       attachments: [
         {
           filename: 'captura.png',
-          content: compressedImage, // Usamos la imagen comprimida
+          content: compressedImage,
           cid: 'tabla'
         },
         {
@@ -191,7 +154,7 @@ exports.sendAuditEmail = async (req, res) => {
  */
 exports.updateAuditStatus = async (req, res) => {
   const { id } = req.params;
-  const updateData = req.body; // Recibe todo el objeto de auditoría
+  const updateData = req.body;
 
   try {
     // Validar que exista la auditoría
@@ -202,7 +165,7 @@ exports.updateAuditStatus = async (req, res) => {
 
     // Actualizar todos los campos recibidos
     Object.keys(updateData).forEach(key => {
-      if (key !== '_id') { // Evitar actualizar el ID
+      if (key !== '_id') {
         audit[key] = updateData[key];
       }
     });
@@ -215,6 +178,71 @@ exports.updateAuditStatus = async (req, res) => {
     console.error("Error al actualizar auditoría:", error);
     res.status(500).json({ 
       message: 'Error al actualizar auditoría',
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * PUT /programas-anuales/audits/:id/notas
+ * Actualiza específicamente las notas de una auditoría
+ */
+exports.updateAuditNotes = async (req, res) => {
+  const { id } = req.params;
+  const { notas } = req.body;
+
+  try {
+    // Validar que las notas no excedan el límite
+    if (notas && notas.length > 1000) {
+      return res.status(400).json({ 
+        message: 'Las notas no pueden exceder 1000 caracteres' 
+      });
+    }
+
+    // Buscar y actualizar la auditoría
+    const updatedAudit = await Audit.findByIdAndUpdate(
+      id,
+      { notas: notas || '' },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedAudit) {
+      return res.status(404).json({ message: 'Auditoría no encontrada' });
+    }
+
+    res.status(200).json(updatedAudit);
+  } catch (error) {
+    console.error("Error al actualizar notas:", error);
+    res.status(500).json({ 
+      message: 'Error al actualizar notas',
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * GET /programas-anuales/audits/:id/notas
+ * Obtiene las notas específicas de una auditoría
+ */
+exports.getAuditNotes = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const audit = await Audit.findById(id, 'notas cliente');
+    
+    if (!audit) {
+      return res.status(404).json({ message: 'Auditoría no encontrada' });
+    }
+
+    res.status(200).json({
+      id: audit._id,
+      cliente: audit.cliente,
+      notas: audit.notas || ''
+    });
+  } catch (error) {
+    console.error("Error al obtener notas:", error);
+    res.status(500).json({ 
+      message: 'Error al obtener notas',
       error: error.message 
     });
   }
