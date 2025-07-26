@@ -47,7 +47,7 @@
     border-radius: 1vw; 
     margin-top: 5vh; 
     border: 3px solid #b8b8b8;
-    background-color: #ffffff;
+    background-color: var(--bg-secondary);
     margin-top: 20em;
     margin-bottom: 15vh;
 }
@@ -83,7 +83,7 @@
 }
 
 .card-home {
-  background-color: #a8d8ff;
+  background-color: var(--bg-cards);
   border: 2px solid #e2e2e2;
   border-radius: 1.5vw;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);

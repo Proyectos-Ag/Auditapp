@@ -21,7 +21,7 @@ import {
   Box,
   Typography,
   Divider,
-  Button, Alert,AlertTitle
+  Button, Alert,AlertTitle, TextField, Autocomplete
 } from '@mui/material';
 import Backdrop from '@mui/material/Backdrop';
 import SaveIcon from '@mui/icons-material/Save';
@@ -672,6 +672,24 @@ const handleSave = async () => {
             Swal.fire('Error', 'Hubo un problema al guardar los datos.', 'error');
         }
 };  
+
+const handleReasignar = async (registroId) => {
+  try {
+    await axios.patch(
+      `${process.env.REACT_APP_BACKEND_URL}/ishikawa/asig/${registroId}`,
+      {
+        auditado: valorSeleccionado,
+        correo: CorreoSeleccionado,
+      }
+    );
+    Swal.fire('Reasignado', 'El diagrama ha sido reasignado.', 'success');
+    verificarRegistro();
+    fetchData();
+  } catch (error) {
+    console.error('Error al reasignar:', error);
+    Swal.fire('Error', 'No se pudo reasignar el diagrama.', 'error');
+  }
+};
     
 const Asignar = async () => {
         Swal.fire({
@@ -685,7 +703,13 @@ const Asignar = async () => {
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
-            handleSave();
+            if (rechazo.length > 0) {
+                // reasignación parcial
+                const { _id: registroId } = rechazo[0];
+                handleReasignar(registroId);
+            } else {
+                handleSave();
+            }
           }
         });
 };
@@ -848,6 +872,17 @@ const EliminarEv = async (index, idIsh, idCorr) => {
     });
 };
 
+const opcionesUsuarios = React.useMemo(() => {
+  if (!usuarios) return [];
+  return [...usuarios]
+    .sort((a, b) => a.Nombre.localeCompare(b.Nombre, 'es'))
+    .map(u => ({
+      label: u.Nombre,
+      correo: u.Correo,
+      id: u._id,
+    }));
+}, [usuarios]);
+
 const mostrarCargando = () => {
     MySwal.fire({
       title: 'Cargando...',
@@ -951,6 +986,50 @@ const ocultarCargando = () => {
 
                         {/* Botones de acción */}
                         <Stack direction="row" spacing={2} alignItems="center">
+
+                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Autocomplete
+                                sx={{ minWidth: 240, bgcolor: 'background.paper' }}
+                                options={opcionesUsuarios}
+                                getOptionLabel={(opt) => opt.label}
+                                clearOnEscape
+                                disableClearable={false}
+                                value={valorSeleccionado ? { label: valorSeleccionado, correo: CorreoSeleccionado } : null}
+                                onChange={(e, option) => {
+                                if (option) {
+                                    setValorSeleccionado(option.label);
+                                    setCorreoSeleccionado(option.correo);
+                                } else {
+                                    setValorSeleccionado('');
+                                    setCorreoSeleccionado('');
+                                }
+                                }}
+                                renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Reasignar a"
+                                    variant="filled"
+                                    size="small"
+                                />
+                                )}
+                            />
+
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                disabled={!valorSeleccionado}
+                                onClick={() => {
+                                const { _id: registroId } = rechazo[0] || {};
+                                if (registroId) {
+                                    handleReasignar(registroId);
+                                } else {
+                                    Asignar();
+                                }
+                                }}
+                            >
+                                Reasignar
+                            </Button>
+                            </Box>
                             {/* Siempre muestro el botón de PDF */}
                              <IshPDF
                                 ref={pdfRef}    

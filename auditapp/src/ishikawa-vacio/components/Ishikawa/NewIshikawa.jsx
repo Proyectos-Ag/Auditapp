@@ -6,19 +6,19 @@ import AutoGrowTextarea from '../../../resources/AutoGrowTextarea';
 import './css/NewIsh.css';
 
 export default function NewIshikawa({ diagrama, setDiagrama, problema, ID, onCausaChange, causa }) {
-  const MAX_CAUSES = 3;
+  const MAX_CAUSES = 4;
 
   // Memoiza las claves de cada espina para que su identidad no cambie en cada render
   const spineKeys = useMemo(
-    () => [
-      ['text10','text12','text14'],   // Materiales
-      ['text11','text13','text15'],   // Mano de obra
-      ['text7','text4','text1'],      // Máquinas
-      ['text8','text5','text2'],      // Medio ambiente
-      ['text9','text6','text3'],      // Métodos
-    ],
-    [] // solo calcular al montar
-  );
+   () => [
+     ['text10','text12','text14','text16'],   // Materiales
+     ['text11','text13','text15','text17'],   // Mano de obra
+     ['text7','text4','text1','text18'],      // Máquinas
+     ['text8','text5','text2','text19'],      // Medio ambiente
+     ['text9','text6','text3','text20'],      // Métodos
+   ],
+   []
+ );
 
   // Estado local de listados de causas por espina
   const [causes, setCauses] = useState(spineKeys.map(() => []));
@@ -168,11 +168,11 @@ export default function NewIshikawa({ diagrama, setDiagrama, problema, ID, onCau
 
   // Dibujo
   const spinePositions = [
-    { position: 'bottom', angle: -60, left: '30%' },
-    { position: 'bottom', angle: -60, left: '70%' },
-    { position: 'top',    angle:  60, left: '25%' },
-    { position: 'top',    angle:  60, left: '50%' },
-    { position: 'top',    angle:  60, left: '75%' },
+    { position: 'bottom', angle: -65, left: '30%' },
+    { position: 'bottom', angle: -65, left: '70%' },
+    { position: 'top',    angle:  65, left: '25%' },
+    { position: 'top',    angle:  65, left: '50%' },
+    { position: 'top',    angle:  65, left: '75%' },
   ];
   const spineNames = ['Medio ambiente','Métodos','Materiales','Mano de obra','Maquinaria'];
 
@@ -182,9 +182,9 @@ export default function NewIshikawa({ diagrama, setDiagrama, problema, ID, onCau
         <div className="fish-tail" />
         <div className="central-line" />
         <div className="fish-head">
-        <div className="problema-display" style={{ fontSize: '15px' }}>
-            {formData.problema}
-          </div>
+        <div className="problema-display spine-end-label" style={{ fontSize: '25px' }}>
+          Problema
+        </div>
         </div>
 
         {spinePositions.map((pos, i) => {
@@ -203,7 +203,7 @@ export default function NewIshikawa({ diagrama, setDiagrama, problema, ID, onCau
                         key={ci}
                         className="cause-line"
                         style={{
-                            /* centrar antes de rotar */
+                            
                             transform: `translateY(-50%) rotate(${-pos.angle}deg)`,
                             right: `${(ci + 1) * spacing}%`
                           }}

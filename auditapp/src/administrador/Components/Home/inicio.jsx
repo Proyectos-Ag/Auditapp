@@ -49,15 +49,17 @@ const Inicio = () => {
   return(
     <div>
     <div className="inicio-container" style={{ position: 'relative' }}>
-      <video 
+      <div className="video-wrapper">
+    <video 
       className="video"
-        ref={videoRef} 
-        src={videoFile} 
-        autoPlay 
-        loop 
-        muted 
-      />
-
+      ref={videoRef} 
+      src={videoFile} 
+      autoPlay 
+      loop 
+      muted 
+    />
+    <div className="video-overlay" />
+  </div>
       
       <div className="inicio-content">
         <h1>Bienvenidos a Auditapp</h1>

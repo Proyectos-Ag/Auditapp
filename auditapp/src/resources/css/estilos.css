@@ -1,13 +1,18 @@
 .unique-header {
-  background-color: #dbdbdb;
+  position: relative;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--bg-header);
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  position: relative;
-  border-bottom: 3px solid #929292;
-  z-index: 3;
+  border-bottom: 3px solid var(--bd-header);
+  z-index: 1000;
+  box-sizing: border-box;
 }
+
 
 /* nuevo estilo para el contenedor del logo */
 .logo-container {

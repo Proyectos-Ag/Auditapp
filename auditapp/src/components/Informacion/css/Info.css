@@ -11,7 +11,7 @@
 /* Tarjeta principal con sombra y animación */
 .content-inf {
   width: 70%;
-  background-color: #ffffff;
+  background-color: var(--bg-secondary);
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   padding: 40px;

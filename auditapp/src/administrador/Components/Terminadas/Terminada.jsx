@@ -481,8 +481,8 @@ const Terminada = () => {
                                                 </thead>
                                                 <tbody>
                                                     <tr>
-                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold', width:'50%'}}>Documento de Referencia</td>
-                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold'}}>Alcance de Auditoría</td>
+                                                        <td style={{backgroundColor: 'var(--bg-tabla-th)', fontWeight: 'bold', width:'50%'}}>Documento de Referencia</td>
+                                                        <td style={{backgroundColor:'var(--bg-tabla-th)', fontWeight: 'bold'}}>Alcance de Auditoría</td>
                                                     </tr>
                                                     <tr>
                                                     <td> 
@@ -497,8 +497,8 @@ const Terminada = () => {
                                                         <td>{dato.Alcance? dato.Alcance: dato.AreasAudi}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold'}}>Equipo auditor</td>
-                                                        <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold'}}>Participantes en el área del recorrido</td>
+                                                        <td style={{backgroundColor:'var(--bg-tabla-th)', fontWeight: 'bold'}}>Equipo auditor</td>
+                                                        <td style={{backgroundColor:'var(--bg-tabla-th)', fontWeight: 'bold'}}>Participantes en el área del recorrido</td>
                                                     </tr>
                                                     <tr>
                                                         <td>

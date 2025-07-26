@@ -28,7 +28,7 @@ export default function ActivList({ onNavigate }) {
       .catch(error => console.error('Error al obtener las actividades:', error));
   }, [userData]);
 
-  const handleCheck = async (ishikawaId, actividadId, event, index) => {
+  const handleCheck = async (ishikawaId, actividadId, actividad, event, index) => {
     if (!event.target.checked) return;
     const result = await Swal.fire({
       title: 'Confirmar acción',
@@ -44,7 +44,7 @@ export default function ActivList({ onNavigate }) {
     try {
       await axios.put(
         `${process.env.REACT_APP_BACKEND_URL}/ishikawa/actividad/concluido`,
-        { ishikawaId, actividadId, user: userData.Nombre, concluido: true }
+        { ishikawaId, actividadId, actividad, user: userData.Nombre, concluido: true }
       );
       setActivities(prev => {
         const updated = [...prev];
@@ -87,7 +87,7 @@ export default function ActivList({ onNavigate }) {
               edge="start"
               checked={act.concluido}
               onClick={e => e.stopPropagation()}
-              onChange={e => handleCheck(act.ishikawaId, act.actividadId, e, i)}
+              onChange={e => handleCheck(act.ishikawaId, act.actividadId, act.actividad, e, i)}
             />
             <ListItemText
               primary={act.actividad}

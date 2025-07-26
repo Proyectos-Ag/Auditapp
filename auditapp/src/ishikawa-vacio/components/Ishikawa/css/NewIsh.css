@@ -4,7 +4,7 @@
     --sub-spine-length: 20%;
     --label-offset: 50px;
     --central-line-color: #179e6a;
-    --sub-line-color: #7f8c8d;
+    --sub-line-color: #6d7a7a;
     --spine-angle: 45deg;
   }
 
@@ -15,16 +15,7 @@
   background-color: white;
   padding: 5px;
   border-radius: 4px;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
 }
-  
-  .fishbone-container {
-    position: relative;
-    width: 100%;
-    min-height: 80vh;
-    margin: 2rem auto;
-    overflow: visible;
-  }
   
   .central-line {
     position: absolute;
@@ -50,18 +41,20 @@
   
   .diagonal-line {
     position: relative;              /* make wrapper relative */
-    width: 100%;
+    width: 21vw;
     height: var(--central-line-height);
     background: var(--central-line-color);
     transform-origin: right center;
+    overflow: visible;
   }
   
   /* distribute causes evenly along the diagonal */
   .causes-wrapper {
     position: relative;       /* antes era absolute con flex */
-    height: 0;                /* no necesitamos altura fija */
+    height: auto;                /* no necesitamos altura fija */
     top: 50%;
-    pointer-events: none;     /* para que el click “caiga” al botón si toca */
+    pointer-events: none;
+    overflow: visible;
   }
   
   .cause-line {
@@ -87,10 +80,12 @@
   line-height: 1.2;
   box-sizing: border-box;
   overflow: hidden !important;
-  border: 1px solid #bdc3c7;
-  border-radius: 4px;
+  border: none;
+  border-bottom: 1px solid #000000;
+  border-radius: 0;
   font-size: 16px;
 }
+
 
   .spine-label {
     position: absolute;
@@ -122,11 +117,13 @@
 
   /* Botón fijo para añadir causa al lado izquierdo del label */
 .add-cause-fixed {
+  padding: 0 !important;
+  overflow: visible;
   background: #3498db !important;
   color: white !important;
-  /* si quieres un tamaño de “botón” consistente */
   width: 2rem;
   height: 2rem;
+  margin-top: 50rem;
   border-radius: 50%;
   z-index: 2;
 }
@@ -134,7 +131,7 @@
 /* COLA: triángulo que forma la flecha de la cola */
 .fish-tail {
   position: absolute;
-  left: 11%;           /* mismo inicio que central-line */
+  left: 14%;           /* mismo inicio que central-line */
   top: 50%;
   width: 0;
   height: 0;
@@ -144,24 +141,24 @@
   transform: translate(-100%, -50%);
   pointer-events: none;
   z-index: 1;
+  border-radius: 10px;
 }
 
 /* ================================= */
 /*  CABEZA: cuadrado grande con borde */
 /* ================================= */
-/* 1) Cabeza fija, flex centrado y sin overflow */
 .fish-head {
   position: absolute;
-  right: 15%;
+  right: 11%;
   top: 50%;
 
-  width: 10rem;
-  height: 10rem;
+  width: 9rem;
+  height: 9rem;
   background: var(--central-line-color);
   border-top-right-radius: 5rem;
   border-bottom-right-radius: 5rem;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
 
   /* RESTAURA ESTA LÍNEA para mantener la posición original */
   transform: translate(100%, -50%);
@@ -188,20 +185,26 @@
   line-height: 1.2;         /* buena legibilidad */
 }
 
-
-
 /* Nuevos estilos para el wrapper */
 .ishikawa-wrapper {
   position: relative;
   width: 80em;
-  height: 100vh;
+  height: 123vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;  
   overflow: auto;
-  background: #fff;
+  background: #ffffff;
+  padding: 30px;
+  margin-bottom: -3rem;
+  box-sizing: border-box;
 }
 
-/* Modifica el contenedor principal */
 .fishbone-container {
   position: relative;
-  margin: 30px auto;
+  width: 100%;
+  height: 80vh;
+  margin: 0 auto;
+  margin-left: -2rem;
   transform-origin: center;
 }

@@ -785,6 +785,7 @@ const handleUploadFile = (fieldKey) => {
                         </div>
                         <div className='posicion-en-2'>
                             <h3>Fecha: {ishikawa.fecha}</h3>
+                            <h3>Folio: {ishikawa.folio}</h3>
                         </div>
                         <div>
                             <NewIshikawaFin

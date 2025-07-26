@@ -63,11 +63,13 @@ const BotonesRol = () => {
             padding: isSmall ? '12px 24px' : '12px 0',
             minWidth: isSmall ? '160px' : 0,
             flex: isSmall ? 'none' : 1,
-            textAlign: 'center'
+            textAlign: 'center',
+            color: 'var(--cl-rol-bt)',
+            background: 'var(--bg-rol-bt)',
           },
           '& .Mui-selected': {
-            color: '#1b70df',
-            fontWeight: 'bold'
+            color: 'var(--cl-rol-bt)',
+            fontWeight: 'bold',
           }
         }}
       >

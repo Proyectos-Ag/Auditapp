@@ -10,7 +10,7 @@
     margin-top: 7em; 
     margin-bottom: -5em;
     border: 3px solid #b8b8b8;
-    background-color: #ffffff;
+    background-color: var(--bg-secondary);
 }
 
 .card-repo {

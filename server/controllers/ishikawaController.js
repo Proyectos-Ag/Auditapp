@@ -994,6 +994,80 @@ const updateConcluido = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+const reasignarIshikawa = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { auditado: newAuditado, correo: newCorreo } = req.body;
+
+    // 1. Recuperar datos previos
+    const existing = await Ishikawa.findById(id);
+    if (!existing) {
+      return res.status(404).json({ msg: 'Registro no encontrado' });
+    }
+    const oldAuditado = existing.auditado;
+    const oldCorreo = existing.correo;
+    const proName = existing.proName;
+
+    // 2. Actualizar y guardar
+    existing.auditado = newAuditado;
+    existing.correo = newCorreo;
+    const actualizado = await existing.save();
+
+    /*** ENVÍO AL NUEVO AUDITADO ***/
+    const tplAsignPath = path.join(__dirname, 'templates', 'asignacion-ishikawa.html');
+    const tplAsign = fs.readFileSync(tplAsignPath, 'utf8');
+    const htmlAsign = tplAsign
+      .replace('{{usuario}}', newAuditado)
+      .replace('{{programa}}', proName);
+
+    const mailToNew = {
+      from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
+      to: newCorreo,
+      subject: 'Se te ha asignado un nuevo Ishikawa',
+      html: htmlAsign,
+      attachments: [{
+        filename: 'logoAguida.png',
+        path: path.join(__dirname, '../assets/logoAguida-min.png'),
+        cid: 'logoAguida'
+      }]
+    };
+    transporter.sendMail(mailToNew, (err, info) => {
+      if (err) console.error('Error envío a nuevo auditado:', err);
+      else console.log('Email enviado al nuevo auditado:', info.response);
+    });
+
+    /*** ENVÍO AL AUDITADO ANTERIOR ***/
+    const tplOldPath = path.join(__dirname, 'templates', 'reasignacion-anterior.html');
+    const tplOld = fs.readFileSync(tplOldPath, 'utf8');
+    const htmlOld = tplOld
+      .replace('{{usuarioAnterior}}', oldAuditado)
+      .replace('{{usuarioNuevo}}', newAuditado)
+      .replace('{{programa}}', proName);
+
+    const mailToOld = {
+      from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
+      to: oldCorreo,
+      subject: 'Tu Ishikawa ha sido reasignado',
+      html: htmlOld,
+      attachments: [{
+        filename: 'logoAguida.png',
+        path: path.join(__dirname, '../assets/logoAguida-min.png'),
+        cid: 'logoAguida'
+      }]
+    };
+    transporter.sendMail(mailToOld, (err, info) => {
+      if (err) console.error('Error envío a auditado anterior:', err);
+      else console.log('Email enviado al auditado anterior:', info.response);
+    });
+
+    return res.json(actualizado);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: 'Error del servidor' });
+  }
+};
+
   
   module.exports = {
     crearIshikawa,
@@ -1019,5 +1093,6 @@ const updateConcluido = async (req, res) => {
     updateConcluido,
     obtenerIshikawaVacioEsp,
     getAccesosByIshikawa,
-    crearIshikawa2
+    crearIshikawa2,
+    reasignarIshikawa
   };

@@ -9,7 +9,7 @@
     padding: 2vh; 
     border-radius: 1vw; 
     border: 3px solid #b8b8b8;
-    background-color: #ffffff;
+    background-color: var(--bg-secondary);
     margin-top: 50px;
 }
 

@@ -30,6 +30,7 @@ router.delete('/delete/:id', ishikawaController.deleteIshikawa);
 router.delete('/eliminar/:idRep', ishikawaController.eliminarIshikawasPorIdRep);
 router.post('/enviar-pdf', upload.single("pdf"), ishikawaController.enviarPDF);
 router.post('/enviar-pdf-dos', upload.single("pdf"), ishikawaController.enviarPDFDos);
+router.patch('/asig/:id', ishikawaController.reasignarIshikawa);
 
 
 module.exports = router;

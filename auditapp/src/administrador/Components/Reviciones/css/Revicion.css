@@ -12,13 +12,13 @@
     width: 80rem;
     max-width: 100rem;
     padding: 20px;
-    background-color: #d9d9d9;
+    background-color: var(--bg-reporte-cn);
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .datos-container-repo th {
-    background-color: #bdfdbd;
+    background-color: var(--bg-tabla-th);
 }
 
 th.conformity-header-repo {
@@ -49,7 +49,7 @@ th.conformity-header-repo {
     width: 78rem;
     max-width: 100rem;
     padding: 20px;
-    background-color: #ffffff;
+    background-color: var(--bg-reporte);
     border-radius: 8px 8px 0 0;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     margin-top: -10px;
@@ -171,7 +171,7 @@ table, th, td {
     margin-bottom: 20px;
 }
 
-.tabla-reporte th, td {
+.tabla-reporte th, .tabla-reporte td {
     padding: 8px;
     text-align: center;
 }
