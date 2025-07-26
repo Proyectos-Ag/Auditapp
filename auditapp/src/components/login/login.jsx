@@ -119,7 +119,7 @@ const Login = () => {
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <span>
             <br />
-            v2.1.8(Beta)
+            v2.1.9(Beta)
           </span>
         </div>
 
