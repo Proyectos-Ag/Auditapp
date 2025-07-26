@@ -8,7 +8,7 @@ import jsPDF from 'jspdf';
 
 const IshikawaDashboard = () => {
   const [totalIshikawas, setTotalIshikawas] = useState(0);
-  const [statusCounts, setStatusCounts] = useState({ Aprobado: 0, Rechazados: 0, Finalizados: 0 });
+  const [statusCounts, setStatusCounts] = useState({ Aprobado: 0, Rechazados: 0, Finalizados: 0, Incompleto: 0 });
   const [topIssues, setTopIssues] = useState([]);
   const [participantsCounts, setParticipantsCounts] = useState({});
   const [selectedMonths, setSelectedMonths] = useState([]);
@@ -26,6 +26,7 @@ const IshikawaDashboard = () => {
           Aprobado: filteredIshikawas.filter(ishikawa => ishikawa.estado === "Aprobado").length,
           Rechazados: filteredIshikawas.filter(ishikawa => ishikawa.estado === "Rechazado").length,
           Finalizados: filteredIshikawas.filter(ishikawa => ishikawa.estado === "Finalizado").length,
+          Incompleto: filteredIshikawas.filter(ishikawa => ishikawa.estado === "Incompleto").length,
         };
         setStatusCounts(statusCount);
 
@@ -142,6 +143,8 @@ const IshikawaDashboard = () => {
         return '#FF5722';
       case 'Finalizados':
         return '#FFC107';
+      case 'Incompleto':
+        return '#FF9800';
       default:
         return '#36A2EB';
     }
@@ -273,7 +276,7 @@ const IshikawaDashboard = () => {
               Object.entries(statusCounts).map(([estado, cantidad]) => [estado, cantidad])
             )}
             <div className="pie-chart-container-audits" style={{ height: 400 }}>
-              <ResponsivePie
+              <ResponsiveBar
                 data={prepareStatusData()}
                 margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
                 innerRadius={0.5}
@@ -306,12 +309,22 @@ const IshikawaDashboard = () => {
                     rotation: -45,
                     lineWidth: 6,
                     spacing: 10
+                  },
+                  {
+                    id: 'stripes',
+                    type: 'patternLines',
+                    background: 'inherit',
+                    color: 'rgba(255, 255, 255, 0.3)',
+                    rotation: 45,
+                    lineWidth: 4,
+                    spacing: 8
                   }
                 ]}
                 fill={[
                   { match: { id: 'Aprobado' }, id: 'dots' },
                   { match: { id: 'Rechazados' }, id: 'lines' },
-                  { match: { id: 'Finalizados' }, id: 'dots' }
+                  { match: { id: 'Finalizados' }, id: 'dots' },
+                  { match: { id: 'Incompleto' }, id: 'stripes' }
                 ]}
                 legends={[
                   {

@@ -16,8 +16,14 @@ router.post("/audits/send-email", upload.single("tablaImagen"), auditController.
 // Ruta para actualizar el estado de realizada o programada
 router.put('/audits/:id', auditController.updateAuditStatus);
 
+// Ruta para eliminar auditoría
+router.delete('/audits/:id', auditController.deleteAudit);
 
-// Add this to your server routes
-router.delete('/audits/:id', auditController.deleteAudit);  // Quita programas-anuales/
+// NUEVAS RUTAS PARA NOTAS
+// Ruta para obtener las notas de una auditoría específica
+router.get('/audits/:id/notas', auditController.getAuditNotes);
+
+// Ruta para actualizar las notas de una auditoría específica
+router.put('/audits/:id/notas', auditController.updateAuditNotes);
 
 module.exports = router;
