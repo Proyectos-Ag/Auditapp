@@ -46,7 +46,7 @@
 
 .audits-container {
     padding: 20px;
-    margin-top: 384px; /* 4 pulgadas */
+    margin-top: 384px; 
     color: #333;
     font-family: 'Roboto', sans-serif;
     background-color: #f4f6f8;
@@ -197,11 +197,10 @@
     align-items: center;
 }
 
-/* Estadisticas.css - Enhanced styling for charts */
 
 .audits-container {
   max-width: 1200px;
-  margin-top: 384px; /* 4 pulgadas */
+  margin-top: 384px; 
   margin: 0 auto;
   padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -294,14 +293,14 @@
     padding: 15px;
     border-radius: 1%;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    page-break-inside: avoid; /* Ensure sections do not break inside */
+    page-break-inside: avoid; 
 }
 
 .section {
-    flex: 1 1 calc(50% - 20px); /* Adjust for better spacing */
+    flex: 1 1 calc(50% - 20px);
     min-width: 200px;
     margin: 10px;
-    page-break-inside: avoid; /* Ensure sections do not break inside */
+    page-break-inside: avoid; 
 }
 
 .section table {
@@ -320,8 +319,8 @@
     background-color: #5fed2b;
 }
 .audits-container {
-    max-width: 1400px; /* Ancho mayor */
-    margin: 100px auto 0 auto; /* Baja 4 pulgadas desde arriba */
+    max-width: 1400px;
+    margin: 100px auto 0 auto; 
     padding: 20px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f4f6f8;
@@ -346,7 +345,7 @@
   font-weight: 600;
   box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
   transition: all 0.3s ease;
-  width: auto; /* ✅ Para que NO ocupe todo el ancho */
+  width: auto; 
   margin-bottom: 20px;
   display: inline-block;
   margin-right: 15px;
@@ -411,7 +410,7 @@
     width: 100%;
     height: 220px;
     margin-top: 20px;
-    page-break-inside: avoid; /* Ensure charts do not break inside */
+    page-break-inside: avoid; 
 }
 
 .no-data-container {
@@ -502,7 +501,7 @@
     
     .chart-container-audits {
         width: 100%;
-        height: auto; /* Ajustar la altura para adaptarse mejor a la página */
+        height: auto; 
     }
     
     .table-chart-container-audits {
@@ -518,19 +517,19 @@
     }
     
     @page {
-        size: Letter landscape; /* Cambia a landscape si prefieres esa orientación */
-        margin: 2cm; /* Ajusta los márgenes a 2cm */
+        size: Letter landscape; 
+        margin: 2cm; 
     }
 }
 
-/* Opcional: Ajustar el tamaño de fuente y los márgenes para mejorar la legibilidad */
 .table-chart-container-audits,
 .section table,
 .section th,
 .section td {
-    font-size: 12px; /* Ajusta el tamaño de fuente */
+    font-size: 12px; 
 }
 
 .section {
-    margin: 5px; /* Ajusta los márgenes */
+    margin: 5px; 
+
 }
