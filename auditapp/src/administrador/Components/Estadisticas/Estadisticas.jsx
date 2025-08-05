@@ -17,25 +17,45 @@ const Estadisticas = () => {
   const [reviewedObservations, setReviewedObservations] = useState([]);
   const [selectedMonths, setSelectedMonths] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeVisualization, setActiveVisualization] = useState('bar'); // Cambiado de 'both' a 'bar'
+  const [activeVisualization, setActiveVisualization] = useState('bar');
+  const [auditIds, setAuditIds] = useState([]);
+  const [reviewedByYear, setReviewedByYear] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
-        setAudits(response.data.filter(audit => audit.Estado === 'Finalizado' || audit.Estado === 'Terminada' || audit.Estado === 'Realizada' || audit.Estado === 'Devuelto'));
-        const observationsData = response.data.flatMap(audit =>
+        const filteredAudits = response.data.filter(audit => 
+          audit.Estado === 'Finalizado' || 
+          audit.Estado === 'Terminada' || 
+          audit.Estado === 'Realizada' || 
+          audit.Estado === 'Devuelto'
+        );
+        
+        setAudits(filteredAudits);
+        setAuditIds(filteredAudits.map(audit => audit._id));
+
+        // Extraer observaciones solo de auditorías existentes
+        const observationsData = filteredAudits.flatMap(audit =>
           audit.Programa.flatMap(program =>
-            program.Descripcion.filter(desc => (desc.Criterio === 'M'|| desc.Criterio === 'C' || desc.Criterio === 'm')
-          ))
+            program.Descripcion.filter(desc => 
+              ['M', 'C', 'm'].includes(desc.Criterio)
+            )
+          )
         );
         setObservations(observationsData);
 
+        // Obtener ishikawas solo para auditorías existentes
         const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
         const reviewedObservationsData = ishikawaResponse.data.filter(
-            ishikawa => (ishikawa.estado === 'Revisado' || ishikawa.estado === 'Aprobado' || ishikawa.estado === 'Rechazados' || ishikawa.estado === 'Pendiente' || ishikawa.estado === 'Rechazados')
+          ishikawa => 
+            (ishikawa.estado === 'Revisado' || 
+             ishikawa.estado === 'Aprobado' || 
+             ishikawa.estado === 'Rechazados' || 
+             ishikawa.estado === 'Pendiente') &&
+            filteredAudits.map(audit => audit._id).includes(ishikawa.idAuditoria)
         );
-        setReviewedObservations(reviewedObservationsData);        
+        setReviewedObservations(reviewedObservationsData);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -79,11 +99,50 @@ const Estadisticas = () => {
     return acc;
   }, {});
 
+  // Función para contar observaciones por año
+  const countObservationsByYear = (year) => {
+    const yearAudits = filteredAuditsByYear[year] || [];
+    return yearAudits.flatMap(audit =>
+      audit.Programa.flatMap(program =>
+        program.Descripcion.filter(desc => ['C', 'M', 'm'].includes(desc.Criterio))
+      )
+    ).length;
+  };
+
+  // Nuevo useEffect para calcular hallazgos revisados por año
+  useEffect(() => {
+  const fetchReviewed = async () => {
+    const reviewedData = {};
+    for (const year of Object.keys(filteredAuditsByYear)) {
+      const yearAudits = filteredAuditsByYear[year] || [];
+      const yearAuditIds = yearAudits.map(audit => audit._id);
+
+      try {
+        const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+        const reviewed = ishikawaResponse.data.filter(
+          ishikawa =>
+            (ishikawa.estado === 'Revisado' ||
+              ishikawa.estado === 'Aprobado' ||
+              ishikawa.estado === 'Rechazados' ||
+              ishikawa.estado === 'Pendiente') &&
+            yearAuditIds.includes(ishikawa.idRep) // <-- CAMBIA idAuditoria por idRep
+        );
+        reviewedData[year] = reviewed.length;
+      } catch (error) {
+        reviewedData[year] = 0;
+      }
+    }
+    setReviewedByYear(reviewedData);
+  };
+  fetchReviewed();
+  // eslint-disable-next-line
+}, [filteredAuditsByYear]);
+
   const criteriaCountByYear = Object.keys(filteredAuditsByYear).reduce((acc, year) => {
     const criteriaCount = filteredAuditsByYear[year].reduce((countAcc, audit) => {
       audit.Programa.forEach(program => {
         program.Descripcion.forEach(desc => {
-          if (['C', 'M', 'm','C'].includes(desc.Criterio)) {
+          if (['C', 'M', 'm'].includes(desc.Criterio)) {
             if (!countAcc[desc.Criterio]) {
               countAcc[desc.Criterio] = 0;
             }
@@ -129,13 +188,11 @@ const Estadisticas = () => {
   };
 
   const months = [
-    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
   ];
 
   const hasData = audits.length > 0;
-  const totalObservations = observations.length;
-  const reviewedObservationsCount = reviewedObservations.length;
-  const pendingObservationsCount = totalObservations - reviewedObservationsCount;
 
   const calculateAverage = (audits) => {
     if (audits.length === 0) return 0;
@@ -182,7 +239,6 @@ const Estadisticas = () => {
     return data;
   };
 
- 
   // Convert criteria data to Nivo format
   const prepareCriteriaData = (year) => {
     return Object.entries(criteriaCountByYear[year].criteriaCount).map(([id, value]) => ({
@@ -200,7 +256,7 @@ const Estadisticas = () => {
         id: "Porcentaje Mensual",
         color: "hsl(211, 70%, 50%)",
         data: Object.keys(auditsByMonthAndYear[year])
-          .filter(month => month !== 'Promedio') // Excluir "Promedio" del gráfico de línea
+          .filter(month => month !== 'Promedio')
           .map(month => ({
             x: month,
             y: parseFloat(calculateAverage(auditsByMonthAndYear[year][month]))
@@ -224,16 +280,16 @@ const Estadisticas = () => {
 
         canvases.forEach((canvas, index) => {
             const imgData = canvas.toDataURL('image/png');
-            const imgWidth = pdfWidth - 20; // Ajustar ancho de imagen para márgenes
+            const imgWidth = pdfWidth - 20;
             const imgHeight = (imgWidth / canvas.width) * canvas.height;
 
-            if (position + imgHeight > pdfHeight - 20) { // Ajustar altura disponible para márgenes
+            if (position + imgHeight > pdfHeight - 20) {
                 pdf.addPage();
-                position = 10; // Márgen superior en nueva página
+                position = 10;
             }
 
-            pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight); // Márgenes izquierdo y superior
-            position += imgHeight + 10; // Espacio entre imágenes
+            pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+            position += imgHeight + 10;
         });
 
         pdf.save('audits.pdf');
@@ -245,7 +301,6 @@ const Estadisticas = () => {
       <h2 className="audits-title">Auditorías Finalizadas</h2>
       <div id="print-content">
         <div className="dropdown">
-         
           <div className={`dropdown-menu ${menuOpen ? 'show' : ''}`}>
             {months.map((month, index) => (
               <label key={index} className={`month-option ${selectedMonths.includes(month) ? 'selected' : ''}`}>
@@ -260,13 +315,11 @@ const Estadisticas = () => {
           </div>
         </div>
         
-        {/* Controles de visualización */}
         <div className="visualization-controls">
           <button 
             onClick={() => toggleVisualization('bar')} 
             className={activeVisualization === 'bar' ? 'active' : ''}
           >
-            
             Gráfico de Barras
           </button>
 
@@ -331,13 +384,10 @@ const Estadisticas = () => {
                   </table>
                 </div>
                 
-                {/* Contenedor combinado de visualización */}
                 <div className="combined-charts-container">
-                  {/* Gráfico combinado cuando activeVisualization es 'both' */}
                   {activeVisualization === 'both' && (
                     <div className="chart-container-audits" style={{ height: 400, width: '100%' }}>
                       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                        {/* Gráfico de barras como capa base */}
                         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
                           <ResponsiveBar
                             data={prepareAuditsBarData(year)}
@@ -412,7 +462,6 @@ const Estadisticas = () => {
                           />
                         </div>
                         
-                        {/* Gráfico de línea superpuesto */}
                         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2 }}>
                           <ResponsiveLine
                             data={prepareMonthlyLineData(year)}
@@ -429,8 +478,8 @@ const Estadisticas = () => {
                             curve="cardinal"
                             axisTop={null}
                             axisRight={null}
-                            axisBottom={null} // Ocultar eje para evitar duplicación
-                            axisLeft={null} // Ocultar eje para evitar duplicación
+                            axisBottom={null}
+                            axisLeft={null}
                             enableGridX={false}
                             enableGridY={false}
                             pointSize={10}
@@ -438,7 +487,7 @@ const Estadisticas = () => {
                             pointBorderWidth={2}
                             pointBorderColor="#FF6384"
                             lineWidth={3}
-                            colors={["#FF6384"]} // Color específico para la línea
+                            colors={["#FF6384"]}
                             enableSlices="x"
                             useMesh={true}
                             legends={[
@@ -471,7 +520,6 @@ const Estadisticas = () => {
                     </div>
                   )}
                   
-                  {/* Gráfico de barras - Visible solo si activeVisualization es 'bar' */}
                   {activeVisualization === 'bar' && (
                     <div className="chart-container-audits" style={{ height: 400, width: '100%' }}>
                       <ResponsiveBar
@@ -556,7 +604,6 @@ const Estadisticas = () => {
                     </div>
                   )}
                   
-                  {/* Gráfico de línea - Visible solo si activeVisualization es 'line' */}
                   {activeVisualization === 'line' && (
                     <div className="chart-container-audits" style={{ height: 400, width: '100%' }}>
                       <ResponsiveLine
@@ -722,28 +769,43 @@ const Estadisticas = () => {
                   <tbody>
                     <tr>
                       <td>Hallazgos Totales</td>
-                      <td>{totalObservations}</td>
+                      <td>{countObservationsByYear(year)}</td>
                       <td>100%</td>
                     </tr>
                     <tr>
                       <td>Hallazgos Revisados</td>
-                      <td>{reviewedObservationsCount}</td>
-                      <td>{((reviewedObservationsCount / totalObservations) * 100).toFixed(2)}%</td>
+                      <td>{reviewedByYear[year] ?? '...'}</td>
+                      <td>{countObservationsByYear(year) > 0 ? 
+                          (((reviewedByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : 
+                          '0%'}</td>
                     </tr>
                     <tr>
                       <td>Hallazgos Faltantes</td>
-                      <td>{pendingObservationsCount}</td>
-                      <td>{((pendingObservationsCount / totalObservations) * 100).toFixed(2)}%</td>
+                      <td>{Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0))}</td>
+                      <td>{countObservationsByYear(year) > 0 ? 
+                          ((Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0)) / countObservationsByYear(year) * 100).toFixed(2) + '%') :
+                          '0%'}</td>
                     </tr>
                   </tbody>
                 </table>
                 <div className="chart-container-audits" style={{ height: 300 }}>
                   <ResponsiveBar
                     data={[
-                      { id: 'Hallazgos Faltantes', value: pendingObservationsCount, color: '#FF9F40' },
-                      { id: 'Hallazgos Revisadas', value: reviewedObservationsCount, color: '#9966FF' },
-                      { id: 'Hallazgos Totales', value: totalObservations, color: '#4BC0C0' }
-
+                      { 
+                        id: 'Hallazgos Faltantes', 
+                        value: Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0)), 
+                        color: '#FF9F40' 
+                      },
+                      { 
+                        id: 'Hallazgos Revisadas', 
+                        value: reviewedByYear[year] ?? 0, 
+                        color: '#9966FF' 
+                      },
+                      { 
+                        id: 'Hallazgos Totales', 
+                        value: countObservationsByYear(year), 
+                        color: '#4BC0C0' 
+                      }
                     ]}
                     keys={['value']}
                     indexBy="id"
@@ -802,8 +864,8 @@ const Estadisticas = () => {
                     ))}
                   </tbody>
                 </table>
-                <div className="pie-chart-container-audits" style={{ height: 400 }}>
-                  <ResponsivePie
+                <div className="bar-chart-container-audits" style={{ height: 400 }}>
+                  <ResponsiveBar
                     data={prepareCriteriaData(year)}
                     margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
                     innerRadius={0.5}
