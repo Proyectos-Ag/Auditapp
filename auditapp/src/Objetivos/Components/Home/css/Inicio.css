@@ -2,7 +2,7 @@
     opacity: 1;
     transition: opacity 1s ease-in-out;
   }
-
+//hola
   .inicio-container.fade-out {
     opacity: 0;
     transition: opacity 1s ease-in-out;
