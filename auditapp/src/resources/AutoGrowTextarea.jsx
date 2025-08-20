@@ -32,6 +32,17 @@ export default function AutoGrowTextarea({
     let fontSize = initialFontSize.current + (shrinkable ? baseFontIncrement : 0);
     el.style.fontSize = `${fontSize}px`;
 
+    // Si se pasa de 145 caracteres, empieza a reducir la fuente
+if (value && value.length > 145) {
+  while (value.length > 145 && fontSize > minFontSize) {
+    fontSize -= 1;
+    el.style.fontSize = `${fontSize}px`;
+    // Recalcular hasta que ya no desborde
+    if (el.scrollHeight <= (maxHeight || el.scrollHeight)) break;
+  }
+}
+
+
     const scroll = el.scrollHeight;
 
     // Lógica de AutoGrow cuando expandable

@@ -72,6 +72,9 @@ import RegistroAccionCorrectiva from './Objetivos/Components/Tabla/AccionesCorre
 import GestionCambioForm from './gestion/GestionCambioForm.jsx';
 import MobileSign from './gestion/MobileSign.jsx';
 import GestionList from './gestion/GestionCambioList.jsx'
+import Home from './gestion/home/Home.jsx';
+import VistaSolicitudesCambios from './gestion/VistaSolicitudesCambios.jsx';
+import RevisionSolicitudesCambios from './gestion/RevisionSolicitudesCambios.jsx';
 
 //Paginas de error
 import UnauthorizedPage from './components/Pag-error/UnauthorizedPage.jsx';
@@ -171,8 +174,12 @@ export const UserContext = createContext(null);
               <Route path="/concentradon" element={<Concentrado />} />
 
               {/*Gestion de Cambios*/}
+              <Route path="/gestion-cambio/:id" element={<ProtectedRoute><GestionCambioForm/></ProtectedRoute>}/>
               <Route path="/gestion-cambio" element={<ProtectedRoute><GestionCambioForm/></ProtectedRoute>}/>
-              <Route path="/gestion-cambio-list" element={<ProtectedRoute><GestionList/></ProtectedRoute>}/>
+              <Route path="/solicitud-cambio/:id" element={<ProtectedRoute><GestionList/></ProtectedRoute>}/>
+              <Route path="/gestion" element={<ProtectedRoute><Home/></ProtectedRoute>}/>
+              <Route path="/vista-solictudes" element={<ProtectedRoute><VistaSolicitudesCambios/></ProtectedRoute>}/>
+              <Route path="/vista-solictudes-rev" element={<ProtectedRoute><RevisionSolicitudesCambios/></ProtectedRoute>}/>
               <Route path="/mobile-sign" element={<MobileSign />} />
 
               {/* Rutas protegidas para los componentes de usuario */}

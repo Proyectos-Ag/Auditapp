@@ -432,3 +432,165 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Compact grid: cuando quieras más densidad en ciertos grids */
+.gcl-grid-fields.compact {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.6rem;
+}
+
+/* Inline row para pares/triples pequeños */
+.gcl-inline-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.gcl-inline-row.smalls .gcl-inline-item { flex: 1 1 120px; }
+.gcl-inline-row .gcl-inline-item { flex: 1 1 220px; }
+
+/* Riesgos grid (cards compactas) */
+.gcl-riesgos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+.gcl-riesgo-card {
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+.gcl-riesgo-card-head {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom: 8px;
+}
+.gcl-riesgo-title { color: var(--primary-color); font-weight: 700; }
+.gcl-riesgo-badge { background: var(--light-gray); padding: 4px 8px; border-radius: 12px; font-size: 12px; color: var(--text-light); }
+
+/* texto pequeño dentro de cards */
+.gcl-text-content-small { font-size: 13px; color: #444; margin: 6px 0; }
+
+/* Involucrado block */
+.gcl-involucrado-block {
+  border-left: 3px solid var(--border-color);
+  padding-left: 10px;
+  margin-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Firmas: 2 por fila en desktop, 1 por fila en mobile */
+.gcl-signatures-grid.two-per-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (max-width: 780px) {
+  .gcl-signatures-grid.two-per-row { grid-template-columns: 1fr; }
+}
+
+/* Ajustes en la tarjeta de firma para verse más compacto */
+.gcl-signature-card {
+  padding: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.gcl-signature-info {
+  flex: 1;
+  text-align: left;
+}
+.gcl-signature-canvas {
+  max-width: 180px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: white;
+  pointer-events: none;
+  display: block;
+}
+
+/* Mantener consistencia visual con tu CSS existente */
+.gcl-field-value { font-size: 0.98rem; }
+
+/* Layout exclusivo para vista de un solo registro (90% ancho) */
+.gcl-container-single {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+  min-height: calc(100vh - 120px);
+}
+
+.gcl-single-card-wrapper {
+  width: 90%;
+  max-width: 1200px;
+  margin: 1.2rem auto;
+}
+
+.gcl-card-single {
+  width: 100%;
+  /* más espacio vertical para leer */
+  padding: 1.6rem;
+  border-radius: 14px;
+}
+
+.gcl-card-single .gcl-card-body {
+  padding: 1rem 0;
+}
+
+/* Ajustes para campos en vista única: ocupar filas más amplias */
+.gcl-grid-fields.compact {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1024px) {
+  .gcl-grid-fields.compact {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .gcl-signatures-grid.two-per-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .gcl-grid-fields.compact {
+    grid-template-columns: 1fr;
+  }
+  .gcl-single-card-wrapper { width: 98%; }
+}
+
+/* Hacer la cabecera del card más visible en detalle */
+.gcl-card-single .gcl-card-header {
+  background: linear-gradient(90deg, rgba(44,62,80,0.95), rgba(52,73,94,0.95));
+  color: #fff;
+  padding: 1rem 1.2rem;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Dar más espacio a títulos de sección */
+.gcl-card-single .gcl-section-title {
+  font-size: 1.15rem;
+  padding-bottom: 0.6rem;
+}
+
+/* Reduce visual clutter en footer */
+.gcl-card-single .gcl-card-footer {
+  background: transparent;
+  border-top: none;
+  padding-top: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+

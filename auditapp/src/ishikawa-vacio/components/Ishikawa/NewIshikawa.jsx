@@ -214,7 +214,7 @@ export default function NewIshikawa({ diagrama, setDiagrama, problema, ID, onCau
                         <AutoGrowTextarea
                           className="cause-input editable-textarea"
                           placeholder={`Causa ${ci+1}`}
-                          maxLength={145}
+                          maxLength={count === 1 ? 190 : 145}
                           value={text}
                           onChange={e => {
                             const v = e.target.value;

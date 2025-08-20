@@ -8,8 +8,13 @@ router.post('/', gestionCambioController.crearGestionCambio);
 // Ruta para obtener todos los registros
 router.get('/', gestionCambioController.obtenerGestionCambios);
 
+router.get('/resumen', gestionCambioController.obtenerResumenGestiones);
+
 // Ruta para obtener un registro por ID
 router.get('/:id', gestionCambioController.obtenerGestionPorId);
+
+// Enviar (cambia estado a 'enviado' si pasa validación)
+router.post('/:id/enviar', gestionCambioController.enviarGestionCambio);
 
 // Ruta para actualizar un registro
 router.put('/:id', gestionCambioController.actualizarGestionCambio);

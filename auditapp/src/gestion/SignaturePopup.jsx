@@ -40,8 +40,8 @@ const SignaturePopup = ({ open, role, onSave, onClose }) => {
   // Genera URL de QR para mobile-sign
   useEffect(() => {
     if (open) {
-      //const base = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
-      const base = 'http://192.168.0.72:3000';
+      const base = process.env.REACT_APP_FRONTEND_URL;
+      //const base = 'http://192.168.0.72:3000';
       setQrUrl(`${base}/mobile-sign?role=${encodeURIComponent(role)}&session=${sessionId}`);
     }
   }, [open, role, sessionId]);
