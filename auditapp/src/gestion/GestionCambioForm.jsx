@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import Grid from '@mui/material/Grid';
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
 import SignaturePopup from './SignaturePopup';
 import { UserContext } from '../App';
 import './css/GestionForm.css';
@@ -9,6 +12,8 @@ export default function GestionCambioForm() {
   const { id: routeId } = useParams();
   const navigate = useNavigate();
   const { userData } = useContext(UserContext);
+
+  const [userNames, setUserNames] = useState([]);
 
   const [formData, setFormData] = useState({
     solicitante: '',
@@ -53,7 +58,27 @@ export default function GestionCambioForm() {
   const [submitted, setSubmitted] = useState(false);
 
   const [sigRole, setSigRole] = useState(null);
-  const sectionRefs = useRef([]); // refs para scroll
+  const sectionRefs = useRef([]);
+
+  useEffect(() => {
+  const loadNames = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombres`);
+      if (!res || !res.data) return;
+      if (Array.isArray(res.data) && typeof res.data[0] === 'string') {
+        setUserNames(res.data);
+      } else if (Array.isArray(res.data)) {
+        // si tu endpoint devuelve objetos, intenta mapear al campo Nombre
+        const names = res.data.map(u => u.Nombre || u.nombre || '').filter(Boolean);
+        setUserNames(Array.from(new Set(names)));
+      }
+    } catch (err) {
+      // si no existe el endpoint exacto, no romperá la app
+      console.warn('No se pudieron cargar los nombres para Autocomplete', err);
+    }
+  };
+  loadNames();
+}, []);
 
   // Cargar si hay routeId
   useEffect(() => {
@@ -118,16 +143,15 @@ useEffect(() => {
 
   const openSignature = (role) => setSigRole(role);
   const handleSaveSig = (role, dataURL) => {
-    if (role !== 'solicitado') return;
   setFormData(prev => ({
     ...prev,
     firmadoPor: {
       ...prev.firmadoPor,
-      solicitado: { ...prev.firmadoPor.solicitado, firma: dataURL }
+      [role]: { ...prev.firmadoPor[role], firma: dataURL }
     }
   }));
   setSigRole(null);
-  };
+};
 
   /* ---------- Helpers de estado y cambios ---------- */
   const handleChange = (e) => {
@@ -829,128 +853,158 @@ const handleAprobadoChange = (idx, field, value) => {
     <div className="form-section" ref={el => sectionRefs.current[8] = el}>
       <h2>Firmas</h2>
 
-      {/* SOLICITANTE */}
-      <fieldset className={`signature-group ${(errors['firma_solicitado_nombre'] || errors['firma_solicitado_cargo'] || errors['firma_solicitado_firma']) ? 'field-error' : ''}`}>
-        <legend>Solicitado por:</legend>
-        <div className="form-group">
-          <label>Nombre*</label>
-          <input type="text"
-                 value={formData.firmadoPor.solicitado.nombre}
-                 onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, solicitado: { ...prev.firmadoPor.solicitado, nombre: e.target.value } } }))}
-                 className={errors['firma_solicitado_nombre'] ? 'error' : ''} />
-        </div>
-        <div className="form-group">
-          <label>Cargo*</label>
-          <input type="text"
-                 value={formData.firmadoPor.solicitado.cargo}
-                 onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, solicitado: { ...prev.firmadoPor.solicitado, cargo: e.target.value } } }))}
-                 className={errors['firma_solicitado_cargo'] ? 'error' : ''} />
-        </div>
-        <div className="form-group">
-          <label>Firma*</label>
-          <button type="button" onClick={() => openSignature('solicitado')} className="signature-btn">
-            {formData.firmadoPor.solicitado.firma ? 'Re-firmar' : 'Firmar'}
-          </button>
-          {formData.firmadoPor.solicitado.firma && (
-            <div className="signature-preview">
-              <img src={formData.firmadoPor.solicitado.firma} alt="Firma solicitante" height="50" />
-              <span>Firma capturada</span>
-            </div>
-          )}
-        </div>
-        {(errors['firma_solicitado_nombre'] || errors['firma_solicitado_cargo'] || errors['firma_solicitado_firma']) && <div className="error-message">Faltan datos del solicitante.</div>}
-      </fieldset>
-
-      {/* EVALUADO (solo nombre y cargo) */}
-      <fieldset className={`signature-group ${(errors['firma_evaluado_nombre'] || errors['firma_evaluado_cargo']) ? 'field-error' : ''}`}>
-        <legend>Evaluado por:</legend>
-        <div className="form-group">
-          <label>Nombre*</label>
-          <input type="text"
-                 value={formData.firmadoPor.evaluado.nombre}
-                 onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, evaluado: { ...prev.firmadoPor.evaluado, nombre: e.target.value } } }))}
-                 className={errors['firma_evaluado_nombre'] ? 'error' : ''} />
-        </div>
-        <div className="form-group">
-          <label>Cargo*</label>
-          <input type="text"
-                 value={formData.firmadoPor.evaluado.cargo}
-                 onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, evaluado: { ...prev.firmadoPor.evaluado, cargo: e.target.value } } }))}
-                 className={errors['firma_evaluado_cargo'] ? 'error' : ''} />
-        </div>
-      </fieldset>
-
-      {/* APROBADO - lista dinámica (solo nombre y cargo) */}
-      <fieldset className="signature-group">
-        <legend>Aprobado por:</legend>
-
-        {(formData.firmadoPor.aprobado || []).map((a, idx) => (
-          <div key={idx} style={{ border: '1px solid #eee', padding: 8, marginBottom: 8 }}>
+      <Grid container spacing={2}>
+        {/* SOLICITANTE */}
+        <Grid item xs={12} md={6}>
+          <fieldset className={`signature-group ${(errors['firma_solicitado_nombre'] || errors['firma_solicitado_cargo'] || errors['firma_solicitado_firma']) ? 'field-error' : ''}`}>
+            <legend>Solicitado por:</legend>
             <div className="form-group">
               <label>Nombre*</label>
-              <input type="text"
-                     value={a.nombre}
-                     onChange={(e) => handleAprobadoChange(idx, 'nombre', e.target.value)}
-                     className={errors[`firma_aprobado_${idx}_nombre`] ? 'error' : ''} />
+              <Autocomplete
+                freeSolo
+                options={userNames}
+                value={formData.firmadoPor.solicitado.nombre || ''}
+                onChange={(e, newValue) => setFormData(prev => ({ 
+                  ...prev, firmadoPor: { 
+                    ...prev.firmadoPor, solicitado: { ...prev.firmadoPor.solicitado, nombre: newValue || '' } 
+                  } 
+                }))}
+                renderInput={(params) => <TextField {...params} variant="outlined" size="small" error={!!errors['firma_solicitado_nombre']} />}
+              />
             </div>
             <div className="form-group">
               <label>Cargo*</label>
               <input type="text"
-                     value={a.cargo}
-                     onChange={(e) => handleAprobadoChange(idx, 'cargo', e.target.value)}
-                     className={errors[`firma_aprobado_${idx}_cargo`] ? 'error' : ''} />
+                value={formData.firmadoPor.solicitado.cargo}
+                onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, solicitado: { ...prev.firmadoPor.solicitado, cargo: e.target.value } } }))}
+                className={errors['firma_solicitado_cargo'] ? 'error' : ''} />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button type="button" className="btn-secondary" onClick={() => removeAprobado(idx)}>Eliminar</button>
+            <div className="form-group">
+              <label>Firma*</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button type="button" onClick={() => openSignature('solicitado')} className="signature-btn">
+                  {formData.firmadoPor.solicitado.firma ? 'Re-firmar' : 'Firmar'}
+                </button>
+                {formData.firmadoPor.solicitado.firma && (
+                  <div className="signature-preview">
+                    <img src={formData.firmadoPor.solicitado.firma} alt="Firma solicitante" height="50" />
+                    <span>Firma capturada</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          </fieldset>
+        </Grid>
+
+        {/* EVALUADO */}
+        <Grid item xs={12} md={6}>
+          <fieldset className={`signature-group ${(errors['firma_evaluado_nombre'] || errors['firma_evaluado_cargo']) ? 'field-error' : ''}`}>
+            <legend>Evaluado por:</legend>
+            <div className="form-group">
+              <label>Nombre*</label>
+              <Autocomplete
+                freeSolo
+                options={userNames}
+                value={formData.firmadoPor.evaluado.nombre || ''}
+                onChange={(e, newValue) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, evaluado: { ...prev.firmadoPor.evaluado, nombre: newValue || '' } } }))}
+                renderInput={(params) => <TextField {...params} variant="outlined" size="small" error={!!errors['firma_evaluado_nombre']} />}
+              />
+            </div>
+            <div className="form-group">
+              <label>Cargo*</label>
+              <input type="text"
+                value={formData.firmadoPor.evaluado.cargo}
+                onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, evaluado: { ...prev.firmadoPor.evaluado, cargo: e.target.value } } }))}
+                className={errors['firma_evaluado_cargo'] ? 'error' : ''} />
+            </div>
+          </fieldset>
+        </Grid>
+
+        {/* IMPLEMENTADO */}
+        <Grid item xs={12} md={6}>
+          <fieldset className={`signature-group ${(errors['firma_implementado_nombre'] || errors['firma_implementado_cargo']) ? 'field-error' : ''}`}>
+            <legend>Implementado por:</legend>
+            <div className="form-group">
+              <label>Nombre*</label>
+              <Autocomplete
+                freeSolo
+                options={userNames}
+                value={formData.firmadoPor.implementado.nombre || ''}
+                onChange={(e, newValue) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, implementado: { ...prev.firmadoPor.implementado, nombre: newValue || '' } } }))}
+                renderInput={(params) => <TextField {...params} variant="outlined" size="small" error={!!errors['firma_implementado_nombre']} />}
+              />
+            </div>
+            <div className="form-group">
+              <label>Cargo*</label>
+              <input type="text"
+                value={formData.firmadoPor.implementado.cargo}
+                onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, implementado: { ...prev.firmadoPor.implementado, cargo: e.target.value } } }))}
+                className={errors['firma_implementado_cargo'] ? 'error' : ''} />
+            </div>
+          </fieldset>
+        </Grid>
+
+        {/* VALIDADO */}
+        <Grid item xs={12} md={6}>
+          <fieldset className={`signature-group ${(errors['firma_validado_nombre'] || errors['firma_validado_cargo']) ? 'field-error' : ''}`}>
+            <legend>Validado por:</legend>
+            <div className="form-group">
+              <label>Nombre*</label>
+              <Autocomplete
+                freeSolo
+                options={userNames}
+                value={formData.firmadoPor.validado.nombre || ''}
+                onChange={(e, newValue) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, validado: { ...prev.firmadoPor.validado, nombre: newValue || '' } } }))}
+                renderInput={(params) => <TextField {...params} variant="outlined" size="small" error={!!errors['firma_validado_nombre']} />}
+              />
+            </div>
+            <div className="form-group">
+              <label>Cargo*</label>
+              <input type="text"
+                value={formData.firmadoPor.validado.cargo}
+                onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, validado: { ...prev.firmadoPor.validado, cargo: e.target.value } } }))}
+                className={errors['firma_validado_cargo'] ? 'error' : ''} />
+            </div>
+          </fieldset>
+        </Grid>
+
+        {/* APROBADOS dinámicos */}
+        {(formData.firmadoPor.aprobado || []).map((a, idx) => (
+          <Grid item xs={12} md={6} key={`aprobado-${idx}`}>
+            <div style={{ border: '1px solid #eee', padding: 8, marginBottom: 8 }}>
+              <div className="form-group">
+                <label>Nombre*</label>
+                <Autocomplete
+                  freeSolo
+                  options={userNames}
+                  value={a.nombre || ''}
+                  onChange={(e, newValue) => handleAprobadoChange(idx, 'nombre', newValue || '')}
+                  renderInput={(params) => <TextField {...params} variant="outlined" size="small" error={!!errors[`firma_aprobado_${idx}_nombre`]} />}
+                />
+              </div>
+              <div className="form-group">
+                <label>Cargo*</label>
+                <input type="text"
+                  value={a.cargo}
+                  onChange={(e) => handleAprobadoChange(idx, 'cargo', e.target.value)}
+                  className={errors[`firma_aprobado_${idx}_cargo`] ? 'error' : ''} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button type="button" className="btn-secondary" onClick={() => removeAprobado(idx)}>Eliminar</button>
+              </div>
+            </div>
+          </Grid>
         ))}
 
-        <div style={{ marginTop: 8 }}>
-          <button type="button" className="btn-primary" onClick={addAprobado}>Agregar aprobador</button>
-        </div>
-      </fieldset>
-
-      {/* IMPLEMENTADO */}
-      <fieldset className={`signature-group ${(errors['firma_implementado_nombre'] || errors['firma_implementado_cargo']) ? 'field-error' : ''}`}>
-        <legend>Implementado por:</legend>
-        <div className="form-group">
-          <label>Nombre*</label>
-          <input type="text"
-                 value={formData.firmadoPor.implementado.nombre}
-                 onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, implementado: { ...prev.firmadoPor.implementado, nombre: e.target.value } } }))}
-                 className={errors['firma_implementado_nombre'] ? 'error' : ''} />
-        </div>
-        <div className="form-group">
-          <label>Cargo*</label>
-          <input type="text"
-                 value={formData.firmadoPor.implementado.cargo}
-                 onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, implementado: { ...prev.firmadoPor.implementado, cargo: e.target.value } } }))}
-                 className={errors['firma_implementado_cargo'] ? 'error' : ''} />
-        </div>
-      </fieldset>
-
-      {/* VALIDADO */}
-      <fieldset className={`signature-group ${(errors['firma_validado_nombre'] || errors['firma_validado_cargo']) ? 'field-error' : ''}`}>
-        <legend>Validado por:</legend>
-        <div className="form-group">
-          <label>Nombre*</label>
-          <input type="text"
-                 value={formData.firmadoPor.validado.nombre}
-                 onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, validado: { ...prev.firmadoPor.validado, nombre: e.target.value } } }))}
-                 className={errors['firma_validado_nombre'] ? 'error' : ''} />
-        </div>
-        <div className="form-group">
-          <label>Cargo*</label>
-          <input type="text"
-                 value={formData.firmadoPor.validado.cargo}
-                 onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, validado: { ...prev.firmadoPor.validado, cargo: e.target.value } } }))}
-                 className={errors['firma_validado_cargo'] ? 'error' : ''} />
-        </div>
-      </fieldset>
+        {/* agregar aprobador */}
+        <Grid item xs={12}>
+          <div style={{ marginTop: 8 }}>
+            <button type="button" className="btn-primary" onClick={addAprobado}>Agregar aprobador</button>
+          </div>
+        </Grid>
+      </Grid>
     </div>
   );
-
 
       default:
         return null;
@@ -1033,12 +1087,12 @@ const handleAprobadoChange = (idx, field, value) => {
 
         <div className="form-navigation">
           {activeSection > 1 && <button type="button" className="btn-secondary" onClick={() => setActiveSection(activeSection - 1)}>Anterior</button>}
+          <button type="button" className="btn-secondary" onClick={saveDraft} disabled={isSubmitting}>{isSubmitting ? 'Guardando...' : 'Guardar borrador'}</button>
 
           {activeSection < 9 ? (
             <button type="submit" className="btn-primary">Siguiente</button>
           ) : (
             <>
-              <button type="button" className="btn-secondary" onClick={saveDraft} disabled={isSubmitting}>{isSubmitting ? 'Guardando...' : 'Guardar borrador'}</button>
               <button type="button" className="btn-primary" onClick={sendRequest} disabled={isSubmitting} style={{ marginLeft: 8 }}>{isSubmitting ? 'Procesando...' : 'Enviar Solicitud'}</button>
             </>
           )}

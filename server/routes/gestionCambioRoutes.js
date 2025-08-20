@@ -5,6 +5,8 @@ const gestionCambioController = require('../controllers/gestionCambioController'
 // Ruta para crear un nuevo registro
 router.post('/', gestionCambioController.crearGestionCambio);
 
+router.post('/:id/sign', gestionCambioController.signGestionCambio);
+
 // Ruta para obtener todos los registros
 router.get('/', gestionCambioController.obtenerGestionCambios);
 

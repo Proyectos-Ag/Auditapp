@@ -1,10 +1,12 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useContext } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import GestionCambioPDF from "./GestionCambioPDF";
+import SignaturePopup from "./SignaturePopup";
+import { UserContext } from '../App';
 import "./css/GestionList.css";
 
-/* ------------------ SignatureProtegida (canvas + overlay) ------------------ */
+// Componente SignatureProtegida (sin cambios en funcionalidad)
 const SignatureProtegida = ({ src, alt, width = 220 }) => {
   const canvasRef = useRef(null);
 
@@ -86,25 +88,24 @@ const hasValue = (v) => {
 const formatDate = (d) => {
   if (!d) return "-";
   try {
-    const date = new Date(d);
-    if (isNaN(date)) return "-";
-    return date.toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    const dateOnly = new Date(d).toISOString().split("T")[0];
+    const [year, month, day] = dateOnly.split("-");
+    return `${day}/${month}/${year}`;
   } catch {
     return "-";
   }
 };
 
-/* ------------------ Componente principal (detalle único) ------------------ */
+/* ------------------ Componente principal ------------------ */
 const GestionCambioList = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [item, setItem] = useState(null); // un solo registro
+  const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { userData } = useContext(UserContext);
+  const [signatureOpen, setSignatureOpen] = useState(false);
+  const [signatureRole, setSignatureRole] = useState('aprobado');
 
   useEffect(() => {
     if (!id) {
@@ -117,8 +118,9 @@ const GestionCambioList = () => {
     const fetchById = async (recordId) => {
       try {
         setLoading(true);
+        const userName = encodeURIComponent(userData?.Nombre || '');
         const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${recordId}`
+          `${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${recordId}?userName=${userName}`
         );
         if (!cancelled) setItem(res.data || null);
       } catch (err) {
@@ -134,10 +136,8 @@ const GestionCambioList = () => {
     };
 
     fetchById(id);
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
+    return () => { cancelled = true; };
+  }, [id, userData?.correo]);
 
   const volver = () => navigate(-1);
 
@@ -159,6 +159,26 @@ const GestionCambioList = () => {
         <span className="gcl-boolean gcl-true">Sí</span>
       </div>
     );
+  };
+
+  const onSaveSignature = async (role, dataURL) => {
+    try {
+      const payload = {
+        role,
+        email: userData?.Correo,
+        nombre: userData?.Nombre,
+        cargo: userData?.cargo,
+        dataURL
+      };
+      const res = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${id}/sign`,
+        payload
+      );
+      setItem(res.data);
+      setSignatureOpen(false);
+    } catch (err) {
+      console.error('Error guardando firma:', err);
+    }
   };
 
   const renderRiesgosCards = (cards = []) => {
@@ -406,19 +426,17 @@ const GestionCambioList = () => {
   if (error)
     return (
       <div className="gcl-no-data-container" style={{ padding: 24 }}>
-        <div style={{ fontSize: 22, marginBottom: 12 }}>⚠️ {error}</div>
+        <div className="gcl-error-message">{error}</div>
         <button className="gcl-retry-button" onClick={() => volver()}>
           Volver
         </button>
       </div>
     );
 
-  // Si no hay item (vacío) mostrar mensaje
   if (!item)
     return (
       <div className="gcl-container-single">
         <div className="gcl-no-data-container">
-          <div className="gcl-no-data-icon">📭</div>
           <p className="gcl-no-data-text">
             No se encontró la solicitud solicitada.
           </p>
@@ -429,27 +447,21 @@ const GestionCambioList = () => {
       </div>
     );
 
-  // normalizar acceso a firmas / aprobadores (antes del `return (`)
   const fp = item?.firmadoPor || {};
-  // compat: si por alguna razón vino como objeto único, convertir a array
   const aprobadoList = Array.isArray(fp.aprobado)
     ? fp.aprobado
     : fp.aprobado
     ? [fp.aprobado]
     : [];
-  // compatibilidad con nombres distintos (solicitado vs solicitante)
   const solicitado = fp.solicitado || fp.solicitante || {};
 
-  // ---------- comprobar que TODAS las firmas/personas requeridas existen ----------
   const nonEmpty = (s) => typeof s === "string" && s.trim() !== "";
 
-  // solicitante: requerimos nombre, cargo y firma
   const solicitanteCompleto =
     nonEmpty(solicitado?.nombre) &&
     nonEmpty(solicitado?.cargo) &&
     nonEmpty(solicitado?.firma);
 
-  // evaluado / implementado / validado: requerimos nombre y cargo
   const roleComplete = (roleObj) =>
     roleObj &&
     nonEmpty(roleObj.nombre) &&
@@ -459,13 +471,11 @@ const GestionCambioList = () => {
   const implementadoCompleto = roleComplete(fp.implementado);
   const validadoCompleto = roleComplete(fp.validado);
 
-  // aprobadores: debe existir al menos uno y cada uno debe tener nombre + cargo
   const aprobadoresCompleto =
     Array.isArray(aprobadoList) &&
     aprobadoList.length > 0 &&
     aprobadoList.every((a) => a && nonEmpty(a.nombre) && nonEmpty(a.cargo));
 
-  // resultado final: todas las firmas/personas completas -> aprobado
   const todasFirmasCompletas =
     solicitanteCompleto &&
     evaluadoCompleto &&
@@ -475,27 +485,17 @@ const GestionCambioList = () => {
 
   return (
     <div className="gcl-container-single">
-      <div
-        className="gcl-header-container"
-        style={{ maxWidth: "90%", margin: "2em auto" }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
+      <div className="gcl-header-container">
+        <div className="gcl-header-content">
           <div>
             <h1 className="gcl-header">Detalle de Solicitud</h1>
-            <div style={{ color: "#666" }}>
+            <div className="gcl-subheader">
               Solicitud ID: <strong>{item._id}</strong>
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 8 }}>
-            <button className="gcl-retry-button" onClick={() => volver()}>
+          <div className="gcl-header-actions">
+            <button className="gcl-button-secondary" onClick={() => volver()}>
               Volver
             </button>
             <GestionCambioPDF registro={item} />
@@ -515,10 +515,7 @@ const GestionCambioList = () => {
           <div className="gcl-card-body">
             {/* Datos de la solicitud */}
             <div className="gcl-section">
-              <h3 className="gcl-section-title">
-                <span className="gcl-section-icon">📋</span> Datos de la
-                solicitud
-              </h3>
+              <h3 className="gcl-section-title">Datos de la solicitud</h3>
               <div className="gcl-grid-fields compact">
                 {renderFieldIf("Solicitante", item.solicitante, true)}
                 {renderFieldIf("Área solicitante", item.areaSolicitante)}
@@ -533,9 +530,7 @@ const GestionCambioList = () => {
 
             {/* Alcance */}
             <div className="gcl-section">
-              <h3 className="gcl-section-title">
-                <span className="gcl-section-icon">📊</span> Alcance del cambio
-              </h3>
+              <h3 className="gcl-section-title">Alcance del cambio</h3>
               <div className="gcl-grid-fields">
                 {renderFieldIf("Tipo de cambio", item.tipoCambio, true)}
                 {renderFieldIf(
@@ -592,9 +587,7 @@ const GestionCambioList = () => {
 
             {/* Causa */}
             <div className="gcl-section">
-              <h3 className="gcl-section-title">
-                <span className="gcl-section-icon">🔍</span> Causa
-              </h3>
+              <h3 className="gcl-section-title">Causa</h3>
               <div className="gcl-grid-fields compact">
                 {renderBooleanIf(
                   "Solicitud cliente",
@@ -623,10 +616,7 @@ const GestionCambioList = () => {
             {/* Descripción / Justificación */}
             {hasValue(item.descripcionPropuesta) && (
               <div className="gcl-section">
-                <h3 className="gcl-section-title">
-                  <span className="gcl-section-icon">📝</span> Descripción
-                  propuesta
-                </h3>
+                <h3 className="gcl-section-title">Descripción propuesta</h3>
                 <div className="gcl-text-content">
                   {item.descripcionPropuesta}
                 </div>
@@ -635,18 +625,14 @@ const GestionCambioList = () => {
 
             {hasValue(item.justificacion) && (
               <div className="gcl-section">
-                <h3 className="gcl-section-title">
-                  <span className="gcl-section-icon">💡</span> Justificación
-                </h3>
+                <h3 className="gcl-section-title">Justificación</h3>
                 <div className="gcl-text-content">{item.justificacion}</div>
               </div>
             )}
 
             {/* Implicaciones */}
             <div className="gcl-section">
-              <h3 className="gcl-section-title">
-                <span className="gcl-section-icon">⚖️</span> Implicaciones
-              </h3>
+              <h3 className="gcl-section-title">Implicaciones</h3>
               <div className="gcl-grid-fields compact">
                 {renderBooleanIf("Riesgos", item.implicaciones?.riesgos)}
                 {renderBooleanIf("Recursos", item.implicaciones?.recursos)}
@@ -658,127 +644,209 @@ const GestionCambioList = () => {
               </div>
             </div>
 
-            {/* Riesgos (Sección 8) */}
+            {/* Riesgos */}
             {renderRiesgosCards(item.riesgosCards)}
 
             {/* Consecuencias */}
             {hasValue(item.consecuencias) && (
               <div className="gcl-section">
-                <h3 className="gcl-section-title">
-                  <span className="gcl-section-icon">⚠️</span> Consecuencias
-                </h3>
+                <h3 className="gcl-section-title">Consecuencias</h3>
                 <div className="gcl-text-content">{item.consecuencias}</div>
               </div>
             )}
 
             {/* Firmas */}
-            {/* Firmas */}
-            <div className="gcl-section">
-              <h3 className="gcl-section-title">
-                <span className="gcl-section-icon">✍️</span> Firmas
-              </h3>
+          
+{(() => {
+  const firmadoPor = item?.firmadoPor || {};
+  const userNombre = userData?.nombre || userData?.Nombre || '';
+  const userCargo = userData?.cargo || userData?.Cargo || '';
+  return (
+    <div className="gcl-section">
+      <h3 className="gcl-section-title">Firmas</h3>
 
-              <div className="gcl-signatures-grid two-per-row">
-                {/* SOLICITANTE (tiene firma) */}
-                <div key="solicitado" className="gcl-signature-card">
-                  <div className="gcl-signature-role">Solicitante</div>
-                  <div className="gcl-signature-info">
-                    <div className="gcl-signature-name">
-                      {solicitado?.nombre || "Pendiente"}
-                    </div>
-                    <div className="gcl-signature-position">
-                      {solicitado?.cargo || "-"}
-                    </div>
-                  </div>
-                  {solicitado?.firma ? (
-                    <SignatureProtegida
-                      src={solicitado.firma}
-                      alt="Firma solicitante"
-                      width={220}
-                    />
-                  ) : (
-                    <div className="gcl-signature-pending">Pendiente</div>
-                  )}
-                </div>
+      <div className="gcl-signatures-grid two-per-row">
 
-                {/* EVALUADO (nombre + cargo) */}
-                <div key="evaluado" className="gcl-signature-card">
-                  <div className="gcl-signature-role">Evaluado por</div>
-                  <div className="gcl-signature-info">
-                    <div className="gcl-signature-name">
-                      {fp.evaluado?.nombre || "Pendiente"}
-                    </div>
-                    <div className="gcl-signature-position">
-                      {fp.evaluado?.cargo || "-"}
-                    </div>
-                  </div>
-                  <div className="gcl-signature-placeholder" />
-                </div>
+        {/* SOLICITANTE */}
+        <div key="solicitado" className="gcl-signature-card">
+          <div className="gcl-signature-role">Solicitante</div>
+          <div className="gcl-signature-info">
+            <div className="gcl-signature-name">{firmadoPor?.solicitado?.nombre || "Pendiente"}</div>
+            <div className="gcl-signature-position">{firmadoPor?.solicitado?.cargo || "-"}</div>
+          </div>
 
-                {/* APROBADORES: lista dinámica (solo nombre + cargo) */}
-                {aprobadoList && aprobadoList.length > 0 ? (
-                  aprobadoList.map((a, idx) => (
-                    <div key={`aprobado_${idx}`} className="gcl-signature-card">
-                      <div className="gcl-signature-role">
-                        Aprobado por
-                        {aprobadoList.length > 1 ? ` #${idx + 1}` : ""}
-                      </div>
-                      <div className="gcl-signature-info">
-                        <div className="gcl-signature-name">
-                          {a?.nombre || "Pendiente"}
-                        </div>
-                        <div className="gcl-signature-position">
-                          {a?.cargo || "-"}
-                        </div>
-                      </div>
-                      <div className="gcl-signature-placeholder" />
-                    </div>
-                  ))
-                ) : (
-                  <div className="gcl-signature-card">
-                    <div className="gcl-signature-role">Aprobado por</div>
-                    <div className="gcl-signature-pending">Pendiente</div>
-                  </div>
-                )}
+          {firmadoPor?.solicitado?.firma ? (
+            <SignatureProtegida src={firmadoPor.solicitado.firma} alt="Firma solicitante" width={220} />
+          ) : firmadoPor?.solicitado?.hasFirma ? (
+            <div className="gcl-signed-badge">
+              <span className="gcl-check-icon"></span>
+              Firmado
+            </div>
+          ) : firmadoPor?.canSignSolicitado ? (
+            <div className="gcl-sign-action">
+              <button className="gcl-sign-btn" onClick={() => { setSignatureRole('solicitado'); setSignatureOpen(true); }}>
+                Firmar
+              </button>
+            </div>
+          ) : (
+            <div className="gcl-signature-pending">Pendiente</div>
+          )}
+        </div>
 
-                {/* IMPLEMENTADO */}
-                <div key="implementado" className="gcl-signature-card">
-                  <div className="gcl-signature-role">Implementado por</div>
-                  <div className="gcl-signature-info">
-                    <div className="gcl-signature-name">
-                      {fp.implementado?.nombre || "Pendiente"}
-                    </div>
-                    <div className="gcl-signature-position">
-                      {fp.implementado?.cargo || "-"}
-                    </div>
-                  </div>
-                  <div className="gcl-signature-placeholder" />
-                </div>
+        {/* EVALUADO */}
+        <div key="evaluado" className="gcl-signature-card">
+          <div className="gcl-signature-role">Evaluado por</div>
+          <div className="gcl-signature-info">
+            <div className="gcl-signature-name">{firmadoPor?.evaluado?.nombre || "Pendiente"}</div>
+            <div className="gcl-signature-position">{firmadoPor?.evaluado?.cargo || "-"}</div>
+          </div>
 
-                {/* VALIDADO */}
-                <div key="validado" className="gcl-signature-card">
-                  <div className="gcl-signature-role">Validado por</div>
-                  <div className="gcl-signature-info">
-                    <div className="gcl-signature-name">
-                      {fp.validado?.nombre || "Pendiente"}
-                    </div>
-                    <div className="gcl-signature-position">
-                      {fp.validado?.cargo || "-"}
-                    </div>
-                  </div>
-                  <div className="gcl-signature-placeholder" />
-                </div>
-              </div>
+          {firmadoPor?.evaluado?.firma ? (
+            <SignatureProtegida src={firmadoPor.evaluado.firma} alt="Firma evaluado" width={220} />
+          ) : firmadoPor?.evaluado?.hasFirma ? (
+            <div className="gcl-signed-badge">
+              <span className="gcl-check-icon"></span>
+              Firmado
+            </div>
+          ) : firmadoPor?.canSignEvaluado ? (
+            <div className="gcl-sign-action">
+              <button className="gcl-sign-btn" onClick={() => { setSignatureRole('evaluado'); setSignatureOpen(true); }}>
+                Firmar
+              </button>
+            </div>
+          ) : (
+            <div className="gcl-signature-pending">Pendiente</div>
+          )}
+        </div>
+
+        {/* APROBADOR USUARIO AUTENTICADO */}
+        <div key="aprobador_self" className="gcl-signature-card">
+          <div className="gcl-signature-role">Aprobado por</div>
+          <div className="gcl-signature-info">
+            <div className="gcl-signature-name">
+              {firmadoPor?.aprobadoSelf?.nombre || userNombre || 'Tú'}
+            </div>
+            <div className="gcl-signature-position">
+              {firmadoPor?.aprobadoSelf?.cargo || userCargo || '-'}
             </div>
           </div>
 
+          {firmadoPor?.aprobadoSelf?.firma ? (
+            <SignatureProtegida src={firmadoPor.aprobadoSelf.firma} alt="Tu firma" width={220} />
+          ) : firmadoPor?.aprobadoSelf?.hasFirma ? (
+            <div className="gcl-signed-badge">
+              <span className="gcl-check-icon"></span>
+              Firmado
+            </div>
+          ) : firmadoPor?.canSignAprobador ? (
+            <div className="gcl-sign-action">
+              <button className="gcl-sign-btn" onClick={() => { setSignatureRole('aprobado'); setSignatureOpen(true); }}>
+                Firmar
+              </button>
+            </div>
+          ) : (
+            <div className="gcl-signature-pending">Pendiente</div>
+          )}
+        </div>
+
+        {/* Resumen de otros aprobadores */}
+        <div key="aprobadores_resumen" className="gcl-signature-card gcl-aprobadores-resumen">
+          <div className="gcl-signature-role">Aprobadores</div>
+          <div className="gcl-aprobadores-list">
+            {(firmadoPor?.otrosAprobadoresResumen && firmadoPor.otrosAprobadoresResumen.length > 0) ? (
+              firmadoPor.otrosAprobadoresResumen.map((o, i) => (
+                <div key={i} className="gcl-otro-aprobador">
+                  <div className="gcl-otro-name">{o.nombre}</div>
+                  <div className="gcl-otro-cargo">{o.cargo}</div>
+                  <div className="gcl-otro-status">
+                    {o.hasFirma ? (
+                      <>
+                        <span className="gcl-check-icon"></span>
+                        Firmado
+                      </>
+                    ) : (
+                      "Pendiente"
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="gcl-signature-pending">No hay más aprobadores</div>
+            )}
+          </div>
+        </div>
+
+        {/* IMPLEMENTADO */}
+        <div key="implementado" className="gcl-signature-card">
+          <div className="gcl-signature-role">Implementado por</div>
+          <div className="gcl-signature-info">
+            <div className="gcl-signature-name">{firmadoPor?.implementado?.nombre || "Pendiente"}</div>
+            <div className="gcl-signature-position">{firmadoPor?.implementado?.cargo || "-"}</div>
+          </div>
+
+          {firmadoPor?.implementado?.firma ? (
+            <SignatureProtegida src={firmadoPor.implementado.firma} alt="Firma implementado" width={220} />
+          ) : firmadoPor?.implementado?.hasFirma ? (
+            <div className="gcl-signed-badge">
+              <span className="gcl-check-icon"></span>
+              Firmado
+            </div>
+          ) : firmadoPor?.canSignImplementado ? (
+            <div className="gcl-sign-action">
+              <button className="gcl-sign-btn" onClick={() => { setSignatureRole('implementado'); setSignatureOpen(true); }}>
+                Firmar
+              </button>
+            </div>
+          ) : (
+            <div className="gcl-signature-pending">Pendiente</div>
+          )}
+        </div>
+
+        {/* VALIDADO */}
+        <div key="validado" className="gcl-signature-card">
+          <div className="gcl-signature-role">Validado por</div>
+          <div className="gcl-signature-info">
+            <div className="gcl-signature-name">{firmadoPor?.validado?.nombre || "Pendiente"}</div>
+            <div className="gcl-signature-position">{firmadoPor?.validado?.cargo || "-"}</div>
+          </div>
+
+          {firmadoPor?.validado?.firma ? (
+            <SignatureProtegida src={firmadoPor.validado.firma} alt="Firma validado" width={220} />
+          ) : firmadoPor?.validado?.hasFirma ? (
+            <div className="gcl-signed-badge">
+              <span className="gcl-check-icon"></span>
+              Firmado
+            </div>
+          ) : firmadoPor?.canSignValidado ? (
+            <div className="gcl-sign-action">
+              <button className="gcl-sign-btn" onClick={() => { setSignatureRole('validado'); setSignatureOpen(true); }}>
+                Firmar
+              </button>
+            </div>
+          ) : (
+            <div className="gcl-signature-pending">Pendiente</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+})()}
+          </div>
+
           <div className="gcl-card-footer">
-            <span className="gcl-status">
-              {todasFirmasCompletas ? "Aprobado" : "Pendiente"}
+            <span className={`gcl-status ${item?.estado === 'aprobado' ? 'gcl-status-approved' : 'gcl-status-pending'}`}>
+              {item?.estado === 'aprobado' ? 'Aprobado' : 'Pendiente'}
             </span>
           </div>
         </div>
       </div>
+
+      <SignaturePopup
+        open={signatureOpen}
+        role={signatureRole}
+        onSave={(role, dataURL) => onSaveSignature(role, dataURL)}
+        onClose={() => setSignatureOpen(false)}
+      />
     </div>
   );
 };

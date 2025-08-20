@@ -80,16 +80,78 @@ const obtenerGestionCambios = async (req, res) => {
   }
 };
 
-// Obtener un registro por ID
+// GET /api/gestion-cambio/:id
 const obtenerGestionPorId = async (req, res) => {
   try {
     const { id } = req.params;
+    const userEmail = (req.query.userEmail || req.query.email || '').toString().trim();
+    const userNameQuery = (req.query.userName || req.query.nombre || '').toString().trim();
+
     const gestion = await GestionCambio.findById(id);
     if (!gestion) return res.status(404).json({ error: 'Registro no encontrado' });
-    res.status(200).json(gestion);
+
+    const doc = gestion.toObject();
+    const firmadoPorFiltered = buildFirmadoPorFiltered(doc, userEmail, userNameQuery);
+
+    return res.status(200).json({
+      ...doc,
+      firmadoPor: firmadoPorFiltered
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+const signGestionCambio = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role, email, nombre, cargo, dataURL } = req.body || {};
+    if (!role || !email || !dataURL) {
+      return res.status(400).json({ error: 'Falta role, email o dataURL' });
+    }
+
+    const gestion = await GestionCambio.findById(id);
+    if (!gestion) return res.status(404).json({ error: 'Registro no encontrado' });
+
+    // Normalizar firmadoPor
+    if (!gestion.firmadoPor) gestion.firmadoPor = {};
+    const fp = gestion.firmadoPor;
+
+    if (role === 'aprobado') {
+      fp.aprobado = Array.isArray(fp.aprobado) ? fp.aprobado : (fp.aprobado ? [fp.aprobado] : []);
+      const idx = fp.aprobado.findIndex(a =>
+        a && (
+          (a.email && a.email.toLowerCase() === (email || '').toLowerCase()) ||
+          (a.nombre && a.nombre.toLowerCase() === (nombre || '').toLowerCase())
+        )
+      );
+      const newEntry = { nombre: nombre || '', cargo: cargo || '', email, firma: dataURL, fechaFirma: new Date() };
+      if (idx >= 0) fp.aprobado[idx] = { ...fp.aprobado[idx], ...newEntry };
+      else fp.aprobado.push(newEntry);
+    } else {
+      if (!fp[role] || typeof fp[role] !== 'object') fp[role] = {};
+      fp[role].nombre = nombre || fp[role].nombre || '';
+      fp[role].cargo = cargo || fp[role].cargo || '';
+      fp[role].email = email;
+      fp[role].firma = dataURL;
+      fp[role].fechaFirma = new Date();
+    }
+
+    gestion.firmadoPor = fp;
+    await gestion.save();
+
+    // -> RESPONDER con VISTA FILTRADA para el usuario que firmó
+    const gestionDoc = gestion.toObject();
+    const firmadoPorFiltered = buildFirmadoPorFiltered(gestionDoc, email, nombre);
+
+    return res.status(200).json({
+      ...gestionDoc,
+      firmadoPor: firmadoPorFiltered
+    });
+  } catch (error) {
+    console.error('Error al firmar:', error);
+    return res.status(500).json({ error: 'Error interno al firmar' });
   }
 };
 
@@ -172,42 +234,69 @@ const eliminarGestionCambio = async (req, res) => {
   }
 };
 
+// GET /api/gestion-cambio/resumen
 const obtenerResumenGestiones = async (req, res) => {
   try {
-    // opcionales: limit, skip, sort
-    const limit = parseInt(req.query.limit, 10) || 0; // 0 => sin límite
+    // paginado / sorting opcionales
+    const limit = parseInt(req.query.limit, 10) || 0;
     const skip = parseInt(req.query.skip, 10) || 0;
-    const sortDir = req.query.sort === 'asc' ? 1 : -1; // por fechaSolicitud
+    const sortDir = req.query.sort === 'asc' ? 1 : -1;
 
-    // filtro base
+    // estado puede venir como ?estado=pendiente,enviado o repeated params
     const filtro = {};
-
-    // estado puede llegar como: ?estado=pendiente  ó ?estado=pendiente,enviado ó ?estado=pendiente&estado=enviado
     if (req.query.estado) {
       let estados = req.query.estado;
-      // si es array (multiple params) o string con comas -> normalizar a array de strings
-      if (Array.isArray(estados)) {
-        estados = estados.flatMap(s => String(s).split(','));
-      } else {
-        estados = String(estados).split(',');
-      }
+      if (Array.isArray(estados)) estados = estados.flatMap(s => String(s).split(','));
+      else estados = String(estados).split(',');
       estados = estados.map(s => s.trim()).filter(Boolean);
-      if (estados.length > 0) filtro.estado = { $in: estados };
+      if (estados.length) filtro.estado = { $in: estados };
     }
 
-    // Proyección: solo campos requeridos (+ estado para mostrar en la lista)
+    // obtener info del usuario (puede venir por query o por req.user si autenticas con middleware)
+    const tipoUsuarioRaw = (req.query.tipoUsuario || (req.user && req.user.TipoUsuario) || req.query.tipo || '').toString().toLowerCase().trim();
+    const userNameRaw = (req.query.userName || req.query.nombre || (req.user && (req.user.nombre || req.user.Nombre)) || '').toString().trim();
+
+    // helper para escapar regex
+    const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // si no es administrador aplicar filtro por nombre del usuario
+    if (tipoUsuarioRaw !== 'administrador') {
+      // si no nos pasan el nombre del usuario, devolvemos 400 o cero resultados (elección de tu app)
+      if (!userNameRaw) {
+        return res.status(400).json({ error: 'Se requiere userName para usuarios no administradores' });
+      }
+
+      const escaped = escapeRegExp(userNameRaw);
+      const regex = new RegExp(escaped, 'i'); // case-insensitive, match parcial
+
+      // campos a buscar (PersonaSchema y SolicitanteFirmaSchema)
+      const orConditions = [
+        { 'firmadoPor.solicitado.nombre': { $regex: regex } },
+        { 'firmadoPor.evaluado.nombre': { $regex: regex } },
+        { 'firmadoPor.implementado.nombre': { $regex: regex } },
+        { 'firmadoPor.validado.nombre': { $regex: regex } },
+        { 'firmadoPor.aprobado.nombre': { $regex: regex } }, // busca en array aprobado.nombre
+        { 'solicitante': { $regex: regex } } // en caso uses solicitante como string top-level
+      ];
+
+      // unir con filtro existente (estado)
+      filtro.$or = orConditions;
+    }
+
+    // Proyección: solo campos requeridos en el resumen
     const gestiones = await GestionCambio.find(filtro)
       .select('_id solicitante liderProyecto fechaSolicitud estado')
       .sort({ fechaSolicitud: sortDir })
       .skip(skip)
       .limit(limit);
 
-    res.status(200).json(gestiones);
+    return res.status(200).json(gestiones);
   } catch (error) {
     console.error('Error al obtener resumen de gestiones:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    return res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
+
 
 
 const enviarGestionCambio = async (req, res) => {
@@ -266,6 +355,112 @@ const enviarGestionCambio = async (req, res) => {
   }
 };
 
+//Helper
+// helpers (encápsular lógica de filtrado)
+function normalize(s) {
+  return (s === null || s === undefined) ? '' : String(s).toLowerCase().trim();
+}
+function matchesUser(candidateName = '', candidateEmail = '', userEmail = '', userNameQuery = '') {
+  const cName = normalize(candidateName);
+  const cEmail = normalize(candidateEmail);
+  if (userEmail && cEmail && cEmail === userEmail) return true;
+  if (userNameQuery && cName && cName === userNameQuery) return true;
+  if (userNameQuery && cName && (cName.includes(userNameQuery) || userNameQuery.includes(cName))) return true;
+  return false;
+}
+
+/**
+ * Construye el firmadoPor filtrado para devolver al cliente.
+ * - muestra firma base64 solo si pertenece al usuario (match por email/nombre)
+ * - para los demás devuelve nombre/cargo/hasFirma (no base64)
+ */
+function buildFirmadoPorFiltered(doc, userEmailRaw = '', userNameRaw = '') {
+  const userEmail = normalize(userEmailRaw);
+  const userNameQuery = normalize(userNameRaw);
+
+  const fp = (doc && doc.firmadoPor) ? doc.firmadoPor : {};
+  const aprobado = Array.isArray(fp.aprobado) ? fp.aprobado : (fp.aprobado ? [fp.aprobado] : []);
+
+  // aprobadores
+  let aprobadoSelf = null;
+  const otros = [];
+  aprobado.forEach(a => {
+    if (!a) return;
+    const aEmail = a.email || a.correo || '';
+    const aNombre = a.nombre || '';
+    const aHasFirma = !!a.firma;
+    if (matchesUser(aNombre, aEmail, userEmail, userNameQuery)) {
+      aprobadoSelf = { ...a }; // signer match -> conserva firma si existe
+    } else {
+      otros.push({ nombre: a.nombre || '', cargo: a.cargo || '', hasFirma: aHasFirma });
+    }
+  });
+
+  // roles únicos
+  const solicitadoObj = fp.solicitado || {};
+  const evaluadoObj = fp.evaluado || {};
+  const implementadoObj = fp.implementado || {};
+  const validadoObj = fp.validado || {};
+
+  const solicitadoIsSelf = matchesUser(solicitadoObj.nombre, solicitadoObj.email || solicitadoObj.correo, userEmail, userNameQuery);
+  const evaluadoIsSelf   = matchesUser(evaluadoObj.nombre, evaluadoObj.email || evaluadoObj.correo, userEmail, userNameQuery);
+  const implementadoIsSelf = matchesUser(implementadoObj.nombre, implementadoObj.email || implementadoObj.correo, userEmail, userNameQuery);
+  const validadoIsSelf   = matchesUser(validadoObj.nombre, validadoObj.email || validadoObj.correo, userEmail, userNameQuery);
+
+  const solicitadoHasFirma = !!(solicitadoObj && solicitadoObj.firma);
+  const evaluadoHasFirma = !!(evaluadoObj && evaluadoObj.firma);
+  const implementadoHasFirma = !!(implementadoObj && implementadoObj.firma);
+  const validadoHasFirma = !!(validadoObj && validadoObj.firma);
+
+  const solicitadoReturn = {
+    nombre: solicitadoObj.nombre || '',
+    cargo: solicitadoObj.cargo || '',
+    hasFirma: solicitadoHasFirma,
+    ...(solicitadoIsSelf ? { firma: solicitadoObj.firma || null } : {})
+  };
+  const evaluadoReturn = {
+    nombre: evaluadoObj.nombre || '',
+    cargo: evaluadoObj.cargo || '',
+    hasFirma: evaluadoHasFirma,
+    ...(evaluadoIsSelf ? { firma: evaluadoObj.firma || null } : {})
+  };
+  const implementadoReturn = {
+    nombre: implementadoObj.nombre || '',
+    cargo: implementadoObj.cargo || '',
+    hasFirma: implementadoHasFirma,
+    ...(implementadoIsSelf ? { firma: implementadoObj.firma || null } : {})
+  };
+  const validadoReturn = {
+    nombre: validadoObj.nombre || '',
+    cargo: validadoObj.cargo || '',
+    hasFirma: validadoHasFirma,
+    ...(validadoIsSelf ? { firma: validadoObj.firma || null } : {})
+  };
+
+  return {
+    solicitado: solicitadoReturn,
+    evaluado: evaluadoReturn,
+    implementado: implementadoReturn,
+    validado: validadoReturn,
+
+    aprobadoSelf: aprobadoSelf ? {
+      nombre: aprobadoSelf.nombre || '',
+      cargo: aprobadoSelf.cargo || '',
+      hasFirma: !!aprobadoSelf.firma,
+      ...(aprobadoSelf.firma ? { firma: aprobadoSelf.firma } : {})
+    } : null,
+
+    otrosAprobadoresCount: otros.length,
+    otrosAprobadoresResumen: otros.slice(0, 50),
+
+    canSignSolicitado: solicitadoIsSelf && !solicitadoHasFirma,
+    canSignEvaluado: evaluadoIsSelf && !evaluadoHasFirma,
+    canSignImplementado: implementadoIsSelf && !implementadoHasFirma,
+    canSignValidado: validadoIsSelf && !validadoHasFirma,
+    canSignAprobador: !!aprobadoSelf && !(aprobadoSelf.firma)
+  };
+}
+
 module.exports = {
   crearGestionCambio,
   obtenerGestionCambios,
@@ -273,5 +468,6 @@ module.exports = {
   actualizarGestionCambio,
   eliminarGestionCambio,
   obtenerResumenGestiones,
-  enviarGestionCambio
+  enviarGestionCambio,
+  signGestionCambio
 };

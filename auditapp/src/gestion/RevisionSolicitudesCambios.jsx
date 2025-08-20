@@ -112,7 +112,6 @@ const RevisionSolicitudesCambios = () => {
                 </div>
                 <div style={{ marginLeft: 12, textAlign: 'right' }}>
                   <div style={{ fontSize: 12, color: '#666' }}>{label}</div>
-                  <div style={{ fontSize: 12, color: '#999' }}>ID: {s._id}</div>
                   <div style={{ fontSize: 12, color: '#333', marginTop: 6 }}><strong>Estado:</strong> {s.estado || '-'}</div>
                 </div>
               </div>

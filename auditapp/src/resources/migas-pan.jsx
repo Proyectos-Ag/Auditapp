@@ -37,6 +37,7 @@ const MigasPan = () => {
     '/admin': 'Administrador',
     '/auditor': 'Auditor',
     '/auditado': 'Auditado',
+    '/gestion': 'Gestión de Cambios',
     '/datos': 'Datos',
     '/programa': 'Programas',
     '/usuarios': 'Usuarios',
@@ -73,6 +74,7 @@ const MigasPan = () => {
     '/diagramas': 'Generar Ishikawa',
     '/concentradon': 'Concentrado',
     '/saefty-goals2': 'Safety Goals',
+    '/vista-solictudes': 'Solicitudes de Cambio',
   };
 
   const getDynamicBreadcrumbName = (path) => {
@@ -115,7 +117,7 @@ const MigasPan = () => {
 
   const getBreadcrumbLabel = (path, isLast) => {
     const customName = breadcrumbNameMap[path] || getDynamicBreadcrumbName(path) || decodeURIComponent(path);
-    const showHomeIcon = ['/admin', '/auditor', '/auditado'].includes(path);
+    const showHomeIcon = ['/admin', '/auditor', '/auditado','/gestion'].includes(path);
 
     return (
       <StyledBreadcrumb

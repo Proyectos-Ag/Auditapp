@@ -2,8 +2,10 @@ import React, { useEffect, useRef } from "react";
 import BotonesRol from "../../resources/botones-rol";
 import './css/Home.css';
 import videoFile from '../../auditado/Components/assets/img/UpscaleVideo_1_20240628.webm';
+import ciclo from "../../assets/img/ciclo.png";
 import { useNavigate } from "react-router-dom";
 import Event from "../../resources/event";
+import { CircleNotifications } from "@mui/icons-material";
 
 const Home = () => {
   const videoRef = useRef(null);
@@ -41,12 +43,9 @@ const Home = () => {
     <h1>Gestión de Cambios</h1>
     <div className="contenedor-home">
       <div className="card-home" onClick={() => navigate("/vista-solictudes")}>
-        Generar Solicitud de Cambio
-        <br/><br/>
-      </div>
-      <div className="card-home" onClick={() => navigate("/vista-solictudes-rev")}>
-       Solicitudes de Cambio
-       <br/><br/>
+        Solicitudes de Cambio
+        <br/>
+        <img src={ciclo} alt="pez" className='imagen-mini' />
       </div>
     </div>
     </div>
