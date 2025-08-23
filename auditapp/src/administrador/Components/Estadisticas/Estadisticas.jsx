@@ -109,11 +109,16 @@ const Estadisticas = () => {
     ).length;
   };
 
-  // Nuevo useEffect para calcular hallazgos revisados por año
-  useEffect(() => {
+// Nuevo useEffect para calcular hallazgos revisados por año
+useEffect(() => {
   const fetchReviewed = async () => {
+    // Verificar si realmente hay años para procesar
+    const years = Object.keys(filteredAuditsByYear);
+    if (years.length === 0) return;
+    
     const reviewedData = {};
-    for (const year of Object.keys(filteredAuditsByYear)) {
+    
+    for (const year of years) {
       const yearAudits = filteredAuditsByYear[year] || [];
       const yearAuditIds = yearAudits.map(audit => audit._id);
 
@@ -125,18 +130,19 @@ const Estadisticas = () => {
               ishikawa.estado === 'Aprobado' ||
               ishikawa.estado === 'Rechazados' ||
               ishikawa.estado === 'Pendiente') &&
-            yearAuditIds.includes(ishikawa.idRep) // <-- CAMBIA idAuditoria por idRep
+            yearAuditIds.includes(ishikawa.idRep) 
         );
         reviewedData[year] = reviewed.length;
       } catch (error) {
+        console.error('Error fetching ishikawa data:', error);
         reviewedData[year] = 0;
       }
     }
     setReviewedByYear(reviewedData);
   };
+
   fetchReviewed();
-  // eslint-disable-next-line
-}, [filteredAuditsByYear]);
+}, [JSON.stringify(filteredAuditsByYear)]); // Usar JSON.stringify para comparación profunda
 
   const criteriaCountByYear = Object.keys(filteredAuditsByYear).reduce((acc, year) => {
     const criteriaCount = filteredAuditsByYear[year].reduce((countAcc, audit) => {
@@ -216,6 +222,7 @@ const Estadisticas = () => {
     });
     return auditsGroupedByMonth;
   };
+  
 
   const auditsByMonthAndYear = Object.keys(filteredAuditsByYear).reduce((acc, year) => {
     acc[year] = auditsByMonth(filteredAuditsByYear[year]);
@@ -947,4 +954,3 @@ const Estadisticas = () => {
 };
 
 export default Estadisticas;
-
