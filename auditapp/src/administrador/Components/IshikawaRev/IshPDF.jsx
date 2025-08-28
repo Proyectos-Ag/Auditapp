@@ -796,7 +796,6 @@ const afectText = [
   `${id || ''}`,
   `${programaNombreLimpio}`
 ].filter(Boolean).join(' | ');
-console.log('ishikawa en PDF:', ishikawa);
 
 
       doc.setFont(BASE_FONT, 'normal').setFontSize(TEXT_SIZE).setTextColor(0);
@@ -813,20 +812,22 @@ const afectLines = doc.splitTextToSize(afectText, pageWidth - margin * 2);
       yOffset += afectacionHeight + 30;
 
       // --- MARGEN EXTRA para evitar empalme ---
-      yOffset += 115; // Puedes ajustar este valor si quieres más o menos espacio
+      yOffset += 125; // Puedes ajustar este valor si quieres más o menos espacio
 
 
 // <- AJUSTE PRINCIPAL: reducir padding previo para colocar diagrama como en la versión buena
 const PRE_DIAGRAM_PADDING = 10; // reducido respecto al valor anterior (185)
 yOffset += PRE_DIAGRAM_PADDING;
       const espacioDisponible = pageHeight - yOffset - margin - 1; // margen de seguridad
-      const alturaDiagramaBase = 280; // altura base estimada a escala 1.0
+      const alturaDiagramaBase = 285; // altura base estimada a escala 1.0
 
       // calcular escala automática si es necesario
       let escala = 1.0;
       if (espacioDisponible < alturaDiagramaBase) {
-        escala = Math.max(0.6, espacioDisponible / alturaDiagramaBase);
+        // Permitir reducir más; prueba 0.45 (antes 0.6)
+        escala = Math.max(0.45, espacioDisponible / alturaDiagramaBase);
       }
+
 
       // <- AJUSTE PRINCIPAL: reducir padding previo para colocar diagrama como en la versión buena
       yOffset += PRE_DIAGRAM_PADDING;
@@ -866,7 +867,7 @@ yOffset += PRE_DIAGRAM_PADDING;
       );
 
       // Avanzar yOffset usando la medida exacta (añade pequeño padding)
-      yOffset += medidaDiagrama + 80;
+      yOffset += medidaDiagrama + 90;
 
       // --- PARTICIPANTES: ajustado para coincidir con la versión correcta (mismo estilo/posición) ---
       if (participantes && participantes.length > 0) {
@@ -879,37 +880,60 @@ yOffset += PRE_DIAGRAM_PADDING;
             iconData = null;
           }
         }
+// --- Ajuste para reducir espacio entre renglones de PARTICIPANTES ---
+const namesText = participantes.join(', ');
+const iconWidthPt = 14;
+const textStartX = margin + iconWidthPt;
 
-        const iconWidthPt = 14; // tamaño reducido del icono (pt) - coincide con la versión buena
-        const gap = 8; // espacio entre icono y texto
-        const textStartX = margin + iconWidthPt + gap;
-        // AJUSTE: respetar margen al calcular ancho disponible para participantes
-        const textAreaWidth = pageWidth - margin - textStartX - 10; // 10pt padding extra
+// ancho máximo disponible respetando el MARGEN derecho del documento
+const textAreaWidth = Math.max(0, pageWidth - 1 );
 
-        const namesText = participantes.join(', ');
-        const nameLines = doc.splitTextToSize(namesText, textAreaWidth);
+// dividir en líneas que caben en textAreaWidth
+const nameLines = doc.splitTextToSize(namesText, textAreaWidth);
 
-        const lineHeightPt = 14; // altura por línea en pt
-        const textHeight = nameLines.length * lineHeightPt;
-        const iconHeightPt = iconWidthPt; // tratamos icono como cuadrado
-        const blockHeight = Math.max(textHeight + 6, iconHeightPt); // padding visual mínimo
+// CONTROL DE ESPACIADO: reduce estos valores para acercar renglones
+const fontSizePt = 8;               // tamaño de fuente usado para participantes
+const lineHeightPt = 8;             // altura entre renglones (menor = renglones más juntos)
+const paddingVert = 4;               // padding vertical dentro del bloque
+const iconHeightPt = iconWidthPt;
 
-        // dibujar icono (si se capturó)
-        if (iconData) {
-          try {
-            doc.addImage(iconData, 'PNG', margin, yOffset + (blockHeight - iconHeightPt) / 2, iconWidthPt, iconHeightPt);
-          } catch (e) {
-            // fallback silencioso si falla la imagen
-          }
-        }
+let remaining = [...nameLines];
+let firstChunk = true;
 
-        // escribir nombres junto al icono (siempre color negro)
-        doc.setFont(BASE_FONT, 'normal').setFontSize(11);
-        doc.setTextColor(0, 0, 0);
-        doc.text(nameLines, textStartX, yOffset + (lineHeightPt * 0.9)); // ligera corrección vertical
+while (remaining.length > 0) {
+  // calcular cuántas líneas caben en la página actual (respetando margen inferior)
+  const availableHeight = pageHeight - margin - yOffset - paddingVert;
+  // no crear página nueva: si no entra ninguna línea, forzamos 1 y la colocamos en la misma página
+  let maxLinesThatFit = Math.floor(availableHeight / lineHeightPt);
+  if (maxLinesThatFit <= 0) maxLinesThatFit = 1;
 
-        // avanzar cursor vertical sin afectar lo siguiente
-        yOffset += blockHeight + 12;
+  const chunk = remaining.splice(0, maxLinesThatFit);
+  const chunkHeight = chunk.length * lineHeightPt;
+  const blockHeight = Math.max(chunkHeight + paddingVert, iconHeightPt);
+
+  // dibujar icono solo en el primer bloque (si se capturó)
+  if (firstChunk && iconData) {
+    try {
+      doc.addImage(iconData, 'PNG', margin, yOffset + (blockHeight - iconHeightPt) / 2, iconWidthPt, iconHeightPt);
+    } catch (e) {
+      /* fallback silencioso */
+    }
+  }
+
+  // escribir PARTICIPANTES línea a línea con control de espaciado
+  doc.setFont(BASE_FONT, 'normal').setFontSize(fontSizePt);
+  doc.setTextColor(0, 0, 0);
+  chunk.forEach((ln, idx) => {
+    // la posición Y inicia en yOffset + smallOffset; luego sumamos idx * lineHeightPt
+    const smallOffset = fontSizePt * 0.75; // corrección vertical fina
+    doc.text(ln, textStartX, yOffset + smallOffset + idx * lineHeightPt);
+  });
+
+  // avanzar cursor vertical (reduce el gap extra si quieres menos separación)
+  yOffset += blockHeight + 1; // <- aquí reduje el +12 a +6 para menos espacio vertical entre bloques
+  firstChunk = false;
+}
+
       }
 
       // --- Solo crear nueva página si no queda espacio suficiente para las secciones textuales ---
