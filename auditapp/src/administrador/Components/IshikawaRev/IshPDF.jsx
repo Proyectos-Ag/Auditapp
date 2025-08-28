@@ -462,7 +462,8 @@ const IshPDF = forwardRef(({
 
           // AQUÍ NO JUSTIFICAMOS: texto alineado a la izquierda para las causas
           doc.setTextColor(0, 0, 0);
-          doc.text(line, textStartX, textY, { align: 'right' });
+          const rightX = rectX + rectW - pad; // coordenada para el borde derecho interno
+          doc.text(line, rightX, textY, { align: 'right' });
         });
       });
     });
@@ -886,43 +887,29 @@ yOffset += PRE_DIAGRAM_PADDING;
         const textAreaWidth = pageWidth - margin - textStartX - 10; // 10pt padding extra
 
         const namesText = participantes.join(', ');
+        const nameLines = doc.splitTextToSize(namesText, textAreaWidth);
 
-// helper: ajustar/truncar una sola línea para que quepa en maxW (añade '...' si truncado)
-function fitSingleLine(doc, text, maxW) {
-  if (typeof doc.getTextWidth !== 'function') return text;
-  if (doc.getTextWidth(text) <= maxW) return text;
-  const ellipsis = '...';
-  let t = text;
-  // recortar carácter a carácter hasta que quepa con '...'
-  while (t.length > 0 && doc.getTextWidth(t + ellipsis) > maxW) {
-    t = t.slice(0, -1);
-  }
-  return t.length === 0 ? ellipsis : t + (t.length < text.length ? ellipsis : '');
-}
+        const lineHeightPt = 14; // altura por línea en pt
+        const textHeight = nameLines.length * lineHeightPt;
+        const iconHeightPt = iconWidthPt; // tratamos icono como cuadrado
+        const blockHeight = Math.max(textHeight + 6, iconHeightPt); // padding visual mínimo
 
-const singleLine = fitSingleLine(doc, namesText, textAreaWidth);
+        // dibujar icono (si se capturó)
+        if (iconData) {
+          try {
+            doc.addImage(iconData, 'PNG', margin, yOffset + (blockHeight - iconHeightPt) / 2, iconWidthPt, iconHeightPt);
+          } catch (e) {
+            // fallback silencioso si falla la imagen
+          }
+        }
 
-const lineHeightPt = 14; // altura por línea en pt (usamos 1 línea)
-const textHeight = lineHeightPt;
-const iconHeightPt = iconWidthPt; // tratamos icono como cuadrado
-const blockHeight = Math.max(textHeight + 6, iconHeightPt); // padding visual mínimo
+        // escribir nombres junto al icono (siempre color negro)
+        doc.setFont(BASE_FONT, 'normal').setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.text(nameLines, textStartX, yOffset + (lineHeightPt * 0.9)); // ligera corrección vertical
 
-// dibujar icono (si se capturó)
-if (iconData) {
-  try {
-    doc.addImage(iconData, 'PNG', margin, yOffset + (blockHeight - iconHeightPt) / 2, iconWidthPt, iconHeightPt);
-  } catch (e) {
-    // fallback silencioso si falla la imagen
-  }
-}
-
-// escribir PARTICIPANTES como UNA SOLA LÍNEA (truncada si es necesario) - siempre en negro
-doc.setFont(BASE_FONT, 'normal').setFontSize(11);
-doc.setTextColor(0, 0, 0);
-doc.text(singleLine, textStartX, yOffset + (lineHeightPt * 0.9));
-
-// avanzar cursor vertical sin afectar lo siguiente
-yOffset += blockHeight + 12;
+        // avanzar cursor vertical sin afectar lo siguiente
+        yOffset += blockHeight + 12;
       }
 
       // --- Solo crear nueva página si no queda espacio suficiente para las secciones textuales ---
