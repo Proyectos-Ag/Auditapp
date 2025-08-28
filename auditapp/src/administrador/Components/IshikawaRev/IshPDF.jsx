@@ -6,9 +6,11 @@ import NewIshikawaFin from '../../../ishikawa-vacio/components/Ishikawa/NewIshik
 import './css/IshikawaRev.css';
 import axios from 'axios';
 import Button from '@mui/material/Button';
-import Logo from "../assets/img/logoAguida.png";
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import GroupIcon from '@mui/icons-material/Group';
+
+// IMPORT CAMBIADO: ahora usamos la URL pública de Firebase en lugar de la carpeta assets
+const Logo = 'https://firebasestorage.googleapis.com/v0/b/imagenes-auditapp.appspot.com/o/assets%2FlogoAguida.png?alt=media&token=8e2f91d8-78cf-4a0a-888b-64d2e3e26fb1';
 
 // Función auxiliar para procesar responsable
 const getResponsable = (responsable) => {
@@ -167,7 +169,7 @@ const IshPDF = forwardRef(({
     });
   };
 
-  // --- drawIshikawaDiagram: (mantengo tu lógica tal cual)
+  // --- drawIshikawaDiagram: (mantengo tu lógica tal cual, salvo NO JUSTIFICAR causas) ---
   const drawIshikawaDiagram = (doc, yOffset, diagrama, problema, pageWidth, pageHeight, margin, causaTexto = '', scale = 1, measureOnly = false) => {
     const lineColor  = '#179e6a';
     const centerY    = yOffset + 20;
@@ -187,7 +189,7 @@ const IshPDF = forwardRef(({
     const headSize    = baseHeadSize * scale;
     const spineLength = baseSpineLength * scale;
 
-    // --- NUEVO: tamaño de fuente y helper para justificar --- 
+    // --- NUEVO: tamaño de fuente y helper para justificar ---
     const causeFontSize = Math.max(8, Math.round(10 * scale)); // tamaño de fuente para causas
     const causeLineHeight = Math.round(causeFontSize * 1.25);   // altura base de línea (ligeramente mayor)
     const causeLineSpacing = 1.25; // factor para separar renglones (1.0 = sin separación extra)
@@ -396,7 +398,7 @@ const IshPDF = forwardRef(({
         doc.setLineDashPattern([], 0)
            .setFont('helvetica','normal')
            .setFontSize(causeFontSize)
-           .setTextColor(0);
+           .setTextColor(0, 0, 0); // asegurar negro para causas
 
         const desiredMax = Math.round(spineLength * 0.80); // más ancho por defecto
         const pad = Math.max(4, 6 * scale); // padding dentro del rectángulo
@@ -415,6 +417,7 @@ const IshPDF = forwardRef(({
         const causeLower = causeStr.toLowerCase();
         const isRootCause = causaRaices.length ? causaRaices.some(r => causeLower.includes(r)) : false;
 
+        // NOTA IMPORTANTE: AQUÍ YA NO JUSTIFICAMOS LAS CAUSAS (petición explícita)
         const lines = doc.splitTextToSize(cause, maxTextW);
 
         lines.forEach((line, ii) => {
@@ -456,7 +459,10 @@ const IshPDF = forwardRef(({
 
           const innerMaxWidth = rectW - pad * 2;
           const textY = rectY + rectH * 0.6;
-          drawJustifiedText(doc, line, textStartX, textY, innerMaxWidth);
+
+          // AQUÍ NO JUSTIFICAMOS: texto alineado a la izquierda para las causas
+          doc.setTextColor(0, 0, 0);
+          doc.text(line, textStartX, textY, { align: 'left' });
         });
       });
     });
@@ -703,17 +709,25 @@ const IshPDF = forwardRef(({
 
         console.log('Informacion de ishikawa:', ishikawa)
 
-      // Helper para pintar las zonas de margen en verde claro (opcional)
-      const drawMarginGuides = (doc, pageWidth, pageHeight, margin, color = '#39eb80') => {
-        doc.setFillColor(color);
-        doc.rect(0, 0, margin, pageHeight, 'F');
-        doc.rect(pageWidth - margin, 0, margin, pageHeight, 'F');
-        doc.rect(margin, 0, pageWidth - 2 * margin, margin, 'F');
-        doc.rect(margin, pageHeight - margin, pageWidth - 2 * margin, margin, 'F');
-        doc.setFillColor(255, 255, 255);
-      };
-
-      try { doc.addImage(Logo, 'PNG', margin, yOffset, 100, 40); } catch (e) { /* ignore */ }
+      // Intentar cargar el logo desde la URL pública (Firebase) y añadirlo al PDF.
+      try {
+        const logoImg = new Image();
+        logoImg.crossOrigin = 'Anonymous';
+        await new Promise((resolve, reject) => {
+          logoImg.onload = resolve;
+          logoImg.onerror = reject;
+          logoImg.src = Logo;
+        });
+        const canvasLogo = document.createElement('canvas');
+        canvasLogo.width = logoImg.width;
+        canvasLogo.height = logoImg.height;
+        const ctx = canvasLogo.getContext('2d');
+        ctx.drawImage(logoImg, 0, 0);
+        const logoData = canvasLogo.toDataURL('image/png');
+        doc.addImage(logoData, 'PNG', margin, yOffset, 100, 40);
+      } catch (e) {
+        // fallback silencioso si no se puede cargar
+      }
 
       doc.setFont(BASE_FONT,'normal').setFontSize(10).setTextColor(0)
         .text('GCF015', pageWidth - margin, yOffset + 5, { align: 'right' });
@@ -732,7 +746,8 @@ doc.setFont(BASE_FONT, 'bold').setFontSize(LABEL_SIZE).setTextColor(0)
 
 // Mantener exactamente el ancho/posición que tenías en la versión anterior
 const problemaStartX = 140; // igual que la versión que quieres conservar
-const problemaMaxW = pageWidth - 180; // igual que antes
+// AJUSTE: respetar margen para evitar choque con orilla
+const problemaMaxW = pageWidth - margin - problemaStartX - 10;
 
 // Pre-calculamos las líneas para conservar la misma altura vertical (no alterar yOffset)
 const problemaLines = doc.splitTextToSize((ishikawa.problema || '').toString(), problemaMaxW);
@@ -789,7 +804,7 @@ console.log('ishikawa en PDF:', ishikawa);
       yOffset = drawParagraphGlobal(doc, afectText || afectText, afectStartX, yOffset, afectMaxW, TEXT_SIZE, PAGE_LINE_SPACING) - 30;
 
 
-// Pre-calculamos líneas para conservar la altura vertical original
+      // Pre-calculamos líneas para conservar la altura vertical original
 const afectLines = doc.splitTextToSize(afectText, pageWidth - margin * 2);
         
       // Calcular altura ocupada por la afectación
@@ -867,7 +882,8 @@ yOffset += PRE_DIAGRAM_PADDING;
         const iconWidthPt = 14; // tamaño reducido del icono (pt) - coincide con la versión buena
         const gap = 8; // espacio entre icono y texto
         const textStartX = margin + iconWidthPt + gap;
-        const textAreaWidth = pageWidth - margin - textStartX; // ancho disponible para nombres
+        // AJUSTE: respetar margen al calcular ancho disponible para participantes
+        const textAreaWidth = pageWidth - margin - textStartX - 10; // 10pt padding extra
 
         const namesText = participantes.join(', ');
         const nameLines = doc.splitTextToSize(namesText, textAreaWidth);
@@ -886,8 +902,9 @@ yOffset += PRE_DIAGRAM_PADDING;
           }
         }
 
-        // escribir nombres junto al icono
+        // escribir nombres junto al icono (siempre color negro)
         doc.setFont(BASE_FONT, 'normal').setFontSize(11);
+        doc.setTextColor(0, 0, 0);
         doc.text(nameLines, textStartX, yOffset + (lineHeightPt * 0.9)); // ligera corrección vertical
 
         // avanzar cursor vertical sin afectar lo siguiente

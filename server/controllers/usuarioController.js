@@ -186,20 +186,24 @@ const actualizarFoto = async (req, res) => {
   }
 };
 
-// Devuelve un array con TODOS los nombres (puede contener duplicados si existen)
-const obtenerNombresUsuarios = async (req, res) => {
+const obtenerDatosUsuarios = async (req, res) => {
   try {
-    // obtenemos solo el campo Nombre y evitamos traer _id u otros campos
-    const docs = await Usuarios.find().select('Nombre -_id').lean();
-    // transformamos a array de strings
-    const nombres = docs.map(d => d.Nombre);
-    return res.json(nombres);
+    // obtenemos los campos deseados y evitamos traer _id
+    const docs = await Usuarios.find().select('Nombre Puesto Correo -_id').lean();
+
+    // transformamos a array de objetos con los tres campos
+    const datos = docs.map(d => ({
+      Nombre: d.Nombre,
+      Puesto: d.Puesto,
+      Correo: d.Correo
+    }));
+
+    return res.json(datos);
   } catch (error) {
-    console.error('Error al obtener los nombres de usuarios:', error);
+    console.error('Error al obtener los datos de usuarios:', error);
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
-
 
 module.exports = {
   registroUsuario,
@@ -211,5 +215,5 @@ module.exports = {
   cambiarPassword,
   searchUsuarios,
   actualizarFoto,
-  obtenerNombresUsuarios
+  obtenerDatosUsuarios
 };

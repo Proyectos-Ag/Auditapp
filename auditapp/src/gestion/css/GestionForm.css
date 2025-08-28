@@ -296,3 +296,156 @@
 
 .alert-missing-list { margin:6px 0 0 18px; padding:0; color:#333; }
 .alert-missing-list li { margin-bottom:4px; font-size:13px; }
+
+/* Estilos específicos para pantallas pequeñas */
+
+/* Grid para las cards: 1 col en móvil, 2 en pantallas grandes */
+.riesgo-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+/* dos columnas en >= 992px (laptop/desktop) */
+@media (min-width: 992px) {
+  .riesgo-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Card layout */
+.riesgo-card {
+  background: #ffffff;
+  border: 1px solid rgba(34,34,34,0.06);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 6px 18px rgba(20,30,40,0.04);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.riesgo-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(20,30,40,0.06);
+}
+
+.riesgo-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 12px;
+}
+
+.riesgo-pill {
+  display: inline-block;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f1f7ff;
+  color: #0b66ff;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.riesgo-title {
+  margin: 0;
+  font-size: 16px;
+  color: #213547;
+  font-weight: 700;
+}
+
+/* acciones header */
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(16, 24, 40, 0.06);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* cuerpo colapsable */
+.riesgo-card-body {
+  display: block;
+  margin-top: 6px;
+  transition: max-height 0.2s ease, opacity 0.2s ease;
+  overflow: hidden;
+  max-height: 10000px;
+}
+
+/* layout helpers */
+.grid-2-cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 680px) {
+  .grid-2-cols { grid-template-columns: repeat(2, 1fr); }
+}
+
+.grid-3-cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 992px) {
+  .grid-3-cols { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+/* compact field spacing */
+.form-group.compact { margin-bottom: 8px; }
+.form-group { margin-bottom: 12px; }
+
+.form-group label { font-weight: 600; font-size: 13px; color: #213547; margin-bottom: 6px; display:block; }
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e6eef6;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-group textarea { min-height: 56px; resize: vertical; }
+
+/* involucrado block */
+.involucrado-block {
+  border-left: 3px solid #eef2f8;
+  padding-left: 12px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background: #fbfdff;
+  border-radius: 8px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* checkbox inline style */
+.inline-checkbox {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+/* checkbox group full width for readability */
+.checkbox-group { display:flex; flex-direction:column; gap:8px; }
+
+/* helper muted text */
+.muted { color: #6b7280; font-size: 13px; }
+
+.checkbox-grid .inline-checkbox { padding: 6px 8px; border-radius: 4px; background: #fafafa; }
+.involucrado-subcard { background: #fff; }
+
+
+/* small responsive tweaks */
+@media (min-width: 1280px) {
+  .riesgo-card { padding: 18px; }
+  .riesgo-title { font-size: 17px; }
+}
+
+

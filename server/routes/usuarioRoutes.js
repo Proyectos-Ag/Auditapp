@@ -8,7 +8,7 @@ router.post('/', usuariosController.registroUsuario);
 // Ruta para obtener todos los usuarios (GET)
 router.get('/', usuariosController.obtenerUsuarios);
 
-router.get('/nombres', usuariosController.obtenerNombresUsuarios);
+router.get('/nombres', usuariosController.obtenerDatosUsuarios);
 
 router.get('/search', usuariosController.searchUsuarios);
 

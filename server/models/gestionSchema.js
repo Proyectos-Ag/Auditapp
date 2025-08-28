@@ -1,16 +1,13 @@
+// models/gestionSchema.js
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-const PersonaSchema = new Schema({
+const FirmaSchema = new Schema({
   nombre: { type: String, default: '' },
   cargo: { type: String, default: '' },
-  firma: { type: String, default: '' }
-}, { _id: false });
-
-const SolicitanteFirmaSchema = new Schema({
-  nombre: { type: String, default: '' },
-  cargo: { type: String, default: '' },
-  firma: { type: String, default: '' }
+  firma: { type: String, default: '' },
+  email: { type: String, default: '' },
+  fechaFirma: { type: Date, default: null }
 }, { _id: false });
 
 const CausaSchema = new Schema({
@@ -29,7 +26,6 @@ const ImplicacionesSchema = new Schema({
   otros: { type: String, default: '' }
 }, { _id: false });
 
-/* Schema para cada involucrado dentro de una card (OTRAS) */
 const InvolucradoDetailSchema = new Schema({
   tipoAfectacion: { type: String, default: '' },
   generaCostos: { type: Boolean, default: false },
@@ -38,12 +34,11 @@ const InvolucradoDetailSchema = new Schema({
   responsable: { type: String, default: '' }
 }, { _id: false });
 
-/* Schema para riesgosCards (Sección 8) */
 const RiesgoCardSchema = new Schema({
-  id: { type: String, required: true }, // id provisto por front (timestamp o uuid)
-  tipoImplicacion: { type: String, enum: ['IMPLICACION_DE_RIESGOS','DOCUMENTOS','RECURSOS','OTRAS'], required: true },
+  id: { type: String, required: true, default: () => String(Date.now()) + Math.floor(Math.random() * 1000) },
+  // ya no obligamos tipoImplicacion al crear; el front podrá crear la card vacía y luego el usuario selecciona el tipo
+  tipoImplicacion: { type: String, default: '' }, // valores esperados: 'IMPLICACION_DE_RIESGOS','DOCUMENTOS','RECURSOS','OTRAS' (pero no forzamos enum aquí)
 
-  /* IMPLICACION_DE_RIESGOS campos */
   tipoPeligro: { type: String, default: '' },
   descripcionPeligro: { type: String, default: '' },
   consecuencias: { type: String, default: '' },
@@ -52,38 +47,32 @@ const RiesgoCardSchema = new Schema({
   nivelRiesgo: { type: String, default: '' },
   medidasControl: { type: String, default: '' },
   responsable: { type: String, default: '' },
-  fechaCompromiso: { type: Date },
+  fechaCompromiso: { type: Date, default: null },
 
-  /* DOCUMENTOS campos */
   tipoDocumento: { type: String, default: '' },
   nombreDocumento: { type: String, default: '' },
   cambioRealizar: { type: String, default: '' },
-  fechaCompromisoDoc: { type: Date },
+  fechaCompromisoDoc: { type: Date, default: null },
   responsableDoc: { type: String, default: '' },
 
-  /* RECURSOS campos */
   tipoRecursos: { type: String, default: '' },
   origenRecursos: { type: String, default: '' },
   costos: { type: String, default: '' },
   tiempoDisponible: { type: String, default: '' },
-  fechaCompromisoRec: { type: Date },
+  fechaCompromisoRec: { type: Date, default: null },
   responsableRec: { type: String, default: '' },
 
-  /* OTRAS campos */
   involucradosSelected: { type: [String], default: [] },
   involucradosData: {
-    SOCIOS: { type: InvolucradoDetailSchema, default: null },
-    PROVEEDORES: { type: InvolucradoDetailSchema, default: null },
-    AUTORIDADES: { type: InvolucradoDetailSchema, default: null },
-    CLIENTES: { type: InvolucradoDetailSchema, default: null },
-    OTROS: { type: InvolucradoDetailSchema, default: null }
+    SOCIOS: { type: InvolucradoDetailSchema, default: () => ({}) },
+    PROVEEDORES: { type: InvolucradoDetailSchema, default: () => ({}) },
+    AUTORIDADES: { type: InvolucradoDetailSchema, default: () => ({}) },
+    CLIENTES: { type: InvolucradoDetailSchema, default: () => ({}) },
+    OTROS: { type: InvolucradoDetailSchema, default: () => ({}) }
   },
-
-  /* Para OTRAS: etiqueta que el usuario escribió en Sección 6 (campo implicaciones.otros) */
   otherLabel: { type: String, default: null }
 }, { _id: false });
 
-/* Impactos (Sección 2) - estructura flexible con campos concretos */
 const ImpactosDataSchema = new Schema({
   productos: { type: String, default: '' },
   sistemasEquipos: { type: String, default: '' },
@@ -100,7 +89,6 @@ const ImpactosDataSchema = new Schema({
 }, { _id: false });
 
 const GestionCambioSchema = new Schema({
-  // Sección 1
   solicitante: { type: String },
   areaSolicitante: { type: String },
   lugar: { type: String },
@@ -108,43 +96,34 @@ const GestionCambioSchema = new Schema({
   fechaSolicitud: { type: Date },
   fechaPlaneada: { type: Date },
 
-  // Sección 2
   tipoCambio: { type: String },
-  impactosSeleccionados: { type: [String], default: [] }, // keys seleccionadas
+  impactosSeleccionados: { type: [String], default: [] },
   impactosData: { type: ImpactosDataSchema, default: () => ({}) },
 
-  // Sección 3
   causa: { type: CausaSchema, default: () => ({}) },
 
-  // Sección 4
   descripcionPropuesta: { type: String },
-
-  // Sección 5
   justificacion: { type: String },
-
-  // Sección 6
   implicaciones: { type: ImplicacionesSchema, default: () => ({}) },
-
-  // Sección 7
   consecuencias: { type: String },
 
-  // Sección 8 -> Riesgos cards (array)
   riesgosCards: { type: [RiesgoCardSchema], default: [] },
 
-  // Firmas
+  // firmadoPor: ahora TODOS los roles son arrays de FirmaSchema
   firmadoPor: {
-  solicitado: { type: SolicitanteFirmaSchema, default: () => ({}) },
-  evaluado: { type: PersonaSchema, default: () => ({}) },
-  aprobado: { type: [PersonaSchema], default: [] },      // ahora es array
-  implementado: { type: PersonaSchema, default: () => ({}) },
-  validado: { type: PersonaSchema, default: () => ({}) }
-},
+    solicitado: { type: [FirmaSchema], default: [] },
+    evaluado: { type: [FirmaSchema], default: [] },
+    aprobado: { type: [FirmaSchema], default: [] },
+    implementado: { type: [FirmaSchema], default: [] },
+    validado: { type: [FirmaSchema], default: [] }
+  },
 
   fechaCreacion: { type: Date, default: Date.now },
-  estado: { type: String, default: 'pendiente' } // pendiente, aprobado, rechazado, implementado, validado
+  estado: { type: String, default: 'pendiente' } 
 }, {
-  strict: false 
-},{ timestamps: true });
+  strict: false,
+  timestamps: true
+});
 
 const GestionCambio = mongoose.model('GestionCambio', GestionCambioSchema);
 module.exports = GestionCambio;

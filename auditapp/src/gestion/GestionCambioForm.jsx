@@ -1,17 +1,28 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+// ===================== IMPORTS Y CONTEXTOS =====================
+import React, { useState, useEffect, useRef, useContext} from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import Grid from '@mui/material/Grid';
-import Autocomplete from '@mui/material/Autocomplete';
-import TextField from '@mui/material/TextField';
 import SignaturePopup from './SignaturePopup';
 import { UserContext } from '../App';
 import './css/GestionForm.css';
+import Seccion1 from './secciones/Seccion1';
+import Seccion2 from './secciones/Seccion2';
+import Seccion3 from './secciones/Seccion3';
+import Seccion4 from './secciones/Seccion4';
+import Seccion5 from './secciones/Seccion5';
+import Seccion6 from './secciones/Seccion6';
+import Seccion7 from './secciones/Seccion7';
+import Seccion8 from './secciones/Seccion8';
+import Seccion9 from './secciones/Seccion9';
 
+// ===================== COMPONENTE PRINCIPAL =====================
 export default function GestionCambioForm() {
+  // ===================== ESTADOS Y REFS PRINCIPALES =====================
   const { id: routeId } = useParams();
   const navigate = useNavigate();
   const { userData } = useContext(UserContext);
+
+
 
   const [userNames, setUserNames] = useState([]);
 
@@ -35,15 +46,15 @@ export default function GestionCambioForm() {
     },
     descripcionPropuesta: '',
     justificacion: '',
-    implicaciones: { riesgos: false, recursos: false, documentacion: false, otros: '' },
+    implicaciones: { riesgos: false, recursos: false, documentacion: false, otros: false },
     consecuencias: '',
     riesgosCards: [],
     firmadoPor: {
-      solicitado: { nombre: '', cargo: '', firma: '' },
-      evaluado: { nombre: '', cargo: '', firma: '' },
+      solicitado: [{ nombre: '', cargo: '', firma: '', email: '' }],
+      evaluado: [],
       aprobado: [],
-      implementado: { nombre: '', cargo: '', firma: '' },
-      validado: { nombre: '', cargo: '', firma: '' },
+      implementado: [],
+      validado: []
     },
     estado: 'pendiente'
   });
@@ -60,18 +71,27 @@ export default function GestionCambioForm() {
   const [sigRole, setSigRole] = useState(null);
   const sectionRefs = useRef([]);
 
+  // ===================== EFECTOS: CARGA DE DATOS Y NORMALIZACIÓN =====================
   useEffect(() => {
   const loadNames = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombres`);
-      if (!res || !res.data) return;
-      if (Array.isArray(res.data) && typeof res.data[0] === 'string') {
-        setUserNames(res.data);
-      } else if (Array.isArray(res.data)) {
-        // si tu endpoint devuelve objetos, intenta mapear al campo Nombre
-        const names = res.data.map(u => u.Nombre || u.nombre || '').filter(Boolean);
-        setUserNames(Array.from(new Set(names)));
-      }
+if (!res || !res.data) return;
+
+// Si viene un array de strings, mantenemos compatibilidad.
+// Si viene array de objetos {Nombre, Puesto, Correo} lo almacenamos tal cual.
+if (Array.isArray(res.data) && res.data.length && typeof res.data[0] === 'string') {
+  setUserNames(res.data.map(n => ({ Nombre: n })));
+} else if (Array.isArray(res.data)) {
+  // normalizar keys a mayúsculas esperadas si fuera necesario
+  const users = res.data.map(u => ({
+    Nombre: u.Nombre || u.nombre || (typeof u === 'string' ? u : ''),
+    Puesto: u.Puesto || u.puesto || u.cargo || '',
+    Correo: u.Correo || u.correo || u.email || ''
+  })).filter(u => u.Nombre);
+  setUserNames(users);
+}
+
     } catch (err) {
       // si no existe el endpoint exacto, no romperá la app
       console.warn('No se pudieron cargar los nombres para Autocomplete', err);
@@ -85,7 +105,12 @@ export default function GestionCambioForm() {
     if (!routeId) return;
     const load = async () => {
       try {
-        const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${routeId}`);
+        const userName = encodeURIComponent(userData?.Nombre || userData?.nombre || '');
+        const userEmail = encodeURIComponent(userData?.Correo || userData?.email || userData?.correo || '');
+
+        const res = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${routeId}?userName=${userName}&userEmail=${userEmail}`
+        );
         const data = res.data || {};
         const toInputDate = (d) => {
           if (!d) return '';
@@ -99,7 +124,18 @@ export default function GestionCambioForm() {
           fechaSolicitud: toInputDate(data.fechaSolicitud),
           fechaPlaneada: toInputDate(data.fechaPlaneada),
         };
-        setFormData(prev => ({ ...prev, ...normalized }));
+        // después de obtener `data` desde backend y normalizar fechas:
+const normalizedFirmado = normalizeFirmadoPorFront(data.firmadoPor);
+setFormData(prev => ({
+  ...prev,
+  ...normalized, // tu objeto con fechas normalizadas, etc.
+  firmadoPor: {
+    // mantén prev.firmadoPor si existen datos locales (ej. while editando)
+    ...prev.firmadoPor,
+    ...normalizedFirmado
+  }
+}));
+
       } catch (err) {
         console.error('No se pudo cargar el registro:', err);
       }
@@ -107,53 +143,62 @@ export default function GestionCambioForm() {
     load();
   }, [routeId]);
 
-  // Prefill desde UserContext cuando se crea nuevo (no cuando estamos editando)
 useEffect(() => {
-  if (routeId) return; // si estamos editando, no sobreescribir
+  if (routeId) return;
   if (!userData) return;
 
-  // helper para distintos nombres de campo en userData
-  const pick = (keys) => {
-    for (const k of keys) {
-      if (userData[k] !== undefined && userData[k] !== null && String(userData[k]).trim() !== '') return userData[k];
-    }
-    return '';
-  };
+  const nombre = userData.Nombre || '';
+  const puesto = userData.Puesto || '';
+  const area = userData.area || userData.Area || '';
 
-  const nombre = pick(['Nombre','name','fullName','displayName','username']);
-  const puesto = pick(['Puesto', 'cargo', 'role', 'position']);
-  const area = pick(['area', 'departamento', 'department', 'areaSolicitante']);
-
-  setFormData(prev => ({
-  ...prev,
-  solicitante: prev.solicitante || String(nombre || ''),
-  areaSolicitante: prev.areaSolicitante || String(area || ''),
-  firmadoPor: {
-    ...prev.firmadoPor,
-    solicitado: {
-      nombre: prev.firmadoPor?.solicitado?.nombre || String(nombre || ''),
-      cargo: prev.firmadoPor?.solicitado?.cargo || String(puesto || ''),
-      firma: prev.firmadoPor?.solicitado?.firma || ''
-    }
-    // no asignar firma a evaluado/aprobado/implementado/validado
-  }
-}));
-}, [userData, routeId]);
-
-
-  const openSignature = (role) => setSigRole(role);
-  const handleSaveSig = (role, dataURL) => {
   setFormData(prev => ({
     ...prev,
+    solicitante: prev.solicitante || nombre,
+    areaSolicitante: prev.areaSolicitante || area,
     firmadoPor: {
       ...prev.firmadoPor,
-      [role]: { ...prev.firmadoPor[role], firma: dataURL }
+      // aseguramos un array con 1 objeto solo para solicitante cuando estamos creando
+      solicitado: [{
+        nombre: (prev.firmadoPor?.solicitado?.[0]?.nombre) || nombre,
+        cargo: (prev.firmadoPor?.solicitado?.[0]?.cargo) || puesto,
+        firma: (prev.firmadoPor?.solicitado?.[0]?.firma) || '',
+        email: (prev.firmadoPor?.solicitado?.[0]?.email) || (userData.Correo || userData.email || '')
+      }]
     }
   }));
-  setSigRole(null);
-};
+}, [userData, routeId]);
 
-  /* ---------- Helpers de estado y cambios ---------- */
+useEffect(() => {
+  if (!routeId) return; // <- sólo en edición/edición cargada desde backend
+  setFormData(prev => {
+    const fp = { ...(prev.firmadoPor || {}) };
+    ['solicitado','evaluado','aprobado','implementado','validado'].forEach(role => {
+      if (!Array.isArray(fp[role]) || fp[role].length === 0) {
+        fp[role] = [{ nombre: '', cargo: '', firma: '' }];
+      } else {
+        fp[role] = fp[role].map(it => ({ nombre: it?.nombre || '', cargo: it?.cargo || '', firma: it?.firma || '' }));
+      }
+    });
+    return { ...prev, firmadoPor: fp };
+  });
+}, [routeId]);
+
+  // ===================== HANDLERS GENERALES =====================
+  const openSignature = (role, idx = 0) => setSigRole({ role, idx });
+
+  const handleSaveSig = (role, dataURL, idx = 0) => {
+
+    setFormData(prev => {
+      const fp = { ...(prev.firmadoPor || {}) };
+      const arr = Array.isArray(fp[role]) ? [...fp[role]] : [];
+      while (arr.length <= idx) arr.push({ nombre: '', cargo: '', firma: '' });
+      arr[idx] = { ...arr[idx], firma: dataURL };
+      fp[role] = arr;
+      return { ...prev, firmadoPor: fp };
+    });
+    setSigRole(null);
+  };
+
   const handleChange = (e) => {
     const { name, value, type, options } = e.target;
     if (type === 'select-multiple') {
@@ -175,31 +220,138 @@ useEffect(() => {
     setFormData(prev => ({ ...prev, impactosData: { ...prev.impactosData, [key]: value } }));
   };
 
-  /* ------------------ Sección 6 <-> Sección 8 binding ------------------ */
-  const ensureCardForImplicacion = (tipoKey, extra = null) => {
-    setFormData(prev => {
-      const exists = prev.riesgosCards.some(c => c.tipoImplicacion === tipoKey && (extra ? c.otherLabel === extra : true));
-      if (exists) return prev;
-      const baseCard = {
-        id: Date.now() + Math.floor(Math.random() * 1000),
-        tipoImplicacion: tipoKey,
-        tipoPeligro: '', descripcionPeligro: '', consecuencias: '', probabilidad: '', severidad: '', nivelRiesgo: '', medidasControl: '', responsable: '', fechaCompromiso: '',
-        tipoDocumento: '', nombreDocumento: '', cambioRealizar: '', fechaCompromisoDoc: '', responsableDoc: '',
-        tipoRecursos: '', origenRecursos: '', costos: '', tiempoDisponible: '', fechaCompromisoRec: '', responsableRec: '',
-        involucradosSelected: [], involucradosData: { SOCIOS: null, PROVEEDORES: null, AUTORIDADES: null, CLIENTES: null, OTROS: null },
-        otherLabel: extra || null
-      };
-      return { ...prev, riesgosCards: [...prev.riesgosCards, baseCard] };
-    });
-  };
+  // ----------------- Estados para añadir entradas de forma práctica -----------------
+const [addMode, setAddMode] = useState({
+  evaluado: false,
+  implementado: false,
+  validado: false,
+  aprobado: false
+});
+const [addTemp, setAddTemp] = useState({
+  evaluado: { nombre: '', cargo: '' },
+  implementado: { nombre: '', cargo: '' },
+  validado: { nombre: '', cargo: '' },
+  aprobado: { nombre: '', cargo: '' }
+});
 
-  const removeCardsByTipo = (tipoKey, extra = null) => {
-    setFormData(prev => ({ ...prev, riesgosCards: prev.riesgosCards.filter(c => {
+// Helpers para añadir/cancelar/confirmar entradas (inline)
+const startAdd = (role) => setAddMode(prev => ({ ...prev, [role]: true }));
+const cancelAdd = (role) => setAddMode(prev => ({ ...prev, [role]: false }));
+const confirmAdd = (role) => {
+  setFormData(prev => {
+    const cur = prev.firmadoPor && Array.isArray(prev.firmadoPor[role]) ? prev.firmadoPor[role] : [];
+    const nextArr = [...cur, { nombre: (addTemp[role].nombre || ''), cargo: (addTemp[role].cargo || ''), firma: '', email: (addTemp[role].email || '') }];
+    return { ...prev, firmadoPor: { ...prev.firmadoPor, [role]: nextArr } };
+  });
+  setAddTemp(prev => ({ ...prev, [role]: { nombre: '', cargo: '' } }));
+  setAddMode(prev => ({ ...prev, [role]: false }));
+};
+
+// Si quieres eliminar entradas (no aplicable a solicitante)
+const removeFirmaRole = (role, idx) => {
+  setFormData(prev => ({
+    ...prev,
+    firmadoPor: {
+      ...prev.firmadoPor,
+      [role]: (prev.firmadoPor[role] || []).filter((_, i) => i !== idx)
+    }
+  }));
+  setErrors(prev => {
+    const next = { ...prev };
+    delete next[`firma_${role}_${idx}_nombre`];
+    delete next[`firma_${role}_${idx}_cargo`];
+    return next;
+  });
+};
+
+  // ===================== HANDLERS DE IMPLICACIONES Y RIESGOS =====================
+  /* ---------- Helpers de estado y cambios ---------- */
+// ===================== HELPERS PARA CARDS (RIESGOS / RECURSOS / DOCUMENTOS / OTRAS) =====================
+
+// Asegura que exista *al menos una* card del tipo indicado (se usa al marcar checkbox en Sección 6)
+const ensureCardForImplicacion = (tipoKey, extra = null) => {
+  setFormData(prev => {
+    const list = prev.riesgosCards || [];
+    // si ya existe al menos una card de ese tipo, no hacemos nada
+    const exists = list.some(c => c.tipoImplicacion === tipoKey && (extra ? c.otherLabel === extra : true));
+    if (exists) return prev;
+
+    const baseCard = {
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      tipoImplicacion: tipoKey, // fijado desde el origen (Sección 6) o al agregar nuevo
+      // campos para riesgos
+      tipoPeligro: '', descripcionPeligro: '', probabilidad: '', severidad: '', nivelRiesgo: '', medidasControl: '', responsable: '', fechaCompromiso: '',
+      // campos para recursos
+      tipoRecursos: '', origenRecursos: '', costos: '', tiempoDisponible: '', fechaCompromisoRec: '', responsableRec: '',
+      // documentos
+      tipoDocumento: '', nombreDocumento: '', cambioRealizar: '', fechaCompromisoDoc: '', responsableDoc: '',
+      // comunes/otras
+      involucradosSelected: [], involucradosData: { SOCIOS: null, PROVEEDORES: null, AUTORIDADES: null, CLIENTES: null, OTROS: null },
+      otherLabel: extra || null
+    };
+
+    return { ...prev, riesgosCards: [...list, baseCard] };
+  });
+};
+
+// Remueve todas las cards de un tipo (se usa al desmarcar checkbox en Sección 6)
+const removeCardsByTipo = (tipoKey, extra = null) => {
+  setFormData(prev => ({
+    ...prev,
+    riesgosCards: (prev.riesgosCards || []).filter(c => {
       if (c.tipoImplicacion !== tipoKey) return true;
       if (extra && c.otherLabel !== extra) return true;
       return false;
-    }) }));
+    })
+  }));
+};
+
+// Agregar una nueva card del tipo indicado (llamado desde Sección 8 "Agregar otro recurso/riesgo")
+const addNewCard = (tipoKey, extra = null) => {
+  const newId = Date.now() + Math.floor(Math.random() * 1000);
+  const baseCard = {
+    id: newId,
+    tipoImplicacion: tipoKey,
+    tipoPeligro: '', descripcionPeligro: '', probabilidad: '', severidad: '', nivelRiesgo: '', medidasControl: '', responsable: '', fechaCompromiso: '',
+    tipoRecursos: '', origenRecursos: '', costos: '', tiempoDisponible: '', fechaCompromisoRec: '', responsableRec: '',
+    tipoDocumento: '', nombreDocumento: '', cambioRealizar: '', fechaCompromisoDoc: '', responsableDoc: '',
+    involucradosSelected: [], involucradosData: { SOCIOS: null, PROVEEDORES: null, AUTORIDADES: null, CLIENTES: null, OTROS: null },
+    otherLabel: extra || null
   };
+  setFormData(prev => ({ ...prev, riesgosCards: [...(prev.riesgosCards || []), baseCard] }));
+  return newId;
+};
+
+// Eliminar una card por id, pero **proteger** que si la implicación está marcada no quede 0 cards
+const removeCardById = (id) => {
+  setFormData(prev => {
+    const list = prev.riesgosCards || [];
+    const card = list.find(c => c.id === id);
+    if (!card) return prev;
+
+    // si la card es de RIESGOS y la implicación está marcada, impedir eliminar la última
+    if (card.tipoImplicacion === 'IMPLICACION_DE_RIESGOS' && prev.implicaciones?.riesgos) {
+      const count = list.filter(c => c.tipoImplicacion === 'IMPLICACION_DE_RIESGOS').length;
+      if (count <= 1) {
+        alert('No puede eliminar la última card de Riesgos mientras la implicación "Riesgos" esté marcada en la Sección 6. Primero desmarque la implicación o agregue otra card.');
+        return prev;
+      }
+    }
+
+    // lo mismo para RECURSOS
+    if (card.tipoImplicacion === 'RECURSOS' && prev.implicaciones?.recursos) {
+      const count = list.filter(c => c.tipoImplicacion === 'RECURSOS').length;
+      if (count <= 1) {
+        alert('No puede eliminar la última card de Recursos mientras la implicación "Recursos" esté marcada en la Sección 6. Primero desmarque la implicación o agregue otra card.');
+        return prev;
+      }
+    }
+
+    // si todo bien, filtramos la card
+    return { ...prev, riesgosCards: list.filter(c => c.id !== id) };
+  });
+};
+
 
   const handleImplicacionToggle = (name, checked) => {
     handleNestedChange('implicaciones', name, checked);
@@ -207,10 +359,12 @@ useEffect(() => {
       if (name === 'riesgos') ensureCardForImplicacion('IMPLICACION_DE_RIESGOS');
       if (name === 'documentacion') ensureCardForImplicacion('DOCUMENTOS');
       if (name === 'recursos') ensureCardForImplicacion('RECURSOS');
+      else if (name === 'otros') {ensureCardForImplicacion('OTRAS');}
     } else {
       if (name === 'riesgos') removeCardsByTipo('IMPLICACION_DE_RIESGOS');
       if (name === 'documentacion') removeCardsByTipo('DOCUMENTOS');
       if (name === 'recursos') removeCardsByTipo('RECURSOS');
+      else if (name === 'otros') removeCardsByTipo('OTRAS');
     }
   };
 
@@ -269,45 +423,7 @@ useEffect(() => {
     }));
   };
 
-  // helpers para aprobadores
-const addAprobado = () => {
-  setFormData(prev => ({ 
-    ...prev, 
-    firmadoPor: { 
-      ...prev.firmadoPor, 
-      aprobado: [...(prev.firmadoPor.aprobado || []), { nombre: '', cargo: '' }] 
-    } 
-  }));
-};
-
-const removeAprobado = (idx) => {
-  setFormData(prev => ({ 
-    ...prev, 
-    firmadoPor: { 
-      ...prev.firmadoPor, 
-      aprobado: prev.firmadoPor.aprobado.filter((_, i) => i !== idx) 
-    } 
-  }));
-  // limpiar errores específicos si existen
-  setErrors(prev => {
-    const next = { ...prev };
-    delete next[`firma_aprobado_${idx}_nombre`];
-    delete next[`firma_aprobado_${idx}_cargo`];
-    return next;
-  });
-};
-
-const handleAprobadoChange = (idx, field, value) => {
-  setFormData(prev => ({ 
-    ...prev, 
-    firmadoPor: { 
-      ...prev.firmadoPor, 
-      aprobado: prev.firmadoPor.aprobado.map((a, i) => i === idx ? { ...a, [field]: value } : a) 
-    } 
-  }));
-};
-
-  /* ------------------ VALIDATION helpers ------------------ */
+  // ===================== VALIDACIONES =====================
   // label helpers para mensajes legibles
   const labelFor = {
     solicitante: 'Solicitante', areaSolicitante: 'Área solicitante', lugar: 'Lugar',
@@ -359,42 +475,117 @@ const handleAprobadoChange = (idx, field, value) => {
       case 7:
         if (!formData.consecuencias) { newErrors.consecuencias = 'Requerido'; missing.push(labelFor.consecuencias); }
         break;
-      case 8:
-        // opcional: si quieres validar cards específica hazlo aquí y añade mensajes a `missing`
-        break;
-      case 9:
-  {
-    // validar solicitante obligatorio (nombre, cargo, firma)
-    const p = formData.firmadoPor?.solicitado || {};
-    if (!p.nombre) { newErrors['firma_solicitado_nombre'] = 'Falta nombre solicitante'; missing.push('Solicitante - Nombre'); }
-    if (!p.cargo)  { newErrors['firma_solicitado_cargo'] = 'Falta cargo solicitante'; missing.push('Solicitante - Cargo'); }
-    if (!p.firma)  { newErrors['firma_solicitado_firma'] = 'Falta firma solicitante'; missing.push('Solicitante - Firma'); }
+      case 8: {
+            const faltantes = [];
+            (formData.riesgosCards || []).forEach((c, i) => {
+              if (c.tipoImplicacion === 'IMPLICACION_DE_RIESGOS' && (!c.tipoPeligro || !c.tipoPeligro.trim())) {
+                faltantes.push(`Riesgo #${i+1}: Tipo de peligro`);
+              }
+              if (c.tipoImplicacion === 'RECURSOS' && (!c.tipoRecursos || !c.tipoRecursos.trim())) {
+                faltantes.push(`Recurso #${i+1}: Tipo de recurso`);
+              }
+            });
+            if (faltantes.length) {
+              setErrors(prev => ({ ...prev, 'riesgosCards_tipo': 'Faltan tipos en cards' }));
+              setMissingMap(prev => ({ ...prev, [section]: (prev[section] || []).concat(faltantes) }));
+              return faltantes;
+            }
+            break;
+          }
 
-    // evaluado (solo nombre/cargo)
-    const ev = formData.firmadoPor?.evaluado || {};
-    if (!ev.nombre) { newErrors['firma_evaluado_nombre'] = 'Falta nombre evaluado'; missing.push('Evaluado - Nombre'); }
-    if (!ev.cargo)  { newErrors['firma_evaluado_cargo'] = 'Falta cargo evaluado'; missing.push('Evaluado - Cargo'); }
+case 9: {
+  const newErrorsLocal = {};
+  const missingLocal = [];
 
-    // implementado
-    const imp = formData.firmadoPor?.implementado || {};
-    if (!imp.nombre) { newErrors['firma_implementado_nombre'] = 'Falta nombre implementado'; missing.push('Implementado - Nombre'); }
-    if (!imp.cargo)  { newErrors['firma_implementado_cargo'] = 'Falta cargo implementado'; missing.push('Implementado - Cargo'); }
+  // SOLICITANTE: ahora es objeto
+const s = (formData.firmadoPor && Array.isArray(formData.firmadoPor.solicitado) && formData.firmadoPor.solicitado[0]) || { nombre: '', cargo: '', firma: '' };
 
-    // validado
-    const val = formData.firmadoPor?.validado || {};
-    if (!val.nombre) { newErrors['firma_validado_nombre'] = 'Falta nombre validado'; missing.push('Validado - Nombre'); }
-    if (!val.cargo)  { newErrors['firma_validado_cargo'] = 'Falta cargo validado'; missing.push('Validado - Cargo'); }
-
-    // aprobados: si existen, validar cada uno
-    const aprob = formData.firmadoPor?.aprobado || [];
-    if (Array.isArray(aprob)) {
-      aprob.forEach((a, idx) => {
-        if (!a.nombre) { newErrors[`firma_aprobado_${idx}_nombre`] = 'Falta nombre aprobado'; missing.push(`Aprobado #${idx + 1} - Nombre`); }
-        if (!a.cargo)  { newErrors[`firma_aprobado_${idx}_cargo`] = 'Falta cargo aprobado'; missing.push(`Aprobado #${idx + 1} - Cargo`); }
-      });
-    }
+  if (!s.nombre || String(s.nombre).trim() === '') {
+    newErrorsLocal['firma_solicitado_nombre'] = 'Falta nombre solicitante';
+    missingLocal.push('Solicitante - Nombre');
   }
-  break;
+  if (!s.cargo || String(s.cargo).trim() === '') {
+    newErrorsLocal['firma_solicitado_cargo'] = 'Falta cargo solicitante';
+    missingLocal.push('Solicitante - Cargo');
+  }
+  if (!s.firma || String(s.firma).trim() === '') {
+    newErrorsLocal['firma_solicitado_firma'] = 'Falta firma solicitante';
+    missingLocal.push('Solicitante - Firma');
+  }
+
+  // EVALUADO (array)
+  const evaluados = (formData.firmadoPor?.evaluado) || [];
+  if (evaluados.length === 0) {
+    newErrorsLocal['firma_evaluado_empty'] = 'Agregar al menos un evaluado';
+    missingLocal.push('Evaluado - (al menos 1)');
+  } else {
+    evaluados.forEach((ev, idx) => {
+      if (!ev || !ev.nombre || String(ev.nombre).trim() === '') {
+        newErrorsLocal[`firma_evaluado_${idx}_nombre`] = 'Falta nombre evaluado';
+        missingLocal.push(`Evaluado #${idx + 1} - Nombre`);
+      }
+      if (!ev || !ev.cargo || String(ev.cargo).trim() === '') {
+        newErrorsLocal[`firma_evaluado_${idx}_cargo`] = 'Falta cargo evaluado';
+        missingLocal.push(`Evaluado #${idx + 1} - Cargo`);
+      }
+    });
+  }
+
+  // IMPLEMENTADO
+  const implementados = (formData.firmadoPor?.implementado) || [];
+  if (implementados.length === 0) {
+    newErrorsLocal['firma_implementado_empty'] = 'Agregar al menos un implementado';
+    missingLocal.push('Implementado - (al menos 1)');
+  } else {
+    implementados.forEach((it, idx) => {
+      if (!it || !it.nombre || String(it.nombre).trim() === '') {
+        newErrorsLocal[`firma_implementado_${idx}_nombre`] = 'Falta nombre implementado';
+        missingLocal.push(`Implementado #${idx + 1} - Nombre`);
+      }
+      if (!it || !it.cargo || String(it.cargo).trim() === '') {
+        newErrorsLocal[`firma_implementado_${idx}_cargo`] = 'Falta cargo implementado';
+        missingLocal.push(`Implementado #${idx + 1} - Cargo`);
+      }
+    });
+  }
+
+  // VALIDADO
+  const validados = (formData.firmadoPor?.validado) || [];
+  if (validados.length === 0) {
+    newErrorsLocal['firma_validado_empty'] = 'Agregar al menos un validado';
+    missingLocal.push('Validado - (al menos 1)');
+  } else {
+    validados.forEach((v, idx) => {
+      if (!v || !v.nombre || String(v.nombre).trim() === '') {
+        newErrorsLocal[`firma_validado_${idx}_nombre`] = 'Falta nombre validado';
+        missingLocal.push(`Validado #${idx + 1} - Nombre`);
+      }
+      if (!v || !v.cargo || String(v.cargo).trim() === '') {
+        newErrorsLocal[`firma_validado_${idx}_cargo`] = 'Falta cargo validado';
+        missingLocal.push(`Validado #${idx + 1} - Cargo`);
+      }
+    });
+  }
+
+  // APROBADOS
+  const aprobados = (formData.firmadoPor?.aprobado) || [];
+  
+  aprobados.forEach((a, idx) => {
+    if (!a || !a.nombre || String(a.nombre).trim() === '') {
+      newErrorsLocal[`firma_aprobado_${idx}_nombre`] = 'Falta nombre aprobado';
+      missingLocal.push(`Aprobado #${idx + 1} - Nombre`);
+    }
+    if (!a || !a.cargo || String(a.cargo).trim() === '') {
+      newErrorsLocal[`firma_aprobado_${idx}_cargo`] = 'Falta cargo aprobado';
+      missingLocal.push(`Aprobado #${idx + 1} - Cargo`);
+    }
+  });
+
+
+  setErrors(prev => ({ ...prev, ...newErrorsLocal }));
+  setMissingMap(prev => ({ ...prev, [section]: missingLocal }));
+  return missingLocal;
+}
 
 
       default:
@@ -418,10 +609,13 @@ const handleAprobadoChange = (idx, field, value) => {
     return fullMissing;
   };
 
-  /* ------------------ SAVE / SEND ------------------ */
+  // ===================== SAVE / SEND =====================
   const saveDraft = async () => {
     try {
       setIsSubmitting(true);
+      // justo antes de construir payload para enviar
+console.log('>>> firmadoPor antes de enviar:', JSON.stringify(formData.firmadoPor, null, 2));
+
       const payload = {
         ...formData,
         fechaSolicitud: formData.fechaSolicitud ? new Date(formData.fechaSolicitud).toISOString() : null,
@@ -432,12 +626,12 @@ const handleAprobadoChange = (idx, field, value) => {
       if (routeId || formData._id) {
         const target = routeId || formData._id;
         const res = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${target}`, payload);
-        setFormData(prev => ({ ...prev, ...res.data }));
+
         setAlertBanner({ type: 'success', text: 'Borrador guardado correctamente.' });
         if (!routeId && res.data._id) navigate(`/gestion-cambio/${res.data._id}`, { replace: true });
       } else {
         const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio`, payload);
-        setFormData(prev => ({ ...prev, ...res.data }));
+
         setAlertBanner({ type: 'success', text: 'Borrador creado correctamente.' });
         if (res.data._id) navigate(`/gestion-cambio/${res.data._id}`, { replace: true });
       }
@@ -517,500 +711,178 @@ const handleAprobadoChange = (idx, field, value) => {
     }
   };
 
-  /* ------------------ Render helpers ------------------ */
-  const impactoOptions = [
-    { key: 'productos', label: "Productos nuevos, MP´S, ingredientes y servicios" },
-    { key: 'sistemasEquipos', label: 'Sistemas y equipos de producción' },
-    { key: 'localesProduccion', label: 'Locales de producción, ubicación de los equipos, entorno circundante' },
-    { key: 'programasLimpieza', label: 'Programas de limpieza y desinfección' },
-    { key: 'sistemasEmbalaje', label: 'Sistemas de embalaje, almacenamiento y distribución' },
-    { key: 'nivelesPersonal', label: 'Niveles de calificación del personal y/o asignación de responsabilidades  y autorizaciones' },
-    { key: 'requisitosLegales', label: 'Requisitos legales y reglamentarios' },
-    { key: 'conocimientosPeligros', label: 'Conocimientos relativos a los peligros para la inocuidad de los alimentos y medidas de control' },
-    { key: 'requisitosCliente', label: 'Requisitos del cliente, del sector y otros requisitos que la organización tiene en cuenta' },
-    { key: 'consultasPartes', label: 'Consultas pertinentes de las partes interesadas externas' },
-    { key: 'quejasPeligros', label: 'Quejas indicando peligros relacionados con la inocuidad de los alimentos, asociados al producto' },
-    { key: 'otrasCondiciones', label: 'Otras condiciones que tenga impacto en la inocuidad de los alimentos' },
-  ];
+  // ===================== HELPERS DE RENDER Y UTILIDADES =====================
+  const inputClass = (key) => (errors[key] ? 'error' : '');
 
-  const renderProgressStep = (section) => {
-    const hasMissing = Array.isArray(missingMap[section]) && missingMap[section].length > 0;
-    const badge = hasMissing ? (<span className="progress-badge">{missingMap[section].length}</span>) : null;
-    return (
-      <div
-        key={section}
-        className={`progress-step ${section <= activeSection ? 'active' : ''} ${hasMissing ? 'has-missing' : ''}`}
-        onClick={() => { setActiveSection(section); sectionRefs.current[section - 1]?.scrollIntoView({ behavior: 'smooth' }); }}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setActiveSection(section); sectionRefs.current[section - 1]?.scrollIntoView({ behavior: 'smooth' }); } }}
-      >
-        <div className="step-number">{section}</div>
-        <div className="step-label">
-          {section === 1 ? 'Datos' : section === 2 ? 'Notificación' : section === 3 ? 'Causa' : section === 4 ? 'Descripción' : section === 5 ? 'Justificación' : section === 6 ? 'Implicaciones' : section === 7 ? 'Consecuencias' : section === 8 ? 'Riesgos' : 'Firmas'}
-        </div>
-        {badge}
-      </div>
-    );
+  // Normaliza cualquier forma de firmadoPor que venga del servidor
+  function normalizeFirmadoPorFront(fp) {
+  const empty = (o = {}) => ({ nombre: o.nombre || '', cargo: o.cargo || '', firma: o.firma || '' });
+
+  if (!fp || typeof fp !== 'object') {
+  return { solicitado: [], evaluado: [], aprobado: [], implementado: [], validado: [] };
+}
+
+  const toArray = (val) => {
+    if (Array.isArray(val)) return val.map(v => empty(v));
+    if (val && typeof val === 'object' && ('self' in val || 'others' in val)) {
+      const out = [];
+      if (val.self) out.push(empty(val.self));
+      if (Array.isArray(val.others)) val.others.forEach(o => out.push(empty(o)));
+      return out.length ? out : [{ nombre: '', cargo: '', firma: '' }];
+    }
+    if (val && typeof val === 'object') return [ empty(val) ];
+    return [{ nombre: '', cargo: '', firma: '' }];
   };
 
-  const inputClass = (key) => (errors[key] ? 'error' : '');
-  const signatureErrorFor = (role) => errors[`firma_${role}`];
+  return {
+    solicitado: toArray(fp.solicitado).slice(0,1), // solo el primer elemento para solicitante
+    evaluado: toArray(fp.evaluado),
+    aprobado: toArray(fp.aprobado),
+    implementado: toArray(fp.implementado),
+    validado: toArray(fp.validado)
+  };
+}
 
-  /* ------------------ Render sections (igual que antes, con refs y clases) ------------------ */
+  // ===================== SECCIONES DEL FORMULARIO =====================
+  // Cada sección puede moverse a su propio archivo SeccionX.jsx y recibir props necesarias
+
+  // ----------- SECCIÓN 1: Datos de la solicitud del cambio -----------
+  // ----------- SECCIÓN 2: Notificación de Solicitud de Cambio --------
+  // ----------- SECCIÓN 3: Causa/Origen del cambio -------------------
+  // ----------- SECCIÓN 4: Descripción de la propuesta de cambio -----
+  // ----------- SECCIÓN 5: Justificación de la propuesta de cambio ----
+  // ----------- SECCIÓN 6: Implicaciones del cambio ------------------
+  // ----------- SECCIÓN 7: Consecuencias de no realizar el cambio ----
+  // ----------- SECCIÓN 8: RIESGOS (auto-generados) ------------------
+  // ----------- SECCIÓN 9: Firmas ------------------------------------
+
   const renderSection = () => {
     switch (activeSection) {
+      // ========== SECCIÓN 1 ==========
       case 1:
         return (
-          <div className="form-section" ref={el => sectionRefs.current[0] = el}>
-            <h2>Sección 1: Datos de la solicitud del cambio</h2>
-            <div className="form-group">
-              <label>Solicitante del cambio*</label>
-              <input type="text" name="solicitante" value={formData.solicitante} onChange={handleChange} className={inputClass('solicitante')} />
-              {errors.solicitante && <span className="error-message">{errors.solicitante}</span>}
-            </div>
+        <Seccion1
+          formData={formData}
+          handleChange={handleChange}
+          errors={errors}
+          inputClass={inputClass}
+          sectionRef={el => sectionRefs.current[0] = el}
+        />
+      );
 
-            <div className="form-group">
-              <label>Área del solicitante*</label>
-              <input type="text" name="areaSolicitante" value={formData.areaSolicitante} onChange={handleChange} className={inputClass('areaSolicitante')} />
-              {errors.areaSolicitante && <span className="error-message">{errors.areaSolicitante}</span>}
-            </div>
-
-            <div className="form-group">
-              <label>Lugar*</label>
-              <input type="text" name="lugar" value={formData.lugar} onChange={handleChange} className={inputClass('lugar')} />
-              {errors.lugar && <span className="error-message">{errors.lugar}</span>}
-            </div>
-
-            <div className="form-group">
-              <label>Líder del proyecto</label>
-              <input type="text" name="liderProyecto" value={formData.liderProyecto} onChange={handleChange} />
-            </div>
-
-            <div className="form-group">
-              <label>Fecha de solicitud del cambio*</label>
-              <input type="date" name="fechaSolicitud" value={formData.fechaSolicitud} onChange={handleChange} className={inputClass('fechaSolicitud')} />
-              {errors.fechaSolicitud && <span className="error-message">{errors.fechaSolicitud}</span>}
-            </div>
-
-            <div className="form-group">
-              <label>Fecha planeada para realizar el cambio*</label>
-              <input type="date" name="fechaPlaneada" value={formData.fechaPlaneada} onChange={handleChange} className={inputClass('fechaPlaneada')} />
-              {errors.fechaPlaneada && <span className="error-message">{errors.fechaPlaneada}</span>}
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="form-section" ref={el => sectionRefs.current[1] = el}>
-            <h2>Sección 2: Notificación de Solicitud de Cambio</h2>
-            <div className="form-group">
-              <label>Tipo de cambio*</label>
-              <select name="tipoCambio" value={formData.tipoCambio} onChange={handleChange} className={inputClass('tipoCambio')}>
-                <option value="">-- Seleccione --</option>
-                <option value="Permanente">Permanente</option>
-                <option value="De emergencia">De emergencia</option>
-                <option value="Temporal">Temporal</option>
-              </select>
-              {errors.tipoCambio && <span className="error-message">{errors.tipoCambio}</span>}
-            </div>
-
-            <div className="form-group">
-              <label>Impactos (seleccione uno o varios):</label>
-              <select multiple value={formData.impactosSeleccionados} onChange={handleChange} style={{ minHeight: 120 }}>
-                {impactoOptions.map(opt => <option key={opt.key} value={opt.key}>{opt.label}</option>)}
-              </select>
-              <small>Puede mantener Ctrl/Cmd para seleccionar varios.</small>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-              {formData.impactosSeleccionados.map(key => {
-                const opt = impactoOptions.find(o => o.key === key);
-                return (
-                  <div className="form-group" key={key}>
-                    <label style={{ fontSize: 14 }}>{opt ? opt.label : key}</label>
-                    <textarea rows={3} value={formData.impactosData[key] || ''} onChange={(e) => handleImpactoTextareaChange(key, e.target.value)} />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="form-section" ref={el => sectionRefs.current[2] = el}>
-            <h2>Sección 3: Causa/Origen del cambio</h2>
-            {errors.causa && <div className="error-message">{errors.causa}</div>}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-              {[
-                { key: 'solicitudCliente', label: 'Solicitud Cliente' },
-                { key: 'reparacionDefecto', label: 'Reparación de defecto' },
-                { key: 'accionPreventiva', label: 'Acción preventiva' },
-                { key: 'actualizacionDocumento', label: 'Actualización / modificación de documento' },
-                { key: 'accionCorrectiva', label: 'Acción correctiva' },
-              ].map(({ key, label }) => (
-                <label key={key} className="checkbox-inline">
-                  <input type="checkbox" name={key} checked={formData.causa[key]} onChange={(e) => handleNestedChange('causa', key, e.target.checked)} /> {label}
-                </label>
-              ))}
-            </div>
-            <div className="form-group" style={{ marginTop: 12 }}>
-              <label>Otros:</label>
-              <input type="text" value={formData.causa.otros} onChange={(e) => handleNestedChange('causa', 'otros', e.target.value)} />
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="form-section" ref={el => sectionRefs.current[3] = el}>
-            <h2>Sección 4: Descripción de la propuesta de cambio</h2>
-            <div className="form-group">
-              <textarea name="descripcionPropuesta" value={formData.descripcionPropuesta} onChange={handleChange} rows={6} className={inputClass('descripcionPropuesta')} placeholder="Describa detalladamente la propuesta de cambio..." />
-              {errors.descripcionPropuesta && <span className="error-message">{errors.descripcionPropuesta}</span>}
-            </div>
-          </div>
-        );
-
-      case 5:
-        return (
-          <div className="form-section" ref={el => sectionRefs.current[4] = el}>
-            <h2>Sección 5: Justificación de la propuesta de cambio</h2>
-            <div className="form-group">
-              <textarea name="justificacion" value={formData.justificacion} onChange={handleChange} rows={6} className={inputClass('justificacion')} placeholder="Explique por qué se propone este cambio..." />
-              {errors.justificacion && <span className="error-message">{errors.justificacion}</span>}
-            </div>
-          </div>
-        );
-
-      case 6:
-        return (
-          <div className="form-section" ref={el => sectionRefs.current[5] = el}>
-            <h2>Sección 6: Implicaciones del cambio</h2>
-            {errors.implicaciones && <div className="error-message">{errors.implicaciones}</div>}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-              {[
-                { key: 'riesgos', label: 'Riesgos' },
-                { key: 'recursos', label: 'Recursos' },
-                { key: 'documentacion', label: 'Documentación' },
-              ].map(({ key, label }) => (
-                <label key={key} className="checkbox-inline">
-                  <input type="checkbox" name={key} checked={formData.implicaciones[key]} onChange={(e) => handleImplicacionToggle(key, e.target.checked)} /> {label}
-                </label>
-              ))}
-            </div>
-
-            <div className="form-group" style={{ marginTop: 12 }}>
-              <label>Otros (si aplica) — texto libre que generará una card en Sección 8:</label>
-              <input type="text" value={formData.implicaciones.otros} onChange={(e) => handleImplicacionesOtrosChange(e.target.value)} placeholder="Ej: Cambio en proveedores, cambio normativo X, ..." />
-            </div>
-
-            <p style={{ marginTop: 12, fontStyle: 'italic' }}>Nota: Las implicaciones seleccionadas en esta sección generan automáticamente cards en la Sección 8. No se pueden agregar cards manualmente en la Sección 8.</p>
-          </div>
-        );
-
-      case 7:
-        return (
-          <div className="form-section" ref={el => sectionRefs.current[6] = el}>
-            <h2>Sección 7: Consecuencias de no realizar el cambio</h2>
-            <div className="form-group">
-              <textarea name="consecuencias" value={formData.consecuencias} onChange={handleChange} rows={6} className={inputClass('consecuencias')} placeholder="Describa las consecuencias de no implementar este cambio..." />
-              {errors.consecuencias && <span className="error-message">{errors.consecuencias}</span>}
-            </div>
-          </div>
-        );
-
-      case 8:
-        return (
-          <div className="form-section" ref={el => sectionRefs.current[7] = el}>
-            <h2>Sección 8: RIESGOS (auto-generados desde Sección 6)</h2>
-            <p>Las cards en esta sección se generan automáticamente según las opciones marcadas en la Sección 6. Para añadir o quitar cards, regrese a la Sección 6 y modifique las implicaciones seleccionadas.</p>
-
-            {formData.riesgosCards.length === 0 && <div className="info">No hay cards aún. Seleccione implicaciones en la Sección 6 para generar cards aquí.</div>}
-
-            {formData.riesgosCards.map((card, idx) => (
-              <div key={card.id} className="riesgo-card form-section-card" style={{ padding: 12, marginBottom: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4>{card.tipoImplicacion === 'OTRAS' ? `OTRAS: ${card.otherLabel}` : (card.tipoImplicacion || '').replaceAll('_', ' ')} #{idx + 1}</h4>
-                </div>
-
-                {card.tipoImplicacion === 'IMPLICACION_DE_RIESGOS' && (
-                  <>
-                    <div className="form-group">
-                      <label>TIPO DE PELIGRO</label>
-                      <select value={card.tipoPeligro} onChange={(e) => updateRiesgoCardField(card.id, 'tipoPeligro', e.target.value)}>
-                        <option value="">-- Seleccione --</option>
-                        <option value="FISICO">FÍSICO</option>
-                        <option value="QUIMICO">QUÍMICO</option>
-                        <option value="BIOLOGICO">BIOLÓGICO</option>
-                      </select>
-                    </div>
-
-                    <div className="form-group">
-                      <label>DESCRIPCIÓN DEL PELIGRO</label>
-                      <textarea value={card.descripcionPeligro} onChange={(e) => updateRiesgoCardField(card.id, 'descripcionPeligro', e.target.value)} rows={3} />
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
-                      <div className="form-group"><label>PROBABILIDAD</label><input type="text" value={card.probabilidad} onChange={(e) => updateRiesgoCardField(card.id, 'probabilidad', e.target.value)} /></div>
-                      <div className="form-group"><label>SEVERIDAD</label><input type="text" value={card.severidad} onChange={(e) => updateRiesgoCardField(card.id, 'severidad', e.target.value)} /></div>
-                      <div className="form-group"><label>NIVEL DE RIESGO</label><input type="text" value={card.nivelRiesgo} onChange={(e) => updateRiesgoCardField(card.id, 'nivelRiesgo', e.target.value)} /></div>
-                    </div>
-
-                    <div className="form-group"><label>MEDIDAS DE CONTROL</label><textarea value={card.medidasControl} onChange={(e) => updateRiesgoCardField(card.id, 'medidasControl', e.target.value)} rows={2} /></div>
-                    <div className="form-group"><label>RESPONSABLE</label><input type="text" value={card.responsable} onChange={(e) => updateRiesgoCardField(card.id, 'responsable', e.target.value)} /></div>
-                    <div className="form-group"><label>FECHA COMPROMISO</label><input type="date" value={card.fechaCompromiso ? card.fechaCompromiso : ''} onChange={(e) => updateRiesgoCardField(card.id, 'fechaCompromiso', e.target.value)} /></div>
-                  </>
-                )}
-
-                {card.tipoImplicacion === 'DOCUMENTOS' && (
-                  <>
-                    <div className="form-group"><label>TIPO DE DOCUMENTO</label><input type="text" value={card.tipoDocumento} onChange={(e) => updateRiesgoCardField(card.id, 'tipoDocumento', e.target.value)} /></div>
-                    <div className="form-group"><label>NOMBRE DEL DOCUMENTO</label><input type="text" value={card.nombreDocumento} onChange={(e) => updateRiesgoCardField(card.id, 'nombreDocumento', e.target.value)} /></div>
-                    <div className="form-group"><label>CAMBIO A REALIZAR</label><textarea value={card.cambioRealizar} onChange={(e) => updateRiesgoCardField(card.id, 'cambioRealizar', e.target.value)} rows={2} /></div>
-                    <div className="form-group"><label>FECHA COMPROMISO</label><input type="date" value={card.fechaCompromisoDoc ? card.fechaCompromisoDoc : ''} onChange={(e) => updateRiesgoCardField(card.id, 'fechaCompromisoDoc', e.target.value)} /></div>
-                    <div className="form-group"><label>RESPONSABLE</label><input type="text" value={card.responsableDoc} onChange={(e) => updateRiesgoCardField(card.id, 'responsableDoc', e.target.value)} /></div>
-                  </>
-                )}
-
-                {card.tipoImplicacion === 'RECURSOS' && (
-                  <>
-                    <div className="form-group"><label>TIPO DE RECURSOS</label>
-                      <select value={card.tipoRecursos} onChange={(e) => updateRiesgoCardField(card.id, 'tipoRecursos', e.target.value)}>
-                        <option value="">-- Seleccione --</option>
-                        <option value="ECONOMICOS">ECONÓMICOS</option>
-                        <option value="MANO_DE_OBRA">MANO DE OBRA</option>
-                        <option value="MATERIALES">MATERIALES</option>
-                      </select>
-                    </div>
-
-                    <div className="form-group"><label>ORIGEN DE LOS RECURSOS</label>
-                      <select value={card.origenRecursos} onChange={(e) => updateRiesgoCardField(card.id, 'origenRecursos', e.target.value)}>
-                        <option value="">-- Seleccione --</option>
-                        <option value="INTERNO">INTERNO</option>
-                        <option value="EXTERNO">EXTERNO</option>
-                      </select>
-                    </div>
-
-                    <div className="form-group"><label>COSTOS</label><input type="text" value={card.costos} onChange={(e) => updateRiesgoCardField(card.id, 'costos', e.target.value)} /></div>
-                    <div className="form-group"><label>TIEMPO EN QUE ESTARÁN DISPONIBLES</label><input type="text" value={card.tiempoDisponible} onChange={(e) => updateRiesgoCardField(card.id, 'tiempoDisponible', e.target.value)} /></div>
-                    <div className="form-group"><label>FECHA COMPROMISO</label><input type="date" value={card.fechaCompromisoRec ? card.fechaCompromisoRec : ''} onChange={(e) => updateRiesgoCardField(card.id, 'fechaCompromisoRec', e.target.value)} /></div>
-                    <div className="form-group"><label>RESPONSABLE</label><input type="text" value={card.responsableRec} onChange={(e) => updateRiesgoCardField(card.id, 'responsableRec', e.target.value)} /></div>
-                  </>
-                )}
-
-                {card.tipoImplicacion === 'OTRAS' && (
-                  <>
-                    <div className="form-group"><label>INVOLUCRADOS (puede seleccionar varios)</label>
-                      <div className="checkbox-group">
-                        {['SOCIOS', 'PROVEEDORES', 'AUTORIDADES', 'CLIENTES', 'OTROS'].map(inv => (
-                          <label key={inv} style={{ display: 'block' }}>
-                            <input type="checkbox" checked={(card.involucradosSelected || []).includes(inv)} onChange={(e) => toggleInvolucrado(card.id, inv, e.target.checked)} /> {inv}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    {(card.involucradosSelected || []).map(inv => (
-                      <div key={inv} className="involucrado-block" style={{ borderLeft: '3px solid #ccc', paddingLeft: 8, marginTop: 8 }}>
-                        <h5>{inv}</h5>
-                        <div className="form-group"><label>TIPO DE AFECTACIÓN O BENEFICIO</label>
-                          <input type="text" value={card.involucradosData && card.involucradosData[inv] ? card.involucradosData[inv].tipoAfectacion : ''} onChange={(e) => updateInvolucradoField(card.id, inv, 'tipoAfectacion', e.target.value)} />
-                        </div>
-
-                        <div className="form-group"><label>GENERA COSTOS</label>
-                          <select value={card.involucradosData && card.involucradosData[inv] ? (card.involucradosData[inv].generaCostos ? 'SI' : 'NO') : ''} onChange={(e) => updateInvolucradoField(card.id, inv, 'generaCostos', e.target.value === 'SI')}>
-                            <option value="">-- Seleccione --</option>
-                            <option value="SI">SI</option>
-                            <option value="NO">NO</option>
-                          </select>
-                        </div>
-
-                        <div className="form-group"><label>MEDIDAS DE CONTROL</label>
-                          <textarea rows={2} value={card.involucradosData && card.involucradosData[inv] ? card.involucradosData[inv].medidasControl : ''} onChange={(e) => updateInvolucradoField(card.id, inv, 'medidasControl', e.target.value)} />
-                        </div>
-
-                        <div className="form-group"><label>FECHA COMPROMISO</label>
-                          <input type="date" value={card.involucradosData && card.involucradosData[inv] ? card.involucradosData[inv].fechaCompromiso : ''} onChange={(e) => updateInvolucradoField(card.id, inv, 'fechaCompromiso', e.target.value)} />
-                        </div>
-
-                        <div className="form-group"><label>RESPONSABLE</label>
-                          <input type="text" value={card.involucradosData && card.involucradosData[inv] ? card.involucradosData[inv].responsable : ''} onChange={(e) => updateInvolucradoField(card.id, inv, 'responsable', e.target.value)} />
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        );
-
-      case 9:
+      // ========== SECCIÓN 2 ==========
+case 2:
   return (
-    <div className="form-section" ref={el => sectionRefs.current[8] = el}>
-      <h2>Firmas</h2>
-
-      <Grid container spacing={2}>
-        {/* SOLICITANTE */}
-        <Grid item xs={12} md={6}>
-          <fieldset className={`signature-group ${(errors['firma_solicitado_nombre'] || errors['firma_solicitado_cargo'] || errors['firma_solicitado_firma']) ? 'field-error' : ''}`}>
-            <legend>Solicitado por:</legend>
-            <div className="form-group">
-              <label>Nombre*</label>
-              <Autocomplete
-                freeSolo
-                options={userNames}
-                value={formData.firmadoPor.solicitado.nombre || ''}
-                onChange={(e, newValue) => setFormData(prev => ({ 
-                  ...prev, firmadoPor: { 
-                    ...prev.firmadoPor, solicitado: { ...prev.firmadoPor.solicitado, nombre: newValue || '' } 
-                  } 
-                }))}
-                renderInput={(params) => <TextField {...params} variant="outlined" size="small" error={!!errors['firma_solicitado_nombre']} />}
-              />
-            </div>
-            <div className="form-group">
-              <label>Cargo*</label>
-              <input type="text"
-                value={formData.firmadoPor.solicitado.cargo}
-                onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, solicitado: { ...prev.firmadoPor.solicitado, cargo: e.target.value } } }))}
-                className={errors['firma_solicitado_cargo'] ? 'error' : ''} />
-            </div>
-            <div className="form-group">
-              <label>Firma*</label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button type="button" onClick={() => openSignature('solicitado')} className="signature-btn">
-                  {formData.firmadoPor.solicitado.firma ? 'Re-firmar' : 'Firmar'}
-                </button>
-                {formData.firmadoPor.solicitado.firma && (
-                  <div className="signature-preview">
-                    <img src={formData.firmadoPor.solicitado.firma} alt="Firma solicitante" height="50" />
-                    <span>Firma capturada</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </fieldset>
-        </Grid>
-
-        {/* EVALUADO */}
-        <Grid item xs={12} md={6}>
-          <fieldset className={`signature-group ${(errors['firma_evaluado_nombre'] || errors['firma_evaluado_cargo']) ? 'field-error' : ''}`}>
-            <legend>Evaluado por:</legend>
-            <div className="form-group">
-              <label>Nombre*</label>
-              <Autocomplete
-                freeSolo
-                options={userNames}
-                value={formData.firmadoPor.evaluado.nombre || ''}
-                onChange={(e, newValue) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, evaluado: { ...prev.firmadoPor.evaluado, nombre: newValue || '' } } }))}
-                renderInput={(params) => <TextField {...params} variant="outlined" size="small" error={!!errors['firma_evaluado_nombre']} />}
-              />
-            </div>
-            <div className="form-group">
-              <label>Cargo*</label>
-              <input type="text"
-                value={formData.firmadoPor.evaluado.cargo}
-                onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, evaluado: { ...prev.firmadoPor.evaluado, cargo: e.target.value } } }))}
-                className={errors['firma_evaluado_cargo'] ? 'error' : ''} />
-            </div>
-          </fieldset>
-        </Grid>
-
-        {/* IMPLEMENTADO */}
-        <Grid item xs={12} md={6}>
-          <fieldset className={`signature-group ${(errors['firma_implementado_nombre'] || errors['firma_implementado_cargo']) ? 'field-error' : ''}`}>
-            <legend>Implementado por:</legend>
-            <div className="form-group">
-              <label>Nombre*</label>
-              <Autocomplete
-                freeSolo
-                options={userNames}
-                value={formData.firmadoPor.implementado.nombre || ''}
-                onChange={(e, newValue) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, implementado: { ...prev.firmadoPor.implementado, nombre: newValue || '' } } }))}
-                renderInput={(params) => <TextField {...params} variant="outlined" size="small" error={!!errors['firma_implementado_nombre']} />}
-              />
-            </div>
-            <div className="form-group">
-              <label>Cargo*</label>
-              <input type="text"
-                value={formData.firmadoPor.implementado.cargo}
-                onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, implementado: { ...prev.firmadoPor.implementado, cargo: e.target.value } } }))}
-                className={errors['firma_implementado_cargo'] ? 'error' : ''} />
-            </div>
-          </fieldset>
-        </Grid>
-
-        {/* VALIDADO */}
-        <Grid item xs={12} md={6}>
-          <fieldset className={`signature-group ${(errors['firma_validado_nombre'] || errors['firma_validado_cargo']) ? 'field-error' : ''}`}>
-            <legend>Validado por:</legend>
-            <div className="form-group">
-              <label>Nombre*</label>
-              <Autocomplete
-                freeSolo
-                options={userNames}
-                value={formData.firmadoPor.validado.nombre || ''}
-                onChange={(e, newValue) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, validado: { ...prev.firmadoPor.validado, nombre: newValue || '' } } }))}
-                renderInput={(params) => <TextField {...params} variant="outlined" size="small" error={!!errors['firma_validado_nombre']} />}
-              />
-            </div>
-            <div className="form-group">
-              <label>Cargo*</label>
-              <input type="text"
-                value={formData.firmadoPor.validado.cargo}
-                onChange={(e) => setFormData(prev => ({ ...prev, firmadoPor: { ...prev.firmadoPor, validado: { ...prev.firmadoPor.validado, cargo: e.target.value } } }))}
-                className={errors['firma_validado_cargo'] ? 'error' : ''} />
-            </div>
-          </fieldset>
-        </Grid>
-
-        {/* APROBADOS dinámicos */}
-        {(formData.firmadoPor.aprobado || []).map((a, idx) => (
-          <Grid item xs={12} md={6} key={`aprobado-${idx}`}>
-            <div style={{ border: '1px solid #eee', padding: 8, marginBottom: 8 }}>
-              <div className="form-group">
-                <label>Nombre*</label>
-                <Autocomplete
-                  freeSolo
-                  options={userNames}
-                  value={a.nombre || ''}
-                  onChange={(e, newValue) => handleAprobadoChange(idx, 'nombre', newValue || '')}
-                  renderInput={(params) => <TextField {...params} variant="outlined" size="small" error={!!errors[`firma_aprobado_${idx}_nombre`]} />}
-                />
-              </div>
-              <div className="form-group">
-                <label>Cargo*</label>
-                <input type="text"
-                  value={a.cargo}
-                  onChange={(e) => handleAprobadoChange(idx, 'cargo', e.target.value)}
-                  className={errors[`firma_aprobado_${idx}_cargo`] ? 'error' : ''} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button type="button" className="btn-secondary" onClick={() => removeAprobado(idx)}>Eliminar</button>
-              </div>
-            </div>
-          </Grid>
-        ))}
-
-        {/* agregar aprobador */}
-        <Grid item xs={12}>
-          <div style={{ marginTop: 8 }}>
-            <button type="button" className="btn-primary" onClick={addAprobado}>Agregar aprobador</button>
-          </div>
-        </Grid>
-      </Grid>
-    </div>
+    <Seccion2
+      formData={formData}
+      handleChange={handleChange}
+      errors={errors}
+      inputClass={inputClass}
+      sectionRef={el => sectionRefs.current[1] = el}
+      impactoOptions={impactoOptions}
+      handleImpactoTextareaChange={handleImpactoTextareaChange}
+    />
   );
 
+// ========== SECCIÓN 3 ==========
+case 3:
+  return (
+    <Seccion3
+      formData={formData}
+      errors={errors}
+      handleNestedChange={handleNestedChange}
+      sectionRef={el => sectionRefs.current[2] = el}
+    />
+  );
+
+// ========== SECCIÓN 4 ==========
+case 4:
+  return (
+    <Seccion4
+      formData={formData}
+      handleChange={handleChange}
+      errors={errors}
+      inputClass={inputClass}
+      sectionRef={el => sectionRefs.current[3] = el}
+    />
+  );
+
+// ========== SECCIÓN 5 ==========
+case 5:
+  return (
+    <Seccion5
+      formData={formData}
+      handleChange={handleChange}
+      errors={errors}
+      inputClass={inputClass}
+      sectionRef={el => sectionRefs.current[4] = el}
+    />
+  );
+
+// ========== SECCIÓN 6 ==========
+case 6:
+  return (
+    <Seccion6
+      formData={formData}
+      errors={errors}
+      handleImplicacionToggle={handleImplicacionToggle}
+      handleImplicacionesOtrosChange={handleImplicacionesOtrosChange}
+      sectionRef={el => sectionRefs.current[5] = el}
+    />
+  );
+
+// ========== SECCIÓN 7 ==========
+case 7:
+  return (
+    <Seccion7
+      formData={formData}
+      handleChange={handleChange}
+      errors={errors}
+      inputClass={inputClass}
+      sectionRef={el => sectionRefs.current[6] = el}
+    />
+  );
+
+// ========== SECCIÓN 8 ==========
+case 8:
+  return (
+<Seccion8
+  formData={formData}
+  updateRiesgoCardField={updateRiesgoCardField}
+  toggleInvolucrado={toggleInvolucrado}
+  updateInvolucradoField={updateInvolucradoField}
+  addNewCard={addNewCard}
+  removeCardById={removeCardById}
+  sectionRef={el => sectionRefs.current[7] = el}
+/>
+  );
+
+// ========== SECCIÓN 9 ==========
+case 9:
+  return (
+    <Seccion9
+      formData={formData}
+      setFormData={setFormData}
+      setAddTemp={setAddTemp}
+      errors={errors}
+      inputClass={inputClass}
+      openSignature={openSignature}
+      userNames={userNames}
+      addMode={addMode}
+      addTemp={addTemp}
+      startAdd={startAdd}
+      cancelAdd={cancelAdd}
+      confirmAdd={confirmAdd}
+      removeFirmaRole={removeFirmaRole}
+      sectionRefs={sectionRefs}
+    />
+  );  
       default:
         return null;
     }
   };
 
+  // ===================== RENDER PRINCIPAL =====================
   if (submitted) {
     return (
       <div className="confirmation">
@@ -1031,56 +903,78 @@ const handleAprobadoChange = (idx, field, value) => {
 
       {/* ALERT BANNER */}
       {alertBanner && (
-  <div className={`form-alert ${alertBanner.type === 'error' ? 'alert-error' : 'alert-success'}`}>
-    <div className="alert-top">
-      <div className="alert-left">
-        <div className="alert-icon">{alertBanner.type === 'error' ? '⚠️' : '✅'}</div>
-        <div>
-          <strong>{alertBanner.type === 'error' ? 'Atención:' : 'Éxito:'}</strong>
-          <div className="alert-summary">{alertBanner.text}</div>
-        </div>
-      </div>
-
-      <div className="alert-actions">
-        {alertBanner.details && <button className="small-link" onClick={() => {
-          const firstSec = Math.min(...Object.keys(alertBanner.details).map(n => parseInt(n,10)));
-          setActiveSection(firstSec);
-          sectionRefs.current[firstSec - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }}>Ir a primer faltante</button>}
-        <button className="small-link" onClick={() => setAlertBanner(null)} style={{ marginLeft: 8 }}>Cerrar</button>
-      </div>
-    </div>
-
-    {alertBanner.details && (
-      <div className="alert-details">
-        {Object.entries(alertBanner.details).map(([sec, arr]) => (
-          <div key={sec} className="alert-section">
-            <div className="alert-section-header">
-              <button className="link-to-section" onClick={() => {
-                const s = parseInt(sec, 10);
-                setActiveSection(s);
-                sectionRefs.current[s - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }}>
-                Sección {sec}
-              </button>
-              <span className="badge">{arr.length}</span>
+        <div className={`form-alert ${alertBanner.type === 'error' ? 'alert-error' : 'alert-success'}`}>
+          <div className="alert-top">
+            <div className="alert-left">
+              <div className="alert-icon">{alertBanner.type === 'error' ? '⚠️' : '✅'}</div>
+              <div>
+                <strong>{alertBanner.type === 'error' ? 'Atención:' : 'Éxito:'}</strong>
+                <div className="alert-summary">{alertBanner.text}</div>
+              </div>
             </div>
-            <ul className="alert-missing-list">
-              {arr.map((label, i) => (
-                <li key={i}><small>{label}</small></li>
-              ))}
-            </ul>
+
+            <div className="alert-actions">
+              {alertBanner.details && <button className="small-link" onClick={() => {
+                const firstSec = Math.min(...Object.keys(alertBanner.details).map(n => parseInt(n,10)));
+                setActiveSection(firstSec);
+                sectionRefs.current[firstSec - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}>Ir a primer faltante</button>}
+              <button className="small-link" onClick={() => setAlertBanner(null)} style={{ marginLeft: 8 }}>Cerrar</button>
+            </div>
           </div>
-        ))}
-      </div>
-    )}
-  </div>
-)}
 
+          {alertBanner.details && (
+            <div className="alert-details">
+              {Object.entries(alertBanner.details).map(([sec, arr]) => (
+                <div key={sec} className="alert-section">
+                  <div className="alert-section-header">
+                    <button className="link-to-section" onClick={() => {
+                      const s = parseInt(sec, 10);
+                      setActiveSection(s);
+                      sectionRefs.current[s - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}>
+                      Sección {sec}
+                    </button>
+                    <span className="badge">{arr.length}</span>
+                  </div>
+                  <ul className="alert-missing-list">
+                    {arr.map((label, i) => (
+                      <li key={i}><small>{label}</small></li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-      <div className="progress-bar">
-        {[1,2,3,4,5,6,7,8,9].map(renderProgressStep)}
-      </div>
+<div className="progress-bar">
+  {[
+    { num: 1, label: "Datos" },
+    { num: 2, label: "Notificación" },
+    { num: 3, label: "Causa" },
+    { num: 4, label: "Descripción" },
+    { num: 5, label: "Justificación" },
+    { num: 6, label: "Implicaciones" },
+    { num: 7, label: "Consecuencias" },
+    { num: 8, label: "Riesgos" },
+    { num: 9, label: "Firmas" }
+  ].map(({ num, label }) => (
+    <div
+      key={num}
+      className={
+        "progress-step" +
+        (activeSection === num ? " active" : "") +
+        (missingMap[num] && missingMap[num].length ? " error" : "")
+      }
+      onClick={() => setActiveSection(num)}
+    >
+      <div className="step-number">{num}</div>
+      <div className="step-label">{label}</div>
+    </div>
+  ))}
+</div>
 
       <form onSubmit={activeSection === 9 ? (e) => { e.preventDefault(); sendRequest(); } : (e) => { e.preventDefault(); const missing = validateSection(activeSection); if (missing.length === 0) setActiveSection(s => Math.min(9, s + 1)); }}>
         {renderSection()}
@@ -1099,7 +993,36 @@ const handleAprobadoChange = (idx, field, value) => {
         </div>
       </form>
 
-      <SignaturePopup open={!!sigRole} role={sigRole} onSave={handleSaveSig} onClose={() => setSigRole(null)} />
+        <SignaturePopup
+          open={!!sigRole}
+          role={sigRole?.role}
+          index={sigRole?.idx}
+          onSave={(maybeRoleOrDataUrl, maybeDataUrl) => {
+            // Si SignaturePopup llamó onSave(role, dataURL), entonces maybeDataUrl será la dataURL.
+            // Si SignaturePopup llamó onSave(dataURL) (otro formato), maybeDataUrl será undefined.
+            const roleFromPopup = (typeof maybeDataUrl === 'string') ? maybeRoleOrDataUrl : sigRole?.role;
+            const dataURL = (typeof maybeDataUrl === 'string') ? maybeDataUrl : maybeRoleOrDataUrl;
+            const idx = sigRole?.idx ?? 0;
+            handleSaveSig(roleFromPopup, dataURL, idx);
+          }}
+          onClose={() => setSigRole(null)}
+        />
+
     </div>
   );
 }
+
+const impactoOptions = [
+  { key: 'productos', label: 'Productos nuevos, MP´S, ingredientes y servicios' },
+  { key: 'sistemasEquipos', label: 'Sistemas y equipos de producción' },
+  { key: 'localesProduccion', label: 'Locales de producción, ubicación de los equipos, entorno circundante' },
+  { key: 'programasLimpieza', label: 'Programas de limpieza y desinfección' },
+  { key: 'sistemasEmbalaje', label: 'Sistemas de embalaje, almacenamiento y distribución' },
+  { key: 'nivelesPersonal', label: 'Niveles de calificación del personal y/o asignación de responsabilidades  y autorizaciones' },
+  { key: 'requisitosLegales', label: 'Requisitos legales y reglamentarios' },
+  { key: 'conocimientosPeligros', label: 'Conocimientos relativos a los peligros para la inocuidad de los alimentos y medidas de control' },
+  { key: 'requisitosCliente', label: 'Requisitos del cliente, del sector y otros requisitos que la organización tiene en cuenta' },
+  { key: 'consultasPartes', label: 'Consultas pertinentes de las partes interesadas externas' },
+  { key: 'quejasPeligros', label: 'Quejas indicando peligros relacionados con la inocuidad de los alimentos, asociados al producto' },
+  { key: 'otrasCondiciones', label: 'Otras condiciones que tenga impacto en la inocuidad de los alimentos' }
+];

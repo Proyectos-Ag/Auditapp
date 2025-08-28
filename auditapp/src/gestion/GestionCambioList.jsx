@@ -96,6 +96,64 @@ const formatDate = (d) => {
   }
 };
 
+// helpers para mapear firmadoPor del backend (filtrado) a la forma legacy que espera el front
+const capitalize = (s = '') => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
+
+function mapFirmadoPorBackendToLegacy(fpFiltered = {}) {
+  const roles = ['solicitado','evaluado','aprobado','implementado','validado'];
+  const out = {};
+
+  roles.forEach((role) => {
+    const node = fpFiltered[role] || {};
+    const self = node.self || null; // objeto completo si el backend detectó que el usuario es uno de los del rol
+    const others = Array.isArray(node.others) ? node.others : []; // [{nombre,cargo,hasFirma},...]
+
+    // Construimos array legacy: self (si existe) al inicio, luego others
+    const arr = [];
+    if (self) {
+      arr.push({
+        nombre: self.nombre || '',
+        cargo: self.cargo || '',
+        firma: self.firma || '',
+        email: self.email || '',
+        fechaFirma: self.fechaFirma || null,
+        hasFirma: !!self.firma
+      });
+    }
+    others.forEach(o => {
+      arr.push({
+        nombre: o.nombre || '',
+        cargo: o.cargo || '',
+        hasFirma: !!o.hasFirma,
+        // otros objetos de la lista de "others" normalmente no traen 'firma' ni 'email'
+      });
+    });
+
+    // Exportamos el array como la representación principal del role (compatibilidad mejorada)
+    out[role] = arr;
+
+    // También exportamos un objeto con el primer elemento para lecturas antiguas
+    out[`${role}Obj`] = arr.length > 0 ? arr[0] : null;
+
+    // Flags de canSign: soportamos ambos nombres por compatibilidad
+    const canSign = !!node.canSign;
+    if (role === 'aprobado') {
+      out['canSignAprobador'] = canSign;
+      out['canSignAprobado'] = canSign;
+      // estructuras adicionales que el UI ya usaba
+      out.aprobadoSelf = self ? { ...self, hasFirma: !!self.firma } : null;
+      out.otrosAprobadoresResumen = others.map(o => ({ nombre: o.nombre || '', cargo: o.cargo || '', hasFirma: !!o.hasFirma }));
+      out.aprobado = arr; // legacy: mantenemos también la propiedad aprobado (array)
+      out.aprobadoObj = out.aprobadoObj || null;
+    } else {
+      const key = `canSign${capitalize(role)}`;
+      out[key] = canSign;
+    }
+  });
+
+  return out;
+}
+
 /* ------------------ Componente principal ------------------ */
 const GestionCambioList = () => {
   const { id } = useParams();
@@ -119,10 +177,18 @@ const GestionCambioList = () => {
       try {
         setLoading(true);
         const userName = encodeURIComponent(userData?.Nombre || '');
+        const userEmail = encodeURIComponent(userData?.Correo || userData?.correo || userData?.email || '');
         const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${recordId}?userName=${userName}`
+          `${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${recordId}?userName=${userName}&userEmail=${userEmail}`
         );
-        if (!cancelled) setItem(res.data || null);
+        if (!cancelled) {
+          // mapear firmadoPor si viene (backend devuelve firmadoPor filtrado)
+          const data = res.data || null;
+          if (data && data.firmadoPor) {
+            data.firmadoPor = mapFirmadoPorBackendToLegacy(data.firmadoPor);
+          }
+          setItem(data);
+        }
       } catch (err) {
         console.error(`Error al obtener gestion ${recordId}:`, err);
         if (!cancelled) {
@@ -137,7 +203,7 @@ const GestionCambioList = () => {
 
     fetchById(id);
     return () => { cancelled = true; };
-  }, [id, userData?.correo]);
+  }, [id, userData?.Nombre, userData?.Correo, userData?.correo, userData?.email]);
 
   const volver = () => navigate(-1);
 
@@ -174,8 +240,12 @@ const GestionCambioList = () => {
         `${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${id}/sign`,
         payload
       );
-      setItem(res.data);
-      setSignatureOpen(false);
+      const data = res.data;
+if (data && data.firmadoPor) {
+  data.firmadoPor = mapFirmadoPorBackendToLegacy(data.firmadoPor);
+}
+setItem(data);
+setSignatureOpen(false);
     } catch (err) {
       console.error('Error guardando firma:', err);
     }
@@ -256,7 +326,7 @@ const GestionCambioList = () => {
                     <div className="gcl-inline-row">
                       {showTipoPeligro && (
                         <div className="gcl-inline-item">
-                          {renderFieldIf("Tipo de peligro", card.tipoPeligro)}
+                          {renderFieldIf("TIPO DE PELIGRO", card.tipoPeligro)}
                         </div>
                       )}
                       {showResp && (
@@ -331,25 +401,25 @@ const GestionCambioList = () => {
                     <div className="gcl-inline-row">
                       {showRecTipo && (
                         <div className="gcl-inline-item">
-                          {renderFieldIf("Tipo recursos", card.tipoRecursos)}
+                          {renderFieldIf("TIPO DE RECURSOS", card.tipoRecursos)}
                         </div>
                       )}
                       {showRecOrigen && (
                         <div className="gcl-inline-item">
-                          {renderFieldIf("Origen", card.origenRecursos)}
+                          {renderFieldIf("ORIGEN DE LOS RECURSOS (INTERNO/EXTERNO)", card.origenRecursos)}
                         </div>
                       )}
                     </div>
                     <div className="gcl-inline-row smalls">
                       {showCostos && (
                         <div className="gcl-inline-item">
-                          {renderFieldIf("Costos", card.costos)}
+                          {renderFieldIf("COSTOS", card.costos)}
                         </div>
                       )}
                       {showTiempo && (
                         <div className="gcl-inline-item">
                           {renderFieldIf(
-                            "Tiempo disponible",
+                            "TIEMPO EN QUE ESTARAN DISPONIBLES",
                             card.tiempoDisponible
                           )}
                         </div>
@@ -357,11 +427,11 @@ const GestionCambioList = () => {
                     </div>
                     {showFechaRec &&
                       renderFieldIf(
-                        "Fecha compromiso",
+                        "FECHA COMPROMISO",
                         formatDate(card.fechaCompromisoRec)
                       )}
                     {showRespRec &&
-                      renderFieldIf("Responsable", card.responsableRec)}
+                      renderFieldIf("RESPONSABLE", card.responsableRec)}
                   </>
                 )}
 
@@ -447,41 +517,6 @@ const GestionCambioList = () => {
       </div>
     );
 
-  const fp = item?.firmadoPor || {};
-  const aprobadoList = Array.isArray(fp.aprobado)
-    ? fp.aprobado
-    : fp.aprobado
-    ? [fp.aprobado]
-    : [];
-  const solicitado = fp.solicitado || fp.solicitante || {};
-
-  const nonEmpty = (s) => typeof s === "string" && s.trim() !== "";
-
-  const solicitanteCompleto =
-    nonEmpty(solicitado?.nombre) &&
-    nonEmpty(solicitado?.cargo) &&
-    nonEmpty(solicitado?.firma);
-
-  const roleComplete = (roleObj) =>
-    roleObj &&
-    nonEmpty(roleObj.nombre) &&
-    nonEmpty(roleObj.cargo) &&
-    nonEmpty(roleObj.firma);
-  const evaluadoCompleto = roleComplete(fp.evaluado);
-  const implementadoCompleto = roleComplete(fp.implementado);
-  const validadoCompleto = roleComplete(fp.validado);
-
-  const aprobadoresCompleto =
-    Array.isArray(aprobadoList) &&
-    aprobadoList.length > 0 &&
-    aprobadoList.every((a) => a && nonEmpty(a.nombre) && nonEmpty(a.cargo));
-
-  const todasFirmasCompletas =
-    solicitanteCompleto &&
-    evaluadoCompleto &&
-    implementadoCompleto &&
-    validadoCompleto &&
-    aprobadoresCompleto;
 
   return (
     <div className="gcl-container-single">
@@ -515,14 +550,14 @@ const GestionCambioList = () => {
           <div className="gcl-card-body">
             {/* Datos de la solicitud */}
             <div className="gcl-section">
-              <h3 className="gcl-section-title">Datos de la solicitud</h3>
+              <h3 className="gcl-section-title">Sección 1: Datos de la solicitud del cambio</h3>
               <div className="gcl-grid-fields compact">
-                {renderFieldIf("Solicitante", item.solicitante, true)}
-                {renderFieldIf("Área solicitante", item.areaSolicitante)}
+                {renderFieldIf("Solicitante del cambio", item.solicitante, true)}
+                {renderFieldIf("Área del solicitante", item.areaSolicitante)}
                 {renderFieldIf("Lugar", item.lugar)}
-                {renderFieldIf("Líder de proyecto", item.liderProyecto)}
+                {renderFieldIf("Líder del proyecto", item.liderProyecto)}
                 {renderFieldIf(
-                  "Fecha planeada",
+                  "Fecha planeada para realizar el cambio",
                   formatDate(item.fechaPlaneada)
                 )}
               </div>
@@ -530,56 +565,56 @@ const GestionCambioList = () => {
 
             {/* Alcance */}
             <div className="gcl-section">
-              <h3 className="gcl-section-title">Alcance del cambio</h3>
+              <h3 className="gcl-section-title">Sección 2: Formulario de Notificación de Solicitud de Cambio</h3>
               <div className="gcl-grid-fields">
                 {renderFieldIf("Tipo de cambio", item.tipoCambio, true)}
                 {renderFieldIf(
-                  "Productos",
+                  "Productos nuevos, MP´S, ingredientes y servicios",
                   item.impactosData?.productos || item.productos
                 )}
                 {renderFieldIf(
-                  "Sistemas/Equipos",
+                  "Sistemas y equipos de producción",
                   item.impactosData?.sistemasEquipos || item.sistemasEquipos
                 )}
                 {renderFieldIf(
-                  "Locales de producción",
+                  "Locales de producción, ubicación de los equipos, entorno circundante",
                   item.impactosData?.localesProduccion || item.localesProduccion
                 )}
                 {renderFieldIf(
-                  "Programas de limpieza",
+                  "Programas de limpieza y desinfección",
                   item.impactosData?.programasLimpieza || item.programasLimpieza
                 )}
                 {renderFieldIf(
-                  "Sistemas de embalaje",
+                  "Sistemas de embalaje, almacenamiento y distribución",
                   item.impactosData?.sistemasEmbalaje || item.sistemasEmbalaje
                 )}
                 {renderFieldIf(
-                  "Niveles de personal",
+                  "Niveles de calificación del personal y/o asignación de responsabilidades  y autorizaciones",
                   item.impactosData?.nivelesPersonal || item.nivelesPersonal
                 )}
                 {renderFieldIf(
-                  "Requisitos legales",
+                  "Requisitos legales y reglamentarios",
                   item.impactosData?.requisitosLegales || item.requisitosLegales
                 )}
                 {renderFieldIf(
-                  "Conocimientos de peligros",
+                  "Conocimientos relativos a los peligros para la inocuidad de los alimentos y medidas de control",
                   item.impactosData?.conocimientosPeligros ||
                     item.conocimientosPeligros
                 )}
                 {renderFieldIf(
-                  "Requisitos del cliente",
+                  "Requisitos del cliente, del sector y otros requisitos que la organización tiene en cuenta",
                   item.impactosData?.requisitosCliente || item.requisitosCliente
                 )}
                 {renderFieldIf(
-                  "Consultas a partes",
+                  "Consultas pertinentes de las partes interesadas externas",
                   item.impactosData?.consultasPartes || item.consultasPartes
                 )}
                 {renderFieldIf(
-                  "Quejas de peligros",
+                  "Quejas indicando peligros relacionados con la inocuidad de los alimentos, asociados al producto",
                   item.impactosData?.quejasPeligros || item.quejasPeligros
                 )}
                 {renderFieldIf(
-                  "Otras condiciones",
+                  "Otras condiciones que tenga impacto en la inocuidad de los alimentos",
                   item.impactosData?.otrasCondiciones || item.otrasCondiciones
                 )}
               </div>
@@ -587,14 +622,14 @@ const GestionCambioList = () => {
 
             {/* Causa */}
             <div className="gcl-section">
-              <h3 className="gcl-section-title">Causa</h3>
+              <h3 className="gcl-section-title">Sección 3: Causa/ Origen del cambio</h3>
               <div className="gcl-grid-fields compact">
                 {renderBooleanIf(
-                  "Solicitud cliente",
+                  "Solicitud del cliente",
                   item.causa?.solicitudCliente
                 )}
                 {renderBooleanIf(
-                  "Reparación defecto",
+                  "Reparación de defecto",
                   item.causa?.reparacionDefecto
                 )}
                 {renderBooleanIf(
@@ -602,7 +637,7 @@ const GestionCambioList = () => {
                   item.causa?.accionPreventiva
                 )}
                 {renderBooleanIf(
-                  "Actualización documento",
+                  " Actualización / modificación de documento",
                   item.causa?.actualizacionDocumento
                 )}
                 {renderBooleanIf(
@@ -616,7 +651,7 @@ const GestionCambioList = () => {
             {/* Descripción / Justificación */}
             {hasValue(item.descripcionPropuesta) && (
               <div className="gcl-section">
-                <h3 className="gcl-section-title">Descripción propuesta</h3>
+                <h3 className="gcl-section-title">Sección 4: Descripción de la propuesta de cambio</h3>
                 <div className="gcl-text-content">
                   {item.descripcionPropuesta}
                 </div>
@@ -625,212 +660,120 @@ const GestionCambioList = () => {
 
             {hasValue(item.justificacion) && (
               <div className="gcl-section">
-                <h3 className="gcl-section-title">Justificación</h3>
+                <h3 className="gcl-section-title">Sección 5: Justificación de la propuesta de cambio</h3>
                 <div className="gcl-text-content">{item.justificacion}</div>
               </div>
             )}
 
             {/* Implicaciones */}
             <div className="gcl-section">
-              <h3 className="gcl-section-title">Implicaciones</h3>
+              <h3 className="gcl-section-title">Sección 6: Implicaciones del cambio</h3>
               <div className="gcl-grid-fields compact">
-                {renderBooleanIf("Riesgos", item.implicaciones?.riesgos)}
-                {renderBooleanIf("Recursos", item.implicaciones?.recursos)}
+                {renderBooleanIf("Riesgos para la inocuidad", item.implicaciones?.riesgos)}
+                {renderBooleanIf("Recursos (humano, económico, material)", item.implicaciones?.recursos)}
                 {renderBooleanIf(
-                  "Documentación",
+                  "Documentación (layout, procedimientos, planos etc.)",
                   item.implicaciones?.documentacion
                 )}
                 {renderFieldIf("Otros", item.implicaciones?.otros)}
               </div>
             </div>
 
-            {/* Riesgos */}
-            {renderRiesgosCards(item.riesgosCards)}
-
-            {/* Consecuencias */}
+             {/* Consecuencias */}
             {hasValue(item.consecuencias) && (
               <div className="gcl-section">
-                <h3 className="gcl-section-title">Consecuencias</h3>
+                <h3 className="gcl-section-title">Sección 7: Consecuencias de no realizar el  cambio</h3>
                 <div className="gcl-text-content">{item.consecuencias}</div>
               </div>
             )}
 
+            {/* Riesgos */}
+            {renderRiesgosCards(item.riesgosCards)}
+
             {/* Firmas */}
           
+{/* Firmas */}
 {(() => {
   const firmadoPor = item?.firmadoPor || {};
   const userNombre = userData?.nombre || userData?.Nombre || '';
   const userCargo = userData?.cargo || userData?.Cargo || '';
+
+  const renderRoleSigners = (roleKey, label, canSignFlagKey) => {
+    const arr = Array.isArray(firmadoPor?.[roleKey]) ? firmadoPor[roleKey] : (firmadoPor?.[roleKey] ? [firmadoPor[roleKey]] : []);
+    const canSign = !!(firmadoPor?.[canSignFlagKey]);
+
+    return (
+      <div key={roleKey} className="gcl-signature-card">
+        <div className="gcl-signature-role">{label}</div>
+
+        <div className="gcl-signers-list">
+          {arr.length === 0 ? (
+            <div className="gcl-signature-pending">Pendiente</div>
+          ) : (
+            arr.map((s, i) => {
+              const name = s?.nombre || 'Pendiente';
+              const cargo = s?.cargo || '-';
+              const hasFirma = !!s?.hasFirma || !!s?.firma;
+              return (
+                <div key={`${roleKey}-${i}`} className="gcl-signer-row" style={{ marginBottom: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div style={{ flex: 1 }}>
+                    <div className="gcl-signature-info">
+                      <div className="gcl-signature-name">{name}</div>
+                      <div className="gcl-signature-position">{cargo}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ width: 240 }}>
+                    {s?.firma ? (
+                      <SignatureProtegida src={s.firma} alt={`Firma ${name}`} width={220} />
+                    ) : hasFirma ? (
+                      <div className="gcl-signed-badge">
+                        <span className="gcl-check-icon" />
+                        Firmado
+                      </div>
+                    ) : (
+                      <div className="gcl-signature-pending">Pendiente</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Botón de firmar para este rol (si el backend indicó que el usuario puede) */}
+        {canSign ? (
+          <div className="gcl-sign-action" style={{ marginTop: 8 }}>
+            <button
+              className="gcl-sign-btn"
+              onClick={() => {
+                setSignatureRole(roleKey);
+                setSignatureOpen(true);
+              }}
+            >
+              Firmar
+            </button>
+          </div>
+        ) : null}
+      </div>
+    );
+  };
+
   return (
     <div className="gcl-section">
       <h3 className="gcl-section-title">Firmas</h3>
 
       <div className="gcl-signatures-grid two-per-row">
-
-        {/* SOLICITANTE */}
-        <div key="solicitado" className="gcl-signature-card">
-          <div className="gcl-signature-role">Solicitante</div>
-          <div className="gcl-signature-info">
-            <div className="gcl-signature-name">{firmadoPor?.solicitado?.nombre || "Pendiente"}</div>
-            <div className="gcl-signature-position">{firmadoPor?.solicitado?.cargo || "-"}</div>
-          </div>
-
-          {firmadoPor?.solicitado?.firma ? (
-            <SignatureProtegida src={firmadoPor.solicitado.firma} alt="Firma solicitante" width={220} />
-          ) : firmadoPor?.solicitado?.hasFirma ? (
-            <div className="gcl-signed-badge">
-              <span className="gcl-check-icon"></span>
-              Firmado
-            </div>
-          ) : firmadoPor?.canSignSolicitado ? (
-            <div className="gcl-sign-action">
-              <button className="gcl-sign-btn" onClick={() => { setSignatureRole('solicitado'); setSignatureOpen(true); }}>
-                Firmar
-              </button>
-            </div>
-          ) : (
-            <div className="gcl-signature-pending">Pendiente</div>
-          )}
-        </div>
-
-        {/* EVALUADO */}
-        <div key="evaluado" className="gcl-signature-card">
-          <div className="gcl-signature-role">Evaluado por</div>
-          <div className="gcl-signature-info">
-            <div className="gcl-signature-name">{firmadoPor?.evaluado?.nombre || "Pendiente"}</div>
-            <div className="gcl-signature-position">{firmadoPor?.evaluado?.cargo || "-"}</div>
-          </div>
-
-          {firmadoPor?.evaluado?.firma ? (
-            <SignatureProtegida src={firmadoPor.evaluado.firma} alt="Firma evaluado" width={220} />
-          ) : firmadoPor?.evaluado?.hasFirma ? (
-            <div className="gcl-signed-badge">
-              <span className="gcl-check-icon"></span>
-              Firmado
-            </div>
-          ) : firmadoPor?.canSignEvaluado ? (
-            <div className="gcl-sign-action">
-              <button className="gcl-sign-btn" onClick={() => { setSignatureRole('evaluado'); setSignatureOpen(true); }}>
-                Firmar
-              </button>
-            </div>
-          ) : (
-            <div className="gcl-signature-pending">Pendiente</div>
-          )}
-        </div>
-
-        {/* APROBADOR USUARIO AUTENTICADO */}
-        <div key="aprobador_self" className="gcl-signature-card">
-          <div className="gcl-signature-role">Aprobado por</div>
-          <div className="gcl-signature-info">
-            <div className="gcl-signature-name">
-              {firmadoPor?.aprobadoSelf?.nombre || userNombre || 'Tú'}
-            </div>
-            <div className="gcl-signature-position">
-              {firmadoPor?.aprobadoSelf?.cargo || userCargo || '-'}
-            </div>
-          </div>
-
-          {firmadoPor?.aprobadoSelf?.firma ? (
-            <SignatureProtegida src={firmadoPor.aprobadoSelf.firma} alt="Tu firma" width={220} />
-          ) : firmadoPor?.aprobadoSelf?.hasFirma ? (
-            <div className="gcl-signed-badge">
-              <span className="gcl-check-icon"></span>
-              Firmado
-            </div>
-          ) : firmadoPor?.canSignAprobador ? (
-            <div className="gcl-sign-action">
-              <button className="gcl-sign-btn" onClick={() => { setSignatureRole('aprobado'); setSignatureOpen(true); }}>
-                Firmar
-              </button>
-            </div>
-          ) : (
-            <div className="gcl-signature-pending">Pendiente</div>
-          )}
-        </div>
-
-        {/* Resumen de otros aprobadores */}
-        <div key="aprobadores_resumen" className="gcl-signature-card gcl-aprobadores-resumen">
-          <div className="gcl-signature-role">Aprobadores</div>
-          <div className="gcl-aprobadores-list">
-            {(firmadoPor?.otrosAprobadoresResumen && firmadoPor.otrosAprobadoresResumen.length > 0) ? (
-              firmadoPor.otrosAprobadoresResumen.map((o, i) => (
-                <div key={i} className="gcl-otro-aprobador">
-                  <div className="gcl-otro-name">{o.nombre}</div>
-                  <div className="gcl-otro-cargo">{o.cargo}</div>
-                  <div className="gcl-otro-status">
-                    {o.hasFirma ? (
-                      <>
-                        <span className="gcl-check-icon"></span>
-                        Firmado
-                      </>
-                    ) : (
-                      "Pendiente"
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="gcl-signature-pending">No hay más aprobadores</div>
-            )}
-          </div>
-        </div>
-
-        {/* IMPLEMENTADO */}
-        <div key="implementado" className="gcl-signature-card">
-          <div className="gcl-signature-role">Implementado por</div>
-          <div className="gcl-signature-info">
-            <div className="gcl-signature-name">{firmadoPor?.implementado?.nombre || "Pendiente"}</div>
-            <div className="gcl-signature-position">{firmadoPor?.implementado?.cargo || "-"}</div>
-          </div>
-
-          {firmadoPor?.implementado?.firma ? (
-            <SignatureProtegida src={firmadoPor.implementado.firma} alt="Firma implementado" width={220} />
-          ) : firmadoPor?.implementado?.hasFirma ? (
-            <div className="gcl-signed-badge">
-              <span className="gcl-check-icon"></span>
-              Firmado
-            </div>
-          ) : firmadoPor?.canSignImplementado ? (
-            <div className="gcl-sign-action">
-              <button className="gcl-sign-btn" onClick={() => { setSignatureRole('implementado'); setSignatureOpen(true); }}>
-                Firmar
-              </button>
-            </div>
-          ) : (
-            <div className="gcl-signature-pending">Pendiente</div>
-          )}
-        </div>
-
-        {/* VALIDADO */}
-        <div key="validado" className="gcl-signature-card">
-          <div className="gcl-signature-role">Validado por</div>
-          <div className="gcl-signature-info">
-            <div className="gcl-signature-name">{firmadoPor?.validado?.nombre || "Pendiente"}</div>
-            <div className="gcl-signature-position">{firmadoPor?.validado?.cargo || "-"}</div>
-          </div>
-
-          {firmadoPor?.validado?.firma ? (
-            <SignatureProtegida src={firmadoPor.validado.firma} alt="Firma validado" width={220} />
-          ) : firmadoPor?.validado?.hasFirma ? (
-            <div className="gcl-signed-badge">
-              <span className="gcl-check-icon"></span>
-              Firmado
-            </div>
-          ) : firmadoPor?.canSignValidado ? (
-            <div className="gcl-sign-action">
-              <button className="gcl-sign-btn" onClick={() => { setSignatureRole('validado'); setSignatureOpen(true); }}>
-                Firmar
-              </button>
-            </div>
-          ) : (
-            <div className="gcl-signature-pending">Pendiente</div>
-          )}
-        </div>
+        {renderRoleSigners('solicitado', 'Solicitante', 'canSignSolicitado')}
+        {renderRoleSigners('evaluado', 'Evaluado por', 'canSignEvaluado')}
+        {renderRoleSigners('aprobado', 'Aprobado por', 'canSignAprobador')}
+        {renderRoleSigners('implementado', 'Implementado por', 'canSignImplementado')}
+        {renderRoleSigners('validado', 'Validado por', 'canSignValidado')}
       </div>
     </div>
   );
 })()}
+
           </div>
 
           <div className="gcl-card-footer">
