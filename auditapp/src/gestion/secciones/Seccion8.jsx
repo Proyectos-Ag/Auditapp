@@ -25,40 +25,36 @@ export default function Seccion8({
 
   const canAddRiesgo = !!(formData.implicaciones && formData.implicaciones.riesgos);
   const canAddRecurso = !!(formData.implicaciones && formData.implicaciones.recursos);
+  const canAddDoc = !!(formData.implicaciones && formData.implicaciones.documentacion);
 
   function computeNivelRiesgo(probabilidadVal, severidadVal) {
-  const prob = parseInt(probabilidadVal, 10);
-  const sev = (severidadVal || '').toUpperCase();
+    const prob = parseInt(probabilidadVal, 10);
+    const sev = (severidadVal || '').toUpperCase();
 
-  if (isNaN(prob) || !sev) return '';
+    if (isNaN(prob) || !sev) return '';
 
-  // Reglas solicitadas:
-  // 1 -> NO SIGNIFICATIVO (cualquier severidad)
-  // 2 -> SIGNIFICATIVO si severidad A o B, sino NO SIGNIFICATIVO
-  // 3 -> SIGNIFICATIVO si severidad A o B, sino NO SIGNIFICATIVO
-  // 4 -> SIGNIFICATIVO (cualquier severidad)
-  if (prob === 1) return 'NIVEL DE RIESGO NO SIGNIFICATIVO';
-  if (prob === 4) return 'NIVEL DE RIESGO SIGNIFICATIVO';
-  if (prob === 2 || prob === 3) {
-    if (sev === 'A' || sev === 'B') return 'NIVEL DE RIESGO SIGNIFICATIVO';
-    return 'NIVEL DE RIESGO NO SIGNIFICATIVO';
+    if (prob === 1) return 'NIVEL DE RIESGO NO SIGNIFICATIVO';
+    if (prob === 4) return 'NIVEL DE RIESGO SIGNIFICATIVO';
+    if (prob === 2 || prob === 3) {
+      if (sev === 'A' || sev === 'B') return 'NIVEL DE RIESGO SIGNIFICATIVO';
+      return 'NIVEL DE RIESGO NO SIGNIFICATIVO';
+    }
+
+    return '';
   }
-
-  return ''; // por seguridad si viene otro valor
-}
-
 
   return (
     <div className="form-section" ref={sectionRef}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
         <div>
           <h2>Sección 8: RIESGOS (auto-generados desde Sección 6)</h2>
-          <p className="muted">Las cards se crean desde Sección 6. Complete primero el <strong>Tipo específico</strong> dentro de cada card (p.ej. "Tipo de peligro" o "Tipo de recursos").</p>
+          <p className="muted">Las cards se crean desde Sección 6. Complete primero el <strong>Tipo específico</strong> dentro de cada card (p.ej. "Tipo de peligro", "Tipo de recursos" o "Tipo de documento").</p>
         </div>
 
         <div style={{ display: 'flex', gap: 8 }}>
           {canAddRiesgo && <button type="button" className="btn-primary" onClick={() => addNewCard('IMPLICACION_DE_RIESGOS')}>+ Agregar Riesgo</button>}
           {canAddRecurso && <button type="button" className="btn-primary" onClick={() => addNewCard('RECURSOS')}>+ Agregar Recurso</button>}
+          {canAddDoc && <button type="button" className="btn-primary" onClick={() => addNewCard('DOCUMENTOS')}>+ Agregar Documento</button>}
         </div>
       </div>
 
@@ -67,19 +63,18 @@ export default function Seccion8({
       <div className="riesgo-grid">
         {(formData.riesgosCards || []).map((card, idx) => {
           const open = !!openMap[card.id];
-          const titleSimple = card.tipoImplicacion === 'OTRAS' ? 'OTRAS' : (card.tipoImplicacion || '').replaceAll('_', ' ');
+          const titleSimple = card.tipoImplicacion === 'OTRAS' ? (card.otherLabel || 'OTRAS') : (card.tipoImplicacion || '').replaceAll('_', ' ');
           const isRiesgo = card.tipoImplicacion === 'IMPLICACION_DE_RIESGOS';
           const isRecurso = card.tipoImplicacion === 'RECURSOS';
+          const isDocumento = card.tipoImplicacion === 'DOCUMENTOS';
 
-          // Antes: solo impedía eliminar si era la última. Ahora: si la implicación está marcada en Sección 6
-          // no se permite eliminar *ninguna* card de ese tipo.
           const implicSel = formData.implicaciones || {};
           const cannotRemoveBecauseImplic =
             (card.tipoImplicacion === 'IMPLICACION_DE_RIESGOS' && implicSel.riesgos) ||
-            (card.tipoImplicacion === 'RECURSOS' && implicSel.recursos);
+            (card.tipoImplicacion === 'RECURSOS' && implicSel.recursos) ||
+            (card.tipoImplicacion === 'DOCUMENTOS' && implicSel.documentacion);
 
-          // extract display values for minimized view
-          const miniTipo = isRiesgo ? (card.tipoPeligro || '') : isRecurso ? (card.tipoRecursos || '') : '';
+          const miniTipo = isRiesgo ? (card.tipoPeligro || '') : isRecurso ? (card.tipoRecursos || '') : isDocumento ? (card.nombreDocumento || card.tipoDocumento || '') : '';
           const miniNivel = isRiesgo ? (card.nivelRiesgo || '') : '';
           const miniConsecuencias = isRiesgo ? ((card.consecuencias || '').slice(0, 80)) : '';
 
@@ -90,7 +85,6 @@ export default function Seccion8({
                   <div className="riesgo-pill">{titleSimple}</div>
                   <h4 className="riesgo-title">{titleSimple} #{idx + 1}</h4>
 
-                  {/* cuando está minimizada, mostrar info clave (tipo / nivel / consecuencias) */}
                   {!open && (miniTipo || miniNivel || miniConsecuencias) && (
                     <div className="riesgo-mini-info" style={{ marginTop: 6, fontSize: 13, color: '#444' }}>
                       {miniTipo && <span style={{ marginRight: 10 }}><strong>Tipo:</strong> {miniTipo}</span>}
@@ -123,7 +117,6 @@ export default function Seccion8({
                 </div>
               </header>
 
-              {/* Mostrar formulario sólo si la card está expandida */}
               {open && (
                 <div className="riesgo-card-body open" style={{ marginTop: 12 }}>
                   {isRiesgo && (
@@ -189,7 +182,6 @@ export default function Seccion8({
                         <textarea value={card.medidasControl || ''} onChange={(e) => updateRiesgoCardField(card.id, 'medidasControl', e.target.value)} rows={2} />
                       </div>
 
-                      {/* NUEVO: CONSECUENCIAS */}
                       <div className="form-group">
                         <label>CONSECUENCIAS</label>
                         <textarea
@@ -199,7 +191,6 @@ export default function Seccion8({
                         />
                       </div>
 
-                      {/* NUEVO: NIVEL DE RIESGO (readOnly, calculado) */}
                       <div className="form-group">
                         <label>NIVEL DE RIESGO</label>
                         <input type="text" value={card.nivelRiesgo || ''} readOnly />
@@ -254,98 +245,100 @@ export default function Seccion8({
                     </>
                   )}
 
-                  {card.tipoImplicacion === 'DOCUMENTOS' && (
+                  {isDocumento && (
                     <>
                       <div className="form-group"><label>TIPO DE DOCUMENTO</label><input type="text" value={card.tipoDocumento || ''} onChange={(e) => updateRiesgoCardField(card.id, 'tipoDocumento', e.target.value)} /></div>
                       <div className="form-group"><label>NOMBRE DOCUMENTO</label><input type="text" value={card.nombreDocumento || ''} onChange={(e) => updateRiesgoCardField(card.id, 'nombreDocumento', e.target.value)} /></div>
                       <div className="form-group"><label>CAMBIO A REALIZAR</label><textarea value={card.cambioRealizar || ''} onChange={(e) => updateRiesgoCardField(card.id, 'cambioRealizar', e.target.value)} rows={2} /></div>
+
+                      <div className="grid-2-cols">
+                        <div className="form-group"><label>FECHA COMPROMISO</label><input type="date" value={card.fechaCompromisoDoc || ''} onChange={(e) => updateRiesgoCardField(card.id, 'fechaCompromisoDoc', e.target.value)} /></div>
+                        <div className="form-group"><label>RESPONSABLE</label><input type="text" value={card.responsableDoc || ''} onChange={(e) => updateRiesgoCardField(card.id, 'responsableDoc', e.target.value)} /></div>
+                      </div>
                     </>
                   )}
 
                   {card.tipoImplicacion === 'OTRAS' && (
-  <div className="form-group">
-    <label>INVOLUCRADOS</label>
+                    <div className="form-group">
+                      <label>INVOLUCRADOS</label>
 
-    {/* CHECKBOXES organizados en grid */}
-    <div className="checkbox-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 8, marginBottom: 12 }}>
-      {['SOCIOS','PROVEEDORES','AUTORIDADES','CLIENTES','OTROS'].map(inv => (
-        <label key={inv} className="inline-checkbox" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <input
-            type="checkbox"
-            checked={Array.isArray(card.involucradosSelected) && card.involucradosSelected.includes(inv)}
-            onChange={(e) => toggleInvolucrado(card.id, inv, e.target.checked)}
-          />
-          <span>{inv}</span>
-        </label>
-      ))}
-    </div>
+                      <div className="checkbox-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 8, marginBottom: 12 }}>
+                        {['SOCIOS','PROVEEDORES','AUTORIDADES','CLIENTES','OTROS'].map(inv => (
+                          <label key={inv} className="inline-checkbox" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <input
+                              type="checkbox"
+                              checked={Array.isArray(card.involucradosSelected) && card.involucradosSelected.includes(inv)}
+                              onChange={(e) => toggleInvolucrado(card.id, inv, e.target.checked)}
+                            />
+                            <span>{inv}</span>
+                          </label>
+                        ))}
+                      </div>
 
-    {/* RENDER de subcards para cada involucrado seleccionado */}
-    <div className="involucrados-subcards" style={{ marginTop: 8 }}>
-      {(card.involucradosSelected || []).map((invKey) => {
-        const invData = (card.involucradosData || {})[invKey] || { tipoAfectacion: '', generaCostos: false, medidasControl: '', fechaCompromiso: '', responsable: '' };
-        return (
-          <div key={invKey} className="involucrado-subcard" style={{ border: '1px solid #e6e6e6', padding: 10, borderRadius: 6, marginBottom: 10 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <strong>{invKey}</strong>
-              <small style={{ color: '#666' }}>{invData.tipoAfectacion ? invData.tipoAfectacion : 'Sin detalles'}</small>
-            </div>
+                      <div className="involucrados-subcards" style={{ marginTop: 8 }}>
+                        {(card.involucradosSelected || []).map((invKey) => {
+                          const invData = (card.involucradosData || {})[invKey] || { tipoAfectacion: '', generaCostos: false, medidasControl: '', fechaCompromiso: '', responsable: '' };
+                          return (
+                            <div key={invKey} className="involucrado-subcard" style={{ border: '1px solid #e6e6e6', padding: 10, borderRadius: 6, marginBottom: 10 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                <strong>{invKey}</strong>
+                                <small style={{ color: '#666' }}>{invData.tipoAfectacion ? invData.tipoAfectacion : 'Sin detalles'}</small>
+                              </div>
 
-            <div className="grid-2-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <div className="form-group">
-                <label>Tipo de afectación</label>
-                <input
-                  type="text"
-                  value={invData.tipoAfectacion || ''}
-                  onChange={(e) => updateInvolucradoField(card.id, invKey, 'tipoAfectacion', e.target.value)}
-                />
-              </div>
+                              <div className="grid-2-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                <div className="form-group">
+                                  <label>Tipo de afectación</label>
+                                  <input
+                                    type="text"
+                                    value={invData.tipoAfectacion || ''}
+                                    onChange={(e) => updateInvolucradoField(card.id, invKey, 'tipoAfectacion', e.target.value)}
+                                  />
+                                </div>
 
-              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <label style={{ margin: 0 }}>Genera costos</label>
-                <input
-                  type="checkbox"
-                  checked={!!invData.generaCostos}
-                  onChange={(e) => updateInvolucradoField(card.id, invKey, 'generaCostos', e.target.checked)}
-                />
-              </div>
-            </div>
+                                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <label style={{ margin: 0 }}>Genera costos</label>
+                                  <input
+                                    type="checkbox"
+                                    checked={!!invData.generaCostos}
+                                    onChange={(e) => updateInvolucradoField(card.id, invKey, 'generaCostos', e.target.checked)}
+                                  />
+                                </div>
+                              </div>
 
-            <div className="form-group">
-              <label>Medidas de control</label>
-              <textarea
-                rows={2}
-                value={invData.medidasControl || ''}
-                onChange={(e) => updateInvolucradoField(card.id, invKey, 'medidasControl', e.target.value)}
-              />
-            </div>
+                              <div className="form-group">
+                                <label>Medidas de control</label>
+                                <textarea
+                                  rows={2}
+                                  value={invData.medidasControl || ''}
+                                  onChange={(e) => updateInvolucradoField(card.id, invKey, 'medidasControl', e.target.value)}
+                                />
+                              </div>
 
-            <div className="grid-2-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <div className="form-group">
-                <label>Fecha compromiso</label>
-                <input
-                  type="date"
-                  value={invData.fechaCompromiso || ''}
-                  onChange={(e) => updateInvolucradoField(card.id, invKey, 'fechaCompromiso', e.target.value)}
-                />
-              </div>
+                              <div className="grid-2-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                <div className="form-group">
+                                  <label>Fecha compromiso</label>
+                                  <input
+                                    type="date"
+                                    value={invData.fechaCompromiso || ''}
+                                    onChange={(e) => updateInvolucradoField(card.id, invKey, 'fechaCompromiso', e.target.value)}
+                                  />
+                                </div>
 
-              <div className="form-group">
-                <label>Responsable</label>
-                <input
-                  type="text"
-                  value={invData.responsable || ''}
-                  onChange={(e) => updateInvolucradoField(card.id, invKey, 'responsable', e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  </div>
-)}
-
+                                <div className="form-group">
+                                  <label>Responsable</label>
+                                  <input
+                                    type="text"
+                                    value={invData.responsable || ''}
+                                    onChange={(e) => updateInvolucradoField(card.id, invKey, 'responsable', e.target.value)}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </article>
