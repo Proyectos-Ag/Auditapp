@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const counterSchema = new mongoose.Schema({
-  _id:  String,            // prefijo, ej. "AC-", "DC-"
+  _id:  String,
   seq:  { type: Number, default: 0 }
 });
 

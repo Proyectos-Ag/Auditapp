@@ -1,8 +1,6 @@
 const GestionCambio = require('../models/gestionSchema');
+const ValidacionCambio = require("../models/ValidacionCambio");
 
-/* Helper: asegura que cada card tenga un id (string) para poder identificarla en front/back */
-/* Helper: asegura que cada card tenga un id (string) para poder identificarla en front/back
-   y normaliza algunos campos (arrays, fechas) */
 const ensureCardIds = (cards) => {
   if (!Array.isArray(cards)) return [];
   return cards.map(card => {
@@ -223,7 +221,7 @@ const signGestionCambio = async (req, res) => {
     if (!gestion) return res.status(404).json({ error: 'Registro no encontrado' });
 
     if (!gestion.firmadoPor) gestion.firmadoPor = {};
-    // asegurar arrays
+    // asegurar arrays / normalizar
     gestion.firmadoPor = Object.assign({}, gestion.firmadoPor, normalizeFirmadoPor(gestion.firmadoPor));
 
     const arr = Array.isArray(gestion.firmadoPor[role]) ? gestion.firmadoPor[role] : [];
@@ -255,13 +253,46 @@ const signGestionCambio = async (req, res) => {
     gestion.firmadoPor[role] = arr;
     await gestion.save();
 
+    // --- nueva lógica: si todas las etapas tienen al menos una firma, marcar aprobado y crear ValidacionCambio ---
+    const requiredRoles = ['solicitado','evaluado','aprobado','implementado','validado'];
+    const allSigned = requiredRoles.every(r => {
+      const rArr = Array.isArray(gestion.firmadoPor[r]) ? gestion.firmadoPor[r] : [];
+      // requiere que exista al menos un elemento y que TODOS los elementos tengan firma no vacía
+      if (rArr.length === 0) return false;
+      return rArr.every(a => a && a.firma && String(a.firma).trim() !== '');
+    });
+
+    let createdValidacion = null;
+    if (allSigned && gestion.estado !== 'aprobado') {
+      gestion.estado = 'aprobado';
+      await gestion.save();
+
+      // evitar duplicados: si ya existe una validación para esta gestión no crear otra
+      const existingValidacion = await ValidacionCambio.findOne({ gestionId: gestion._id });
+      if (!existingValidacion) {
+        const validacionDoc = new ValidacionCambio({
+          gestionId: gestion._id,
+          fechaValidacion: new Date(),
+          observaciones: 'Validación creada automáticamente al completarse todas las firmas',
+          // si tienes req.user y quieres registrar quien creó la validación:
+          creadoPor: (req.user && req.user._id) ? req.user._id : undefined
+        });
+        await validacionDoc.save();
+        createdValidacion = validacionDoc;
+      } else {
+        createdValidacion = existingValidacion;
+      }
+    }
+
     // devolver vista filtrada para el que firmó
     const gestionDoc = gestion.toObject();
     const firmadoPorFiltered = buildFirmadoPorFiltered(gestionDoc, email, nombre);
 
+    // incluir info de validación creada (si la hubo) en la respuesta
     return res.status(200).json({
       ...gestionDoc,
-      firmadoPor: firmadoPorFiltered
+      firmadoPor: firmadoPorFiltered,
+      validacionCreada: createdValidacion ? { _id: createdValidacion._id } : null
     });
   } catch (error) {
     console.error('Error al firmar:', error);

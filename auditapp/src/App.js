@@ -75,6 +75,7 @@ import GestionList from './gestion/GestionCambioList.jsx'
 import Home from './gestion/home/Home.jsx';
 import VistaSolicitudesCambios from './gestion/VistaSolicitudesCambios.jsx';
 import RevisionSolicitudesCambios from './gestion/RevisionSolicitudesCambios.jsx';
+import ValidacionForm from './gestion/validacion/ValidacionForm.jsx';
 
 //Paginas de error
 import UnauthorizedPage from './components/Pag-error/UnauthorizedPage.jsx';
@@ -180,6 +181,7 @@ export const UserContext = createContext(null);
               <Route path="/gestion" element={<ProtectedRoute><Home/></ProtectedRoute>}/>
               <Route path="/vista-solictudes" element={<ProtectedRoute><VistaSolicitudesCambios/></ProtectedRoute>}/>
               <Route path="/vista-solictudes-rev" element={<ProtectedRoute><RevisionSolicitudesCambios/></ProtectedRoute>}/>
+              <Route path="/validacion-form" element={<ProtectedRoute><ValidacionForm/></ProtectedRoute>}/>
               <Route path="/mobile-sign" element={<MobileSign />} />
 
               {/* Rutas protegidas para los componentes de usuario */}

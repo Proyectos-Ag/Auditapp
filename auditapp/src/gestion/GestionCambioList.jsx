@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import GestionCambioPDF from "./GestionCambioPDF";
 import SignaturePopup from "./SignaturePopup";
 import { UserContext } from '../App';
+import ValidacionForm from "./validacion/ValidacionForm";
 import "./css/GestionList.css";
 
 // Componente SignatureProtegida (sin cambios en funcionalidad)
@@ -164,6 +165,11 @@ const GestionCambioList = () => {
   const { userData } = useContext(UserContext);
   const [signatureOpen, setSignatureOpen] = useState(false);
   const [signatureRole, setSignatureRole] = useState('aprobado');
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+  setCollapsed(!!(item && item.estado === 'aprobado'));
+}, [item?.estado]);
 
   useEffect(() => {
     if (!id) {
@@ -227,29 +233,36 @@ const GestionCambioList = () => {
     );
   };
 
-  const onSaveSignature = async (role, dataURL) => {
-    try {
-      const payload = {
-        role,
-        email: userData?.Correo,
-        nombre: userData?.Nombre,
-        cargo: userData?.cargo,
-        dataURL
-      };
-      const res = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${id}/sign`,
-        payload
-      );
-      const data = res.data;
-if (data && data.firmadoPor) {
-  data.firmadoPor = mapFirmadoPorBackendToLegacy(data.firmadoPor);
-}
-setItem(data);
-setSignatureOpen(false);
-    } catch (err) {
-      console.error('Error guardando firma:', err);
+ const onSaveSignature = async (role, dataURL) => {
+  try {
+    const payload = {
+      role,
+      email: userData?.Correo,
+      nombre: userData?.Nombre,
+      cargo: userData?.cargo,
+      dataURL
+    };
+    const res = await axios.post(
+      `${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${id}/sign`,
+      payload
+    );
+    const data = res.data;
+    if (data && data.firmadoPor) {
+      data.firmadoPor = mapFirmadoPorBackendToLegacy(data.firmadoPor);
     }
-  };
+    setItem(data);
+    setSignatureOpen(false);
+
+    if (data && data.validacionCreada) {
+      // ejemplo simple: mostrar alerta o navegar a la validación
+      alert(`Se creó la validación: ${data.validacionCreada._id}`);
+      // o: navigate(`/validacion/${data.validacionCreada._id}`);
+    }
+  } catch (err) {
+    console.error('Error guardando firma:', err);
+  }
+};
+
 
   const renderRiesgosCards = (cards = []) => {
     if (!Array.isArray(cards) || cards.length === 0) return null;
@@ -530,11 +543,22 @@ setSignatureOpen(false);
           </div>
 
           <div className="gcl-header-actions">
-            <button className="gcl-button-secondary" onClick={() => volver()}>
-              Volver
-            </button>
-            <GestionCambioPDF registro={item} />
-          </div>
+          <button className="gcl-button-secondary" onClick={() => volver()}>
+            Volver
+          </button>
+
+          <button
+            className="gcl-button-secondary"
+            onClick={() => setCollapsed(c => !c)}
+            title={collapsed ? 'Expandir contenido' : 'Minimizar contenido'}
+            style={{ marginLeft: 8 }}
+          >
+            {collapsed ? 'Expandir' : 'Minimizar'}
+          </button>
+
+          <GestionCambioPDF registro={item} />
+        </div>
+
         </div>
       </div>
 
@@ -547,6 +571,22 @@ setSignatureOpen(false);
             </div>
           </div>
 
+          {collapsed ? (
+            <div className="gcl-card-body gcl-collapsed">
+              <div style={{ padding: 12 }}>
+                <strong>Solicitud minimizada</strong>
+                <div style={{ marginTop: 8, fontSize: 14, color: '#444' }}>
+                  <div>{renderFieldIf("Solicitante del cambio", item.solicitante)}</div>
+                  <div>{renderFieldIf("Tipo de cambio", item.tipoCambio)}</div>
+                  <div>{renderFieldIf("Fecha planeada", formatDate(item.fechaPlaneada))}</div>
+                </div>
+
+                <div style={{ marginTop: 10 }}>
+                  <small style={{ color: '#666' }}>Contenido minimizado porque el estado es <strong>{item.estado}</strong>. Pulsa <em>Expandir</em> para ver todo.</small>
+                </div>
+              </div>
+            </div>
+          ) : (
           <div className="gcl-card-body">
             {/* Datos de la solicitud */}
             <div className="gcl-section">
@@ -776,12 +816,22 @@ setSignatureOpen(false);
 
           </div>
 
+)}
+
+
+
           <div className="gcl-card-footer">
             <span className={`gcl-status ${item?.estado === 'aprobado' ? 'gcl-status-approved' : 'gcl-status-pending'}`}>
               {item?.estado === 'aprobado' ? 'Aprobado' : 'Pendiente'}
             </span>
           </div>
         </div>
+        {item?.estado === 'aprobado' && userData?.TipoUsuario === 'administrador' && (
+          <div className="gcl-validation-section" style={{ marginTop: 18 }}>
+            <h3 style={{ marginBottom: 12 }}>Formulario de Validación</h3>
+            <ValidacionForm cambioId={item._id} />
+          </div>
+        )}
       </div>
 
       <SignaturePopup

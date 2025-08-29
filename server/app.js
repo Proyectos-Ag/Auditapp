@@ -6,6 +6,7 @@ const cors = require('cors');
 const createError = require('http-errors');
 const dotenv = require('dotenv');
 
+// Rutas
 const usuariosRouter = require('./routes/usuarioRoutes');
 const loginRoutes = require('./routes/loginRoutes');
 const datosRoutes = require('./routes/datosRoutes');
@@ -18,6 +19,8 @@ const programarRoutes = require('./routes/programar-audiRoutes');
 const objetivosRoutes = require("./routes/ObjetivosRoutes");
 const gestionCambio = require("./routes/gestionCambioRoutes");
 const signatureRoutes = require('./routes/signatureRoutes');
+const validacionRoutes = require('./routes/validacionRoutes');
+
 //archivo que usa cron
 require('./tarea_config/notificacionIsh');
 
@@ -52,7 +55,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Configura las rutas
+// Configuracion  de rutas
 app.use('/usuarios', usuariosRouter);
 app.use('/', loginRoutes); 
 app.use('/datos', datosRoutes);
@@ -65,6 +68,7 @@ app.use('/programas-anuales', programarRoutes);
 app.use('/api/objetivos', objetivosRoutes);
 app.use('/api/gestion-cambio', gestionCambio);
 app.use('/api/signatures', signatureRoutes);
+app.use('/api/validaciones', validacionRoutes);
 
 // Manejar la ruta raíz
 app.get('/', (req, res) => {
