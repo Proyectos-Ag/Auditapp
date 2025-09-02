@@ -19,6 +19,21 @@ const EvidenciaSchema = new mongoose.Schema({
   uploadedAt: { type: Date, default: Date.now }
 }, { _id: false });
 
+// --- nuevo: esquema para firmantes ---
+const FirmanteSchema = new mongoose.Schema({
+  nombre: { type: String, default: "" },
+  cargo: { type: String, default: "" },
+  email: { type: String, default: "" },
+  firma: { type: String, default: "" }
+}, { _id: false });
+
+// --- nuevo: esquema contenedor de firmas ---
+const FirmasSchema = new mongoose.Schema({
+  elaboro: { type: FirmanteSchema, default: () => ({ nombre: "", cargo: "", email: "", firma: "" }) },
+  reviso: { type: FirmanteSchema, default: () => ({ nombre: "", cargo: "", email: "", firma: "" }) }
+}, { _id: false });
+
+
 const ValidacionCambioSchema = new mongoose.Schema({
   gestionId: { type: mongoose.Schema.Types.ObjectId, ref: "Gestion", required: true },
   etapaProceso: { type: String },
@@ -35,6 +50,7 @@ const ValidacionCambioSchema = new mongoose.Schema({
   requiereCambio: { type: Boolean, default: false },
   requiereCambioDetalle: { type: String },
   observaciones: { type: String },
+  firmas: { type: FirmasSchema, default: () => ({}) },
   creadoPor: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   estado: { type: String, enum: ['pendiente', 'completado'], default: 'pendiente' }
 }, { timestamps: true });

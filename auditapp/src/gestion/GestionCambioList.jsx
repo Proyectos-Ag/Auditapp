@@ -211,6 +211,22 @@ const GestionCambioList = () => {
     return () => { cancelled = true; };
   }, [id, userData?.Nombre, userData?.Correo, userData?.correo, userData?.email]);
 
+  // normaliza nombre del usuario actual
+const _userNombre = (userData?.Nombre || userData?.nombre || "").trim().toLowerCase();
+
+// obtiene lista de firmantes "validado" (compatibilidad con validadoObj)
+const validadoList = Array.isArray(item?.firmadoPor?.validado)
+  ? item.firmadoPor.validado
+  : (item?.firmadoPor?.validadoObj ? [item.firmadoPor.validadoObj] : []);
+
+// decide si el usuario está en la lista "validado"
+const userIsInValidado = Boolean(
+  _userNombre &&
+  Array.isArray(validadoList) &&
+  validadoList.some(s => ((s?.nombre || "").trim().toLowerCase()) === _userNombre)
+);
+
+
   const volver = () => navigate(-1);
 
   const renderFieldIf = (label, value, important = false) => {
@@ -530,7 +546,6 @@ const GestionCambioList = () => {
       </div>
     );
 
-
   return (
     <div className="gcl-container-single">
       <div className="gcl-header-container">
@@ -575,12 +590,11 @@ const GestionCambioList = () => {
             <div className="gcl-card-body gcl-collapsed">
               <div style={{ padding: 12 }}>
                 <strong>Solicitud minimizada</strong>
-                <div style={{ marginTop: 8, fontSize: 14, color: '#444' }}>
-                  <div>{renderFieldIf("Solicitante del cambio", item.solicitante)}</div>
-                  <div>{renderFieldIf("Tipo de cambio", item.tipoCambio)}</div>
-                  <div>{renderFieldIf("Fecha planeada", formatDate(item.fechaPlaneada))}</div>
+                <div className="gcl-minimized-row" style={{ marginTop: 8 }}>
+                  {renderFieldIf("Solicitante del cambio", item.solicitante)}
+                  {renderFieldIf("Tipo de cambio", item.tipoCambio)}
+                  {renderFieldIf("Fecha planeada", formatDate(item.fechaPlaneada))}
                 </div>
-
                 <div style={{ marginTop: 10 }}>
                   <small style={{ color: '#666' }}>Contenido minimizado porque el estado es <strong>{item.estado}</strong>. Pulsa <em>Expandir</em> para ver todo.</small>
                 </div>
@@ -818,18 +832,24 @@ const GestionCambioList = () => {
 
 )}
 
-
-
           <div className="gcl-card-footer">
             <span className={`gcl-status ${item?.estado === 'aprobado' ? 'gcl-status-approved' : 'gcl-status-pending'}`}>
               {item?.estado === 'aprobado' ? 'Aprobado' : 'Pendiente'}
             </span>
           </div>
         </div>
-        {item?.estado === 'aprobado' && userData?.TipoUsuario === 'administrador' && (
+        {item?.estado === 'aprobado' && (userData?.TipoUsuario === 'administrador' || userIsInValidado) && (
           <div className="gcl-validation-section" style={{ marginTop: 18 }}>
             <h3 style={{ marginBottom: 12 }}>Formulario de Validación</h3>
-            <ValidacionForm cambioId={item._id} />
+
+            {/* Prefill: toma el primer solicitante normalizado si existe */}
+            <ValidacionForm
+              cambioId={item._id}
+              prefillElaboro={
+                // intento preferente: objeto legacy 'solicitadoObj', si no, primer elemento del array
+                item?.firmadoPor?.solicitadoObj || (Array.isArray(item?.firmadoPor?.solicitado) ? item.firmadoPor.solicitado[0] : null)
+              }
+            />
           </div>
         )}
       </div>

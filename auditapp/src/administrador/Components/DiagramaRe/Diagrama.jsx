@@ -16,6 +16,7 @@ import {ref, uploadBytes, getDownloadURL} from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
 import NewIshikawaFin from '../../../ishikawa-vacio/components/Ishikawa/NewIshikawaFin';
 import Cargando from '../../../components/cargando/Cargando';
+import IshPDF from '../IshikawaRev/IshPDF';
 
 
 const Diagrama = () => {
@@ -722,6 +723,7 @@ const handleUploadFile = (fieldKey) => {
             >
                 <CircularProgress color="inherit" />
             </Backdrop>
+            
             <button className='button-pdf-imp'
              style={{top:'6em'}} onClick={() => handlePrintPDF({ download: true })}>Guardar en PDF</button>
             {/*Mensaje de generacion*/}

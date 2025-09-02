@@ -49,27 +49,26 @@ export default function Seccion9({
                               }}
                               value={s.nombre || ''}
                               onChange={(e, newValue) => {
-      setFormData(prev => {
-        const fp = { ...(prev.firmadoPor || {}) };
-        const arr = Array.isArray(fp.solicitado) ? [...fp.solicitado] : [];
-        if (arr.length === 0) arr.push({ nombre: '', cargo: '', firma: '', email: '' });
-        if (!newValue) {
-          arr[0].nombre = '';
-        } else if (typeof newValue === 'string') {
-          arr[0].nombre = newValue;
-        } else {
-          arr[0] = {
-            nombre: newValue.Nombre || newValue.nombre || '',
-            cargo: newValue.Puesto || newValue.cargo || newValue.puesto || '',
-            email: newValue.Correo || newValue.correo || newValue.email || '',
-            firma: arr[0].firma || ''
-          };
-        }
-        fp.solicitado = arr;
-        return { ...prev, solicitante: arr[0].nombre || prev.solicitante, firmadoPor: fp };
-      });
-    }}
-    
+                              setFormData(prev => {
+                                const fp = { ...(prev.firmadoPor || {}) };
+                                const arr = Array.isArray(fp.solicitado) ? [...fp.solicitado] : [];
+                                if (arr.length === 0) arr.push({ nombre: '', cargo: '', firma: '', email: '' });
+                                if (!newValue) {
+                                  arr[0].nombre = '';
+                                } else if (typeof newValue === 'string') {
+                                  arr[0].nombre = newValue;
+                                } else {
+                                  arr[0] = {
+                                    nombre: newValue.Nombre || newValue.nombre || '',
+                                    cargo: newValue.Puesto || newValue.cargo || newValue.puesto || '',
+                                    email: newValue.Correo || newValue.correo || newValue.email || '',
+                                    firma: arr[0].firma || ''
+                                  };
+                                }
+                                fp.solicitado = arr;
+                                return { ...prev, solicitante: arr[0].nombre || prev.solicitante, firmadoPor: fp };
+                              });
+                            }}
     
                             renderInput={(params) => <TextField {...params} variant="outlined" size="small" error={!!errors['firma_solicitado_nombre']} />}
                           />

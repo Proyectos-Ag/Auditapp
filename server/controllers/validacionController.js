@@ -1,12 +1,30 @@
-// controllers/validacionController.js
+const { estimatedDocumentCount } = require("../models/usuarioSchema");
 const ValidacionCambio = require("../models/ValidacionCambio");
 
-/**
- * Normaliza evidencias recibidas en req.body.evidencias
- * Acepta:
- *   - array de objetos { url, name, type, size, provider, uploadedAt }
- *   - array de strings (URLs) -> convierte a objetos mínimos { url }
- */
+// Normaliza el objeto firmas recibido (acepta string JSON o objeto)
+function normalizeFirmas(bodyFirmas) {
+  if (!bodyFirmas) return { elaboro: { nombre:"", cargo:"", email:"", firma:"" }, reviso: { nombre:"", cargo:"", email:"", firma:"" } };
+  if (typeof bodyFirmas === "string") {
+    try { bodyFirmas = JSON.parse(bodyFirmas); } catch(e) { return normalizeFirmas(null); }
+  }
+  const f = bodyFirmas || {};
+  const normal = {
+    elaboro: {
+      nombre: (f.elaboro && (f.elaboro.nombre || f.elaboro.Nombre)) || "",
+      cargo: (f.elaboro && (f.elaboro.cargo || f.elaboro.Puesto)) || "",
+      email: (f.elaboro && (f.elaboro.email || f.elaboro.Correo)) || "",
+      firma: (f.elaboro && f.elaboro.firma) || ""
+    },
+    reviso: {
+      nombre: (f.reviso && (f.reviso.nombre || f.reviso.Nombre)) || "",
+      cargo: (f.reviso && (f.reviso.cargo || f.reviso.Puesto)) || "",
+      email: (f.reviso && (f.reviso.email || f.reviso.Correo)) || "",
+      firma: (f.reviso && f.reviso.firma) || ""
+    }
+  };
+  return normal;
+}
+
 function normalizeEvidencias(bodyEvidencias) {
   const out = [];
   if (!bodyEvidencias) return out;
@@ -74,6 +92,7 @@ exports.createValidacion = async (req, res) => {
   try {
     // Asegúrate de que express.json() está activo para leer req.body
     const evidencias = normalizeEvidencias(req.body.evidencias);
+    const firmas = normalizeFirmas(req.body.firmas);
 
     const elementos = req.body.elementos && typeof req.body.elementos === "string"
       ? JSON.parse(req.body.elementos)
@@ -94,6 +113,7 @@ exports.createValidacion = async (req, res) => {
       requiereCambio: !!req.body.requiereCambio,
       requiereCambioDetalle: req.body.requiereCambioDetalle || null,
       observaciones: req.body.observaciones || null,
+      firmas,
     });
 
     await doc.save();
@@ -149,6 +169,20 @@ exports.update = async (req, res) => {
       return true;
     });
 
+        // Normalizar firmas recibidas (si vienen)
+    const firmasPayload = (typeof req.body.firmas === "string")
+      ? (() => { try { return JSON.parse(req.body.firmas); } catch(e){ return null; } })()
+      : (req.body.firmas || null);
+
+    // crear objeto final de firmas haciendo merge conservador
+    let finalFirmas = existing.firmas || { elaboro: { nombre:"", cargo:"", email:"", firma:"" }, reviso: { nombre:"", cargo:"", email:"", firma:"" } };
+    if (firmasPayload) {
+      finalFirmas = {
+        elaboro: { ...(finalFirmas.elaboro || {}), ...(firmasPayload.elaboro || {}) },
+        reviso: { ...(finalFirmas.reviso || {}), ...(firmasPayload.reviso || {}) }
+      };
+    }
+
     const elementos = req.body.elementos && typeof req.body.elementos === "string"
       ? JSON.parse(req.body.elementos)
       : (req.body.elementos ?? existing.elementos);
@@ -163,11 +197,13 @@ exports.update = async (req, res) => {
       elementos,
       desarrolloValidacion: req.body.desarrolloValidacion ?? existing.desarrolloValidacion,
       evidencias: finalEvid,
+      firmas: finalFirmas,
       resultadosValidacion: req.body.resultadosValidacion ?? existing.resultadosValidacion,
       medidaControlInicial: req.body.medidaControlInicial ?? existing.medidaControlInicial,
       requiereCambio: typeof req.body.requiereCambio !== "undefined" ? !!req.body.requiereCambio : existing.requiereCambio,
       requiereCambioDetalle: req.body.requiereCambioDetalle ?? existing.requiereCambioDetalle,
       observaciones: req.body.observaciones ?? existing.observaciones,
+      estado: req.body.estado || existing.estado
     });
 
     await existing.save();

@@ -523,3 +523,28 @@
     width: 100%;
   }
 }
+
+/* fila minimizada: alinear campos horizontalmente */
+.gcl-minimized-row {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+  flex-wrap: wrap;      /* permite saltos en pantallas pequeñas */
+  font-size: 14px;
+  color: #444;
+}
+
+/* cada campo (.gcl-field) dentro de la fila tendrá un ancho mínimo para mantener orden */
+.gcl-minimized-row .gcl-field {
+  min-width: 200px;     /* ajusta según lo que necesites */
+  margin: 0;            /* eliminar márgenes verticales heredados */
+}
+
+/* responsive: en móviles pasar a columna */
+@media (max-width: 600px) {
+  .gcl-minimized-row {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .gcl-minimized-row .gcl-field { min-width: auto; }
+}
