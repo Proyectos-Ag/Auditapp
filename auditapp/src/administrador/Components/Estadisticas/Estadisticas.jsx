@@ -21,6 +21,7 @@ const Estadisticas = () => {
   const [auditIds, setAuditIds] = useState([]);
   const [reviewedByYear, setReviewedByYear] = useState({});
 
+  // useEffect inicial corregido
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -45,7 +46,7 @@ const Estadisticas = () => {
         );
         setObservations(observationsData);
 
-        // Obtener ishikawas solo para auditorías existentes
+        // CORRECCIÓN: Usar idRep consistentemente
         const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
         const reviewedObservationsData = ishikawaResponse.data.filter(
           ishikawa => 
@@ -53,9 +54,10 @@ const Estadisticas = () => {
              ishikawa.estado === 'Aprobado' || 
              ishikawa.estado === 'Rechazados' || 
              ishikawa.estado === 'Pendiente') &&
-            filteredAudits.map(audit => audit._id).includes(ishikawa.idAuditoria)
+            filteredAudits.map(audit => audit._id).includes(ishikawa.idRep) // <- CAMBIO AQUÍ
         );
         setReviewedObservations(reviewedObservationsData);
+        
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -109,40 +111,85 @@ const Estadisticas = () => {
     ).length;
   };
 
-// Nuevo useEffect para calcular hallazgos revisados por año
-useEffect(() => {
-  const fetchReviewed = async () => {
-    // Verificar si realmente hay años para procesar
-    const years = Object.keys(filteredAuditsByYear);
-    if (years.length === 0) return;
+  // Función de debug para ver hallazgos detallados
+  const debugHallazgosByYear = (year) => {
+    const yearAudits = filteredAuditsByYear[year] || [];
+    const hallazgosDetallados = [];
     
-    const reviewedData = {};
+    yearAudits.forEach(audit => {
+      audit.Programa.forEach(program => {
+        program.Descripcion.forEach(desc => {
+          if (['C', 'M', 'm'].includes(desc.Criterio)) {
+            hallazgosDetallados.push({
+              auditId: audit._id,
+              programaNombre: program.Nombre,
+              requisito: desc.Requisito,
+              criterio: desc.Criterio,
+              observacion: desc.Observacion,
+              hallazgo: desc.Hallazgo
+            });
+          }
+        });
+      });
+    });
     
-    for (const year of years) {
-      const yearAudits = filteredAuditsByYear[year] || [];
-      const yearAuditIds = yearAudits.map(audit => audit._id);
-
-      try {
-        const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-        const reviewed = ishikawaResponse.data.filter(
-          ishikawa =>
-            (ishikawa.estado === 'Revisado' ||
-              ishikawa.estado === 'Aprobado' ||
-              ishikawa.estado === 'Rechazados' ||
-              ishikawa.estado === 'Pendiente') &&
-            yearAuditIds.includes(ishikawa.idRep) 
-        );
-        reviewedData[year] = reviewed.length;
-      } catch (error) {
-        console.error('Error fetching ishikawa data:', error);
-        reviewedData[year] = 0;
-      }
-    }
-    setReviewedByYear(reviewedData);
+    console.log(`Hallazgos detallados año ${year}:`, hallazgosDetallados);
+    console.log(`Total hallazgos calculados: ${hallazgosDetallados.length}`);
+    
+    return hallazgosDetallados;
   };
 
-  fetchReviewed();
-}, [JSON.stringify(filteredAuditsByYear)]); // Usar JSON.stringify para comparación profunda
+  // useEffect corregido para calcular hallazgos revisados por año
+  useEffect(() => {
+    const fetchReviewed = async () => {
+      const years = Object.keys(filteredAuditsByYear);
+      if (years.length === 0) return;
+      
+      const reviewedData = {};
+      
+      for (const year of years) {
+        const yearAudits = filteredAuditsByYear[year] || [];
+        const yearAuditIds = yearAudits.map(audit => audit._id);
+
+        try {
+          const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+          
+          // CORRECCIÓN: Usar idRep que es el campo correcto según tu esquema
+          const reviewed = ishikawaResponse.data.filter(
+            ishikawa =>
+              (ishikawa.estado === 'Revisado' ||
+                ishikawa.estado === 'Aprobado' ||
+                ishikawa.estado === 'Rechazados' ||
+                ishikawa.estado === 'Pendiente') &&
+              yearAuditIds.includes(ishikawa.idRep) // <- CAMBIO AQUÍ
+          );
+          
+          reviewedData[year] = reviewed.length;
+          
+          // Debug: logs para verificar los datos
+          console.log(`Año ${year}:`, {
+            auditoriasDelAño: yearAuditIds.length,
+            idsAuditorias: yearAuditIds,
+            ishikawasRevisados: reviewed.length,
+            ishikawasTotal: ishikawaResponse.data.length,
+            ishikawasQueCoinciden: reviewed.map(r => ({
+              id: r._id, 
+              idRep: r.idRep, 
+              estado: r.estado
+            }))
+          });
+          
+        } catch (error) {
+          console.error('Error fetching ishikawa data:', error);
+          reviewedData[year] = 0;
+        }
+      }
+      
+      setReviewedByYear(reviewedData);
+    };
+
+    fetchReviewed();
+  }, [JSON.stringify(filteredAuditsByYear)]);
 
   const criteriaCountByYear = Object.keys(filteredAuditsByYear).reduce((acc, year) => {
     const criteriaCount = filteredAuditsByYear[year].reduce((countAcc, audit) => {
@@ -223,7 +270,6 @@ useEffect(() => {
     return auditsGroupedByMonth;
   };
   
-
   const auditsByMonthAndYear = Object.keys(filteredAuditsByYear).reduce((acc, year) => {
     acc[year] = auditsByMonth(filteredAuditsByYear[year]);
     return acc;
