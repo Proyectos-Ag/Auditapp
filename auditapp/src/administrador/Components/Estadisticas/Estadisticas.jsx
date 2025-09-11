@@ -101,62 +101,45 @@ const Estadisticas = () => {
     return acc;
   }, {});
 
-  // CORRECCIÓN: Función para contar hallazgos únicos por año
-  const countUniqueObservationsByYear = (year) => {
+  // Función para contar observaciones por año
+  const countObservationsByYear = (year) => {
     const yearAudits = filteredAuditsByYear[year] || [];
-    
-    // Obtener todos los IDs únicos de hallazgos
-    const uniqueObservationIds = new Set();
+    return yearAudits.flatMap(audit =>
+      audit.Programa.flatMap(program =>
+        program.Descripcion.filter(desc => ['C', 'M', 'm'].includes(desc.Criterio))
+      )
+    ).length;
+  };
+
+  // Función de debug para ver hallazgos detallados
+  const debugHallazgosByYear = (year) => {
+    const yearAudits = filteredAuditsByYear[year] || [];
+    const hallazgosDetallados = [];
     
     yearAudits.forEach(audit => {
       audit.Programa.forEach(program => {
         program.Descripcion.forEach(desc => {
           if (['C', 'M', 'm'].includes(desc.Criterio)) {
-            // Crear un ID único para cada hallazgo
-            const observationId = `${audit._id}-${program.Nombre}-${desc.Requisito}-${desc.Observacion}`;
-            uniqueObservationIds.add(observationId);
+            hallazgosDetallados.push({
+              auditId: audit._id,
+              programaNombre: program.Nombre,
+              requisito: desc.Requisito,
+              criterio: desc.Criterio,
+              observacion: desc.Observacion,
+              hallazgo: desc.Hallazgo
+            });
           }
         });
       });
     });
     
-    return uniqueObservationIds.size;
+    console.log(`Hallazgos detallados año ${year}:`, hallazgosDetallados);
+    console.log(`Total hallazgos calculados: ${hallazgosDetallados.length}`);
+    
+    return hallazgosDetallados;
   };
 
-  // CORRECCIÓN: Función para contar hallazgos revisados únicos por año
-  const countUniqueReviewedObservationsByYear = async (year) => {
-    const yearAudits = filteredAuditsByYear[year] || [];
-    const yearAuditIds = yearAudits.map(audit => audit._id);
-
-    try {
-      const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-      
-      // Filtrar por auditorías del año y estados válidos
-      const reviewedIshikawas = ishikawaResponse.data.filter(
-        ishikawa =>
-          (ishikawa.estado === 'Revisado' || 
-           ishikawa.estado === 'Aprobado') &&
-          yearAuditIds.includes(ishikawa.idRep)
-      );
-      
-      // Crear un Set de hallazgos únicos revisados
-      const uniqueReviewedIds = new Set();
-      
-      reviewedIshikawas.forEach(ishikawa => {
-        // Crear ID único basado en la misma lógica que los hallazgos originales
-        const observationId = `${ishikawa.idRep}-${ishikawa.programaNombre}-${ishikawa.requisito}-${ishikawa.observacion}`;
-        uniqueReviewedIds.add(observationId);
-      });
-      
-      return uniqueReviewedIds.size;
-      
-    } catch (error) {
-      console.error('Error fetching ishikawa data:', error);
-      return 0;
-    }
-  };
-
-  // CORRECCIÓN: useEffect para calcular hallazgos revisados únicos
+  // useEffect corregido para calcular hallazgos revisados por año
   useEffect(() => {
     const fetchReviewed = async () => {
       const years = Object.keys(filteredAuditsByYear);
@@ -165,16 +148,41 @@ const Estadisticas = () => {
       const reviewedData = {};
       
       for (const year of years) {
-        const uniqueReviewedCount = await countUniqueReviewedObservationsByYear(year);
-        reviewedData[year] = uniqueReviewedCount;
-        
-        console.log(`Año ${year}:`, {
-          hallazgosTotales: countUniqueObservationsByYear(year),
-          hallazgosRevisadosUnicos: uniqueReviewedCount,
-          porcentaje: uniqueReviewedCount > 0 ? 
-            ((uniqueReviewedCount / countUniqueObservationsByYear(year)) * 100).toFixed(2) + '%' : 
-            '0%'
-        });
+        const yearAudits = filteredAuditsByYear[year] || [];
+        const yearAuditIds = yearAudits.map(audit => audit._id);
+
+        try {
+          const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+          
+          // CORRECCIÓN: Usar idRep que es el campo correcto según tu esquema
+          const reviewed = ishikawaResponse.data.filter(
+            ishikawa =>
+              (ishikawa.estado === 'Revisado' ||
+                ishikawa.estado === 'Aprobado' ||
+                ishikawa.estado === 'Rechazados' ||
+                ishikawa.estado === 'Pendiente') &&
+              yearAuditIds.includes(ishikawa.idRep) // <- CAMBIO AQUÍ
+          );
+          
+          reviewedData[year] = reviewed.length;
+          
+          // Debug: logs para verificar los datos
+          console.log(`Año ${year}:`, {
+            auditoriasDelAño: yearAuditIds.length,
+            idsAuditorias: yearAuditIds,
+            ishikawasRevisados: reviewed.length,
+            ishikawasTotal: ishikawaResponse.data.length,
+            ishikawasQueCoinciden: reviewed.map(r => ({
+              id: r._id, 
+              idRep: r.idRep, 
+              estado: r.estado
+            }))
+          });
+          
+        } catch (error) {
+          console.error('Error fetching ishikawa data:', error);
+          reviewedData[year] = 0;
+        }
       }
       
       setReviewedByYear(reviewedData);
@@ -234,7 +242,7 @@ const Estadisticas = () => {
 
   const months = [
     'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
-    'julio', 'agusto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
   ];
 
   const hasData = audits.length > 0;
@@ -814,21 +822,21 @@ const Estadisticas = () => {
                   <tbody>
                     <tr>
                       <td>Hallazgos Totales</td>
-                      <td>{countUniqueObservationsByYear(year)}</td>
+                      <td>{countObservationsByYear(year)}</td>
                       <td>100%</td>
                     </tr>
                     <tr>
                       <td>Hallazgos Revisados</td>
                       <td>{reviewedByYear[year] ?? '...'}</td>
-                      <td>{countUniqueObservationsByYear(year) > 0 ? 
-                          (((reviewedByYear[year] ?? 0) / countUniqueObservationsByYear(year)) * 100).toFixed(2) + '%' : 
+                      <td>{countObservationsByYear(year) > 0 ? 
+                          (((reviewedByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : 
                           '0%'}</td>
                     </tr>
                     <tr>
                       <td>Hallazgos Faltantes</td>
-                      <td>{Math.max(0, countUniqueObservationsByYear(year) - (reviewedByYear[year] ?? 0))}</td>
-                      <td>{countUniqueObservationsByYear(year) > 0 ? 
-                          ((Math.max(0, countUniqueObservationsByYear(year) - (reviewedByYear[year] ?? 0)) / countUniqueObservationsByYear(year) * 100).toFixed(2) + '%') :
+                      <td>{Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0))}</td>
+                      <td>{countObservationsByYear(year) > 0 ? 
+                          ((Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0)) / countObservationsByYear(year) * 100).toFixed(2) + '%') :
                           '0%'}</td>
                     </tr>
                   </tbody>
@@ -838,7 +846,7 @@ const Estadisticas = () => {
                     data={[
                       { 
                         id: 'Hallazgos Faltantes', 
-                        value: Math.max(0, countUniqueObservationsByYear(year) - (reviewedByYear[year] ?? 0)), 
+                        value: Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0)), 
                         color: '#FF9F40' 
                       },
                       { 
@@ -848,7 +856,7 @@ const Estadisticas = () => {
                       },
                       { 
                         id: 'Hallazgos Totales', 
-                        value: countUniqueObservationsByYear(year), 
+                        value: countObservationsByYear(year), 
                         color: '#4BC0C0' 
                       }
                     ]}
