@@ -40,7 +40,7 @@ const Estadisticas = () => {
         const observationsData = filteredAudits.flatMap(audit =>
           audit.Programa.flatMap(program =>
             program.Descripcion.filter(desc => 
-              ['M', 'C', 'm'].includes(desc.Criterio)
+              ['M', 'C', 'm', 'O'].includes(desc.Criterio)
             )
           )
         );
@@ -101,16 +101,6 @@ const Estadisticas = () => {
     return acc;
   }, {});
 
-  // Función para contar observaciones por año
-  const countObservationsByYear = (year) => {
-    const yearAudits = filteredAuditsByYear[year] || [];
-    return yearAudits.flatMap(audit =>
-      audit.Programa.flatMap(program =>
-        program.Descripcion.filter(desc => ['C', 'M', 'm'].includes(desc.Criterio))
-      )
-    ).length;
-  };
-
   // Función de debug para ver hallazgos detallados
   const debugHallazgosByYear = (year) => {
     const yearAudits = filteredAuditsByYear[year] || [];
@@ -119,7 +109,7 @@ const Estadisticas = () => {
     yearAudits.forEach(audit => {
       audit.Programa.forEach(program => {
         program.Descripcion.forEach(desc => {
-          if (['C', 'M', 'm'].includes(desc.Criterio)) {
+          if (['C', 'M', 'm', 'O'].includes(desc.Criterio)) {
             hallazgosDetallados.push({
               auditId: audit._id,
               programaNombre: program.Nombre,
@@ -137,6 +127,16 @@ const Estadisticas = () => {
     console.log(`Total hallazgos calculados: ${hallazgosDetallados.length}`);
     
     return hallazgosDetallados;
+  };
+
+  // Función corregida para contar observaciones por año
+  const countObservationsByYear = (year) => {
+    const yearAudits = filteredAuditsByYear[year] || [];
+    
+    // Debug: contar hallazgos detallados
+    const hallazgosDetallados = debugHallazgosByYear(year);
+    
+    return hallazgosDetallados.length;
   };
 
   // useEffect corregido para calcular hallazgos revisados por año
@@ -195,7 +195,7 @@ const Estadisticas = () => {
     const criteriaCount = filteredAuditsByYear[year].reduce((countAcc, audit) => {
       audit.Programa.forEach(program => {
         program.Descripcion.forEach(desc => {
-          if (['C', 'M', 'm'].includes(desc.Criterio)) {
+          if (['C', 'M', 'm','O'].includes(desc.Criterio)) {
             if (!countAcc[desc.Criterio]) {
               countAcc[desc.Criterio] = 0;
             }
@@ -809,96 +809,102 @@ const Estadisticas = () => {
                   />
                 </div>
               </div>
-              <div className="section">
-                <h3>Total de hallazgos de las auditorías</h3>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Hallazgos</th>
-                      <th>Cantidad</th>
-                      <th>Porcentaje</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Hallazgos Totales</td>
-                      <td>{countObservationsByYear(year)}</td>
-                      <td>100%</td>
-                    </tr>
-                    <tr>
-                      <td>Hallazgos Revisados</td>
-                      <td>{reviewedByYear[year] ?? '...'}</td>
-                      <td>{countObservationsByYear(year) > 0 ? 
-                          (((reviewedByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : 
-                          '0%'}</td>
-                    </tr>
-                    <tr>
-                      <td>Hallazgos Faltantes</td>
-                      <td>{Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0))}</td>
-                      <td>{countObservationsByYear(year) > 0 ? 
-                          ((Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0)) / countObservationsByYear(year) * 100).toFixed(2) + '%') :
-                          '0%'}</td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div className="chart-container-audits" style={{ height: 300 }}>
-                  <ResponsiveBar
-                    data={[
-                      { 
-                        id: 'Hallazgos Faltantes', 
-                        value: Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0)), 
-                        color: '#FF9F40' 
-                      },
-                      { 
-                        id: 'Hallazgos Revisadas', 
-                        value: reviewedByYear[year] ?? 0, 
-                        color: '#9966FF' 
-                      },
-                      { 
-                        id: 'Hallazgos Totales', 
-                        value: countObservationsByYear(year), 
-                        color: '#4BC0C0' 
-                      }
-                    ]}
-                    keys={['value']}
-                    indexBy="id"
-                    margin={{ top: 50, right: 50, bottom: 50, left: 170 }}
-                    padding={0.3}
-                    layout="horizontal"
-                    valueScale={{ type: 'linear' }}
-                    indexScale={{ type: 'band', round: true }}
-                    colors={{ scheme: 'category10' }}
-                    colorBy="indexValue"
-                    borderRadius={4}
-                    borderWidth={1}
-                    borderColor={{ from: 'color', modifiers: [['darker', 0.8]] }}
-                    axisTop={null}
-                    axisRight={null}
-                    axisBottom={{
-                      tickSize: 5,
-                      tickPadding: 5,
-                      tickRotation: 0,
-                      legend: 'Cantidad',
-                      legendPosition: 'middle',
-                      legendOffset: 40
-                    }}
-                    axisLeft={{
-                      tickSize: 5,
-                      tickPadding: 5,
-                      tickRotation: 0,
-                      legend: 'Categoría',
-                      legendPosition: 'middle',
-                      legendOffset: -140
-                    }}
-                    labelSkipWidth={12}
-                    labelSkipHeight={12}
-                    labelTextColor="#ffffff"
-                    animate={true}
-                    motionStiffness={90}
-                    motionDamping={15}
-                  />
-                </div>
-              </div>
+             <div className="section">
+  <h3>Total de hallazgos de las auditorías</h3>
+  <table className="professional-table">
+    <thead>
+      <tr>
+        <th>Hallazgos</th>
+        <th>Cantidad</th>
+        <th>Porcentaje</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Hallazgos Totales</td>
+        <td>{countObservationsByYear(year)}</td>
+        <td>100%</td>
+      </tr>
+      <tr>
+        <td>Hallazgos Revisados</td>
+        <td>{reviewedByYear[year] ?? 0}</td>
+        <td>{countObservationsByYear(year) > 0 ? 
+            (((reviewedByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : 
+            '0%'}</td>
+      </tr>
+      <tr>
+        <td>Hallazgos Faltantes</td>
+        <td>{Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0))}</td>
+        <td>{countObservationsByYear(year) > 0 ? 
+            ((Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0)) / countObservationsByYear(year) * 100).toFixed(2) + '%') :
+            '0%'}</td>
+      </tr>
+    </tbody>
+  </table>
+  
+  {/* Gráfica de hallazgos - Asegúrate de que los datos se pasen correctamente */}
+  <div className="chart-container-audits" style={{ height: 300 }}>
+    <ResponsiveBar
+      data={[
+        { 
+          categoria: 'Hallazgos Totales', 
+          cantidad: countObservationsByYear(year), 
+          color: '#4BC0C0' 
+        },
+        { 
+          categoria: 'Hallazgos Revisados', 
+          cantidad: reviewedByYear[year] ?? 0, 
+          color: '#9966FF' 
+        },
+        { 
+          categoria: 'Hallazgos Faltantes', 
+          cantidad: Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0)), 
+          color: '#FF9F40' 
+        }
+      ]}
+      keys={['cantidad']}
+      indexBy="categoria"
+      margin={{ top: 50, right: 50, bottom: 50, left: 170 }}
+      padding={0.3}
+      layout="horizontal"
+      valueScale={{ type: 'linear' }}
+      indexScale={{ type: 'band', round: true }}
+      colors={d => d.data.color}
+      borderRadius={4}
+      borderWidth={1}
+      borderColor={{ from: 'color', modifiers: [['darker', 0.8]] }}
+      axisTop={null}
+      axisRight={null}
+      axisBottom={{
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: 'Cantidad',
+        legendPosition: 'middle',
+        legendOffset: 40
+      }}
+      axisLeft={{
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: 'Categoría',
+        legendPosition: 'middle',
+        legendOffset: -140
+      }}
+      labelSkipWidth={12}
+      labelSkipHeight={12}
+      labelTextColor="#ffffff"
+      animate={true}
+      motionStiffness={90}
+      motionDamping={15}
+      tooltip={({ data }) => (
+        <div style={{ background: 'white', padding: '5px', border: '1px solid #ccc' }}>
+          <strong>{data.categoria}:</strong> {data.cantidad}
+        </div>
+      )}
+    />
+  </div>
+</div>
               <div className="section">
                 <h4>Cantidad de Criterios en las auditorías</h4>
                 <table>
@@ -956,7 +962,8 @@ const Estadisticas = () => {
                     fill={[
                       { match: { id: 'C' }, id: 'dots' },
                       { match: { id: 'M' }, id: 'lines' },
-                      { match: { id: 'm' }, id: 'dots' }
+                      { match: { id: 'm' }, id: 'dots' },
+                      { match: { id: 'O' }, id: 'lines' }
                     ]}
                     legends={[
                       {
