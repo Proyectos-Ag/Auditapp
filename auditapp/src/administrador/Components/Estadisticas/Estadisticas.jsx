@@ -20,6 +20,7 @@ const Estadisticas = () => {
   const [activeVisualization, setActiveVisualization] = useState('bar');
   const [auditIds, setAuditIds] = useState([]);
   const [reviewedByYear, setReviewedByYear] = useState({});
+  const [aprobadosByYear, setAprobadosByYear] = useState({});
 
   // useEffect inicial corregido
   useEffect(() => {
@@ -144,48 +145,42 @@ const Estadisticas = () => {
     const fetchReviewed = async () => {
       const years = Object.keys(filteredAuditsByYear);
       if (years.length === 0) return;
-      
+
       const reviewedData = {};
-      
+      const aprobadosData = {};
+
       for (const year of years) {
         const yearAudits = filteredAuditsByYear[year] || [];
         const yearAuditIds = yearAudits.map(audit => audit._id);
 
         try {
           const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-          
-          // CORRECCIÓN: Usar idRep que es el campo correcto según tu esquema
-          const reviewed = ishikawaResponse.data.filter(
+
+          // Solo los que están actualmente en estado 'Aprobado'
+          const aprobados = ishikawaResponse.data.filter(
             ishikawa =>
-              (ishikawa.estado === 'Revisado' ||
-                ishikawa.estado === 'Aprobado' ||
-                ishikawa.estado === 'Rechazados' ||
-                ishikawa.estado === 'Pendiente') &&
-              yearAuditIds.includes(ishikawa.idRep) // <- CAMBIO AQUÍ
+              ishikawa.estado === 'Aprobado' &&
+              yearAuditIds.includes(ishikawa.idRep)
           );
-          
-          reviewedData[year] = reviewed.length;
-          
-          // Debug: logs para verificar los datos
-          console.log(`Año ${year}:`, {
-            auditoriasDelAño: yearAuditIds.length,
-            idsAuditorias: yearAuditIds,
-            ishikawasRevisados: reviewed.length,
-            ishikawasTotal: ishikawaResponse.data.length,
-            ishikawasQueCoinciden: reviewed.map(r => ({
-              id: r._id, 
-              idRep: r.idRep, 
-              estado: r.estado
-            }))
-          });
-          
+          aprobadosData[year] = aprobados.length;
+
+          // Solo los que están actualmente en estado 'Revisado'
+          const revisados = ishikawaResponse.data.filter(
+            ishikawa =>
+              ishikawa.estado === 'Revisado' &&
+              yearAuditIds.includes(ishikawa.idRep)
+          );
+          reviewedData[year] = revisados.length;
+
         } catch (error) {
           console.error('Error fetching ishikawa data:', error);
           reviewedData[year] = 0;
+          aprobadosData[year] = 0;
         }
       }
-      
+
       setReviewedByYear(reviewedData);
+      setAprobadosByYear(aprobadosData);
     };
 
     fetchReviewed();
@@ -826,18 +821,19 @@ const Estadisticas = () => {
         <td>100%</td>
       </tr>
       <tr>
+        <td>Hallazgos Aprobados</td>
+        <td>{aprobadosByYear[year] ?? 0}</td>
+        <td>{countObservationsByYear(year) > 0 ? (((aprobadosByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : '0%'}</td>
+      </tr>
+      <tr>
         <td>Hallazgos Revisados</td>
         <td>{reviewedByYear[year] ?? 0}</td>
-        <td>{countObservationsByYear(year) > 0 ? 
-            (((reviewedByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : 
-            '0%'}</td>
+        <td>{countObservationsByYear(year) > 0 ? (((reviewedByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : '0%'}</td>
       </tr>
       <tr>
         <td>Hallazgos Faltantes</td>
-        <td>{Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0))}</td>
-        <td>{countObservationsByYear(year) > 0 ? 
-            ((Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0)) / countObservationsByYear(year) * 100).toFixed(2) + '%') :
-            '0%'}</td>
+        <td>{Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) )}</td>
+        <td>{countObservationsByYear(year) > 0 ? ((Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) ) / countObservationsByYear(year) * 100).toFixed(2) + '%') : '0%'}</td>
       </tr>
     </tbody>
   </table>
@@ -852,13 +848,18 @@ const Estadisticas = () => {
           color: '#4BC0C0' 
         },
         { 
+          categoria: 'Hallazgos Aprobados', 
+          cantidad: aprobadosByYear[year] ?? 0, 
+          color: '#2ecc40' 
+        },
+        { 
           categoria: 'Hallazgos Revisados', 
           cantidad: reviewedByYear[year] ?? 0, 
           color: '#9966FF' 
         },
         { 
           categoria: 'Hallazgos Faltantes', 
-          cantidad: Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0)), 
+          cantidad: Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) ), 
           color: '#FF9F40' 
         }
       ]}
