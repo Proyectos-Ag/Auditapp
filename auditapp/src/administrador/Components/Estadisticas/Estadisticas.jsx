@@ -206,17 +206,18 @@ const Estadisticas = () => {
     return acc;
   }, {});
 
-  const auditTypeCountByYear = Object.keys(filteredAuditsByYear).reduce((acc, year) => {
-    const auditTypeCount = filteredAuditsByYear[year].reduce((countAcc, audit) => {
-      const type = audit.TipoAuditoria;
-      if (!countAcc[type]) {
-        countAcc[type] = 0;
+  // Agrupar por TipoAuditoria y Cliente
+  const auditTypeClientCountByYear = Object.keys(filteredAuditsByYear).reduce((acc, year) => {
+    const auditTypeClientCount = {};
+    filteredAuditsByYear[year].forEach(audit => {
+      const key = `${audit.TipoAuditoria} - ${audit.Cliente || 'Sin Cliente'}`;
+      if (!auditTypeClientCount[key]) {
+        auditTypeClientCount[key] = { cantidad: 0, estado: audit.Estado };
       }
-      countAcc[type]++;
-      return countAcc;
-    }, {});
-    const totalCount = Object.values(auditTypeCount).reduce((sum, count) => sum + count, 0);
-    acc[year] = { auditTypeCount, totalCount };
+      auditTypeClientCount[key].cantidad++;
+      auditTypeClientCount[key].estado = audit.Estado;
+    });
+    acc[year] = auditTypeClientCount;
     return acc;
   }, {});
 
@@ -730,33 +731,30 @@ const Estadisticas = () => {
                   <table className="professional-table audit-type-table">
                     <thead>
                       <tr>
-                        <th>Tipo</th>
+                        <th>Tipo / Cliente</th>
                         <th>Cantidad</th>
                         <th>Estatus</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.entries(auditTypeCountByYear[year].auditTypeCount).map(([tipo, cantidad], index) => {
-                        const audit = filteredAuditsByYear[year].find(a => a.TipoAuditoria === tipo);
-                        return (
-                          <tr key={index} className={index % 2 === 0 ? 'even-row' : 'odd-row'}>
-                            <td>{tipo}</td>
-                            <td className="count-cell">{cantidad}</td>
-                            <td className={`status-cell status-${audit?.Estado?.toLowerCase()}`}>{audit?.Estado}</td>
-                          </tr>
-                        );
-                      })}
+                      {Object.entries(auditTypeClientCountByYear[year]).map(([key, data], index) => (
+                        <tr key={index} className={index % 2 === 0 ? 'even-row' : 'odd-row'}>
+                          <td>{key}</td>
+                          <td className="count-cell">{data.cantidad}</td>
+                          <td className={`status-cell status-${data.estado?.toLowerCase()}`}>{data.estado}</td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
                 <div className="chart-container-audits" style={{ height: 400 }}>
                   <ResponsiveBar
-                    data={Object.entries(auditTypeCountByYear[year].auditTypeCount).map(([tipo, cantidad]) => ({
-                      tipo,
-                      cantidad
+                    data={Object.entries(auditTypeClientCountByYear[year]).map(([key, data]) => ({
+                      tipo_cliente: key,
+                      cantidad: data.cantidad
                     }))}
                     keys={['cantidad']}
-                    indexBy="tipo"
+                    indexBy="tipo_cliente"
                     margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
                     padding={0.3}
                     layout="vertical"
@@ -783,7 +781,7 @@ const Estadisticas = () => {
                       tickSize: 5,
                       tickPadding: 5,
                       tickRotation: -45,
-                      legend: 'Tipo de Auditoría',
+                      legend: 'Tipo / Cliente',
                       legendPosition: 'middle',
                       legendOffset: 40
                     }}
@@ -831,7 +829,7 @@ const Estadisticas = () => {
         <td>{countObservationsByYear(year) > 0 ? (((reviewedByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : '0%'}</td>
       </tr>
       <tr>
-        <td>Hallazgos Faltantes</td>
+        <td>Hallazgos Pendientes</td>
         <td>{Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) )}</td>
         <td>{countObservationsByYear(year) > 0 ? ((Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) ) / countObservationsByYear(year) * 100).toFixed(2) + '%') : '0%'}</td>
       </tr>
@@ -858,7 +856,7 @@ const Estadisticas = () => {
           color: '#9966FF' 
         },
         { 
-          categoria: 'Hallazgos Faltantes', 
+          categoria: 'Hallazgos Pendientes', 
           cantidad: Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) ), 
           color: '#FF9F40' 
         }
