@@ -20,7 +20,9 @@ const Estadisticas = () => {
   const [activeVisualization, setActiveVisualization] = useState('bar');
   const [auditIds, setAuditIds] = useState([]);
   const [reviewedByYear, setReviewedByYear] = useState({});
+  const [aprobadosByYear, setAprobadosByYear] = useState({});
 
+  // useEffect inicial corregido
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -39,13 +41,13 @@ const Estadisticas = () => {
         const observationsData = filteredAudits.flatMap(audit =>
           audit.Programa.flatMap(program =>
             program.Descripcion.filter(desc => 
-              ['M', 'C', 'm'].includes(desc.Criterio)
+              ['M', 'C', 'm', 'O'].includes(desc.Criterio)
             )
           )
         );
         setObservations(observationsData);
 
-        // Obtener ishikawas solo para auditorías existentes
+        // CORRECCIÓN: Usar idRep consistentemente
         const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
         const reviewedObservationsData = ishikawaResponse.data.filter(
           ishikawa => 
@@ -53,9 +55,10 @@ const Estadisticas = () => {
              ishikawa.estado === 'Aprobado' || 
              ishikawa.estado === 'Rechazados' || 
              ishikawa.estado === 'Pendiente') &&
-            filteredAudits.map(audit => audit._id).includes(ishikawa.idAuditoria)
+            filteredAudits.map(audit => audit._id).includes(ishikawa.idRep) // <- CAMBIO AQUÍ
         );
         setReviewedObservations(reviewedObservationsData);
+        
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -99,56 +102,95 @@ const Estadisticas = () => {
     return acc;
   }, {});
 
-  // Función para contar observaciones por año
+  // Función de debug para ver hallazgos detallados
+  const debugHallazgosByYear = (year) => {
+    const yearAudits = filteredAuditsByYear[year] || [];
+    const hallazgosDetallados = [];
+    
+    yearAudits.forEach(audit => {
+      audit.Programa.forEach(program => {
+        program.Descripcion.forEach(desc => {
+          if (['C', 'M', 'm', 'O'].includes(desc.Criterio)) {
+            hallazgosDetallados.push({
+              auditId: audit._id,
+              programaNombre: program.Nombre,
+              requisito: desc.Requisito,
+              criterio: desc.Criterio,
+              observacion: desc.Observacion,
+              hallazgo: desc.Hallazgo
+            });
+          }
+        });
+      });
+    });
+    
+    console.log(`Hallazgos detallados año ${year}:`, hallazgosDetallados);
+    console.log(`Total hallazgos calculados: ${hallazgosDetallados.length}`);
+    
+    return hallazgosDetallados;
+  };
+
+  // Función corregida para contar observaciones por año
   const countObservationsByYear = (year) => {
     const yearAudits = filteredAuditsByYear[year] || [];
-    return yearAudits.flatMap(audit =>
-      audit.Programa.flatMap(program =>
-        program.Descripcion.filter(desc => ['C', 'M', 'm'].includes(desc.Criterio))
-      )
-    ).length;
+    
+    // Debug: contar hallazgos detallados
+    const hallazgosDetallados = debugHallazgosByYear(year);
+    
+    return hallazgosDetallados.length;
   };
 
-// Nuevo useEffect para calcular hallazgos revisados por año
-useEffect(() => {
-  const fetchReviewed = async () => {
-    // Verificar si realmente hay años para procesar
-    const years = Object.keys(filteredAuditsByYear);
-    if (years.length === 0) return;
-    
-    const reviewedData = {};
-    
-    for (const year of years) {
-      const yearAudits = filteredAuditsByYear[year] || [];
-      const yearAuditIds = yearAudits.map(audit => audit._id);
+  // useEffect corregido para calcular hallazgos revisados por año
+  useEffect(() => {
+    const fetchReviewed = async () => {
+      const years = Object.keys(filteredAuditsByYear);
+      if (years.length === 0) return;
 
-      try {
-        const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
-        const reviewed = ishikawaResponse.data.filter(
-          ishikawa =>
-            (ishikawa.estado === 'Revisado' ||
-              ishikawa.estado === 'Aprobado' ||
-              ishikawa.estado === 'Rechazados' ||
-              ishikawa.estado === 'Pendiente') &&
-            yearAuditIds.includes(ishikawa.idRep) 
-        );
-        reviewedData[year] = reviewed.length;
-      } catch (error) {
-        console.error('Error fetching ishikawa data:', error);
-        reviewedData[year] = 0;
+      const reviewedData = {};
+      const aprobadosData = {};
+
+      for (const year of years) {
+        const yearAudits = filteredAuditsByYear[year] || [];
+        const yearAuditIds = yearAudits.map(audit => audit._id);
+
+        try {
+          const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+
+          // Solo los que están actualmente en estado 'Aprobado'
+          const aprobados = ishikawaResponse.data.filter(
+            ishikawa =>
+              ishikawa.estado === 'Aprobado' &&
+              yearAuditIds.includes(ishikawa.idRep)
+          );
+          aprobadosData[year] = aprobados.length;
+
+          // Solo los que están actualmente en estado 'Revisado'
+          const revisados = ishikawaResponse.data.filter(
+            ishikawa =>
+              ishikawa.estado === 'Revisado' &&
+              yearAuditIds.includes(ishikawa.idRep)
+          );
+          reviewedData[year] = revisados.length;
+
+        } catch (error) {
+          console.error('Error fetching ishikawa data:', error);
+          reviewedData[year] = 0;
+          aprobadosData[year] = 0;
+        }
       }
-    }
-    setReviewedByYear(reviewedData);
-  };
 
-  fetchReviewed();
-}, [JSON.stringify(filteredAuditsByYear)]); // Usar JSON.stringify para comparación profunda
+      setReviewedByYear(reviewedData);
+      setAprobadosByYear(aprobadosData);
+    };
+
+    fetchReviewed();
+  }, [JSON.stringify(filteredAuditsByYear)]);
 
   const criteriaCountByYear = Object.keys(filteredAuditsByYear).reduce((acc, year) => {
     const criteriaCount = filteredAuditsByYear[year].reduce((countAcc, audit) => {
       audit.Programa.forEach(program => {
         program.Descripcion.forEach(desc => {
-          if (['C', 'M', 'm'].includes(desc.Criterio)) {
+          if (['C', 'M', 'm','O'].includes(desc.Criterio)) {
             if (!countAcc[desc.Criterio]) {
               countAcc[desc.Criterio] = 0;
             }
@@ -164,17 +206,18 @@ useEffect(() => {
     return acc;
   }, {});
 
-  const auditTypeCountByYear = Object.keys(filteredAuditsByYear).reduce((acc, year) => {
-    const auditTypeCount = filteredAuditsByYear[year].reduce((countAcc, audit) => {
-      const type = audit.TipoAuditoria;
-      if (!countAcc[type]) {
-        countAcc[type] = 0;
+  // Agrupar por TipoAuditoria y Cliente
+  const auditTypeClientCountByYear = Object.keys(filteredAuditsByYear).reduce((acc, year) => {
+    const auditTypeClientCount = {};
+    filteredAuditsByYear[year].forEach(audit => {
+      const key = `${audit.TipoAuditoria} - ${audit.Cliente || 'Sin Cliente'}`;
+      if (!auditTypeClientCount[key]) {
+        auditTypeClientCount[key] = { cantidad: 0, estado: audit.Estado };
       }
-      countAcc[type]++;
-      return countAcc;
-    }, {});
-    const totalCount = Object.values(auditTypeCount).reduce((sum, count) => sum + count, 0);
-    acc[year] = { auditTypeCount, totalCount };
+      auditTypeClientCount[key].cantidad++;
+      auditTypeClientCount[key].estado = audit.Estado;
+    });
+    acc[year] = auditTypeClientCount;
     return acc;
   }, {});
 
@@ -223,7 +266,6 @@ useEffect(() => {
     return auditsGroupedByMonth;
   };
   
-
   const auditsByMonthAndYear = Object.keys(filteredAuditsByYear).reduce((acc, year) => {
     acc[year] = auditsByMonth(filteredAuditsByYear[year]);
     return acc;
@@ -689,33 +731,30 @@ useEffect(() => {
                   <table className="professional-table audit-type-table">
                     <thead>
                       <tr>
-                        <th>Tipo</th>
+                        <th>Tipo / Cliente</th>
                         <th>Cantidad</th>
                         <th>Estatus</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.entries(auditTypeCountByYear[year].auditTypeCount).map(([tipo, cantidad], index) => {
-                        const audit = filteredAuditsByYear[year].find(a => a.TipoAuditoria === tipo);
-                        return (
-                          <tr key={index} className={index % 2 === 0 ? 'even-row' : 'odd-row'}>
-                            <td>{tipo}</td>
-                            <td className="count-cell">{cantidad}</td>
-                            <td className={`status-cell status-${audit?.Estado?.toLowerCase()}`}>{audit?.Estado}</td>
-                          </tr>
-                        );
-                      })}
+                      {Object.entries(auditTypeClientCountByYear[year]).map(([key, data], index) => (
+                        <tr key={index} className={index % 2 === 0 ? 'even-row' : 'odd-row'}>
+                          <td>{key}</td>
+                          <td className="count-cell">{data.cantidad}</td>
+                          <td className={`status-cell status-${data.estado?.toLowerCase()}`}>{data.estado}</td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
                 <div className="chart-container-audits" style={{ height: 400 }}>
                   <ResponsiveBar
-                    data={Object.entries(auditTypeCountByYear[year].auditTypeCount).map(([tipo, cantidad]) => ({
-                      tipo,
-                      cantidad
+                    data={Object.entries(auditTypeClientCountByYear[year]).map(([key, data]) => ({
+                      tipo_cliente: key,
+                      cantidad: data.cantidad
                     }))}
                     keys={['cantidad']}
-                    indexBy="tipo"
+                    indexBy="tipo_cliente"
                     margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
                     padding={0.3}
                     layout="vertical"
@@ -742,7 +781,7 @@ useEffect(() => {
                       tickSize: 5,
                       tickPadding: 5,
                       tickRotation: -45,
-                      legend: 'Tipo de Auditoría',
+                      legend: 'Tipo / Cliente',
                       legendPosition: 'middle',
                       legendOffset: 40
                     }}
@@ -763,96 +802,108 @@ useEffect(() => {
                   />
                 </div>
               </div>
-              <div className="section">
-                <h3>Total de hallazgos de las auditorías</h3>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Hallazgos</th>
-                      <th>Cantidad</th>
-                      <th>Porcentaje</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Hallazgos Totales</td>
-                      <td>{countObservationsByYear(year)}</td>
-                      <td>100%</td>
-                    </tr>
-                    <tr>
-                      <td>Hallazgos Revisados</td>
-                      <td>{reviewedByYear[year] ?? '...'}</td>
-                      <td>{countObservationsByYear(year) > 0 ? 
-                          (((reviewedByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : 
-                          '0%'}</td>
-                    </tr>
-                    <tr>
-                      <td>Hallazgos Faltantes</td>
-                      <td>{Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0))}</td>
-                      <td>{countObservationsByYear(year) > 0 ? 
-                          ((Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0)) / countObservationsByYear(year) * 100).toFixed(2) + '%') :
-                          '0%'}</td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div className="chart-container-audits" style={{ height: 300 }}>
-                  <ResponsiveBar
-                    data={[
-                      { 
-                        id: 'Hallazgos Faltantes', 
-                        value: Math.max(0, countObservationsByYear(year) - (reviewedByYear[year] ?? 0)), 
-                        color: '#FF9F40' 
-                      },
-                      { 
-                        id: 'Hallazgos Revisadas', 
-                        value: reviewedByYear[year] ?? 0, 
-                        color: '#9966FF' 
-                      },
-                      { 
-                        id: 'Hallazgos Totales', 
-                        value: countObservationsByYear(year), 
-                        color: '#4BC0C0' 
-                      }
-                    ]}
-                    keys={['value']}
-                    indexBy="id"
-                    margin={{ top: 50, right: 50, bottom: 50, left: 170 }}
-                    padding={0.3}
-                    layout="horizontal"
-                    valueScale={{ type: 'linear' }}
-                    indexScale={{ type: 'band', round: true }}
-                    colors={{ scheme: 'category10' }}
-                    colorBy="indexValue"
-                    borderRadius={4}
-                    borderWidth={1}
-                    borderColor={{ from: 'color', modifiers: [['darker', 0.8]] }}
-                    axisTop={null}
-                    axisRight={null}
-                    axisBottom={{
-                      tickSize: 5,
-                      tickPadding: 5,
-                      tickRotation: 0,
-                      legend: 'Cantidad',
-                      legendPosition: 'middle',
-                      legendOffset: 40
-                    }}
-                    axisLeft={{
-                      tickSize: 5,
-                      tickPadding: 5,
-                      tickRotation: 0,
-                      legend: 'Categoría',
-                      legendPosition: 'middle',
-                      legendOffset: -140
-                    }}
-                    labelSkipWidth={12}
-                    labelSkipHeight={12}
-                    labelTextColor="#ffffff"
-                    animate={true}
-                    motionStiffness={90}
-                    motionDamping={15}
-                  />
-                </div>
-              </div>
+             <div className="section">
+  <h3>Total de hallazgos de las auditorías</h3>
+  <table className="professional-table">
+    <thead>
+      <tr>
+        <th>Hallazgos</th>
+        <th>Cantidad</th>
+        <th>Porcentaje</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Hallazgos Totales</td>
+        <td>{countObservationsByYear(year)}</td>
+        <td>100%</td>
+      </tr>
+      <tr>
+        <td>Hallazgos Aprobados</td>
+        <td>{aprobadosByYear[year] ?? 0}</td>
+        <td>{countObservationsByYear(year) > 0 ? (((aprobadosByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : '0%'}</td>
+      </tr>
+      <tr>
+        <td>Hallazgos Revisados</td>
+        <td>{reviewedByYear[year] ?? 0}</td>
+        <td>{countObservationsByYear(year) > 0 ? (((reviewedByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : '0%'}</td>
+      </tr>
+      <tr>
+        <td>Hallazgos Pendientes</td>
+        <td>{Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) )}</td>
+        <td>{countObservationsByYear(year) > 0 ? ((Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) ) / countObservationsByYear(year) * 100).toFixed(2) + '%') : '0%'}</td>
+      </tr>
+    </tbody>
+  </table>
+  
+  {/* Gráfica de hallazgos - Asegúrate de que los datos se pasen correctamente */}
+  <div className="chart-container-audits" style={{ height: 300 }}>
+    <ResponsiveBar
+      data={[
+        { 
+          categoria: 'Hallazgos Totales', 
+          cantidad: countObservationsByYear(year), 
+          color: '#4BC0C0' 
+        },
+        { 
+          categoria: 'Hallazgos Aprobados', 
+          cantidad: aprobadosByYear[year] ?? 0, 
+          color: '#2ecc40' 
+        },
+        { 
+          categoria: 'Hallazgos Revisados', 
+          cantidad: reviewedByYear[year] ?? 0, 
+          color: '#9966FF' 
+        },
+        { 
+          categoria: 'Hallazgos Pendientes', 
+          cantidad: Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) ), 
+          color: '#FF9F40' 
+        }
+      ]}
+      keys={['cantidad']}
+      indexBy="categoria"
+      margin={{ top: 50, right: 50, bottom: 50, left: 170 }}
+      padding={0.3}
+      layout="horizontal"
+      valueScale={{ type: 'linear' }}
+      indexScale={{ type: 'band', round: true }}
+      colors={d => d.data.color}
+      borderRadius={4}
+      borderWidth={1}
+      borderColor={{ from: 'color', modifiers: [['darker', 0.8]] }}
+      axisTop={null}
+      axisRight={null}
+      axisBottom={{
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: 'Cantidad',
+        legendPosition: 'middle',
+        legendOffset: 40
+      }}
+      axisLeft={{
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: 'Categoría',
+        legendPosition: 'middle',
+        legendOffset: -140
+      }}
+      labelSkipWidth={12}
+      labelSkipHeight={12}
+      labelTextColor="#ffffff"
+      animate={true}
+      motionStiffness={90}
+      motionDamping={15}
+      tooltip={({ data }) => (
+        <div style={{ background: 'white', padding: '5px', border: '1px solid #ccc' }}>
+          <strong>{data.categoria}:</strong> {data.cantidad}
+        </div>
+      )}
+    />
+  </div>
+</div>
               <div className="section">
                 <h4>Cantidad de Criterios en las auditorías</h4>
                 <table>
@@ -910,7 +961,8 @@ useEffect(() => {
                     fill={[
                       { match: { id: 'C' }, id: 'dots' },
                       { match: { id: 'M' }, id: 'lines' },
-                      { match: { id: 'm' }, id: 'dots' }
+                      { match: { id: 'm' }, id: 'dots' },
+                      { match: { id: 'O' }, id: 'lines' }
                     ]}
                     legends={[
                       {
