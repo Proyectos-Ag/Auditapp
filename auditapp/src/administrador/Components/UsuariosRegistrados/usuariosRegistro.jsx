@@ -644,7 +644,7 @@ const UsuariosRegistro = () => {
                     <MenuItem value="Administración">Administración</MenuItem>
                     <MenuItem value="Aseguramiento de calidad">Aseguramiento de calidad</MenuItem>
                     <MenuItem value="Gestión para la calidad">Gestión para la calidad</MenuItem>
-                    <MenuItem value="Gestión para la productividad">Gestión para la productividad</MenuItem>
+                    <MenuItem value="Gestión para la Productividad / Operaciones">Gestión para la Productividad / Operaciones</MenuItem>
                     <MenuItem value="Mantenimiento">Mantenimiento</MenuItem>
                     <MenuItem value="Ingeniería">Ingeniería</MenuItem>
                     <MenuItem value="Planeación y Logística">Planeación y Logística</MenuItem>
