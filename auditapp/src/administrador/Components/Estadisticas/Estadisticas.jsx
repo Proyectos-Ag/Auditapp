@@ -819,17 +819,17 @@ const Estadisticas = () => {
         <td>100%</td>
       </tr>
       <tr>
-        <td>Hallazgos Aprobados</td>
+        <td>Hallazgos Abiertos</td>
         <td>{aprobadosByYear[year] ?? 0}</td>
         <td>{countObservationsByYear(year) > 0 ? (((aprobadosByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : '0%'}</td>
       </tr>
       <tr>
-        <td>Hallazgos Revisados</td>
+        <td>Hallazgos Cerrados</td>
         <td>{reviewedByYear[year] ?? 0}</td>
         <td>{countObservationsByYear(year) > 0 ? (((reviewedByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : '0%'}</td>
       </tr>
       <tr>
-        <td>Hallazgos Pendientes</td>
+        <td>Hallazgos Faltantes</td>
         <td>{Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) )}</td>
         <td>{countObservationsByYear(year) > 0 ? ((Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) ) / countObservationsByYear(year) * 100).toFixed(2) + '%') : '0%'}</td>
       </tr>
@@ -1006,3 +1006,4 @@ const Estadisticas = () => {
 };
 
 export default Estadisticas;
+
