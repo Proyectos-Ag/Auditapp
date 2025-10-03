@@ -1,5 +1,6 @@
 const GestionCambio = require('../models/gestionSchema');
 const ValidacionCambio = require("../models/ValidacionCambio");
+const mongoose = require('mongoose');
 
 const ensureCardIds = (cards) => {
   if (!Array.isArray(cards)) return [];
@@ -203,6 +204,40 @@ const obtenerGestionPorId = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+const obtenerGestionComPorId = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+
+    // Campos que queremos forzar si en algún momento están ocultos por select:false
+    const SIG_FIELDS = [
+      'firmadoPor',
+      'firmadoPor.solicitado',
+      'firmadoPor.evaluado',
+      'firmadoPor.aprobado',
+      'firmadoPor.implementado',
+      'firmadoPor.validado'
+    ];
+    const selectStr = SIG_FIELDS.map(f => `+${f}`).join(' ');
+
+    // Obtener el documento completo. lean() devuelve un objeto plano listo para enviar.
+    const gestion = await GestionCambio.findById(id).select(selectStr).lean();
+
+    if (!gestion) {
+      return res.status(404).json({ error: 'Registro no encontrado' });
+    }
+
+    // Devolver todo el documento tal cual
+    return res.status(200).json(gestion);
+  } catch (error) {
+    console.error('obtenerGestionComPorId error:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
 
@@ -417,6 +452,7 @@ module.exports = {
   actualizarGestionCambio,
   eliminarGestionCambio,
   obtenerResumenGestiones,
+  obtenerGestionComPorId,
   enviarGestionCambio: async (req, res) => { // reutilizo la función anterior 'enviarGestionCambio'
     try {
       const { id } = req.params;

@@ -14,6 +14,7 @@ router.get('/resumen', gestionCambioController.obtenerResumenGestiones);
 
 // Ruta para obtener un registro por ID
 router.get('/:id', gestionCambioController.obtenerGestionPorId);
+router.get('/completa/:id', gestionCambioController.obtenerGestionComPorId);
 
 // Enviar (cambia estado a 'enviado' si pasa validación)
 router.post('/:id/enviar', gestionCambioController.enviarGestionCambio);
