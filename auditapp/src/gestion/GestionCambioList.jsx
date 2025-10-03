@@ -571,7 +571,7 @@ const userIsInValidado = Boolean(
             {collapsed ? 'Expandir' : 'Minimizar'}
           </button>
 
-          <GestionCambioPDF registro={item} />
+          <GestionCambioPDF registroId={id} />
         </div>
 
         </div>

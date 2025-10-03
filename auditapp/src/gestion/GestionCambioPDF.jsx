@@ -94,6 +94,10 @@ const GestionCambioPDF = ({ registroId }) => {
   };
 
   const generatePDF = async () => {
+    if (!registroId) {
+      setError('No hay ID de registro para generar el PDF.');
+      return;
+    }
     setError(null);
     setLoading(true);
     try {
@@ -574,7 +578,7 @@ const GestionCambioPDF = ({ registroId }) => {
       <button
         type="button"
         onClick={generatePDF}
-        disabled={loading}
+        disabled={loading || !registroId}
         style={{
           padding: '8px 16px',
           backgroundColor: '#2c3e50',
