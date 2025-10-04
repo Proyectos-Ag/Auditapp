@@ -37,6 +37,7 @@ import VistaIshikawas from './administrador/Components/DiagramaRe/VistaIshikawas
 import ProgramarAuditoria from './administrador/Components/ProgramarAuditoria/AuditTable.jsx';
 import IshikawaDashboard from './administrador/Components/EstadisticasIsh/IshikawaDashboard.jsx';
 import VistaRevicion from './administrador/Components/Reviciones/VistaRevicion.jsx';
+import EstaUsi from './administrador/Components/EstaUsuario.jsx';
 
 //Auditor
 import PendienteAuditor from './auditor/components/Pendientes/Pendiente';
@@ -68,6 +69,15 @@ import SaeftyGoals from './Objetivos/Components/Tabla/objetivoslistsaeftygoals.j
 import Concentrado from './Objetivos/Components/Tabla/concentrado.jsx'
 import RegistroAccionCorrectiva from './Objetivos/Components/Tabla/AccionesCorrectivas.jsx'
 
+//Gestion de Cambios
+import GestionCambioForm from './gestion/GestionCambioForm.jsx';
+import MobileSign from './gestion/MobileSign.jsx';
+import GestionList from './gestion/GestionCambioList.jsx'
+import Home from './gestion/home/Home.jsx';
+import VistaSolicitudesCambios from './gestion/VistaSolicitudesCambios.jsx';
+import RevisionSolicitudesCambios from './gestion/RevisionSolicitudesCambios.jsx';
+import ValidacionForm from './gestion/validacion/ValidacionForm.jsx';
+
 //Paginas de error
 import UnauthorizedPage from './components/Pag-error/UnauthorizedPage.jsx';
 import NotFoundPage from './components/Pag-error/NotFoundPage.jsx';
@@ -88,7 +98,7 @@ export const UserContext = createContext(null);
     const location = useLocation();
   
     // Rutas donde no queremos que se muestren MigasPan e IconMenu
-    const excludedRoutes = ['/','/correo-prog-audi'];
+    const excludedRoutes = ['/','/correo-prog-audi', '/mobile-sign'];
   
     return (
       <>
@@ -118,6 +128,7 @@ export const UserContext = createContext(null);
               <Route path="/auditcalendar" element={<ProtectedRoute allowedRoles={['administrador']}><Calendarioss/></ProtectedRoute>} />
 
               <Route path="/calendario" element={<ProtectedRoute allowedRoles={['administrador']}><Calendarios /></ProtectedRoute>} />
+              <Route path="/estadousuario" element={<ProtectedRoute allowedRoles={['administrador']}><EstaUsi /></ProtectedRoute>} />
 
               <Route path="/departamento" element={<ProtectedRoute allowedRoles={['administrador']}><Departaments /></ProtectedRoute>} />
               <Route path="/diagrama/:_id" element={<ProtectedRoute allowedRoles={['administrador']}><Diagrama /></ProtectedRoute>} />
@@ -164,6 +175,18 @@ export const UserContext = createContext(null);
               <Route path="/registro-accion" element={<ProtectedRoute><RegistroAccionCorrectiva/></ProtectedRoute>}/>
               <Route path="/saefty-goals2" element={<SaeftyGoals />} />
               <Route path="/concentradon" element={<Concentrado />} />
+
+              {/*Gestion de Cambios*/}
+              <Route path="/gestion-cambio/:id" element={<ProtectedRoute><GestionCambioForm/></ProtectedRoute>}/>
+              <Route path="/gestion-cambio" element={<ProtectedRoute><GestionCambioForm/></ProtectedRoute>}/>
+              <Route path="/solicitud-cambio/:id" element={<ProtectedRoute><GestionList/></ProtectedRoute>}/>
+              <Route path="/gestion" element={<ProtectedRoute><Home/></ProtectedRoute>}/>
+              <Route path="/vista-solictudes" element={<ProtectedRoute><VistaSolicitudesCambios/></ProtectedRoute>}/>
+              <Route path="/vista-solictudes-rev" element={<ProtectedRoute><RevisionSolicitudesCambios/></ProtectedRoute>}/>
+              <Route path="/validacion-form" element={<ProtectedRoute><ValidacionForm/></ProtectedRoute>}/>
+              <Route path="/mobile-sign" element={<MobileSign />} />
+
+              {/* Rutas protegidas para los componentes de usuario */}
 
               {/*Paginas de error*/}
               <Route path="/unauthorized" element={<UnauthorizedPage />} />
