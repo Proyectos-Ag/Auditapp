@@ -37,7 +37,7 @@ import VistaIshikawas from './administrador/Components/DiagramaRe/VistaIshikawas
 import ProgramarAuditoria from './administrador/Components/ProgramarAuditoria/AuditTable.jsx';
 import IshikawaDashboard from './administrador/Components/EstadisticasIsh/IshikawaDashboard.jsx';
 import VistaRevicion from './administrador/Components/Reviciones/VistaRevicion.jsx';
-import EstaUsi from './administrador/Components/EstaUsuario.jsx';
+import EstaUsi from './administrador/Components/EstaUni.jsx';
 
 //Auditor
 import PendienteAuditor from './auditor/components/Pendientes/Pendiente';
