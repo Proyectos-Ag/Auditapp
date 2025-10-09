@@ -37,6 +37,7 @@ import VistaIshikawas from './administrador/Components/DiagramaRe/VistaIshikawas
 import ProgramarAuditoria from './administrador/Components/ProgramarAuditoria/AuditTable.jsx';
 import IshikawaDashboard from './administrador/Components/EstadisticasIsh/IshikawaDashboard.jsx';
 import VistaRevicion from './administrador/Components/Reviciones/VistaRevicion.jsx';
+import EstaUsi from './administrador/Components/Estausuario.jsx';
 
 //Auditor
 import PendienteAuditor from './auditor/components/Pendientes/Pendiente';
@@ -127,6 +128,7 @@ export const UserContext = createContext(null);
               <Route path="/auditcalendar" element={<ProtectedRoute allowedRoles={['administrador']}><Calendarioss/></ProtectedRoute>} />
 
               <Route path="/calendario" element={<ProtectedRoute allowedRoles={['administrador']}><Calendarios /></ProtectedRoute>} />
+              <Route path="/estado-usuario" element={<ProtectedRoute allowedRoles={['administrador','auditor','auditado']}><EstaUsi /></ProtectedRoute>} />
 
               <Route path="/departamento" element={<ProtectedRoute allowedRoles={['administrador']}><Departaments /></ProtectedRoute>} />
               <Route path="/diagrama/:_id" element={<ProtectedRoute allowedRoles={['administrador']}><Diagrama /></ProtectedRoute>} />
