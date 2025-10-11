@@ -32,7 +32,17 @@ import {
   ListItem,
   ListItemText,
   useTheme,
-  alpha
+  alpha,
+  Container,
+  Fade,
+  Zoom,
+  Slide,
+  Divider,
+  Badge,
+  Tooltip,
+  CardMedia,
+  LinearProgress,
+  useMediaQuery
 } from '@mui/material';
 
 // Importar iconos
@@ -57,153 +67,345 @@ import {
   Grading as GradingIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
-  Key as KeyIcon
+  Key as KeyIcon,
+  Person as PersonIcon,
+  CorporateFare as CorporateFareIcon,
+  TrendingUp as TrendingUpIcon,
+  FilterList as FilterListIcon,
+  Search as SearchIcon,
+  VerifiedUser as VerifiedUserIcon,
+  Group as GroupIcon,
+  AdminPanelSettings as AdminPanelSettingsIcon,
+  AutoAwesome as AutoAwesomeIcon,
+  WorkspacePremium as WorkspacePremiumIcon
 } from '@mui/icons-material';
 
 import RegistroUsuarioModal from './RegistroUsuarioModal';
 import CalificacionModal from './CalificacionModal';
 
-// Estilos personalizados
+// Estilos personalizados mejorados
 const styles = {
   container: {
-    padding: 3,
-    maxWidth: '1200px',
+    padding: { xs: 2, md: 4 },
+    maxWidth: '1400px',
     margin: '0 auto',
+    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+    minHeight: '100vh',
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
-    marginTop: 4,
     alignItems: 'center',
-    marginBottom: 3,
+    marginBottom: 4,
+    padding: { xs: 2, md: 3 },
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    borderRadius: 4,
+    color: 'white',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+    position: 'relative',
+    overflow: 'hidden',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'radial-gradient(circle at 30% 20%, rgba(255,255,255,0.1) 0%, transparent 50%)',
+    }
+  },
+  headerContent: {
+    position: 'relative',
+    zIndex: 1,
+    width: '100%',
   },
   filtersContainer: {
-    display: 'flex',
-    gap: 2,
-    marginBottom: 3,
-    flexWrap: 'wrap',
+    padding: 3,
+    marginBottom: 4,
+    background: 'white',
+    borderRadius: 3,
+    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+    border: '1px solid rgba(255,255,255,0.2)',
+    backdropFilter: 'blur(10px)',
   },
   cardGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gridTemplateColumns: {
+      xs: '1fr',
+      sm: 'repeat(2, 1fr)',
+      md: 'repeat(3, 1fr)',
+      lg: 'repeat(4, 1fr)'
+    },
     gap: 3,
   },
   userCard: {
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+    background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+    borderRadius: 3,
+    border: '1px solid rgba(255,255,255,0.3)',
+    boxShadow: `
+      0 4px 20px rgba(0,0,0,0.08),
+      inset 0 1px 0 rgba(255,255,255,0.6)
+    `,
+    overflow: 'hidden',
+    position: 'relative',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: 'linear-gradient(90deg, #667eea, #764ba2, #f093fb)',
+      backgroundSize: '200% 100%',
+      animation: 'shimmer 3s ease-in-out infinite',
+    },
     '&:hover': {
-      transform: 'translateY(-5px)',
-      boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
+      transform: 'translateY(-8px) scale(1.02)',
+      boxShadow: `
+        0 20px 40px rgba(0,0,0,0.15),
+        0 8px 16px rgba(0,0,0,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.8)
+      `,
     },
   },
+  avatarContainer: {
+    position: 'relative',
+    display: 'inline-block',
+  },
   avatar: {
-    width: 56,
-    height: 56,
-    background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+    width: 70,
+    height: 70,
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    border: '3px solid white',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'scale(1.1)',
+      boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
+    },
+  },
+  statusBadge: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    width: 16,
+    height: 16,
+    borderRadius: '50%',
+    border: '2px solid white',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
   },
   chip: {
     margin: 0.5,
+    fontWeight: 600,
+    borderRadius: 2,
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'scale(1.05)',
+    },
   },
   infoItem: {
     display: 'flex',
     alignItems: 'center',
-    marginBottom: 1,
+    marginBottom: 1.5,
+    padding: '8px 12px',
+    borderRadius: 2,
+    background: 'rgba(255,255,255,0.5)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      background: 'rgba(255,255,255,0.8)',
+      transform: 'translateX(4px)',
+    },
   },
   infoIcon: {
-    marginRight: 1,
-    fontSize: '1rem',
+    marginRight: 2,
+    fontSize: '1.2rem',
+    color: '#667eea',
   },
   detailsContainer: {
     marginTop: 2,
+    padding: 2,
+    background: 'linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%)',
+    borderRadius: 2,
+    border: '1px solid rgba(102,126,234,0.1)',
   },
   calificacionesItem: {
-    padding: 1,
+    padding: 2,
     marginTop: 1,
-    borderRadius: 1,
+    borderRadius: 2,
+    background: 'linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%)',
+    border: '1px solid rgba(102,126,234,0.1)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    },
   },
   modalForm: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 2,
+    gap: 3,
   },
   calificacionesList: {
-    maxHeight: '200px',
+    maxHeight: '300px',
     overflow: 'auto',
-    marginTop: 1,
-    padding: 1,
-    backgroundColor: alpha('#fff', 0.05),
-    borderRadius: 1,
+    marginTop: 2,
+    padding: 2,
+    background: 'linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%)',
+    borderRadius: 2,
+    border: '1px solid rgba(102,126,234,0.1)',
   },
   addButton: {
     margin: 1,
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    fontWeight: 600,
+    borderRadius: 3,
+    padding: '12px 24px',
+    boxShadow: '0 4px 15px rgba(102,126,234,0.3)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: '0 8px 25px rgba(102,126,234,0.4)',
+      background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+    },
   },
   userTypeChip: (theme, type) => {
-    let color = 'default';
-    switch (type) {
-      case 'auditor':
-        color = 'primary';
-        break;
-      case 'auditado':
-        color = 'secondary';
-        break;
-      case 'Administrador':
-        color = 'success';
-        break;
-      case 'empleado':
-        color = 'info';
-        break;
-      default:
-        color = 'default';
-    }
+    const colors = {
+      auditor: { main: '#1976d2', light: 'rgba(25, 118, 210, 0.1)' },
+      auditado: { main: '#9c27b0', light: 'rgba(156, 39, 176, 0.1)' },
+      Administrador: { main: '#2e7d32', light: 'rgba(46, 125, 50, 0.1)' },
+      empleado: { main: '#ed6c02', light: 'rgba(237, 108, 2, 0.1)' }
+    };
+    
+    const color = colors[type] || { main: '#6b7280', light: 'rgba(107, 114, 128, 0.1)' };
+    
     return {
-      backgroundColor: alpha(theme.palette[color].main, 0.1),
-      color: theme.palette[color].main,
-      fontWeight: 'bold',
-      border: `1px solid ${theme.palette[color].main}`,
+      background: `linear-gradient(135deg, ${color.light} 0%, ${alpha(color.main, 0.2)} 100%)`,
+      color: color.main,
+      fontWeight: 700,
+      borderRadius: 3,
+      border: `2px solid ${alpha(color.main, 0.3)}`,
+      padding: '6px 12px',
+      fontSize: '0.75rem',
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+      backdropFilter: 'blur(10px)',
     };
   },
   promedioBadge: (theme, promedio) => {
-    let color = 'error';
-    if (promedio >= 80) {
-      color = 'success';
-    } else if (promedio >= 60) {
-      color = 'warning';
-    }
+    let color = '#f44336';
+    if (promedio >= 80) color = '#4caf50';
+    else if (promedio >= 60) color = '#ff9800';
+    
     return {
-      backgroundColor: alpha(theme.palette[color].main, 0.1),
-      color: theme.palette[color].main,
-      fontWeight: 'bold',
-      padding: '4px 8px',
-      borderRadius: '12px',
+      background: `linear-gradient(135deg, ${alpha(color, 0.1)} 0%, ${alpha(color, 0.2)} 100%)`,
+      color: color,
+      fontWeight: 700,
+      padding: '8px 16px',
+      borderRadius: '20px',
       display: 'inline-flex',
       alignItems: 'center',
+      border: `2px solid ${alpha(color, 0.3)}`,
+      backdropFilter: 'blur(10px)',
     };
   },
   inocuidadIcon: {
     marginLeft: 1,
+    color: '#4caf50',
   },
   calificacionItem: {
-    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.05),
-    margin: '4px 0',
-    borderRadius: '4px',
-    padding: '4px 8px',
+    background: 'linear-gradient(135deg, rgba(102,126,234,0.08) 0%, rgba(118,75,162,0.08) 100%)',
+    margin: '8px 0',
+    borderRadius: '12px',
+    padding: '12px 16px',
+    border: '1px solid rgba(102,126,234,0.1)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateX(4px)',
+      background: 'linear-gradient(135deg, rgba(102,126,234,0.12) 0%, rgba(118,75,162,0.12) 100%)',
+    },
   },
   statChip: {
-    margin: '4px',
+    margin: '6px',
+    background: 'linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%)',
+    border: '1px solid rgba(102,126,234,0.2)',
+    fontWeight: 600,
   },
   filterFormControl: {
-    minWidth: 120,
+    minWidth: 140,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 3,
+      background: 'rgba(255,255,255,0.8)',
+      backdropFilter: 'blur(10px)',
+    },
   },
   filterContainer: {
-    padding: 2,
+    padding: 3,
+    marginBottom: 4,
+    background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,249,250,0.9) 100%)',
+    borderRadius: 3,
+    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+    border: '1px solid rgba(255,255,255,0.3)',
+    backdropFilter: 'blur(20px)',
+  },
+  actionButton: {
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    fontWeight: 600,
+    borderRadius: 3,
+    padding: '10px 20px',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: '0 8px 25px rgba(102,126,234,0.4)',
+    },
+  },
+  secondaryButton: {
+    background: 'linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%)',
+    color: '#667eea',
+    fontWeight: 600,
+    borderRadius: 3,
+    border: '2px solid rgba(102,126,234,0.3)',
+    padding: '10px 20px',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      background: 'linear-gradient(135deg, rgba(102,126,234,0.2) 0%, rgba(118,75,162,0.2) 100%)',
+      transform: 'translateY(-2px)',
+    },
+  },
+  statsContainer: {
+    display: 'flex',
+    gap: 2,
     marginBottom: 3,
+    flexWrap: 'wrap',
+  },
+  statCard: {
+    flex: 1,
+    minWidth: 120,
+    padding: 2,
+    background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,249,250,0.9) 100%)',
+    borderRadius: 3,
+    textAlign: 'center',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+    border: '1px solid rgba(255,255,255,0.3)',
   },
 };
 
+// Animación CSS para el shimmer effect
+const shimmerAnimation = `
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+`;
+
 const UsuariosRegistro = () => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -464,113 +666,223 @@ const UsuariosRegistro = () => {
     );
   });
 
+  // Estadísticas
+  const stats = {
+    total: users.length,
+    auditores: users.filter(u => u.TipoUsuario === 'auditor').length,
+    auditados: users.filter(u => u.TipoUsuario === 'auditado').length,
+    administradores: users.filter(u => u.TipoUsuario === 'Administrador').length,
+    inocuidad: users.filter(u => u.FormaParteEquipoInocuidad).length,
+  };
+
   if (loading) return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center',marginTop:4, height: '100vh' }}>
-      <Typography variant="h5">Cargando usuarios...</Typography>
+    <Box sx={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100vh',
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
+    }}>
+      <Box sx={{ textAlign: 'center' }}>
+        <AutoAwesomeIcon sx={{ fontSize: 60, color: '#667eea', mb: 2 }} />
+        <Typography variant="h5" color="#667eea" fontWeight="600">
+          Cargando usuarios...
+        </Typography>
+        <LinearProgress sx={{ mt: 2, height: 6, borderRadius: 3, background: 'rgba(102,126,234,0.2)' }} />
+      </Box>
     </Box>
   );
   
   if (error) return (
-    <Box sx={{ display: 'flex', justifyContent: 'center',marginTop: 4, alignItems: 'center', height: '100vh' }}>
-      <Typography variant="h5" color="error">{error}</Typography>
+    <Box sx={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100vh',
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
+    }}>
+      <Typography variant="h5" color="error" fontWeight="6000">
+        {error}
+      </Typography>
     </Box>
   );
 
   return (
     <Box sx={styles.container}>
-      <Box sx={styles.header}>
-        <Typography variant="h4" component="h1" fontWeight="bold">
-          Usuarios
-        </Typography>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          startIcon={<AddIcon />}
-          onClick={() => setShowRegistrationForm(true)}
-        >
-          Agregar Usuario
-        </Button>
-      </Box>
+      <style>{shimmerAnimation}</style>
+      
+      {/* Header Mejorado */}
+      <Slide direction="down" in={true} timeout={800}>
+        <Box sx={styles.header}>
+          <Box sx={styles.headerContent}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+              <Box>
+                <Typography variant="h3" component="h1" fontWeight="800" sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                  Gestión de Usuarios
+                </Typography>
+                <Typography variant="h6" sx={{ opacity: 0.9, mt: 1 }}>
+                  Administra y supervisa el equipo de trabajo
+                </Typography>
+              </Box>
+              <Zoom in={true} timeout={1000}>
+                <Button 
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setShowRegistrationForm(true)}
+                  sx={styles.addButton}
+                  size="large"
+                >
+                  Nuevo Usuario
+                </Button>
+              </Zoom>
+            </Box>
+          </Box>
+        </Box>
+      </Slide>
 
-      <Paper sx={styles.filterContainer} elevation={2}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth variant="outlined" size="small" sx={styles.filterFormControl}>
-              <InputLabel>Tipo de Usuario</InputLabel>
-              <Select
-                value={filtroTipoUsuario}
-                onChange={(e) => setFiltroTipoUsuario(e.target.value)}
-                label="Tipo de Usuario"
-              >
-                <MenuItem value="">Todos los tipos</MenuItem>
-                <MenuItem value="auditado">Auditado</MenuItem>
-                <MenuItem value="auditor">Auditor</MenuItem>
-                <MenuItem value="Administrador">Administrador</MenuItem>
-                <MenuItem value="empleado">Empleado</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth variant="outlined" size="small" sx={styles.filterFormControl}>
-              <InputLabel>Escolaridad</InputLabel>
-              <Select
-                value={filtroEscolaridad}
-                onChange={(e) => setFiltroEscolaridad(e.target.value)}
-                label="Escolaridad"
-              >
-                <MenuItem value="">Todas</MenuItem>
-                <MenuItem value="TSU">TSU</MenuItem>
-                <MenuItem value="Profesional">Profesional</MenuItem>
-                <MenuItem value="Preparatoria">Preparatoria</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth variant="outlined" size="small" sx={styles.filterFormControl}>
-              <InputLabel>Equipo de Inocuidad</InputLabel>
-              <Select
-                value={filtroInocuidad}
-                onChange={(e) => setFiltroInocuidad(e.target.value)}
-                label="Equipo de Inocuidad"
-              >
-                <MenuItem value="">Todos</MenuItem>
-                <MenuItem value="true">Sí</MenuItem>
-                <MenuItem value="false">No</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth variant="outlined" size="small" sx={styles.filterFormControl}>
-              <InputLabel>Aprobado</InputLabel>
-              <Select
-                value={filtroAprobado}
-                onChange={(e) => setFiltroAprobado(e.target.value)}
-                label="Aprobado"
-              >
-                <MenuItem value="">Todos</MenuItem>
-                <MenuItem value="true">Sí</MenuItem>
-                <MenuItem value="false">No</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
-      </Paper>
+      {/* Estadísticas */}
+      <Fade in={true} timeout={1200}>
+        <Box sx={styles.statsContainer}>
+          <Paper sx={styles.statCard}>
+            <GroupIcon sx={{ fontSize: 40, color: '#667eea', mb: 1 }} />
+            <Typography variant="h4" fontWeight="700" color="#667eea">
+              {stats.total}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Total Usuarios
+            </Typography>
+          </Paper>
+          <Paper sx={styles.statCard}>
+            <VerifiedUserIcon sx={{ fontSize: 40, color: '#1976d2', mb: 1 }} />
+            <Typography variant="h4" fontWeight="700" color="#1976d2">
+              {stats.auditores}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Auditores
+            </Typography>
+          </Paper>
+          <Paper sx={styles.statCard}>
+            <PersonIcon sx={{ fontSize: 40, color: '#9c27b0', mb: 1 }} />
+            <Typography variant="h4" fontWeight="700" color="#9c27b0">
+              {stats.auditados}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Auditados
+            </Typography>
+          </Paper>
+          <Paper sx={styles.statCard}>
+            <AdminPanelSettingsIcon sx={{ fontSize: 40, color: '#2e7d32', mb: 1 }} />
+            <Typography variant="h4" fontWeight="700" color="#2e7d32">
+              {stats.administradores}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Administradores
+            </Typography>
+          </Paper>
+          <Paper sx={styles.statCard}>
+            <SecurityIcon sx={{ fontSize: 40, color: '#ed6c02', mb: 1 }} />
+            <Typography variant="h4" fontWeight="700" color="#ed6c02">
+              {stats.inocuidad}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Equipo Inocuidad
+            </Typography>
+          </Paper>
+        </Box>
+      </Fade>
 
+      {/* Filtros Mejorados */}
+      <Fade in={true} timeout={1400}>
+        <Paper sx={styles.filterContainer}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <FilterListIcon sx={{ mr: 1, color: '#667eea' }} />
+            <Typography variant="h6" fontWeight="600" color="#667eea">
+              Filtros Avanzados
+            </Typography>
+          </Box>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth variant="outlined" size="medium" sx={styles.filterFormControl}>
+                <InputLabel>Tipo de Usuario</InputLabel>
+                <Select
+                  value={filtroTipoUsuario}
+                  onChange={(e) => setFiltroTipoUsuario(e.target.value)}
+                  label="Tipo de Usuario"
+                >
+                  <MenuItem value="">Todos los tipos</MenuItem>
+                  <MenuItem value="auditado">Auditado</MenuItem>
+                  <MenuItem value="auditor">Auditor</MenuItem>
+                  <MenuItem value="Administrador">Administrador</MenuItem>
+                  <MenuItem value="empleado">Empleado</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth variant="outlined" size="medium" sx={styles.filterFormControl}>
+                <InputLabel>Escolaridad</InputLabel>
+                <Select
+                  value={filtroEscolaridad}
+                  onChange={(e) => setFiltroEscolaridad(e.target.value)}
+                  label="Escolaridad"
+                >
+                  <MenuItem value="">Todas</MenuItem>
+                  <MenuItem value="TSU">TSU</MenuItem>
+                  <MenuItem value="Profesional">Profesional</MenuItem>
+                  <MenuItem value="Preparatoria">Preparatoria</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth variant="outlined" size="medium" sx={styles.filterFormControl}>
+                <InputLabel>Equipo de Inocuidad</InputLabel>
+                <Select
+                  value={filtroInocuidad}
+                  onChange={(e) => setFiltroInocuidad(e.target.value)}
+                  label="Equipo de Inocuidad"
+                >
+                  <MenuItem value="">Todos</MenuItem>
+                  <MenuItem value="true">Sí</MenuItem>
+                  <MenuItem value="false">No</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth variant="outlined" size="medium" sx={styles.filterFormControl}>
+                <InputLabel>Aprobado</InputLabel>
+                <Select
+                  value={filtroAprobado}
+                  onChange={(e) => setFiltroAprobado(e.target.value)}
+                  label="Aprobado"
+                >
+                  <MenuItem value="">Todos</MenuItem>
+                  <MenuItem value="true">Sí</MenuItem>
+                  <MenuItem value="false">No</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </Paper>
+      </Fade>
+
+      {/* Grid de Usuarios */}
       <Box sx={styles.cardGrid}>
-        {filteredUsers.map(user => (
-          <UserCard
-            key={user._id}
-            user={user}
-            formatDate={formatDate}
-            calculateYearsInCompany={calculateYearsInCompany}
-            onEditClick={handleEditClick}
-            onDeleteClick={handleDeleteClick}
-            onDegradarClick={handleDegradarClick}
-            onPromocionarClick={handlePromocionarClick}
-            onAgregarCalificaciones={() => handleAgregarCalificaciones(user)}
-            onPasswordChange={handlePasswordChange}
-            theme={theme}
-          />
+        {filteredUsers.map((user, index) => (
+          <Zoom in={true} timeout={800 + index * 100} key={user._id}>
+            <div>
+              <UserCard
+                user={user}
+                formatDate={formatDate}
+                calculateYearsInCompany={calculateYearsInCompany}
+                onEditClick={handleEditClick}
+                onDeleteClick={handleDeleteClick}
+                onDegradarClick={handleDegradarClick}
+                onPromocionarClick={handlePromocionarClick}
+                onAgregarCalificaciones={() => handleAgregarCalificaciones(user)}
+                onPasswordChange={handlePasswordChange}
+                theme={theme}
+              />
+            </div>
+          </Zoom>
         ))}
       </Box>
 
@@ -593,13 +905,26 @@ const UsuariosRegistro = () => {
         onClose={() => setOpenEditModal(false)}
         fullWidth
         maxWidth="md"
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+          }
+        }}
       >
-        <DialogTitle>
-          Editar Usuario: {usuarioAEditar?.Nombre}
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          fontWeight: 600
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <EditIcon sx={{ mr: 1 }} />
+            Editar Usuario: {usuarioAEditar?.Nombre}
+          </Box>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: 4 }}>
           <form onSubmit={handleEditSubmit} style={styles.modalForm}>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid container spacing={3} sx={{ mt: 1 }}>
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -608,6 +933,7 @@ const UsuariosRegistro = () => {
                   value={editFormData.Nombre}
                   onChange={handleEditFormChange}
                   variant="outlined"
+                  sx={{ borderRadius: 2 }}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -619,6 +945,7 @@ const UsuariosRegistro = () => {
                   value={editFormData.Correo}
                   onChange={handleEditFormChange}
                   variant="outlined"
+                  sx={{ borderRadius: 2 }}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -629,10 +956,11 @@ const UsuariosRegistro = () => {
                   value={editFormData.Puesto}
                   onChange={handleEditFormChange}
                   variant="outlined"
+                  sx={{ borderRadius: 2 }}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth variant="outlined">
+                <FormControl fullWidth variant="outlined" sx={{ borderRadius: 2 }}>
                   <InputLabel>Departamento</InputLabel>
                   <Select
                     name="Departamento"
@@ -661,6 +989,7 @@ const UsuariosRegistro = () => {
                   onChange={handleEditFormChange}
                   variant="outlined"
                   required
+                  sx={{ borderRadius: 2 }}
                 />
               </Grid>
 
@@ -676,6 +1005,7 @@ const UsuariosRegistro = () => {
                       onChange={handleEditFormChange}
                       variant="outlined"
                       InputLabelProps={{ shrink: true }}
+                      sx={{ borderRadius: 2 }}
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>
@@ -688,10 +1018,11 @@ const UsuariosRegistro = () => {
                       onChange={handleEditFormChange}
                       variant="outlined"
                       InputProps={{ inputProps: { min: 0, max: 100 } }}
+                      sx={{ borderRadius: 2 }}
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <FormControl fullWidth variant="outlined">
+                    <FormControl fullWidth variant="outlined" sx={{ borderRadius: 2 }}>
                       <InputLabel>Escolaridad</InputLabel>
                       <Select
                         name="Escolaridad"
@@ -715,6 +1046,7 @@ const UsuariosRegistro = () => {
                       value={editFormData.Carrera}
                       onChange={handleEditFormChange}
                       variant="outlined"
+                      sx={{ borderRadius: 2 }}
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>
@@ -727,6 +1059,7 @@ const UsuariosRegistro = () => {
                       onChange={handleEditFormChange}
                       variant="outlined"
                       InputProps={{ inputProps: { min: 0 } }}
+                      sx={{ borderRadius: 2 }}
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>
@@ -739,6 +1072,7 @@ const UsuariosRegistro = () => {
                       onChange={handleEditFormChange}
                       variant="outlined"
                       InputProps={{ inputProps: { min: 0, max: 100 } }}
+                      sx={{ borderRadius: 2 }}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -758,17 +1092,26 @@ const UsuariosRegistro = () => {
               )}
             </Grid>
             {editFormError && (
-              <Typography color="error" variant="body2" sx={{ mt: 2 }}>
+              <Typography color="error" variant="body2" sx={{ mt: 2, p: 2, background: 'rgba(244,67,54,0.1)', borderRadius: 2 }}>
                 {editFormError}
               </Typography>
             )}
           </form>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenEditModal(false)} color="inherit">
+        <DialogActions sx={{ p: 3 }}>
+          <Button 
+            onClick={() => setOpenEditModal(false)} 
+            color="inherit"
+            sx={styles.secondaryButton}
+          >
             Cancelar
           </Button>
-          <Button onClick={handleEditSubmit} color="primary" variant="contained">
+          <Button 
+            onClick={handleEditSubmit} 
+            color="primary" 
+            variant="contained"
+            sx={styles.actionButton}
+          >
             Guardar Cambios
           </Button>
         </DialogActions>
@@ -778,47 +1121,71 @@ const UsuariosRegistro = () => {
       <Dialog
         open={openPasswordModal}
         onClose={() => setOpenPasswordModal(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+          }
+        }}
       >
-        <DialogTitle>
-          Cambiar Contraseña
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          fontWeight: 600
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <KeyIcon sx={{ mr: 1 }} />
+            Cambiar Contraseña
+          </Box>
         </DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ mb: 2 }}>
-            Ingrese la nueva contraseña para el usuario {usuarioAEditar?.Nombre}
+        <DialogContent sx={{ p: 4 }}>
+          <DialogContentText sx={{ mb: 3, fontSize: '1.1rem' }}>
+            Ingrese la nueva contraseña para el usuario <strong>{usuarioAEditar?.Nombre}</strong>
           </DialogContentText>
           <form onSubmit={handlePasswordSubmit} style={styles.modalForm}>
             <TextField
               fullWidth
-              margin="dense"
+              margin="normal"
               label="Nueva Contraseña"
               type="password"
               name="password"
               value={passwordFormData.password}
               onChange={handlePasswordFormChange}
               variant="outlined"
+              sx={{ borderRadius: 2 }}
             />
             <TextField
               fullWidth
-              margin="dense"
+              margin="normal"
               label="Confirmar Contraseña"
               type="password"
               name="confirmPassword"
               value={passwordFormData.confirmPassword}
               onChange={handlePasswordFormChange}
               variant="outlined"
+              sx={{ borderRadius: 2 }}
             />
             {passwordError && (
-              <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+              <Typography color="error" variant="body2" sx={{ mt: 2, p: 2, background: 'rgba(244,67,54,0.1)', borderRadius: 2 }}>
                 {passwordError}
               </Typography>
             )}
           </form>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenPasswordModal(false)} color="inherit">
+        <DialogActions sx={{ p: 3 }}>
+          <Button 
+            onClick={() => setOpenPasswordModal(false)} 
+            color="inherit"
+            sx={styles.secondaryButton}
+          >
             Cancelar
           </Button>
-          <Button onClick={handlePasswordSubmit} color="primary" variant="contained">
+          <Button 
+            onClick={handlePasswordSubmit} 
+            color="primary" 
+            variant="contained"
+            sx={styles.actionButton}
+          >
             Cambiar Contraseña
           </Button>
         </DialogActions>
@@ -872,49 +1239,64 @@ const UserCard = ({
   };
   const handleClose = () => setOpenFoto(false);
 
+  // Color del badge de estado
+  const getStatusColor = () => {
+    if (user.Aprobado) return '#4caf50';
+    if (user.PromedioEvaluacion >= 80) return '#ff9800';
+    return '#f44336';
+  };
+
   return (
     <Card sx={styles.userCard}>
       <CardHeader
         avatar={
-          user.Foto ? (
-            <Avatar
-              src={user.Foto}
-              alt={user.Nombre}
-              sx={{ ...styles.avatar, cursor: 'pointer' }}
-              onClick={handleAvatarClick}
+          <Box sx={styles.avatarContainer}>
+            {user.Foto ? (
+              <Avatar
+                src={user.Foto}
+                alt={user.Nombre}
+                sx={{ ...styles.avatar, cursor: 'pointer' }}
+                onClick={handleAvatarClick}
+              />
+            ) : (
+              <Avatar sx={styles.avatar}>
+                {user.Nombre ? user.Nombre.charAt(0).toUpperCase() : 'U'}
+              </Avatar>
+            )}
+            <Box 
+              sx={{ 
+                ...styles.statusBadge, 
+                backgroundColor: getStatusColor() 
+              }} 
             />
-          ) : (
-            <Avatar sx={styles.avatar}>
-              {user.Nombre ? user.Nombre.charAt(0).toUpperCase() : 'U'}
-            </Avatar>
-          )
+          </Box>
         }
         action={
-          <IconButton aria-label="settings" onClick={handleMenuClick}>
-            <MoreVertIcon />
-          </IconButton>
+          <Tooltip title="Más opciones">
+            <IconButton 
+              aria-label="settings" 
+              onClick={handleMenuClick}
+              sx={{
+                background: 'rgba(102,126,234,0.1)',
+                '&:hover': {
+                  background: 'rgba(102,126,234,0.2)',
+                  transform: 'scale(1.1)',
+                }
+              }}
+            >
+              <MoreVertIcon />
+            </IconButton>
+          </Tooltip>
         }
-        title={user.Nombre}
+        title={
+          <Typography variant="h6" fontWeight="700" color="#2d3748">
+            {user.Nombre}
+          </Typography>
+        }
         subheader={
           <Chip 
             label={user.TipoUsuario} 
-            sx={{
-              backgroundColor: user.TipoUsuario === 'auditor' ? 'rgba(25, 118, 210, 0.1)' :
-                            user.TipoUsuario === 'auditado' ? 'rgba(156, 39, 176, 0.1)' :
-                            user.TipoUsuario === 'Administrador' ? 'rgba(46, 125, 50, 0.1)' :
-                            user.TipoUsuario === 'empleado' ? 'rgba(2, 136, 209, 0.1)' : '#f5f5f5',
-              color: user.TipoUsuario === 'auditor' ? '#1976d2' :
-                  user.TipoUsuario === 'auditado' ? '#9c27b0' :
-                  user.TipoUsuario === 'Administrador' ? '#2e7d32' :
-                  user.TipoUsuario === 'empleado' ? '#0288d1' : '#000',
-              fontWeight: 'bold',
-              border: `1px solid ${
-                user.TipoUsuario === 'auditor' ? '#1976d2' :
-                user.TipoUsuario === 'auditado' ? '#9c27b0' :
-                user.TipoUsuario === 'Administrador' ? '#2e7d32' :
-                user.TipoUsuario === 'empleado' ? '#0288d1' : '#ddd'
-              }`
-            }} 
+            sx={styles.userTypeChip(theme, user.TipoUsuario)}
             size="small"
           />
         }
@@ -925,6 +1307,12 @@ const UserCard = ({
         onClose={handleClose}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            overflow: 'hidden',
+          }
+        }}
       >
         <DialogContent sx={{ p: 0 }}>
           <img
@@ -942,24 +1330,24 @@ const UserCard = ({
       <CardContent>
         <Box sx={styles.infoItem}>
           <EmailIcon sx={styles.infoIcon} />
-          <Typography variant="body2" sx={{overflowWrap: 'break-word'}}>
+          <Typography variant="body2" sx={{ overflowWrap: 'break-word', fontWeight: 500 }}>
             {user.Correo}
           </Typography>
         </Box>
         
         <Box sx={styles.infoItem}>
           <WorkIcon sx={styles.infoIcon} />
-          <Typography variant="body2">{user.Puesto}</Typography>
+          <Typography variant="body2" fontWeight="500">{user.Puesto}</Typography>
         </Box>
         
         <Box sx={styles.infoItem}>
           <BusinessCenterIcon sx={styles.infoIcon} />
-          <Typography variant="body2">{user.Departamento}</Typography>
+          <Typography variant="body2" fontWeight="500">{user.Departamento}</Typography>
         </Box>
         
         <Box sx={styles.infoItem}>
           <BadgeIcon sx={styles.infoIcon} />
-          <Typography variant="body2">{user.area}</Typography>
+          <Typography variant="body2" fontWeight="500">{user.area}</Typography>
         </Box>
 
         {tieneInfoAdicional && (
@@ -967,8 +1355,8 @@ const UserCard = ({
             {user.FechaIngreso && (
               <Box sx={styles.infoItem}>
                 <CalendarTodayIcon sx={styles.infoIcon} />
-                <Typography variant="body2">
-                  Fecha de Ingreso: {formatDate(user.FechaIngreso)}
+                <Typography variant="body2" fontWeight="500">
+                  Ingreso: {formatDate(user.FechaIngreso)}
                 </Typography>
               </Box>
             )}
@@ -979,11 +1367,15 @@ const UserCard = ({
               startIcon={showDetallesAuditor ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               onClick={handleToggleDetallesAuditor}
               sx={{ 
-                mt: 1,
-                color: theme.palette.primary.main,
+                mt: 2,
+                color: '#667eea',
                 textTransform: 'none',
                 justifyContent: 'flex-start',
-                pl: 0
+                pl: 0,
+                fontWeight: 600,
+                '&:hover': {
+                  background: 'rgba(102,126,234,0.1)',
+                }
               }}
             >
               {showDetallesAuditor ? 'Ocultar detalles' : 'Mostrar más detalles'}
@@ -991,39 +1383,39 @@ const UserCard = ({
             
             {/* Detalles adicionales que se muestran/ocultan */}
             <Collapse in={showDetallesAuditor} timeout="auto" unmountOnExit>
-              <Box sx={{ mt: 1 }}>
+              <Box sx={styles.detailsContainer}>
                 <Box sx={styles.infoItem}>
-                  <StarIcon sx={styles.infoIcon} />
-                  <Typography variant="body2">
+                  <TrendingUpIcon sx={styles.infoIcon} />
+                  <Typography variant="body2" fontWeight="500">
                     Años en la Empresa: {calculateYearsInCompany(user.FechaIngreso)}
                   </Typography>
                 </Box>
                 
                 <Box sx={styles.infoItem}>
                   <SchoolIcon sx={styles.infoIcon} />
-                  <Typography variant="body2">
+                  <Typography variant="body2" fontWeight="500">
                     Escolaridad: {user.Escolaridad}
                   </Typography>
                 </Box>
                 
                 <Box sx={styles.infoItem}>
                   <AssignmentIcon sx={styles.infoIcon} />
-                  <Typography variant="body2">
+                  <Typography variant="body2" fontWeight="500">
                     Carrera: {user.Carrera}
                   </Typography>
                 </Box>
                 
                 <Box sx={styles.infoItem}>
                   <GradingIcon sx={styles.infoIcon} />
-                  <Typography variant="body2">
-                    Años de Experiencia: {user.AñosExperiencia}
+                  <Typography variant="body2" fontWeight="500">
+                    Experiencia: {user.AñosExperiencia} años
                   </Typography>
                 </Box>
                 
                 <Box sx={styles.infoItem}>
-                  <SecurityIcon sx={styles.infoIcon} />
-                  <Typography variant="body2">
-                    Puntuación Especialidad: {user.PuntuacionEspecialidad}
+                  <WorkspacePremiumIcon sx={styles.infoIcon} />
+                  <Typography variant="body2" fontWeight="500">
+                    Especialidad: {user.PuntuacionEspecialidad}%
                   </Typography>
                 </Box>
                 
@@ -1033,8 +1425,8 @@ const UserCard = ({
                   ) : (
                     <CloseIcon color="error" sx={styles.infoIcon} />
                   )}
-                  <Typography variant="body2">
-                    Equipo de Inocuidad: {user.FormaParteEquipoInocuidad ? 'Sí' : 'No'}
+                  <Typography variant="body2" fontWeight="500">
+                    Equipo Inocuidad: {user.FormaParteEquipoInocuidad ? 'Sí' : 'No'}
                   </Typography>
                 </Box>
                 
@@ -1044,15 +1436,15 @@ const UserCard = ({
                   ) : (
                     <CloseIcon color="error" sx={styles.infoIcon} />
                   )}
-                  <Typography variant="body2">
+                  <Typography variant="body2" fontWeight="500">
                     Aprobado: {user.Aprobado ? 'Sí' : 'No'}
                   </Typography>
                 </Box>
                 
                 <Box sx={styles.infoItem}>
                   <StarIcon sx={styles.infoIcon} />
-                  <Typography variant="body2">
-                    Promedio: {user.PromedioEvaluacion}
+                  <Typography variant="body2" fontWeight="500">
+                    Promedio: {user.PromedioEvaluacion}%
                   </Typography>
                 </Box>
               </Box>
@@ -1061,48 +1453,39 @@ const UserCard = ({
         )}
       </CardContent>
 
-      {/* Resto del componente UserCard sin cambios */}
-      <CardActions sx={{ flexDirection: 'column', padding: 1, gap: 1 }}>
+      <CardActions sx={{ flexDirection: 'column', padding: 3, gap: 2, mt: 'auto' }}>
         {/* Primera fila con botones de acción principales */}
         <Box sx={{ 
           display: 'flex', 
           width: '100%', 
-          justifyContent: 'space-between', 
-          flexWrap: 'wrap',
-          gap: 1
+          gap: 2
         }}>
-         
           <Button 
             variant="contained"
-            size="small" 
+            size="medium" 
             startIcon={<GradingIcon />} 
             onClick={() => onAgregarCalificaciones(user)}
-            sx={{ 
-              bgcolor: '#2e7d32', 
-              color: 'white',
-              '&:hover': { bgcolor: '#2e7d32' },
-              flex: '1'
-            }}
+            sx={styles.actionButton}
+            fullWidth
           >
             CALIFICACIONES
           </Button>
         </Box>
         
-        {/* Botones condicionales de Promover/Degradar (se mostrarán en la misma línea si aparecen) */}
+        {/* Botones condicionales de Promover/Degradar */}
         {(user.TipoUsuario === 'auditado' && user.PromedioEvaluacion >= 80) || 
          (user.TipoUsuario === 'auditor' && user.PromedioEvaluacion < 80) ? (
-          <Box sx={{ display: 'flex', width: '100%', gap: 1 }}>
+          <Box sx={{ display: 'flex', width: '100%', gap: 2 }}>
             {user.TipoUsuario === 'auditado' && user.PromedioEvaluacion >= 80 && (
               <Button 
                 variant="contained"
-                size="small" 
+                size="medium" 
                 startIcon={<ArrowUpwardIcon />} 
                 onClick={() => onPromocionarClick(user._id)}
-                sx={{ 
-                  bgcolor: '#2e7d32', 
-                  color: 'white',
-                  '&:hover': { bgcolor: '#2e7d32' },
-                  flex: '1'
+                sx={{
+                  ...styles.actionButton,
+                  background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
+                  flex: 1
                 }}
               >
                 PROMOVER
@@ -1112,14 +1495,13 @@ const UserCard = ({
             {user.TipoUsuario === 'auditor' && user.PromedioEvaluacion < 80 && (
               <Button 
                 variant="contained"
-                size="small" 
+                size="medium" 
                 startIcon={<ArrowDownwardIcon />} 
                 onClick={() => onDegradarClick(user._id)}
-                sx={{ 
-                  bgcolor: '#ed6c02', 
-                  color: 'white',
-                  '&:hover': { bgcolor: '#e65100' },
-                  flex: '1'
+                sx={{
+                  ...styles.actionButton,
+                  background: 'linear-gradient(135deg, #ed6c02 0%, #e65100 100%)',
+                  flex: 1
                 }}
               >
                 DEGRADAR
@@ -1128,57 +1510,83 @@ const UserCard = ({
           </Box>
         ) : null}
         
-        {/* Botón Ver Calificaciones en una fila separada */}
+        {/* Botón Ver Calificaciones */}
         <Button 
           variant="outlined"
-          size="small" 
+          size="medium" 
           fullWidth
           startIcon={showCalificaciones ? <ExpandLessIcon /> : <ExpandMoreIcon />} 
           onClick={handleToggleCalificaciones}
-          sx={{ 
-            borderColor: '#0288d1', 
-            color: '#0288d1',
-            textTransform: 'uppercase',
-            '&:hover': { 
-              bgcolor: 'rgba(2, 136, 209, 0.04)',
-              borderColor: '#01579b'
-            }
-          }}
+          sx={styles.secondaryButton}
         >
           {showCalificaciones ? 'OCULTAR' : 'VER'} CALIFICACIONES
         </Button>
       </CardActions>
+
+      {/* Lista de Calificaciones */}
       <Collapse in={showCalificaciones} timeout="auto" unmountOnExit>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="h6" gutterBottom fontWeight="600" color="#667eea">
+            <GradingIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
             Calificaciones
           </Typography>
-          <List>
-            {user.calificaciones.map((calificacion, index) => (
-              <ListItem key={index} sx={styles.calificacionItem}>
-                <ListItemText 
-                  primary={calificacion.nombreCurso} 
-                  secondary={`Calificación: ${calificacion.calificacion}`} 
-                />
-              </ListItem>
-            ))}
+          <List sx={styles.calificacionesList}>
+            {user.calificaciones && user.calificaciones.length > 0 ? (
+              user.calificaciones.map((calificacion, index) => (
+                <ListItem key={index} sx={styles.calificacionItem}>
+                  <ListItemText 
+                    primary={
+                      <Typography variant="subtitle1" fontWeight="600">
+                        {calificacion.nombreCurso}
+                      </Typography>
+                    } 
+                    secondary={
+                      <Typography variant="body2" color="text.secondary">
+                        Calificación: <strong>{calificacion.calificacion}</strong>
+                      </Typography>
+                    } 
+                  />
+                </ListItem>
+              ))
+            ) : (
+              <Typography variant="body2" color="text.secondary" textAlign="center" py={2}>
+                No hay calificaciones registradas
+              </Typography>
+            )}
           </List>
         </CardContent>
       </Collapse>
 
+      {/* Menú de Opciones */}
       <Menu
         anchorEl={anchorEl}
         open={open}
         onClose={handleMenuClose}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+            minWidth: 180,
+          }
+        }}
       >
-        <MenuItem onClick={() => { onEditClick(user); handleMenuClose(); }}>
-          <EditIcon sx={{ mr: 1 }} /> Editar
+        <MenuItem 
+          onClick={() => { onEditClick(user); handleMenuClose(); }}
+          sx={{ fontWeight: 600 }}
+        >
+          <EditIcon sx={{ mr: 1, color: '#667eea' }} /> Editar
         </MenuItem>
-        <MenuItem onClick={() => { onDeleteClick(user._id); handleMenuClose(); }}>
+        <MenuItem 
+          onClick={() => { onPasswordChange(user._id); handleMenuClose(); }}
+          sx={{ fontWeight: 600 }}
+        >
+          <KeyIcon sx={{ mr: 1, color: '#ff9800' }} /> Cambiar Contraseña
+        </MenuItem>
+        <MenuItem 
+          onClick={() => { onDeleteClick(user._id); handleMenuClose(); }}
+          sx={{ fontWeight: 600, color: 'error.main' }}
+        >
           <DeleteIcon sx={{ mr: 1 }} /> Eliminar
-        </MenuItem>
-        <MenuItem onClick={() => { onPasswordChange(user._id); handleMenuClose(); }}>
-          <KeyIcon sx={{ mr: 1 }} /> Cambiar Contraseña
         </MenuItem>
       </Menu>
     </Card>

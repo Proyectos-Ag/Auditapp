@@ -72,6 +72,46 @@ cron.schedule('0 8 * * *', async () => {
   }
 });
 
+// PUT /api/objetivos/acciones/:id
+const actualizarAccionCorrectiva = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Buscar el objetivo que contiene la acción correctiva
+    const objetivo = await Objetivo.findOne({ 'accionesCorrectivas._id': id });
+    
+    if (!objetivo) {
+      return res.status(404).json({ error: "Acción no encontrada" });
+    }
+
+    // Encontrar la acción específica
+    const accion = objetivo.accionesCorrectivas.id(id);
+    if (!accion) {
+      return res.status(404).json({ error: "Acción no encontrada" });
+    }
+
+    // Actualizar los campos de la acción
+    if (req.body.responsable) {
+      accion.responsable = req.body.responsable;
+    }
+    if (req.body.efectividad) {
+      accion.efectividad = req.body.efectividad;
+    }
+    if (req.body.observaciones !== undefined) {
+      accion.observaciones = req.body.observaciones;
+    }
+    if (req.body.acciones !== undefined) {
+      accion.acciones = req.body.acciones;
+    }
+
+    await objetivo.save();
+    res.json(accion);
+  } catch (error) {
+    console.error("Error al actualizar acción:", error);
+    res.status(500).json({ error: "Error al actualizar acción correctiva" });
+  }
+};
+
 // GET /api/objetivos?area=INGENIERIA
 const obtenerObjetivos = async (req, res) => {
   try {
@@ -202,5 +242,6 @@ module.exports = {
   eliminarObjetivo,
   agregarAccionCorrectiva,
   getAccionesCorrectivasByArea,
-  reprogramarFechaCompromiso
+  reprogramarFechaCompromiso,
+  actualizarAccionCorrectiva
 };

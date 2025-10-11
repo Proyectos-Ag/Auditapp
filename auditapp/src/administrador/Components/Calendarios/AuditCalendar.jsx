@@ -1,40 +1,243 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  Typography,
   Box,
   Container,
-  Select,
-  MenuItem,
+  Typography,
+  Card,
+  CardContent,
+  Grid,
+  Chip,
+  Avatar,
+  LinearProgress,
+  Tabs,
+  Tab,
+  Paper,
   FormControl,
   InputLabel,
-  Grid,
+  Select,
+  MenuItem,
+  TextField,
+  InputAdornment,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Tooltip,
+  Badge,
+  Fab,
+  useTheme,
+  useMediaQuery,
+  alpha,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Divider,
+  SwipeableDrawer,
+  BottomNavigation,
+  BottomNavigationAction,
+  Collapse
 } from '@mui/material';
-import './css/AuditCalendar.css';
+import {
+  FilterList,
+  Search,
+  CalendarToday,
+  Person,
+  Business,
+  Assignment,
+  Schedule,
+  CheckCircle,
+  Pending,
+  Warning,
+  TrendingUp,
+  BarChart,
+  ViewModule,
+  ViewWeek,
+  Add,
+  ExpandMore,
+  ChevronRight,
+  ChevronLeft,
+  Today,
+  EventAvailable,
+  EventBusy,
+  Group,
+  Visibility,
+  Close,
+  Menu,
+  ExpandLess
+} from '@mui/icons-material';
+import { styled } from '@mui/material/styles';
+
+// Componentes estilizados
+const StyledCard = styled(Card)(({ theme }) => ({
+  borderRadius: 16,
+  boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+  transition: 'all 0.3s ease-in-out',
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 12px 48px rgba(0,0,0,0.12)',
+  },
+  [theme.breakpoints.down('md')]: {
+    borderRadius: 12,
+    boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+  }
+}));
+
+const GradientCard = styled(Card)(({ theme }) => ({
+  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.1)} 100%)`,
+  borderRadius: 20,
+  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+  backdropFilter: 'blur(10px)',
+  [theme.breakpoints.down('md')]: {
+    borderRadius: 16,
+  }
+}));
+
+const StatusChip = styled(Chip)(({ status, theme }) => ({
+  fontWeight: 600,
+  borderRadius: 8,
+  ...(status === 'Finalizado' && {
+    backgroundColor: theme.palette.success.light,
+    color: theme.palette.success.contrastText,
+  }),
+  ...(status === 'pendiente' && {
+    backgroundColor: theme.palette.warning.light,
+    color: theme.palette.warning.contrastText,
+  }),
+  ...(status === 'Devuelto' && {
+    backgroundColor: theme.palette.error.light,
+    color: theme.palette.error.contrastText,
+  }),
+  ...(status === 'Terminada' && {
+    backgroundColor: theme.palette.info.light,
+    color: theme.palette.info.contrastText,
+  })
+}));
+
+const AcceptabilityChip = styled(Chip)(({ acceptability, theme }) => ({
+  fontWeight: 600,
+  borderRadius: 8,
+  ...(acceptability === 'Bueno' && {
+    backgroundColor: theme.palette.success.main,
+    color: theme.palette.success.contrastText,
+  }),
+  ...(acceptability === 'Aceptable' && {
+    backgroundColor: theme.palette.info.main,
+    color: theme.palette.info.contrastText,
+  }),
+  ...(acceptability === 'No aceptable' && {
+    backgroundColor: theme.palette.warning.main,
+    color: theme.palette.warning.contrastText,
+  }),
+  ...(acceptability === 'Critico' && {
+    backgroundColor: theme.palette.error.main,
+    color: theme.palette.error.contrastText,
+  })
+}));
+
+const CalendarDay = styled(Paper)(({ theme, selected, hasEvent }) => ({
+  width: '100%',
+  height: 120,
+  padding: theme.spacing(1),
+  borderRadius: 12,
+  cursor: 'pointer',
+  transition: 'all 0.3s ease',
+  border: `2px solid ${selected ? theme.palette.primary.main : 'transparent'}`,
+  backgroundColor: hasEvent ? alpha(theme.palette.primary.main, 0.05) : theme.palette.background.paper,
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.primary.main, 0.1),
+    transform: 'scale(1.02)',
+  },
+  [theme.breakpoints.down('md')]: {
+    height: 80,
+    padding: theme.spacing(0.5),
+    borderRadius: 8,
+  }
+}));
+
+const MobileCalendarDay = styled(Paper)(({ theme, selected, hasEvent }) => ({
+  width: '100%',
+  minHeight: 60,
+  padding: theme.spacing(1),
+  borderRadius: 8,
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  border: `2px solid ${selected ? theme.palette.primary.main : 'transparent'}`,
+  backgroundColor: hasEvent ? alpha(theme.palette.primary.main, 0.08) : theme.palette.background.paper,
+  '&:active': {
+    backgroundColor: alpha(theme.palette.primary.main, 0.15),
+    transform: 'scale(0.98)',
+  }
+}));
+
+const ProgressBar = styled(LinearProgress)(({ percentage, theme }) => ({
+  height: 8,
+  borderRadius: 4,
+  backgroundColor: theme.palette.grey[200],
+  '& .MuiLinearProgress-bar': {
+    borderRadius: 4,
+    ...(percentage >= 90 && { backgroundColor: theme.palette.success.main }),
+    ...(percentage >= 80 && percentage < 90 && { backgroundColor: theme.palette.info.main }),
+    ...(percentage >= 60 && percentage < 80 && { backgroundColor: theme.palette.warning.main }),
+    ...(percentage < 60 && { backgroundColor: theme.palette.error.main }),
+  }
+}));
+
+const MobileStatCard = styled(Card)(({ theme }) => ({
+  borderRadius: 12,
+  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.secondary.main, 0.08)} 100%)`,
+  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+  padding: theme.spacing(2),
+}));
 
 const AuditCalendar = () => {
-  // Estados de auditorías finalizadas
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  
+  // Estados principales
   const [auditorias, setAuditorias] = useState([]);
-  const [selectedAudits, setSelectedAudits] = useState([]);
+  const [pendingAudits, setPendingAudits] = useState([]);
+  const [tabValue, setTabValue] = useState(0);
+  const [viewMode, setViewMode] = useState('calendar');
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedAudit, setSelectedAudit] = useState(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [searchDrawerOpen, setSearchDrawerOpen] = useState(false);
+  const [expandedFilters, setExpandedFilters] = useState(false);
+
+  // Filtros para auditorías finalizadas
   const [filters, setFilters] = useState({
     auditorLider: '',
     tipoAuditoria: '',
     departamento: '',
     aceptibilidad: '',
-    year: ''
+    year: new Date().getFullYear().toString()
   });
 
-  // Estados de auditorías pendientes
-  const [pendingAudits, setPendingAudits] = useState([]);
-  const [filterAuditorLider, setFilterAuditorLider] = useState('');
-  const [filterTipoAuditoria, setFilterTipoAuditoria] = useState('');
-  const [filterFechaInicio, setFilterFechaInicio] = useState('');
-  const [filterFechaFin, setFilterFechaFin] = useState('');
+  // Filtros para auditorías pendientes
+  const [pendingFilters, setPendingFilters] = useState({
+    auditorLider: '',
+    tipoAuditoria: '',
+    fechaInicio: '',
+    fechaFin: ''
+  });
+
+  // Estadísticas
+  const [stats, setStats] = useState({
+    total: 0,
+    completed: 0,
+    pending: 0,
+    critical: 0,
+    averageScore: 0
+  });
 
   useEffect(() => {
     const fetchAuditorias = async () => {
@@ -42,11 +245,12 @@ const AuditCalendar = () => {
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
         setAuditorias(response.data);
 
-        // Filtrar y ordenar auditorías pendientes
-        const pendingAudits = response.data.filter(audit => audit.Estado === 'pendiente' || audit.Estado === 'Terminada' || audit.Estado === 'Devuelto');
-        const sortedAudits = pendingAudits.sort((a, b) => new Date(b.FechaInicio) - new Date(a.FechaInicio));
-        setPendingAudits(sortedAudits);
+        const pendingAudits = response.data.filter(audit => 
+          audit.Estado === 'pendiente' || audit.Estado === 'Terminada' || audit.Estado === 'Devuelto'
+        );
+        setPendingAudits(pendingAudits);
 
+        calculateStats(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -55,21 +259,38 @@ const AuditCalendar = () => {
     fetchAuditorias();
   }, []);
 
-  useEffect(() => {
-    const filteredAudits = auditorias.filter(audit => audit.Estado === 'Finalizado');
-    setSelectedAudits(filteredAudits);
-  }, [auditorias]);
+  const calculateStats = (data) => {
+    const total = data.length;
+    const completed = data.filter(audit => audit.Estado === 'Finalizado').length;
+    const pending = data.filter(audit => audit.Estado === 'pendiente' || audit.Estado === 'Devuelto').length;
+    const critical = data.filter(audit => {
+      const percentage = parseFloat(audit.PorcentajeTotal) || 0;
+      return percentage < 60;
+    }).length;
+    
+    const completedAudits = data.filter(audit => audit.Estado === 'Finalizado');
+    const averageScore = completedAudits.length > 0 
+      ? completedAudits.reduce((sum, audit) => sum + (parseFloat(audit.PorcentajeTotal) || 0), 0) / completedAudits.length
+      : 0;
 
-  // Filtros para auditorías finalizadas
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters({ ...filters, [name]: value });
+    setStats({ total, completed, pending, critical, averageScore });
+  };
+
+  const getAcceptability = (percentage) => {
+    const perc = parseFloat(percentage) || 0;
+    if (perc < 61) return 'Critico';
+    if (perc < 80) return 'No aceptable';
+    if (perc < 90) return 'Aceptable';
+    return 'Bueno';
   };
 
   const getFilteredAudits = () => {
-    return selectedAudits.filter(audit => {
+    return auditorias.filter(audit => {
+      if (audit.Estado !== 'Finalizado') return false;
+      
       const acceptability = getAcceptability(audit.PorcentajeTotal);
       const year = new Date(audit.FechaInicio).getFullYear().toString();
+      
       return (
         (filters.auditorLider === '' || audit.AuditorLider === filters.auditorLider) &&
         (filters.tipoAuditoria === '' || audit.TipoAuditoria === filters.tipoAuditoria) &&
@@ -80,288 +301,1599 @@ const AuditCalendar = () => {
     });
   };
 
-  const getAcceptability = (percentage) => {
-    if (percentage < 61) {
-      return 'Critico';
-    } else if (percentage < 80) {
-      return 'No aceptable';
-    } else if (percentage < 90) {
-      return 'Aceptable';
-    } else {
-      return 'Bueno';
-    }
-  };
-
-  // Filtros para auditorías pendientes
-  const applyFilters = () => {
+  const getFilteredPendingAudits = () => {
     return pendingAudits.filter(audit => {
-      if (filterAuditorLider && !audit.AuditorLider.toLowerCase().includes(filterAuditorLider.toLowerCase())) {
+      if (pendingFilters.auditorLider && !audit.AuditorLider.toLowerCase().includes(pendingFilters.auditorLider.toLowerCase())) {
         return false;
       }
-      if (filterTipoAuditoria && audit.TipoAuditoria !== filterTipoAuditoria) {
+      if (pendingFilters.tipoAuditoria && audit.TipoAuditoria !== pendingFilters.tipoAuditoria) {
         return false;
       }
-      if (filterFechaInicio && new Date(audit.FechaInicio) < new Date(filterFechaInicio)) {
+      if (pendingFilters.fechaInicio && new Date(audit.FechaInicio) < new Date(pendingFilters.fechaInicio)) {
         return false;
       }
-      if (filterFechaFin && new Date(audit.FechaFin) > new Date(filterFechaFin)) {
+      if (pendingFilters.fechaFin && new Date(audit.FechaFin) > new Date(pendingFilters.fechaFin)) {
         return false;
       }
       return true;
     });
   };
 
+  const getDaysInMonth = (date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  };
+
+  const getAuditsForDate = (date) => {
+    return auditorias.filter(audit => {
+      const auditDate = new Date(audit.FechaInicio);
+      return auditDate.toDateString() === date.toDateString();
+    });
+  };
+
+  const generateCalendar = () => {
+    const daysInMonth = getDaysInMonth(currentMonth);
+    const firstDay = getFirstDayOfMonth(currentMonth);
+    const calendar = [];
+
+    for (let i = 0; i < firstDay; i++) {
+      calendar.push(null);
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i);
+      calendar.push(date);
+    }
+
+    return calendar;
+  };
+
+  const handlePreviousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  };
+
+  const handleDateClick = (date) => {
+    setSelectedDate(date);
+    const auditsOnDate = getAuditsForDate(date);
+    if (auditsOnDate.length > 0) {
+      setSelectedAudit(auditsOnDate[0]);
+      setDetailDialogOpen(true);
+    }
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters({ ...filters, [name]: value });
+  };
+
+  const handlePendingFilterChange = (e) => {
+    const { name, value } = e.target;
+    setPendingFilters({ ...pendingFilters, [name]: value });
+  };
+
+  const handleAuditClick = (audit) => {
+    setSelectedAudit(audit);
+    setDetailDialogOpen(true);
+  };
+
+  // Versión Mobile del Dialog de Detalles
+  const AuditDetailDialog = () => (
+    <Dialog 
+      open={detailDialogOpen} 
+      onClose={() => setDetailDialogOpen(false)}
+      maxWidth="md"
+      fullWidth
+      fullScreen={isMobile}
+      PaperProps={{
+        sx: {
+          borderRadius: isMobile ? 0 : 3,
+          m: isMobile ? 0 : 2
+        }
+      }}
+    >
+      <DialogTitle>
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box display="flex" alignItems="center" gap={2}>
+            <Avatar sx={{ bgcolor: 'primary.main', width: isMobile ? 40 : 48, height: isMobile ? 40 : 48 }}>
+              <Assignment />
+            </Avatar>
+            <Box>
+              <Typography variant={isMobile ? "subtitle1" : "h6"} fontWeight="600">
+                {selectedAudit?.TipoAuditoria}
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                {selectedAudit?.Departamento}
+              </Typography>
+            </Box>
+          </Box>
+          {isMobile && (
+            <IconButton onClick={() => setDetailDialogOpen(false)} edge="end">
+              <Close />
+            </IconButton>
+          )}
+        </Box>
+      </DialogTitle>
+      <DialogContent>
+        <Grid container spacing={isMobile ? 2 : 3} sx={{ mt: 0.5 }}>
+          <Grid item xs={12}>
+            <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 2 }}>
+              <Typography variant="caption" color="textSecondary" gutterBottom display="block">
+                INFORMACIÓN GENERAL
+              </Typography>
+              <Divider sx={{ my: 1 }} />
+              <Box display="flex" flexDirection="column" gap={1.5}>
+                <Box>
+                  <Typography variant="caption" color="textSecondary">
+                    Auditor Líder
+                  </Typography>
+                  <Typography variant="body2" fontWeight="600">
+                    {selectedAudit?.AuditorLider}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="textSecondary">
+                    Equipo Auditor
+                  </Typography>
+                  <Typography variant="body2" fontWeight="600">
+                    {Array.isArray(selectedAudit?.EquipoAuditor) 
+                      ? selectedAudit.EquipoAuditor.map(e => e.Nombre).join(', ') 
+                      : 'N/A'}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="textSecondary">
+                    Áreas Auditadas
+                  </Typography>
+                  <Typography variant="body2" fontWeight="600">
+                    {selectedAudit?.AreasAudi}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="textSecondary">
+                    Duración
+                  </Typography>
+                  <Typography variant="body2" fontWeight="600">
+                    {selectedAudit?.Duracion}
+                  </Typography>
+                </Box>
+              </Box>
+            </Paper>
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.success.main, 0.05), borderRadius: 2 }}>
+              <Typography variant="caption" color="textSecondary" gutterBottom display="block">
+                RESULTADOS
+              </Typography>
+              <Divider sx={{ my: 1 }} />
+              <Box display="flex" flexDirection="column" gap={1.5}>
+                <Box>
+                  <Typography variant="caption" color="textSecondary">
+                    Porcentaje Total
+                  </Typography>
+                  <Box display="flex" alignItems="center" gap={1} mt={0.5}>
+                    <Typography variant="h5" fontWeight="700" color="primary">
+                      {selectedAudit?.PorcentajeTotal}%
+                    </Typography>
+                    <ProgressBar 
+                      variant="determinate" 
+                      value={parseFloat(selectedAudit?.PorcentajeTotal) || 0} 
+                      percentage={parseFloat(selectedAudit?.PorcentajeTotal) || 0}
+                      sx={{ flexGrow: 1 }}
+                    />
+                  </Box>
+                </Box>
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Typography variant="caption" color="textSecondary">
+                    Aceptabilidad
+                  </Typography>
+                  <AcceptabilityChip 
+                    label={getAcceptability(selectedAudit?.PorcentajeTotal)} 
+                    acceptability={getAcceptability(selectedAudit?.PorcentajeTotal)}
+                    size="small"
+                  />
+                </Box>
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Typography variant="caption" color="textSecondary">
+                    Estado
+                  </Typography>
+                  <StatusChip 
+                    label={selectedAudit?.Estado} 
+                    status={selectedAudit?.Estado}
+                    size="small"
+                  />
+                </Box>
+              </Box>
+            </Paper>
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions sx={{ p: isMobile ? 2 : 3 }}>
+        <Button 
+          onClick={() => setDetailDialogOpen(false)} 
+          variant="contained"
+          fullWidth={isMobile}
+          size={isMobile ? "large" : "medium"}
+        >
+          Cerrar
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+
+  // Vista Mobile del Calendario
+  const MobileCalendarView = () => {
+    const calendar = generateCalendar();
+    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+    return (
+      <Box sx={{ mb: 2 }}>
+        {/* Header del Calendario Mobile */}
+        <Paper sx={{ p: 2, mb: 2, borderRadius: 3, bgcolor: 'background.paper' }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <IconButton 
+              onClick={handlePreviousMonth}
+              sx={{ 
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+              }}
+            >
+              <ChevronLeft />
+            </IconButton>
+            
+            <Box textAlign="center">
+              <Typography variant="h6" fontWeight="700" color="primary.main">
+                {monthNames[currentMonth.getMonth()]}
+              </Typography>
+              <Typography variant="caption" color="textSecondary" fontWeight="600">
+                {currentMonth.getFullYear()}
+              </Typography>
+            </Box>
+            
+            <IconButton 
+              onClick={handleNextMonth}
+              sx={{ 
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+              }}
+            >
+              <ChevronRight />
+            </IconButton>
+          </Box>
+
+          <Button 
+            startIcon={<Today />}
+            onClick={() => setCurrentMonth(new Date())}
+            variant="contained"
+            fullWidth
+            size="small"
+          >
+            Ir a Hoy
+          </Button>
+        </Paper>
+
+        {/* Contenedor del Calendario */}
+        <Paper sx={{ p: 1.5, borderRadius: 3, overflow: 'hidden' }}>
+          {/* Encabezado de días */}
+          <Box 
+            display="grid" 
+            gridTemplateColumns="repeat(7, 1fr)" 
+            gap={0.5} 
+            mb={0.5}
+            sx={{ 
+              bgcolor: alpha(theme.palette.primary.main, 0.05),
+              borderRadius: 1.5,
+              p: 1
+            }}
+          >
+            {dayNames.map(day => (
+              <Box key={day} textAlign="center">
+                <Typography 
+                  variant="caption" 
+                  fontWeight="700" 
+                  color="primary.main"
+                  sx={{ 
+                    fontSize: '0.65rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5
+                  }}
+                >
+                  {day}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+
+          {/* Grid del Calendario */}
+          <Box 
+            display="grid" 
+            gridTemplateColumns="repeat(7, 1fr)" 
+            gap={0.5}
+          >
+            {calendar.map((date, index) => {
+              const isToday = date && date.toDateString() === new Date().toDateString();
+              const auditsOnDate = date ? getAuditsForDate(date) : [];
+              
+              return (
+                <Box key={index} sx={{ position: 'relative' }}>
+                  {date ? (
+                    <Paper
+                      elevation={auditsOnDate.length > 0 ? 2 : 0}
+                      sx={{
+                        height: 70,
+                        p: 0.5,
+                        borderRadius: 1.5,
+                        cursor: auditsOnDate.length > 0 ? 'pointer' : 'default',
+                        border: isToday ? `2px solid ${theme.palette.primary.main}` : `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                        bgcolor: auditsOnDate.length > 0 
+                          ? alpha(theme.palette.primary.main, 0.05) 
+                          : 'background.paper',
+                        transition: 'all 0.2s ease',
+                        '&:active': auditsOnDate.length > 0 ? {
+                          transform: 'scale(0.95)',
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        } : {},
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                      }}
+                      onClick={() => auditsOnDate.length > 0 && handleDateClick(date)}
+                    >
+                      {/* Número del día */}
+                      <Box
+                        sx={{
+                          width: isToday ? 24 : 20,
+                          height: isToday ? 24 : 20,
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          bgcolor: isToday ? 'primary.main' : 'transparent',
+                          color: isToday ? 'white' : 'text.primary',
+                          fontWeight: isToday ? 700 : 600,
+                          mb: 0.5,
+                        }}
+                      >
+                        <Typography variant="caption" fontWeight="inherit" sx={{ fontSize: '0.7rem' }}>
+                          {date.getDate()}
+                        </Typography>
+                      </Box>
+
+                      {/* Indicadores de auditorías */}
+                      {auditsOnDate.length > 0 && (
+                        <Box sx={{ 
+                          display: 'flex', 
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: 0.3,
+                          width: '100%',
+                          px: 0.3
+                        }}>
+                          {/* Primera auditoría como barra */}
+                          <Box
+                            sx={{
+                              width: '100%',
+                              height: 4,
+                              bgcolor: theme.palette.primary.main,
+                              borderRadius: 1,
+                            }}
+                          />
+                          
+                          {/* Segunda auditoría como barra */}
+                          {auditsOnDate.length > 1 && (
+                            <Box
+                              sx={{
+                                width: '100%',
+                                height: 4,
+                                bgcolor: alpha(theme.palette.primary.main, 0.6),
+                                borderRadius: 1,
+                              }}
+                            />
+                          )}
+                          
+                          {/* Contador si hay más */}
+                          {auditsOnDate.length > 2 && (
+                            <Typography 
+                              variant="caption" 
+                              sx={{ 
+                                fontSize: '0.6rem',
+                                fontWeight: 700,
+                                color: 'primary.main',
+                                mt: 0.2
+                              }}
+                            >
+                              +{auditsOnDate.length - 2}
+                            </Typography>
+                          )}
+                        </Box>
+                      )}
+                    </Paper>
+                  ) : (
+                    <Box sx={{ height: 70 }} />
+                  )}
+                </Box>
+              );
+            })}
+          </Box>
+        </Paper>
+
+        {/* Leyenda Mobile */}
+        <Box sx={{ mt: 2, px: 1 }}>
+          <Typography variant="caption" color="textSecondary" gutterBottom display="block" fontWeight="600">
+            Toca cualquier día con eventos para ver detalles
+          </Typography>
+        </Box>
+      </Box>
+    );
+  };
+
+  // Vista Desktop del Calendario
+  const CalendarView = () => {
+    const calendar = generateCalendar();
+    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+    return (
+      <Box sx={{ mb: 4 }}>
+        {/* Header del Calendario */}
+        <Paper sx={{ p: 3, mb: 2, borderRadius: 3, bgcolor: 'background.paper' }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box display="flex" alignItems="center" gap={2}>
+              <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
+                <CalendarToday />
+              </Avatar>
+              <Box>
+                <Typography variant="h4" fontWeight="700" color="primary.main">
+                  {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  Calendario de Auditorías Programadas
+                </Typography>
+              </Box>
+            </Box>
+            <Box display="flex" gap={1} alignItems="center">
+              <IconButton 
+                onClick={handlePreviousMonth}
+                sx={{ 
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+                }}
+              >
+                <ChevronLeft />
+              </IconButton>
+              <Button 
+                startIcon={<Today />}
+                onClick={() => setCurrentMonth(new Date())}
+                variant="contained"
+                sx={{ minWidth: 120 }}
+              >
+                Hoy
+              </Button>
+              <IconButton 
+                onClick={handleNextMonth}
+                sx={{ 
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+                }}
+              >
+                <ChevronRight />
+              </IconButton>
+            </Box>
+          </Box>
+        </Paper>
+
+        {/* Contenedor del Calendario */}
+        <Paper sx={{ p: 2, borderRadius: 3, overflow: 'hidden' }}>
+          {/* Encabezado de días */}
+          <Box 
+            display="grid" 
+            gridTemplateColumns="repeat(7, 1fr)" 
+            gap={1} 
+            mb={1}
+            sx={{ 
+              bgcolor: alpha(theme.palette.primary.main, 0.05),
+              borderRadius: 2,
+              p: 1.5
+            }}
+          >
+            {dayNames.map(day => (
+              <Box key={day} textAlign="center">
+                <Typography 
+                  variant="subtitle2" 
+                  fontWeight="700" 
+                  color="primary.main"
+                  sx={{ textTransform: 'uppercase', letterSpacing: 1 }}
+                >
+                  {day}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+
+          {/* Grid del Calendario */}
+          <Box 
+            display="grid" 
+            gridTemplateColumns="repeat(7, 1fr)" 
+            gap={2}
+            sx={{ minHeight: 600 }}
+          >
+            {calendar.map((date, index) => {
+              const isToday = date && date.toDateString() === new Date().toDateString();
+              const auditsOnDate = date ? getAuditsForDate(date) : [];
+              
+              return (
+                <Box key={index} sx={{ position: 'relative' }}>
+                  {date ? (
+                    <Paper
+                      elevation={auditsOnDate.length > 0 ? 3 : 1}
+                      sx={{
+                        height: '100%',
+                        minHeight: 140,
+                        p: 1.5,
+                        borderRadius: 2,
+                        cursor: auditsOnDate.length > 0 ? 'pointer' : 'default',
+                        border: isToday ? `2px solid ${theme.palette.primary.main}` : `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                        bgcolor: auditsOnDate.length > 0 
+                          ? alpha(theme.palette.primary.main, 0.03) 
+                          : 'background.paper',
+                        transition: 'all 0.3s ease',
+                        '&:hover': auditsOnDate.length > 0 ? {
+                          transform: 'translateY(-4px)',
+                          boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.15)}`,
+                          bgcolor: alpha(theme.palette.primary.main, 0.06),
+                        } : {},
+                      }}
+                      onClick={() => auditsOnDate.length > 0 && handleDateClick(date)}
+                    >
+                      {/* Número del día */}
+                      <Box 
+                        display="flex" 
+                        justifyContent="space-between" 
+                        alignItems="center"
+                        mb={1}
+                      >
+                        <Box
+                          sx={{
+                            width: isToday ? 32 : 28,
+                            height: isToday ? 32 : 28,
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            bgcolor: isToday ? 'primary.main' : 'transparent',
+                            color: isToday ? 'white' : 'text.primary',
+                            fontWeight: isToday ? 700 : 600,
+                            transition: 'all 0.2s',
+                          }}
+                        >
+                          <Typography variant="body2" fontWeight="inherit">
+                            {date.getDate()}
+                          </Typography>
+                        </Box>
+                        {auditsOnDate.length > 0 && (
+                          <Chip
+                            label={auditsOnDate.length}
+                            size="small"
+                            color="primary"
+                            sx={{ 
+                              height: 20, 
+                              minWidth: 20,
+                              '& .MuiChip-label': { px: 0.75, fontSize: '0.7rem', fontWeight: 700 }
+                            }}
+                          />
+                        )}
+                      </Box>
+
+                      {/* Lista de auditorías */}
+                      <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: 0.5,
+                        maxHeight: 90,
+                        overflow: 'auto',
+                        '&::-webkit-scrollbar': {
+                          width: 4,
+                        },
+                        '&::-webkit-scrollbar-thumb': {
+                          backgroundColor: alpha(theme.palette.primary.main, 0.3),
+                          borderRadius: 2,
+                        }
+                      }}>
+                        {auditsOnDate.slice(0, 3).map((audit, idx) => (
+                          <Tooltip 
+                            key={idx} 
+                            title={`${audit.TipoAuditoria} - ${audit.Departamento} - ${audit.AuditorLider}`}
+                            placement="top"
+                          >
+                            <Box
+                              sx={{
+                                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                borderLeft: `3px solid ${theme.palette.primary.main}`,
+                                borderRadius: 1,
+                                px: 1,
+                                py: 0.5,
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                  bgcolor: alpha(theme.palette.primary.main, 0.2),
+                                  transform: 'translateX(2px)',
+                                }
+                              }}
+                            >
+                              <Typography 
+                                variant="caption" 
+                                fontWeight="600"
+                                sx={{ 
+                                  display: 'block',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  fontSize: '0.7rem'
+                                }}
+                              >
+                                {audit.TipoAuditoria}
+                              </Typography>
+                              <Typography 
+                                variant="caption" 
+                                color="textSecondary"
+                                sx={{ 
+                                  display: 'block',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  fontSize: '0.65rem'
+                                }}
+                              >
+                                {audit.Departamento}
+                              </Typography>
+                            </Box>
+                          </Tooltip>
+                        ))}
+                        {auditsOnDate.length > 3 && (
+                          <Typography 
+                            variant="caption" 
+                            color="primary"
+                            fontWeight="600"
+                            sx={{ 
+                              textAlign: 'center',
+                              mt: 0.5,
+                              fontSize: '0.7rem'
+                            }}
+                          >
+                            +{auditsOnDate.length - 3} más
+                          </Typography>
+                        )}
+                      </Box>
+                    </Paper>
+                  ) : (
+                    <Box sx={{ height: '100%', minHeight: 140 }} />
+                  )}
+                </Box>
+              );
+            })}
+          </Box>
+        </Paper>
+      </Box>
+    );
+  };
+
+  // Estadísticas Mobile
+  const MobileStatsOverview = () => (
+    <Box sx={{ mb: 3 }}>
+      <Grid container spacing={1.5}>
+        <Grid item xs={6}>
+          <MobileStatCard>
+            <Box display="flex" alignItems="center" gap={1.5}>
+              <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>
+                <Assignment fontSize="small" />
+              </Avatar>
+              <Box>
+                <Typography variant="h5" fontWeight="700">
+                  {stats.total}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  Total
+                </Typography>
+              </Box>
+            </Box>
+          </MobileStatCard>
+        </Grid>
+        <Grid item xs={6}>
+          <MobileStatCard>
+            <Box display="flex" alignItems="center" gap={1.5}>
+              <Avatar sx={{ bgcolor: 'success.main', width: 40, height: 40 }}>
+                <CheckCircle fontSize="small" />
+              </Avatar>
+              <Box>
+                <Typography variant="h5" fontWeight="700">
+                  {stats.completed}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  Completadas
+                </Typography>
+              </Box>
+            </Box>
+          </MobileStatCard>
+        </Grid>
+        <Grid item xs={6}>
+          <MobileStatCard>
+            <Box display="flex" alignItems="center" gap={1.5}>
+              <Avatar sx={{ bgcolor: 'warning.main', width: 40, height: 40 }}>
+                <Pending fontSize="small" />
+              </Avatar>
+              <Box>
+                <Typography variant="h5" fontWeight="700">
+                  {stats.pending}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  Pendientes
+                </Typography>
+              </Box>
+            </Box>
+          </MobileStatCard>
+        </Grid>
+        <Grid item xs={6}>
+          <MobileStatCard>
+            <Box display="flex" alignItems="center" gap={1.5}>
+              <Avatar sx={{ bgcolor: 'info.main', width: 40, height: 40 }}>
+                <TrendingUp fontSize="small" />
+              </Avatar>
+              <Box>
+                <Typography variant="h5" fontWeight="700">
+                  {stats.averageScore.toFixed(1)}%
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  Promedio
+                </Typography>
+              </Box>
+            </Box>
+          </MobileStatCard>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+
+  // Estadísticas Desktop
+  const StatsOverview = () => (
+    <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid item xs={12} sm={6} md={2.4}>
+        <StyledCard>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Avatar sx={{ bgcolor: 'primary.main', mx: 'auto', mb: 2 }}>
+              <Assignment />
+            </Avatar>
+            <Typography variant="h4" fontWeight="700" gutterBottom>
+              {stats.total}
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Total Auditorías
+            </Typography>
+          </CardContent>
+        </StyledCard>
+      </Grid>
+      <Grid item xs={12} sm={6} md={2.4}>
+        <StyledCard>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Avatar sx={{ bgcolor: 'success.main', mx: 'auto', mb: 2 }}>
+              <CheckCircle />
+            </Avatar>
+            <Typography variant="h4" fontWeight="700" gutterBottom>
+              {stats.completed}
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Completadas
+            </Typography>
+          </CardContent>
+        </StyledCard>
+      </Grid>
+      <Grid item xs={12} sm={6} md={2.4}>
+        <StyledCard>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Avatar sx={{ bgcolor: 'warning.main', mx: 'auto', mb: 2 }}>
+              <Pending />
+            </Avatar>
+            <Typography variant="h4" fontWeight="700" gutterBottom>
+              {stats.pending}
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Pendientes
+            </Typography>
+          </CardContent>
+        </StyledCard>
+      </Grid>
+      <Grid item xs={12} sm={6} md={2.4}>
+        <StyledCard>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Avatar sx={{ bgcolor: 'error.main', mx: 'auto', mb: 2 }}>
+              <Warning />
+            </Avatar>
+            <Typography variant="h4" fontWeight="700" gutterBottom>
+              {stats.critical}
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Críticas
+            </Typography>
+          </CardContent>
+        </StyledCard>
+      </Grid>
+      <Grid item xs={12} sm={6} md={2.4}>
+        <StyledCard>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Avatar sx={{ bgcolor: 'info.main', mx: 'auto', mb: 2 }}>
+              <TrendingUp />
+            </Avatar>
+            <Typography variant="h4" fontWeight="700" gutterBottom>
+              {stats.averageScore.toFixed(1)}%
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Puntuación Media
+            </Typography>
+          </CardContent>
+        </StyledCard>
+      </Grid>
+    </Grid>
+  );
+
+  // Card de Auditoría para Mobile
+  const MobileAuditCard = ({ audit, onClick }) => (
+    <StyledCard sx={{ mb: 2 }} onClick={() => onClick(audit)}>
+      <CardContent>
+        <Box display="flex" alignItems="flex-start" gap={1.5} mb={2}>
+          <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}>
+            <Business fontSize="small" />
+          </Avatar>
+          <Box flex={1}>
+            <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+              {audit.TipoAuditoria}
+            </Typography>
+            <Typography variant="caption" color="textSecondary">
+              {audit.Departamento}
+            </Typography>
+          </Box>
+          <IconButton size="small" color="primary">
+            <ChevronRight />
+          </IconButton>
+        </Box>
+
+        <Box display="flex" flexDirection="column" gap={1.5}>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box display="flex" alignItems="center" gap={1}>
+              <Person fontSize="small" color="action" />
+              <Typography variant="caption">
+                {audit.AuditorLider}
+              </Typography>
+            </Box>
+            <Typography variant="caption" color="textSecondary">
+              {audit.Duracion}
+            </Typography>
+          </Box>
+
+          {audit.Estado === 'Finalizado' && (
+            <>
+              <Box>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
+                  <Typography variant="caption" color="textSecondary">
+                    Resultado
+                  </Typography>
+                  <Typography variant="body2" fontWeight="700">
+                    {audit.PorcentajeTotal}%
+                  </Typography>
+                </Box>
+                <ProgressBar 
+                  variant="determinate" 
+                  value={parseFloat(audit.PorcentajeTotal) || 0} 
+                  percentage={parseFloat(audit.PorcentajeTotal) || 0}
+                />
+              </Box>
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="caption" color="textSecondary">
+                  Aceptabilidad
+                </Typography>
+                <AcceptabilityChip 
+                  label={getAcceptability(audit.PorcentajeTotal)} 
+                  acceptability={getAcceptability(audit.PorcentajeTotal)}
+                  size="small"
+                />
+              </Box>
+            </>
+          )}
+
+          {audit.Estado !== 'Finalizado' && (
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="caption" color="textSecondary">
+                Estado
+              </Typography>
+              <StatusChip 
+                label={audit.Estado} 
+                status={audit.Estado}
+                size="small"
+              />
+            </Box>
+          )}
+        </Box>
+      </CardContent>
+    </StyledCard>
+  );
+
+  // Drawer de Filtros Mobile
+  const FilterDrawer = () => (
+    <SwipeableDrawer
+      anchor="bottom"
+      open={filterDrawerOpen}
+      onClose={() => setFilterDrawerOpen(false)}
+      onOpen={() => setFilterDrawerOpen(true)}
+      PaperProps={{
+        sx: {
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          maxHeight: '80vh'
+        }
+      }}
+    >
+      <Box sx={{ p: 3 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h6" fontWeight="700">
+            Filtros
+          </Typography>
+          <IconButton onClick={() => setFilterDrawerOpen(false)} size="small">
+            <Close />
+          </IconButton>
+        </Box>
+
+        {tabValue === 1 ? (
+          <Box display="flex" flexDirection="column" gap={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Año</InputLabel>
+              <Select
+                value={filters.year}
+                onChange={handleFilterChange}
+                label="Año"
+                name="year"
+              >
+                {[...new Set(auditorias.map(audit => new Date(audit.FechaInicio).getFullYear()))].map((year, index) => (
+                  <MenuItem key={index} value={year.toString()}>
+                    {year}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth size="small">
+              <InputLabel>Auditor Líder</InputLabel>
+              <Select
+                value={filters.auditorLider}
+                onChange={handleFilterChange}
+                label="Auditor Líder"
+                name="auditorLider"
+              >
+                <MenuItem value="">Todos</MenuItem>
+                {[...new Set(auditorias.map(audit => audit.AuditorLider))].map((auditorLider, index) => (
+                  <MenuItem key={index} value={auditorLider}>
+                    {auditorLider}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth size="small">
+              <InputLabel>Tipo de Auditoría</InputLabel>
+              <Select
+                value={filters.tipoAuditoria}
+                onChange={handleFilterChange}
+                label="Tipo de Auditoría"
+                name="tipoAuditoria"
+              >
+                <MenuItem value="">Todos</MenuItem>
+                {[...new Set(auditorias.map(audit => audit.TipoAuditoria))].map((tipoAuditoria, index) => (
+                  <MenuItem key={index} value={tipoAuditoria}>
+                    {tipoAuditoria}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth size="small">
+              <InputLabel>Aceptibilidad</InputLabel>
+              <Select
+                value={filters.aceptibilidad}
+                onChange={handleFilterChange}
+                label="Aceptibilidad"
+                name="aceptibilidad"
+              >
+                <MenuItem value="">Todos</MenuItem>
+                <MenuItem value="Critico">Crítico</MenuItem>
+                <MenuItem value="No aceptable">No aceptable</MenuItem>
+                <MenuItem value="Aceptable">Aceptable</MenuItem>
+                <MenuItem value="Bueno">Bueno</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        ) : (
+          <Box display="flex" flexDirection="column" gap={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Auditor Líder</InputLabel>
+              <Select
+                value={pendingFilters.auditorLider}
+                onChange={handlePendingFilterChange}
+                label="Auditor Líder"
+                name="auditorLider"
+              >
+                <MenuItem value="">Todos</MenuItem>
+                {[...new Set(pendingAudits.map(audit => audit.AuditorLider))].map((auditorLider, index) => (
+                  <MenuItem key={index} value={auditorLider}>
+                    {auditorLider}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth size="small">
+              <InputLabel>Tipo de Auditoría</InputLabel>
+              <Select
+                value={pendingFilters.tipoAuditoria}
+                onChange={handlePendingFilterChange}
+                label="Tipo de Auditoría"
+                name="tipoAuditoria"
+              >
+                <MenuItem value="">Todos</MenuItem>
+                {[...new Set(pendingAudits.map(audit => audit.TipoAuditoria))].map((tipoAuditoria, index) => (
+                  <MenuItem key={index} value={tipoAuditoria}>
+                    {tipoAuditoria}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              size="small"
+              type="date"
+              label="Fecha Inicio"
+              value={pendingFilters.fechaInicio}
+              onChange={(e) => setPendingFilters({...pendingFilters, fechaInicio: e.target.value})}
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              fullWidth
+              size="small"
+              type="date"
+              label="Fecha Fin"
+              value={pendingFilters.fechaFin}
+              onChange={(e) => setPendingFilters({...pendingFilters, fechaFin: e.target.value})}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Box>
+        )}
+
+        <Box display="flex" gap={2} mt={3}>
+          <Button 
+            variant="outlined" 
+            fullWidth
+            onClick={() => {
+              if (tabValue === 1) {
+                setFilters({
+                  auditorLider: '',
+                  tipoAuditoria: '',
+                  departamento: '',
+                  aceptibilidad: '',
+                  year: new Date().getFullYear().toString()
+                });
+              } else {
+                setPendingFilters({
+                  auditorLider: '',
+                  tipoAuditoria: '',
+                  fechaInicio: '',
+                  fechaFin: ''
+                });
+              }
+            }}
+          >
+            Limpiar
+          </Button>
+          <Button 
+            variant="contained" 
+            fullWidth
+            onClick={() => setFilterDrawerOpen(false)}
+          >
+            Aplicar
+          </Button>
+        </Box>
+      </Box>
+    </SwipeableDrawer>
+  );
+
   return (
-    <Container className="audit-calendar-container">
-      <br /><br /><br /><br />
-      
-      {/* Tabla de Auditorías Finalizadas */}
-      <Box className="audit-details-container">
-        <Typography variant="h4" className="section-title" gutterBottom>
-          Detalles de Auditorías Realizadas
+    <Container 
+      maxWidth="xl" 
+      sx={{ 
+        py: isMobile ? 2 : 4,
+        px: isMobile ? 1 : 3,
+        pb: isMobile ? 10 : 4
+      }}
+    >
+      {/* Header Principal */}
+      <Box sx={{ mb: isMobile ? 2 : 4, px: isMobile ? 1 : 0 }}>
+        <Typography variant={isMobile ? "h4" : "h3"} fontWeight="700" gutterBottom>
+          {isMobile ? "Auditorías" : "Calendario de Auditorías"}
         </Typography>
-
-        {/* Filtros para auditorías finalizadas */}
-        <Box className="filters-container">
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={3}>
-              <FormControl variant="outlined" fullWidth className="filter-control">
-                <InputLabel>Año</InputLabel>
-                <Select
-                  value={filters.year}
-                  onChange={handleFilterChange}
-                  label="Año"
-                  name="year"
-                >
-                  <MenuItem value="">Todos</MenuItem>
-                  {[...new Set(auditorias.map(audit => new Date(audit.FechaInicio).getFullYear()))].map((year, index) => (
-                    <MenuItem key={index} value={year.toString()}>
-                      {year}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={3}>
-              <FormControl variant="outlined" fullWidth className="filter-control">
-                <InputLabel>Auditor Líder</InputLabel>
-                <Select
-                  value={filters.auditorLider}
-                  onChange={handleFilterChange}
-                  label="Auditor Líder"
-                  name="auditorLider"
-                >
-                  <MenuItem value="">Todos</MenuItem>
-                  {[...new Set(auditorias.map(audit => audit.AuditorLider))].map((auditorLider, index) => (
-                    <MenuItem key={index} value={auditorLider}>
-                      {auditorLider}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={3}>
-              <FormControl variant="outlined" fullWidth className="filter-control">
-                <InputLabel>Tipo de Auditoría</InputLabel>
-                <Select
-                  value={filters.tipoAuditoria}
-                  onChange={handleFilterChange}
-                  label="Tipo de Auditoría"
-                  name="tipoAuditoria"
-                >
-                  <MenuItem value="">Todos</MenuItem>
-                  {[...new Set(auditorias.map(audit => audit.TipoAuditoria))].map((tipoAuditoria, index) => (
-                    <MenuItem key={index} value={tipoAuditoria}>
-                      {tipoAuditoria}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={3}>
-              <FormControl variant="outlined" fullWidth className="filter-control">
-                <InputLabel>Departamento</InputLabel>
-                <Select
-                  value={filters.departamento}
-                  onChange={handleFilterChange}
-                  label="Departamento"
-                  name="departamento"
-                >
-                  <MenuItem value="">Todos</MenuItem>
-                  {[...new Set(auditorias.map(audit => audit.Departamento))].map((departamento, index) => (
-                    <MenuItem key={index} value={departamento}>
-                      {departamento}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={3}>
-              <FormControl variant="outlined" fullWidth className="filter-control">
-                <InputLabel>Aceptibilidad</InputLabel>
-                <Select
-                  value={filters.aceptibilidad}
-                  onChange={handleFilterChange}
-                  label="Aceptibilidad"
-                  name="aceptibilidad"
-                >
-                  <MenuItem value="">Todos</MenuItem>
-                  <MenuItem value="Critico">Crítico</MenuItem>
-                  <MenuItem value="No aceptable">No aceptable</MenuItem>
-                  <MenuItem value="Aceptable">Aceptable</MenuItem>
-                  <MenuItem value="Bueno">Bueno</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </Box>
-
-        <Table className="audit-table">
-          <TableHead>
-            <TableRow>
-              <TableCell>Tipo de Auditoría</TableCell>
-              <TableCell>Duración</TableCell>
-              <TableCell>Departamento</TableCell>
-              <TableCell>Área Auditada</TableCell>
-              <TableCell>Auditado por</TableCell>
-              <TableCell>Equipo Auditor</TableCell>
-              <TableCell>Observador</TableCell>
-              <TableCell>Porcentaje Obtenido</TableCell>
-              <TableCell>Aceptabilidad</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {getFilteredAudits().map((audit, index) => (
-              <TableRow key={index}>
-                <TableCell>{audit.TipoAuditoria}</TableCell>
-                <TableCell>{audit.Duracion}</TableCell>
-                <TableCell>{audit.Departamento}</TableCell>
-                <TableCell>{audit.AreasAudi}</TableCell>
-                <TableCell>{audit.AuditorLider}</TableCell>
-                <TableCell>
-                  {Array.isArray(audit.EquipoAuditor) 
-                    ? audit.EquipoAuditor.map(e => e.Nombre).join(', ') 
-                    : 'N/A'}
-                </TableCell>
-                <TableCell>{audit.Observador ? audit.Observador.Nombre : 'N/A'}</TableCell>
-                <TableCell>{audit.PorcentajeTotal}%</TableCell>
-                <TableCell>{getAcceptability(audit.PorcentajeTotal)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <Typography variant={isMobile ? "body2" : "h6"} color="textSecondary">
+          {isMobile ? "Gestión y seguimiento" : "Gestión y seguimiento de auditorías programadas"}
+        </Typography>
       </Box>
 
-      {/* Tabla de Auditorías Pendientes */}
-      <Box className="audit-details-container">
-        <Typography variant="h4" className="section-title" gutterBottom>
-          Auditorías Pendientes
-        </Typography>
+      {/* Estadísticas */}
+      {isMobile ? <MobileStatsOverview /> : <StatsOverview />}
 
-        {/* Filtros para auditorías pendientes */}
-        <Box className="filters-container">
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={3}>
-              <FormControl fullWidth className="filter-control">
-                <InputLabel>Auditor Líder</InputLabel>
-                <Select
-                  value={filterAuditorLider}
-                  onChange={(e) => setFilterAuditorLider(e.target.value)}
-                  label="Auditor Líder"
+      {/* Pestañas */}
+      {!isMobile && (
+        <Paper sx={{ mb: 3, borderRadius: 3 }}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs 
+              value={tabValue} 
+              onChange={(e, newValue) => setTabValue(newValue)}
+              sx={{ px: 2 }}
+            >
+              <Tab 
+                icon={<CalendarToday />} 
+                label="Vista Calendario" 
+                iconPosition="start"
+              />
+              <Tab 
+                icon={<BarChart />} 
+                label="Auditorías Realizadas" 
+                iconPosition="start"
+              />
+              <Tab 
+                icon={<Pending />} 
+                label="Auditorías Pendientes" 
+                iconPosition="start"
+              />
+            </Tabs>
+          </Box>
+
+          <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {tabValue === 0 && (
+              <Box display="flex" gap={1}>
+                <Button
+                  variant={viewMode === 'calendar' ? 'contained' : 'outlined'}
+                  startIcon={<ViewModule />}
+                  onClick={() => setViewMode('calendar')}
                 >
-                  <MenuItem value="">Todos</MenuItem>
-                  {[...new Set(pendingAudits.map(audit => audit.AuditorLider))].map((auditorLider, index) => (
-                    <MenuItem key={index} value={auditorLider}>
-                      {auditorLider}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={3}>
-              <FormControl fullWidth className="filter-control">
-                <InputLabel>Tipo de Auditoría</InputLabel>
-                <Select
-                  value={filterTipoAuditoria}
-                  onChange={(e) => setFilterTipoAuditoria(e.target.value)}
-                  label="Tipo de Auditoría"
+                  Calendario
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'contained' : 'outlined'}
+                  startIcon={<ViewWeek />}
+                  onClick={() => setViewMode('list')}
                 >
-                  <MenuItem value="">Todos</MenuItem>
-                  {[...new Set(pendingAudits.map(audit => audit.TipoAuditoria))].map((tipoAuditoria, index) => (
-                    <MenuItem key={index} value={tipoAuditoria}>
-                      {tipoAuditoria}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+                  Lista
+                </Button>
+              </Box>
+            )}
+            
+            <Box display="flex" gap={1} alignItems="center">
+              <TextField
+                size="small"
+                placeholder="Buscar..."
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <IconButton>
+                <FilterList />
+              </IconButton>
+            </Box>
+          </Box>
+        </Paper>
+      )}
 
-            <Grid item xs={12} sm={3}>
-              <FormControl fullWidth className="filter-control">
-                <InputLabel>Fecha Inicio</InputLabel>
-                <input
-                  type="date"
-                  value={filterFechaInicio}
-                  onChange={(e) => setFilterFechaInicio(e.target.value)}
-                  className="filter-date-input"
-                />
-              </FormControl>
-            </Grid>
+      {/* Contenido según pestaña seleccionada */}
+      {tabValue === 0 && (
+        <>
+          {isMobile ? <MobileCalendarView /> : (
+            viewMode === 'calendar' ? <CalendarView /> : (
+              <Typography variant="h6" textAlign="center" color="textSecondary" sx={{ py: 8 }}>
+                Vista de lista en desarrollo...
+              </Typography>
+            )
+          )}
+        </>
+      )}
 
-            <Grid item xs={12} sm={3}>
-              <FormControl fullWidth className="filter-control">
-                <InputLabel>Fecha Fin</InputLabel>
-                <input
-                  type="date"
-                  value={filterFechaFin}
-                  onChange={(e) => setFilterFechaFin(e.target.value)}
-                  className="filter-date-input"
-                />
-              </FormControl>
+      {tabValue === 1 && (
+        <Box>
+          {!isMobile && (
+            <GradientCard sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Filtros de Auditorías Realizadas
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Año</InputLabel>
+                    <Select
+                      value={filters.year}
+                      onChange={handleFilterChange}
+                      label="Año"
+                      name="year"
+                    >
+                      {[...new Set(auditorias.map(audit => new Date(audit.FechaInicio).getFullYear()))].map((year, index) => (
+                        <MenuItem key={index} value={year.toString()}>
+                          {year}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Auditor Líder</InputLabel>
+                    <Select
+                      value={filters.auditorLider}
+                      onChange={handleFilterChange}
+                      label="Auditor Líder"
+                      name="auditorLider"
+                    >
+                      <MenuItem value="">Todos</MenuItem>
+                      {[...new Set(auditorias.map(audit => audit.AuditorLider))].map((auditorLider, index) => (
+                        <MenuItem key={index} value={auditorLider}>
+                          {auditorLider}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Tipo de Auditoría</InputLabel>
+                    <Select
+                      value={filters.tipoAuditoria}
+                      onChange={handleFilterChange}
+                      label="Tipo de Auditoría"
+                      name="tipoAuditoria"
+                    >
+                      <MenuItem value="">Todos</MenuItem>
+                      {[...new Set(auditorias.map(audit => audit.TipoAuditoria))].map((tipoAuditoria, index) => (
+                        <MenuItem key={index} value={tipoAuditoria}>
+                          {tipoAuditoria}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Aceptibilidad</InputLabel>
+                    <Select
+                      value={filters.aceptibilidad}
+                      onChange={handleFilterChange}
+                      label="Aceptibilidad"
+                      name="aceptibilidad"
+                    >
+                      <MenuItem value="">Todos</MenuItem>
+                      <MenuItem value="Critico">Crítico</MenuItem>
+                      <MenuItem value="No aceptable">No aceptable</MenuItem>
+                      <MenuItem value="Aceptable">Aceptable</MenuItem>
+                      <MenuItem value="Bueno">Bueno</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            </GradientCard>
+          )}
+
+          {isMobile ? (
+            <Box>
+              {getFilteredAudits().map((audit, index) => (
+                <MobileAuditCard key={index} audit={audit} onClick={handleAuditClick} />
+              ))}
+            </Box>
+          ) : (
+            <Grid container spacing={2}>
+              {getFilteredAudits().map((audit, index) => (
+                <Grid item xs={12} key={index}>
+                  <StyledCard>
+                    <CardContent>
+                      <Grid container alignItems="center" spacing={2}>
+                        <Grid item xs={12} md={3}>
+                          <Box display="flex" alignItems="center" gap={2}>
+                            <Avatar sx={{ bgcolor: 'primary.main' }}>
+                              <Business />
+                            </Avatar>
+                            <Box>
+                              <Typography variant="h6" gutterBottom>
+                                {audit.TipoAuditoria}
+                              </Typography>
+                              <Typography variant="body2" color="textSecondary">
+                                {audit.Departamento}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                          <Typography variant="body2" gutterBottom>
+                            {audit.Duracion}
+                          </Typography>
+                          <Typography variant="caption" color="textSecondary">
+                            Duración
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'grey.300' }}>
+                              <Person />
+                            </Avatar>
+                            <Typography variant="body2">
+                              {audit.AuditorLider}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                          <Box>
+                            <Typography variant="body2" fontWeight="600" gutterBottom>
+                              {audit.PorcentajeTotal}%
+                            </Typography>
+                            <ProgressBar 
+                              variant="determinate" 
+                              value={parseFloat(audit.PorcentajeTotal) || 0} 
+                              percentage={parseFloat(audit.PorcentajeTotal) || 0}
+                            />
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                          <AcceptabilityChip 
+                            label={getAcceptability(audit.PorcentajeTotal)} 
+                            acceptability={getAcceptability(audit.PorcentajeTotal)}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={1}>
+                          <IconButton 
+                            color="primary"
+                            onClick={() => handleAuditClick(audit)}
+                          >
+                            <Visibility />
+                          </IconButton>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </StyledCard>
+                </Grid>
+              ))}
             </Grid>
-          </Grid>
+          )}
         </Box>
+      )}
 
-        <Table className="audit-table">
-          <TableHead>
-            <TableRow>
-              <TableCell>Tipo de Auditoría</TableCell>
-              <TableCell>Duración</TableCell>
-              <TableCell>Departamento</TableCell>
-              <TableCell>Área Auditada</TableCell>
-              <TableCell>Auditado por</TableCell>
-              <TableCell>Equipo Auditor</TableCell>
-              <TableCell>Observador</TableCell>
-              <TableCell>Fecha Inicio</TableCell>
-              <TableCell>Fecha Fin</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {applyFilters().map((audit, index) => (
-              <TableRow key={index}>
-                <TableCell>{audit.TipoAuditoria}</TableCell>
-                <TableCell>{audit.Duracion}</TableCell>
-                <TableCell>{audit.Departamento}</TableCell>
-                <TableCell>{audit.AreasAudi}</TableCell>
-                <TableCell>{audit.AuditorLider}</TableCell>
-                <TableCell>
-                  {Array.isArray(audit.EquipoAuditor) 
-                    ? audit.EquipoAuditor.map(e => e.Nombre).join(', ') 
-                    : 'N/A'}
-                </TableCell>
-                <TableCell>{audit.Observador ? audit.Observador.Nombre : 'N/A'}</TableCell>
-                <TableCell>{new Date(audit.FechaInicio).toLocaleDateString()}</TableCell>
-                <TableCell>{new Date(audit.FechaFin).toLocaleDateString()}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Box>
+      {tabValue === 2 && (
+        <Box>
+          {!isMobile && (
+            <GradientCard sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Filtros de Auditorías Pendientes
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Auditor Líder</InputLabel>
+                    <Select
+                      value={pendingFilters.auditorLider}
+                      onChange={handlePendingFilterChange}
+                      label="Auditor Líder"
+                      name="auditorLider"
+                    >
+                      <MenuItem value="">Todos</MenuItem>
+                      {[...new Set(pendingAudits.map(audit => audit.AuditorLider))].map((auditorLider, index) => (
+                        <MenuItem key={index} value={auditorLider}>
+                          {auditorLider}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Tipo de Auditoría</InputLabel>
+                    <Select
+                      value={pendingFilters.tipoAuditoria}
+                      onChange={handlePendingFilterChange}
+                      label="Tipo de Auditoría"
+                      name="tipoAuditoria"
+                    >
+                      <MenuItem value="">Todos</MenuItem>
+                      {[...new Set(pendingAudits.map(audit => audit.TipoAuditoria))].map((tipoAuditoria, index) => (
+                        <MenuItem key={index} value={tipoAuditoria}>
+                          {tipoAuditoria}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="date"
+                    label="Fecha Inicio"
+                    value={pendingFilters.fechaInicio}
+                    onChange={(e) => setPendingFilters({...pendingFilters, fechaInicio: e.target.value})}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="date"
+                    label="Fecha Fin"
+                    value={pendingFilters.fechaFin}
+                    onChange={(e) => setPendingFilters({...pendingFilters, fechaFin: e.target.value})}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+              </Grid>
+            </GradientCard>
+          )}
+
+          {isMobile ? (
+            <Box>
+              {getFilteredPendingAudits().map((audit, index) => (
+                <MobileAuditCard key={index} audit={audit} onClick={handleAuditClick} />
+              ))}
+            </Box>
+          ) : (
+            <Grid container spacing={2}>
+              {getFilteredPendingAudits().map((audit, index) => (
+                <Grid item xs={12} key={index}>
+                  <StyledCard>
+                    <CardContent>
+                      <Grid container alignItems="center" spacing={2}>
+                        <Grid item xs={12} md={3}>
+                          <Box display="flex" alignItems="center" gap={2}>
+                            <Avatar sx={{ bgcolor: 'warning.main' }}>
+                              <Schedule />
+                            </Avatar>
+                            <Box>
+                              <Typography variant="h6" gutterBottom>
+                                {audit.TipoAuditoria}
+                              </Typography>
+                              <Typography variant="body2" color="textSecondary">
+                                {audit.Departamento}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                          <Typography variant="body2" gutterBottom>
+                            {audit.Duracion}
+                          </Typography>
+                          <Typography variant="caption" color="textSecondary">
+                            Programada
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'grey.300' }}>
+                              <Person />
+                            </Avatar>
+                            <Typography variant="body2">
+                              {audit.AuditorLider}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                          <StatusChip 
+                            label={audit.Estado} 
+                            status={audit.Estado}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                          <Typography variant="body2" gutterBottom>
+                            {new Date(audit.FechaInicio).toLocaleDateString()}
+                          </Typography>
+                          <Typography variant="caption" color="textSecondary">
+                            Inicio
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} md={1}>
+                          <IconButton 
+                            color="primary"
+                            onClick={() => handleAuditClick(audit)}
+                          >
+                            <Visibility />
+                          </IconButton>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </StyledCard>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </Box>
+      )}
+
+      {/* Navegación inferior para móvil */}
+      {isMobile && (
+        <Paper 
+          sx={{ 
+            position: 'fixed', 
+            bottom: 0, 
+            left: 0, 
+            right: 0, 
+            zIndex: 1000,
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            boxShadow: '0 -4px 20px rgba(0,0,0,0.1)'
+          }} 
+          elevation={3}
+        >
+          <BottomNavigation
+            value={tabValue}
+            onChange={(event, newValue) => setTabValue(newValue)}
+            showLabels
+            sx={{ height: 70, borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
+          >
+            <BottomNavigationAction 
+              label="Calendario" 
+              icon={<CalendarToday />}
+            />
+            <BottomNavigationAction 
+              label="Realizadas" 
+              icon={<CheckCircle />}
+            />
+            <BottomNavigationAction 
+              label="Pendientes" 
+              icon={<Pending />}
+            />
+          </BottomNavigation>
+        </Paper>
+      )}
+
+      {/* Botón flotante */}
+      <Fab
+        color="primary"
+        aria-label="add"
+        sx={{
+          position: 'fixed',
+          bottom: isMobile ? 90 : 24,
+          right: isMobile ? 16 : 24,
+          zIndex: 999
+        }}
+        size={isMobile ? "medium" : "large"}
+      >
+        <Add />
+      </Fab>
+
+      {/* Botón de filtro flotante para móvil */}
+      {isMobile && (tabValue === 1 || tabValue === 2) && (
+        <Fab
+          color="secondary"
+          aria-label="filter"
+          sx={{
+            position: 'fixed',
+            bottom: isMobile ? 90 : 24,
+            left: isMobile ? 16 : 24,
+            zIndex: 999
+          }}
+          size="medium"
+          onClick={() => setFilterDrawerOpen(true)}
+        >
+          <FilterList />
+        </Fab>
+      )}
+
+      {/* Drawer de filtros */}
+      <FilterDrawer />
+
+      {/* Diálogo de detalle */}
+      <AuditDetailDialog />
     </Container>
   );
 };
