@@ -83,6 +83,7 @@ import { storage } from '../../../firebase';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import './css/pendiente.css';
 
 // Tema profesional personalizado
 const theme = createTheme({
@@ -883,26 +884,36 @@ const Pendientes = () => {
   const renderMobileView = () => (
     <Box sx={{ pb: 7 }}>
       {/* Header Móvil */}
-      <AppBar position="sticky" color="primary" elevation={1}>
-        <Toolbar>
-          <IconButton
-            edge="start"
-            color="inherit"
-            onClick={() => setMobileDrawerOpen(true)}
-            sx={{ mr: 2 }}
-          >
-            <Menu />
-          </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Auditorías
-          </Typography>
-          <Chip 
-            label={datos.length} 
-            color="secondary" 
-            size="small"
-          />
-        </Toolbar>
-      </AppBar>
+
+<AppBar
+className='elmeroheader' 
+  position="sticky" 
+  color="primary" 
+  elevation={1}
+  sx={{ 
+    zIndex: (theme) => theme.zIndex.drawer - 10, // Reducir z-index
+    position: 'relative' // Cambiar si es necesario
+  }}
+>
+  <Toolbar>
+    <IconButton
+      edge="start"
+      color="inherit"
+      onClick={() => setMobileDrawerOpen(true)}
+      sx={{ mr: 2 }}
+    >
+      <Menu />
+    </IconButton>
+    <Typography variant="h6" sx={{ flexGrow: 1 }}>
+      Auditorías
+    </Typography>
+    <Chip 
+      label={datos.length} 
+      color="secondary" 
+      size="small"
+    />
+  </Toolbar>
+</AppBar>
 
       {/* Contenido Principal Móvil */}
       <Box sx={{ p: 2 }}>

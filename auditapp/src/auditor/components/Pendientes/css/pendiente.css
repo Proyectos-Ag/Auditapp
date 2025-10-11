@@ -12,6 +12,11 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+.elmeroheader
+{
+    margin-top: 2rem;
+    z-index: 5 !important;
+}
 .logo-empresa {
     height: auto;
     max-width: 20%;
