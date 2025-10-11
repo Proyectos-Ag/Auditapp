@@ -1,696 +1,1475 @@
 import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { UserContext } from '../../../App';
-import logo from "../assets/img/logoAguida.png";
-import './css/pendiente.css';
-import './css/Modal.css';
-import Fotos from './Foto'; 
-import Swal from 'sweetalert2';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Chip,
+  Grid,
+  LinearProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  AppBar,
+  Toolbar,
+  Avatar,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Checkbox,
+  TextField,
+  Fab,
+  Backdrop,
+  CircularProgress,
+  Snackbar,
+  Alert,
+  Stepper,
+  Step,
+  StepLabel,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Badge,
+  Tooltip,
+  ImageList,
+  ImageListItem,
+  ImageListItemBar,
+  useMediaQuery,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  BottomNavigation,
+  BottomNavigationAction
+} from '@mui/material';
+import {
+  AddAPhoto,
+  ExpandMore,
+  CheckCircle,
+  Warning,
+  Error,
+  Info,
+  PhotoCamera,
+  Delete,
+  Save,
+  Assignment,
+  Dashboard,
+  Visibility,
+  Close,
+  CloudUpload,
+  Task,
+  CalendarToday,
+  Person,
+  Group,
+  Menu,
+  Home,
+  Assessment,
+  CheckBox,
+  CameraAlt
+} from '@mui/icons-material';
+import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 import { storage } from '../../../firebase';
-import {ref, uploadBytes, getDownloadURL, deleteObject} from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
-import Backdrop from '@mui/material/Backdrop';
-import CircularProgress from '@mui/material/CircularProgress';
+import Swal from 'sweetalert2';
 
-const Pendientes = () => {
-    const { userData } = useContext(UserContext);
-    const [datos, setDatos] = useState([]);
-    const [hiddenDurations, setHiddenDurations] = useState([]);
-    const [selectedCheckboxes, setSelectedCheckboxes] = useState({});
-    const [percentages, setPercentages] = useState({});
-    const [modalOpen, setModalOpen] = useState(false); 
-    const [selectedField, setSelectedField] = useState(null); 
-    const [capturedPhotos, setCapturedPhotos] = useState({}); 
-    const [open, setOpen] = React.useState(false);
-
-    const [selectedImage, setSelectedImage] = useState(null);
-    const [selectedImageIndex, setSelectedImageIndex] = useState(null);
-    const [selectedImageDocId, setSelectedImageDocId] = useState(null);
-    const [imageModalOpen, setImageModalOpen] = useState(false);
-
-
-    const handleClose = () => {
-        setOpen(false);
-      };
-    
-        const handleOpen = () => {
-        setOpen(true);
-      };
-
-    const checkboxValues = {
-        'Conforme': 1,
-        'm': 0.7,
-        'M': 0.3,
-        'C': 0,
-        'NA': null
-    };
-
-    useEffect(() => {
-        const obtenerFechaInicio = (duracion) => {
-            const partes = duracion.split(" ");
-
-            let diaInicio = 1;
-            let mesInicio = 0;
-            let anoInicio = new Date().getFullYear();
-
-            for (const parte of partes) {
-                const numero = parseInt(parte);
-                if (!isNaN(numero)) {
-                    diaInicio = numero;
-                } else if (parte.length === 4 && !isNaN(parseInt(parte))) {
-                    anoInicio = parseInt(parte);
-                } else {
-                    mesInicio = obtenerNumeroMes(parte);
-                    if (mesInicio !== -1) break;
-                }
-            }
-
-            return new Date(anoInicio, mesInicio, diaInicio);
-        };
-
-    const obtenerDatos = async () => {
-        try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
-            if (userData && userData.Correo) {
-                const datosFiltrados = response.data.filter((dato) => 
-                    (dato.AuditorLiderEmail === userData.Correo || 
-                    (dato.EquipoAuditor.length > 0 && dato.EquipoAuditor.some(auditor => auditor.Correo === userData.Correo))) &&
-                    (dato.Estado === "pendiente" || dato.Estado === "Devuelto")
-                );
-        
-                    datosFiltrados.sort((a, b) => {
-                        const fechaInicioA = obtenerFechaInicio(a.Duracion);
-                        const fechaInicioB = obtenerFechaInicio(b.Duracion);
-                        if (fechaInicioA < fechaInicioB) return -1;
-                        if (fechaInicioA > fechaInicioB) return 1;
-                        return 0;
-                    });
-        
-                    setDatos(datosFiltrados);
-                    
-                    // Set initial state for checkboxes and percentages
-                    const initialCheckboxes = {};
-                const initialPercentages = {};
-                const checkboxValues = {
-                    'Conforme': 1,
-                    'm': 0.7,
-                    'M': 0.3,
-                    'C': 0,
-                    'NA': null
-                };
-
-        datosFiltrados.forEach((dato, periodIdx) => {
-            dato.Programa.forEach((programa, programIdx) => {
-                const programKey = `${periodIdx}_${programIdx}`;
-
-                let totalValue = 0;
-                let validPrograms = 0;
-
-        programa.Descripcion.forEach((desc, descIdx) => {
-            const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
-            initialCheckboxes[fieldKey] = desc.Criterio;
-
-            const value = checkboxValues[desc.Criterio];
-            if (value !== null) {
-                totalValue += value;
-                validPrograms++;
-            }
-        });
-
-        // Calcula el porcentaje para el programa
-        const percentage = validPrograms > 0 ? (totalValue / validPrograms) * 100 : 0;
-        console.log('Esto de qui',validPrograms);
-        console.log('Esto otro de aqui',totalValue);
-        initialPercentages[programKey] = percentage;
-    });
+// Tema profesional personalizado
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#2E7D32',
+      light: '#4CAF50',
+      dark: '#1B5E20'
+    },
+    secondary: {
+      main: '#FF6F00',
+      light: '#FF9800',
+      dark: '#E65100'
+    },
+    success: {
+      main: '#4CAF50',
+      light: '#81C784',
+      dark: '#388E3C'
+    },
+    warning: {
+      main: '#FF9800',
+      light: '#FFB74D',
+      dark: '#F57C00'
+    },
+    error: {
+      main: '#F44336',
+      light: '#EF5350',
+      dark: '#D32F2F'
+    },
+    background: {
+      default: '#f8f9fa',
+      paper: '#ffffff'
+    }
+  },
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h4: {
+      fontWeight: 700,
+    },
+    h6: {
+      fontWeight: 600,
+    },
+    subtitle1: {
+      fontWeight: 500,
+    }
+  },
+  shape: {
+    borderRadius: 12
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          border: '1px solid #e0e0e0'
+        }
+      }
+    }
+  }
 });
 
-setSelectedCheckboxes(initialCheckboxes);
-setPercentages(initialPercentages);
-        
-                } else {
-                    console.log('userData o userData.Correo no definidos:', userData);
-                }
-            } catch (error) {
-                console.error('Error al obtener los datos:', error);
-            }
-        };        
+// Componentes estilizados
+const StyledCard = styled(Card)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius,
+  transition: 'all 0.3s ease-in-out',
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
+  }
+}));
 
-        obtenerDatos();
-    }, [userData]);
+const StatusChip = styled(Chip)(({ status, theme }) => ({
+  fontWeight: 600,
+  ...(status === 'pendiente' && {
+    backgroundColor: theme.palette.warning.light,
+    color: theme.palette.warning.contrastText,
+  }),
+  ...(status === 'Devuelto' && {
+    backgroundColor: theme.palette.error.light,
+    color: theme.palette.error.contrastText,
+  }),
+  ...(status === 'Realizado' && {
+    backgroundColor: theme.palette.success.light,
+    color: theme.palette.success.contrastText,
+  })
+}));
 
-    // Función para obtener el número del mes a partir de su nombre
-    const obtenerNumeroMes = (nombreMes) => {
-        const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-        return meses.indexOf(nombreMes.toLowerCase());
-    };
+const ProgressBar = styled(LinearProgress)(({ percentage, theme }) => ({
+  height: 12,
+  borderRadius: 6,
+  backgroundColor: theme.palette.grey[200],
+  '& .MuiLinearProgress-bar': {
+    borderRadius: 6,
+    ...(percentage >= 90 && { backgroundColor: theme.palette.success.main }),
+    ...(percentage >= 80 && percentage < 90 && { backgroundColor: theme.palette.success.light }),
+    ...(percentage >= 60 && percentage < 80 && { backgroundColor: theme.palette.warning.main }),
+    ...(percentage < 60 && { backgroundColor: theme.palette.error.main }),
+  }
+}));
 
-    const handleImageClick = (imageSrc, index, docId) => {
-        setSelectedImage(imageSrc);
-        setSelectedImageIndex(index);
-        setSelectedImageDocId(docId);
-        setImageModalOpen(true);
-        console.log('Imagen seleccionada:', imageSrc, index, docId);
-    };    
+const ConformityCell = styled(TableCell)(({ selected, type, theme }) => ({
+  textAlign: 'center',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  ...(selected && type === 'Conforme' && {
+    backgroundColor: theme.palette.success.light,
+    color: theme.palette.success.contrastText,
+  }),
+  ...(selected && type === 'm' && {
+    backgroundColor: theme.palette.warning.light,
+    color: theme.palette.warning.contrastText,
+  }),
+  ...(selected && type === 'M' && {
+    backgroundColor: theme.palette.error.light,
+    color: theme.palette.error.contrastText,
+  }),
+  ...(selected && type === 'C' && {
+    backgroundColor: theme.palette.grey[400],
+    color: theme.palette.common.white,
+  }),
+  ...(selected && type === 'NA' && {
+    backgroundColor: theme.palette.info.light,
+    color: theme.palette.info.contrastText,
+  }),
+  '&:hover': {
+    backgroundColor: selected ? undefined : theme.palette.action.hover,
+  }
+}));
 
-    const closeModal = () => {
-        setImageModalOpen(false);
-        setSelectedImage(null);
-    };
+const ImageGallery = styled(ImageList)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius,
+  overflow: 'hidden',
+}));
 
-    const toggleDuration = (duration) => {
-        setHiddenDurations(hiddenDurations.includes(duration) ?
-            hiddenDurations.filter((dur) => dur !== duration) :
-            [...hiddenDurations, duration]
-        );
-    };   
-    
-    const handleCheckboxChange = (periodIdx, programIdx, descIdx, checkboxName) => {
-        const key = `${periodIdx}_${programIdx}_${descIdx}`;
-        setSelectedCheckboxes(prevState => {
-            const updated = { ...prevState, [key]: checkboxName };
-    
-            // Actualizar el porcentaje
-            const programKey = `${periodIdx}_${programIdx}`;
-            const relevantCheckboxes = Object.keys(updated).filter(k => k.startsWith(`${periodIdx}_${programIdx}_`));
-            let totalValue = 0;
-            let validPrograms = 0;
-    
-            relevantCheckboxes.forEach(k => {
-                const value = checkboxValues[updated[k]];
-                if (value !== null) {
-                    totalValue += value;
-                    validPrograms++;
-                }
-            });
-    
-            const percentage = validPrograms > 0 ? (totalValue / validPrograms) * 100 : 0;
-    
-            setPercentages(prevPercentages => ({
-                ...prevPercentages,
-                [programKey]: percentage
-            }));
-    
-            return updated;
-        });
-    };    
-        
-    const handleOpenModal = (fieldKey) => {
-        setSelectedField(fieldKey);
-        setModalOpen(true);
-    };
+const ActionButton = styled(Button)(({ theme, varianttype }) => ({
+  fontWeight: 600,
+  borderRadius: 8,
+  textTransform: 'none',
+  padding: '8px 16px',
+  ...(varianttype === 'save' && {
+    backgroundColor: theme.palette.info.main,
+    '&:hover': {
+      backgroundColor: theme.palette.info.dark,
+    }
+  }),
+  ...(varianttype === 'generate' && {
+    backgroundColor: theme.palette.success.main,
+    '&:hover': {
+      backgroundColor: theme.palette.success.dark,
+    }
+  })
+}));
 
-    const handleCapture = (file) => {
-        if (selectedField) {
-          // Generar el identificador para la fila basado en el `selectedField`
-          const rowIdentifier = selectedField; // Ejemplo: "0_0", "0_1", etc.
-          
-          setCapturedPhotos((prev) => {
-            const updatedPhotos = { ...prev };
+// Componente móvil para criterios de conformidad
+const MobileConformitySelector = ({ selectedValue, onSelect, fieldKey }) => {
+  const [open, setOpen] = useState(false);
+
+  const options = [
+    { value: 'Conforme', label: 'Conforme', color: 'success' },
+    { value: 'm', label: 'Menor', color: 'warning' },
+    { value: 'M', label: 'Mayor', color: 'error' },
+    { value: 'C', label: 'Crítico', color: 'error' },
+    { value: 'NA', label: 'No Aplica', color: 'info' }
+  ];
+
+  const selectedOption = options.find(opt => opt.value === selectedValue);
+
+  return (
+    <>
+      <Box sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+        <Typography variant="subtitle2" gutterBottom>
+          Estado del Requisito
+        </Typography>
+        <Button
+          fullWidth
+          variant={selectedValue ? "contained" : "outlined"}
+          color={selectedOption?.color || 'primary'}
+          onClick={() => setOpen(true)}
+          startIcon={<CheckBox />}
+          sx={{ justifyContent: 'flex-start' }}
+        >
+          {selectedOption?.label || 'Seleccionar estado'}
+        </Button>
+      </Box>
+
+      <Dialog open={open} onClose={() => setOpen(false)} fullScreen>
+        <AppBar position="sticky" elevation={1}>
+          <Toolbar>
+            <IconButton edge="start" color="inherit" onClick={() => setOpen(false)}>
+              <Close />
+            </IconButton>
+            <Typography variant="h6" sx={{ flexGrow: 1 }}>
+              Seleccionar Estado
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <List>
+          {options.map((option) => (
+            <ListItem
+              key={option.value}
+              button
+              onClick={() => {
+                onSelect(option.value);
+                setOpen(false);
+              }}
+              selected={selectedValue === option.value}
+              sx={{
+                borderLeft: selectedValue === option.value ? 4 : 0,
+                borderColor: `${option.color}.main`,
+                backgroundColor: selectedValue === option.value ? `${option.color}.light` : 'transparent'
+              }}
+            >
+              <ListItemIcon>
+                <CheckCircle color={selectedValue === option.value ? option.color : 'disabled'} />
+              </ListItemIcon>
+              <ListItemText 
+                primary={option.label} 
+                primaryTypographyProps={{
+                  fontWeight: selectedValue === option.value ? 600 : 400
+                }}
+              />
+            </ListItem>
+          ))}
+        </List>
+      </Dialog>
+    </>
+  );
+};
+
+// Componente móvil para gestión de fotos
+const MobilePhotoManager = ({ photos, onAddPhoto, onDeletePhoto, onPreviewPhoto, fieldKey }) => {
+  return (
+    <Box sx={{ mb: 2 }}>
+      <Typography variant="subtitle2" gutterBottom>
+        Evidencia Fotográfica ({photos.length}/4)
+      </Typography>
       
-            if (updatedPhotos[rowIdentifier]) {
-              // Si ya tiene 4 fotos, mostramos una alerta y no actualizamos el estado
-              if (updatedPhotos[rowIdentifier].length < 4) {
-                updatedPhotos[rowIdentifier] = [...updatedPhotos[rowIdentifier], file];
-              } else {
-                alert("Ya hay 4 fotos, no se puede agregar más.");
-                return prev; // Retornamos el estado anterior sin modificaciones
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+        {photos.map((photo, index) => (
+          <Box
+            key={index}
+            sx={{
+              position: 'relative',
+              width: 80,
+              height: 80,
+              borderRadius: 2,
+              overflow: 'hidden',
+              border: '1px solid',
+              borderColor: 'divider'
+            }}
+          >
+            <img
+              src={typeof photo === 'string' ? photo : URL.createObjectURL(photo)}
+              alt={`Evidencia ${index + 1}`}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                cursor: 'pointer'
+              }}
+              onClick={() => onPreviewPhoto(photo, index)}
+            />
+            <IconButton
+              size="small"
+              sx={{
+                position: 'absolute',
+                top: 2,
+                right: 2,
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.7)'
+                }
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeletePhoto(index);
+              }}
+            >
+              <Delete fontSize="small" />
+            </IconButton>
+          </Box>
+        ))}
+        
+        {photos.length < 4 && (
+          <Box
+            sx={{
+              width: 80,
+              height: 80,
+              border: '2px dashed',
+              borderColor: 'primary.main',
+              borderRadius: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              backgroundColor: 'primary.light',
+              '&:hover': {
+                backgroundColor: 'primary.main',
+                '& .MuiSvgIcon-root': {
+                  color: 'white'
+                }
               }
-            } else {
-              // Si no hay fotos en la fila, la inicializamos con la nueva foto
-              updatedPhotos[rowIdentifier] = [file];
-            }
-      
-            return updatedPhotos;
-          });
-        }
-        setModalOpen(false); // Cierra el modal
-        console.log("Foto Seleccionada", selectedField);
-      };       
+            }}
+            onClick={onAddPhoto}
+          >
+            <CameraAlt sx={{ color: 'primary.main', fontSize: 32 }} />
+          </Box>
+        )}
+      </Box>
+    </Box>
+  );
+};
 
-    const navigate = useNavigate();
+const Pendientes = () => {
+  const { userData } = useContext(UserContext);
+  const [datos, setDatos] = useState([]);
+  const [expandedPeriods, setExpandedPeriods] = useState([]);
+  const [selectedCheckboxes, setSelectedCheckboxes] = useState({});
+  const [percentages, setPercentages] = useState({});
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const [selectedField, setSelectedField] = useState(null);
+  const [capturedPhotos, setCapturedPhotos] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+  const [selectedImageDocId, setSelectedImageDocId] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [mobileNavValue, setMobileNavValue] = useState(0);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
-    const handleUpdatePeriod = async (periodIdx, id) => {
-        if (!areAllCheckboxesFilled(periodIdx)) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Atención',
-                text: 'Todos los checkboxes deben estar llenos antes de generar el reporte.',
-            });
-            return;
-        }
-    
-        try {
-            let totalPorcentage = 0;
-            const numPrograms = datos[periodIdx].Programa.length;
-    
-            for (let programIdx = 0; programIdx < numPrograms; programIdx++) {
-                const programa = datos[periodIdx].Programa[programIdx];
-    
-                const observaciones = await Promise.all(
-                    programa.Descripcion.map(async (desc, descIdx) => {
-                        const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
-                        const updatedObservation = { ...desc };
-                        const files = capturedPhotos[fieldKey] || [];
-                
-                        if (files.length > 0) {
-                            try {
-                                // Subir todas las imágenes asociadas al fieldKey
-                                const fileUrls = await Promise.all(
-                                    files.map(async (file, index) => {
-                                        const fileName = `evidencia_${id}_${periodIdx}_${programIdx}_${descIdx}_${index}`;
-                                        return await uploadImageToFirebase(file, fileName);
-                                    })
-                                );
-                
-                                // Asignar las URLs al campo Hallazgo como un array
-                                updatedObservation.Hallazgo = fileUrls;
-                            } catch (error) {
-                                console.error(`Error al subir las imágenes para ${fieldKey}:`, error);
-                            }
-                        } else {
-                            // Mantener el hallazgo existente si no hay imágenes nuevas
-                            updatedObservation.Hallazgo = Array.isArray(desc.Hallazgo) ? desc.Hallazgo : [];
-                        }
-                
-                        return {
-                            ID: desc.ID,
-                            Criterio: selectedCheckboxes[fieldKey] || '',
-                            Observacion: document.querySelector(`textarea[name=Observaciones_${periodIdx}_${programIdx}_${descIdx}]`).value,
-                            Problema: document.querySelector(`textarea[name=Problemas_${periodIdx}_${programIdx}_${descIdx}]`).value || desc.Problema,
-                            Hallazgo: updatedObservation.Hallazgo,
-                        };
-                    })
-                );                
-    
-                const percentage = percentages[`${periodIdx}_${programIdx}`] || 0;
-                totalPorcentage += percentage;
-    
-                try {
-                    // Enviar los datos actualizados para el programa específico
-                    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
-                        programIdx,
-                        observaciones,
-                        percentage,
-                    });
-                } catch (error) {
-                    console.error('Error al actualizar los datos:', error);
-                    alert('Error al actualizar los datos');
-                    
-                    return;
-                }
-            }
-    
-            const totalPorcentageAvg = (totalPorcentage / numPrograms).toFixed(2);
-            try {
-                // Actualizar porcentaje total
-                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
-                    PorcentajeTotal: totalPorcentageAvg,
-                    Estado: 'Realizado',
-                    usuario: userData.Nombre
-                });
-                
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Reporte generado',
-                    text: 'El reporte se generó exitosamente',
-                });
-                navigate('/reporte');
-            } catch (error) {
-                console.error('Error al actualizar el porcentaje total:', error);
-                alert('Error al actualizar el porcentaje total');
-            }
-        } catch (error) {
-            console.error('Error en handleUpdatePeriod:', error);
-        }
-    };      
-    
-    const handleGuardarCamb = async (periodIdx, id) => {
-        handleOpen();
-        try {
-            let totalPorcentage = 0;
-            const numPrograms = datos[periodIdx].Programa.length;
-    
-            for (let programIdx = 0; programIdx < numPrograms; programIdx++) {
-                const programa = datos[periodIdx].Programa[programIdx];
-    
-                const observaciones = await Promise.all(
-                    programa.Descripcion.map(async (desc, descIdx) => {
-                        const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
-                        const updatedObservation = { ...desc };
-                        const files = capturedPhotos[fieldKey] || [];
-                
-                        if (files.length > 0) {
-                            try {
-                                // Subir todas las imágenes asociadas al fieldKey
-                                const fileUrls = await Promise.all(
-                                    files.map(async (file, index) => {
-                                        const fileName = `evidencia_${id}_${periodIdx}_${programIdx}_${descIdx}_${index}`;
-                                        return await uploadImageToFirebase(file, fileName);
-                                    })
-                                );
-                
-                                // Asignar las URLs al campo Hallazgo como un array
-                                updatedObservation.Hallazgo = fileUrls;
-                            } catch (error) {
-                                console.error(`Error al subir las imágenes para ${fieldKey}:`, error);
-                            }
-                        } else {
-                            // Mantener el hallazgo existente si no hay imágenes nuevas
-                            updatedObservation.Hallazgo = Array.isArray(desc.Hallazgo) ? desc.Hallazgo : [];
-                        }
-                
-                        return {
-                            ID: desc.ID,
-                            Criterio: selectedCheckboxes[fieldKey] || '',
-                            Observacion: document.querySelector(`textarea[name=Observaciones_${periodIdx}_${programIdx}_${descIdx}]`).value,
-                            Problema: document.querySelector(`textarea[name=Problemas_${periodIdx}_${programIdx}_${descIdx}]`).value || desc.Problema,
-                            Hallazgo: updatedObservation.Hallazgo,
-                        };
-                    })
-                );                
-    
-                const percentage = percentages[`${periodIdx}_${programIdx}`] || 0;
-                totalPorcentage += percentage;
-    
-                try {
-                    // Enviar los datos actualizados para el programa específico
-                    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
-                        programIdx,
-                        observaciones,
-                        percentage,
-                    });
-                } catch (error) {
-                    console.error('Error al actualizar los datos:', error);
-                    alert('Error al actualizar los datos');
-                    
-                    return;
-                }
-            }
-    
-            const totalPorcentageAvg = (totalPorcentage / numPrograms).toFixed(2);
-            try {
-                // Actualizar porcentaje total
-                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
-                    PorcentajeTotal: totalPorcentageAvg,
-                    Estado: 'pendiente',
-                });
-                handleClose();
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Cambios Guardados',
-                    text: 'El checklist se ha guardado',
-                });
-            } catch (error) {
-                handleClose();
-                console.error('Error al actualizar el porcentaje total:', error);
-                alert('Error al actualizar el porcentaje total');
-            }
-        } catch (error) {
-            console.error('Error en handleGuardarCamb:', error);
-        }
-    };
-    
-    // Función para subir imágenes a Firebase
-    const uploadImageToFirebase = async (file, fileName) => {
-        try {
-            if (!(file instanceof File)) {
-                throw new Error('El objeto recibido no es un archivo válido');
-            }
-    
-            const storageRef = ref(storage, `files/${fileName}`);
-            await uploadBytes(storageRef, file); // Subir archivo
-            return await getDownloadURL(storageRef); // Obtener URL
-        } catch (error) {
-            console.error('Error al subir la imagen:', error);
-            throw new Error('No se pudo subir la imagen');
-        }
-    };     
-    
-    const areAllCheckboxesFilled = (periodIdx) => {
-        const numPrograms = datos[periodIdx].Programa.length;
-    
-        for (let programIdx = 0; programIdx < numPrograms; programIdx++) {
-            const programa = datos[periodIdx].Programa[programIdx];
-            for (let descIdx = 0; descIdx < programa.Descripcion.length; descIdx++) {
-                const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
-                if (!selectedCheckboxes[fieldKey]) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    };
-    
-    const getTdClass = (periodIdx, programIdx, descIdx, checkboxName) => {
-        const key = `${periodIdx}_${programIdx}_${descIdx}`;
-        if (selectedCheckboxes[key] === checkboxName) {
-            switch (checkboxName) {
-                case 'Conforme':
-                    return 'selected-conforme';
-                case 'm':
-                    return 'selected-m';
-                case 'M':
-                    return 'selected-M';
-                case 'C':
-                    return 'selected-C';
-                case 'NA':
-                    return 'selected-NA';
-                default:
-                    return '';
-            }
-        }
-        return '';
-    };    
-    
-    const getPercentageClass = (percentage) => {
-        if (percentage >= 90) {
-            return 'percentage-green';
-        } else if (percentage >= 80) {
-            return 'percentage-orange';
-        } else if (percentage >= 60) {
-            return 'percentage-yellow';
-        } else if (percentage < 60) {
-            return 'percentage-red';
+  const isMobile = useMediaQuery('(max-width:768px)');
+
+  const checkboxValues = {
+    'Conforme': 1,
+    'm': 0.7,
+    'M': 0.3,
+    'C': 0,
+    'NA': null
+  };
+
+  const navigate = useNavigate();
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  useEffect(() => {
+    const obtenerFechaInicio = (duracion) => {
+      const partes = duracion.split(" ");
+      let diaInicio = 1;
+      let mesInicio = 0;
+      let anoInicio = new Date().getFullYear();
+
+      for (const parte of partes) {
+        const numero = parseInt(parte);
+        if (!isNaN(numero)) {
+          diaInicio = numero;
+        } else if (parte.length === 4 && !isNaN(parseInt(parte))) {
+          anoInicio = parseInt(parte);
         } else {
-            return '';
+          const mesNum = obtenerNumeroMes(parte);
+          if (mesNum !== -1) mesInicio = mesNum;
         }
+      }
+      return new Date(anoInicio, mesInicio, diaInicio);
     };
 
-    const handleDeleteImage = async (docId, imageIndex, imageUrl) => {
-        // Si la imagen es temporal (vista previa), no se realiza la eliminación en la base de datos ni en Firebase.
-        console.log('imagen a borrar: ', imageUrl);
-        if (imageUrl.startsWith("blob:")) {
-          // Actualiza el estado para eliminar la imagen de la vista previa.
-          // Suponiendo que 'capturedPhotos' es parte del estado y 'fieldKey' es la clave asociada.
-          setCapturedPhotos(prevState => {
+    const obtenerDatos = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+        if (userData && userData.Correo) {
+          const datosFiltrados = response.data.filter((dato) => 
+            (dato.AuditorLiderEmail === userData.Correo || 
+            (dato.EquipoAuditor.length > 0 && dato.EquipoAuditor.some(auditor => auditor.Correo === userData.Correo))) &&
+            (dato.Estado === "pendiente" || dato.Estado === "Devuelto")
+          );
+
+          datosFiltrados.sort((a, b) => {
+            const fechaInicioA = obtenerFechaInicio(a.Duracion);
+            const fechaInicioB = obtenerFechaInicio(b.Duracion);
+            return fechaInicioA - fechaInicioB;
+          });
+
+          setDatos(datosFiltrados);
+          
+          const initialCheckboxes = {};
+          const initialPercentages = {};
+
+          datosFiltrados.forEach((dato, periodIdx) => {
+            dato.Programa.forEach((programa, programIdx) => {
+              const programKey = `${periodIdx}_${programIdx}`;
+              let totalValue = 0;
+              let validPrograms = 0;
+
+              programa.Descripcion.forEach((desc, descIdx) => {
+                const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+                initialCheckboxes[fieldKey] = desc.Criterio;
+                const value = checkboxValues[desc.Criterio];
+                if (value !== null) {
+                  totalValue += value;
+                  validPrograms++;
+                }
+              });
+
+              const percentage = validPrograms > 0 ? (totalValue / validPrograms) * 100 : 0;
+              initialPercentages[programKey] = percentage;
+            });
+          });
+
+          setSelectedCheckboxes(initialCheckboxes);
+          setPercentages(initialPercentages);
+        }
+      } catch (error) {
+        console.error('Error al obtener los datos:', error);
+        showSnackbar('Error al cargar las auditorías', 'error');
+      }
+    };
+
+    obtenerDatos();
+  }, [userData]);
+
+  const obtenerNumeroMes = (nombreMes) => {
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    return meses.indexOf(nombreMes.toLowerCase());
+  };
+
+  const handlePeriodToggle = (periodId) => {
+    setExpandedPeriods(prev =>
+      prev.includes(periodId)
+        ? prev.filter(id => id !== periodId)
+        : [...prev, periodId]
+    );
+  };
+
+  const handleCheckboxChange = (periodIdx, programIdx, descIdx, checkboxName) => {
+    const key = `${periodIdx}_${programIdx}_${descIdx}`;
+    setSelectedCheckboxes(prevState => {
+      const updated = { ...prevState, [key]: checkboxName };
+      const programKey = `${periodIdx}_${programIdx}`;
+      const relevantCheckboxes = Object.keys(updated).filter(k => k.startsWith(`${periodIdx}_${programIdx}_`));
+      
+      let totalValue = 0;
+      let validPrograms = 0;
+
+      relevantCheckboxes.forEach(k => {
+        const value = checkboxValues[updated[k]];
+        if (value !== null) {
+          totalValue += value;
+          validPrograms++;
+        }
+      });
+
+      const percentage = validPrograms > 0 ? (totalValue / validPrograms) * 100 : 0;
+      setPercentages(prevPercentages => ({
+        ...prevPercentages,
+        [programKey]: percentage
+      }));
+
+      return updated;
+    });
+  };
+
+  const handleOpenPhotoModal = (fieldKey) => {
+    setSelectedField(fieldKey);
+    setPhotoModalOpen(true);
+  };
+
+  const handleCapture = (file) => {
+    if (selectedField) {
+      const rowIdentifier = selectedField;
+      setCapturedPhotos((prev) => {
+        const updatedPhotos = { ...prev };
+        if (updatedPhotos[rowIdentifier]) {
+          if (updatedPhotos[rowIdentifier].length < 4) {
+            updatedPhotos[rowIdentifier] = [...updatedPhotos[rowIdentifier], file];
+          } else {
+            showSnackbar('Máximo 4 fotos permitidas por requisito', 'warning');
+            return prev;
+          }
+        } else {
+          updatedPhotos[rowIdentifier] = [file];
+        }
+        return updatedPhotos;
+      });
+    }
+    setPhotoModalOpen(false);
+  };
+
+  const handleImagePreview = (imageSrc, index, docId) => {
+    setSelectedImage(imageSrc);
+    setSelectedImageIndex(index);
+    setSelectedImageDocId(docId);
+    setImagePreviewOpen(true);
+  };
+
+  const handleDeleteImage = async (docId, imageIndex, imageUrl) => {
+    if (imageUrl.startsWith("blob:")) {
+      setCapturedPhotos(prevState => ({
+        ...prevState,
+        [selectedField]: prevState[selectedField].filter((_, idx) => idx !== imageIndex)
+      }));
+      return;
+    }
+
+    try {
+      await fetch(`${process.env.REACT_APP_BACKEND_URL}/datos/eliminarImagen`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ docId, imageUrl })
+      });
+
+      const fileName = imageUrl.split('/').pop().split('?')[0];
+      const decodedFileName = decodeURIComponent(fileName);
+      const imageRef = ref(storage, decodedFileName);
+      await deleteObject(imageRef);
+
+      setCapturedPhotos(prev => {
+        const updatedPhotos = { ...prev };
+        delete updatedPhotos[selectedField];
+        return updatedPhotos;
+      });
+
+      showSnackbar('Imagen eliminada correctamente', 'success');
+      setImagePreviewOpen(false);
+    } catch (error) {
+      console.error("Error al eliminar la imagen:", error);
+      showSnackbar('Error al eliminar la imagen', 'error');
+    }
+  };
+
+  const uploadImageToFirebase = async (file, fileName) => {
+    try {
+      if (!(file instanceof File)) {
+        throw new Error('El objeto recibido no es un archivo válido');
+      }
+      const storageRef = ref(storage, `files/${fileName}`);
+      await uploadBytes(storageRef, file);
+      return await getDownloadURL(storageRef);
+    } catch (error) {
+      console.error('Error al subir la imagen:', error);
+      throw new Error('No se pudo subir la imagen');
+    }
+  };
+
+  const areAllCheckboxesFilled = (periodIdx) => {
+    const numPrograms = datos[periodIdx].Programa.length;
+    for (let programIdx = 0; programIdx < numPrograms; programIdx++) {
+      const programa = datos[periodIdx].Programa[programIdx];
+      for (let descIdx = 0; descIdx < programa.Descripcion.length; descIdx++) {
+        const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+        if (!selectedCheckboxes[fieldKey]) {
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  const handleUpdatePeriod = async (periodIdx, id) => {
+    if (!areAllCheckboxesFilled(periodIdx)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Atención',
+        text: 'Todos los checkboxes deben estar llenos antes de generar el reporte.',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let totalPorcentage = 0;
+      const numPrograms = datos[periodIdx].Programa.length;
+
+      for (let programIdx = 0; programIdx < numPrograms; programIdx++) {
+        const programa = datos[periodIdx].Programa[programIdx];
+        const observaciones = await Promise.all(
+          programa.Descripcion.map(async (desc, descIdx) => {
+            const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+            const updatedObservation = { ...desc };
+            const files = capturedPhotos[fieldKey] || [];
+
+            if (files.length > 0) {
+              const fileUrls = await Promise.all(
+                files.map(async (file, index) => {
+                  const fileName = `evidencia_${id}_${periodIdx}_${programIdx}_${descIdx}_${index}`;
+                  return await uploadImageToFirebase(file, fileName);
+                })
+              );
+              updatedObservation.Hallazgo = fileUrls;
+            } else {
+              updatedObservation.Hallazgo = Array.isArray(desc.Hallazgo) ? desc.Hallazgo : [];
+            }
+
             return {
-              ...prevState,
-              [selectedField]: prevState[selectedField].filter((_, idx) => idx !== imageIndex)
+              ID: desc.ID,
+              Criterio: selectedCheckboxes[fieldKey] || '',
+              Observacion: document.querySelector(`textarea[name=Observaciones_${periodIdx}_${programIdx}_${descIdx}]`).value,
+              Problema: document.querySelector(`textarea[name=Problemas_${periodIdx}_${programIdx}_${descIdx}]`).value || desc.Problema,
+              Hallazgo: updatedObservation.Hallazgo,
             };
-          });
-          return; // Sale de la función sin hacer nada más.
-        }
-      
-        // Si la imagen no es temporal, se ejecutan las operaciones de eliminación reales.
-        try {
-          // 1. Eliminar la URL del arreglo en la base de datos.
-          await fetch(`${process.env.REACT_APP_BACKEND_URL}/datos/eliminarImagen`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              docId,      // ID del documento
-              imageUrl    // URL de la imagen
-            })
-          });
-          console.log("Imagen eliminada de la base de datos");
-      
-          // 2. Eliminar la imagen de Firebase Storage.
-          const fileName = imageUrl.split('/').pop().split('?')[0];
-          const decodedFileName = decodeURIComponent(fileName);
-          const imageRef = ref(storage, decodedFileName);
-          await deleteObject(imageRef);
-          console.log("Imagen eliminada de Firebase Storage");
+          })
+        );
 
-          setCapturedPhotos(prev => {
-            const updatedPhotos = { ...prev };
-            delete updatedPhotos[selectedField]; // Elimina la imagen del objeto
-            return updatedPhotos;
+        const percentage = percentages[`${periodIdx}_${programIdx}`] || 0;
+        totalPorcentage += percentage;
+
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
+          programIdx,
+          observaciones,
+          percentage,
         });
-      
-        } catch (error) {
-          console.error("Error al eliminar la imagen:", error);
-        }
-      };      
+      }
 
+      const totalPorcentageAvg = (totalPorcentage / numPrograms).toFixed(2);
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
+        PorcentajeTotal: totalPorcentageAvg,
+        Estado: 'Realizado',
+        usuario: userData.Nombre
+      });
 
-return (
-        <div>
-            <div className="datos-container2">
-                {/*Carga*/}
-                <Backdrop
-                sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
-                open={open}
-                onClick={handleClose}
-                >
-                <CircularProgress color="inherit" />
-                </Backdrop>
-                    <div className="form-group-datos">
-                    {datos.length === 0 ? (
-                        <p>Sin auditorías pendientes</p>
-                    ) : (   
-                        datos.map((dato, periodIdx) => (
-                            <div key={periodIdx}>
-                                <div className="duracion-bloque">
-                                    <h2 onClick={() => toggleDuration(dato.Duracion)}>
-                                        Período: {dato.Duracion}
-                                    </h2>
-                                </div>
-                                <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
-                                    <div className="header-container-datos">
-                                        <img src={logo} alt="Logo Empresa" className="logo-empresa" />
-                                        <div className='posicion-button'>
-                                        <button className="update-button-camb" onClick={() => handleGuardarCamb(periodIdx, dato._id)}>
-                                            Guardar Cambios
-                                        </button>
-                                        </div>
-                                        <button className="update-button" onClick={() => handleUpdatePeriod(periodIdx, dato._id)}>
-                                            Generar Reporte
-                                        </button>
-                                    </div>
-                                    {dato.Comentario && (
-                                        <th className='th-comentario-auditor'>
-                                            <div>{dato.Comentario}</div>
-                                        </th>
-                                    )}
-                                    {hiddenDurations.includes(dato.Duracion) ? null :
-                                        dato.Programa.map((programa, programIdx) => (
-                                            <div key={programIdx}>
-                                                <table>
-                                                    <thead>
-                                                        <tr>
-                                                            <th colSpan="2">{programa.Nombre}</th>
-                                                            <th colSpan="5" className="conformity-header">Conformidad</th>
-                                                            <th colSpan="2" className={getPercentageClass(percentages[`${periodIdx}_${programIdx}`])}>
-                                                                Porcentaje: {percentages[`${periodIdx}_${programIdx}`] ? percentages[`${periodIdx}_${programIdx}`].toFixed(2) : 0}%
-                                                            </th>
-                                                        </tr>
-                                                        <tr>
-                                                            <th>ID</th>
-                                                            <th>Requisitos</th>
-                                                            <th><div className='conforme-fuente'>Cf</div></th>
-                                                            <th>m</th>
-                                                            <th>M</th>
-                                                            <th>C</th>
-                                                            <th>NA</th>
-                                                            <th className='padingH'>Problema/Hallazgos</th>
-                                                            <th>Evidencia</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    {programa.Descripcion.map((desc, descIdx) => {
-                                                        const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
-                                                        
+      showSnackbar('Reporte generado exitosamente', 'success');
+      navigate('/reporte');
+    } catch (error) {
+      console.error('Error en handleUpdatePeriod:', error);
+      showSnackbar('Error al generar el reporte', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                                                        const imageSrcs = (capturedPhotos[fieldKey] || []).map((file) =>
-                                                            typeof file === "object" && file instanceof File ? URL.createObjectURL(file) : file
-                                                        ).concat(Array.isArray(desc.Hallazgo) ? desc.Hallazgo : []);
+  const handleGuardarCamb = async (periodIdx, id) => {
+    setLoading(true);
+    try {
+      let totalPorcentage = 0;
+      const numPrograms = datos[periodIdx].Programa.length;
 
-                                                        return (
-                                                        <tr key={descIdx}>
-                                                            <td>{desc.ID}</td>
-                                                            <td className='alingR'>{desc.Requisito}</td>
-                                                            {['Conforme', 'm', 'M', 'C', 'NA'].map((checkboxName) => (
-                                                            <td key={checkboxName} className={getTdClass(periodIdx, programIdx, descIdx, checkboxName)}>
-                                                                <input
-                                                                type="checkbox"
-                                                                name={`${checkboxName}_${periodIdx}_${programIdx}_${descIdx}`}
-                                                                checked={selectedCheckboxes[fieldKey] === checkboxName}
-                                                                onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, checkboxName)}
-                                                                />
-                                                            </td>
-                                                            ))}
-                                                            <td className='espacio-test flex-column'>
-                                                            <textarea 
-                                                                name={`Problemas_${periodIdx}_${programIdx}_${descIdx}`} 
-                                                                defaultValue={desc.Problema}
-                                                                className="textarea-custom"
-                                                                style={{height:"40px", marginBottom: "10px"}}
-                                                                placeholder='Problema...'
-                                                            ></textarea>
-                                                            <textarea
-                                                                name={`Observaciones_${periodIdx}_${programIdx}_${descIdx}`}
-                                                                defaultValue={desc.Observacion}
-                                                                className="textarea-custom"
-                                                                placeholder='Hallazgo...'
-                                                            ></textarea>
-                                                            </td>
-                                                            <td>
-                                                            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-                                                            <div className="button-foto" onClick={() => handleOpenModal(fieldKey)}>
-                                                                <span className="material-symbols-outlined">
-                                                                add_a_photo
-                                                                </span>
-                                                            </div>
-                                                            
-                                                            <div
-                                                                className={`image-collage image-collage-${Math.min(
-                                                                    imageSrcs.length,
-                                                                    4
-                                                                )}`} 
-                                                            >
-                                                                {imageSrcs.map((src, idx) => (
-                                                                    <img
-                                                                        key={idx}
-                                                                        src={src}
-                                                                        alt={`Evidencia ${idx + 1}`}
-                                                                        className="hallazgo-imagen"
-                                                                        onClick={() => handleImageClick(src, idx, dato._id)}
-                                                                    />
-                                                                ))}
-                                                            </div>
-                                                            <button onClick={() => handleOpenModal(fieldKey)}>Agregar Imagen</button>
-                                                            </td>
-                                                        </tr>
-                                                        );
-                                                    })}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        ))
-                                    }
-                                </div>
-                            </div>
-                        ))
+      for (let programIdx = 0; programIdx < numPrograms; programIdx++) {
+        const programa = datos[periodIdx].Programa[programIdx];
+        const observaciones = await Promise.all(
+          programa.Descripcion.map(async (desc, descIdx) => {
+            const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+            const updatedObservation = { ...desc };
+            const files = capturedPhotos[fieldKey] || [];
+
+            if (files.length > 0) {
+              const fileUrls = await Promise.all(
+                files.map(async (file, index) => {
+                  const fileName = `evidencia_${id}_${periodIdx}_${programIdx}_${descIdx}_${index}`;
+                  return await uploadImageToFirebase(file, fileName);
+                })
+              );
+              updatedObservation.Hallazgo = fileUrls;
+            } else {
+              updatedObservation.Hallazgo = Array.isArray(desc.Hallazgo) ? desc.Hallazgo : [];
+            }
+
+            return {
+              ID: desc.ID,
+              Criterio: selectedCheckboxes[fieldKey] || '',
+              Observacion: document.querySelector(`textarea[name=Observaciones_${periodIdx}_${programIdx}_${descIdx}]`).value,
+              Problema: document.querySelector(`textarea[name=Problemas_${periodIdx}_${programIdx}_${descIdx}]`).value || desc.Problema,
+              Hallazgo: updatedObservation.Hallazgo,
+            };
+          })
+        );
+
+        const percentage = percentages[`${periodIdx}_${programIdx}`] || 0;
+        totalPorcentage += percentage;
+
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
+          programIdx,
+          observaciones,
+          percentage,
+        });
+      }
+
+      const totalPorcentageAvg = (totalPorcentage / numPrograms).toFixed(2);
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
+        PorcentajeTotal: totalPorcentageAvg,
+        Estado: 'pendiente',
+      });
+
+      showSnackbar('Cambios guardados exitosamente', 'success');
+    } catch (error) {
+      console.error('Error en handleGuardarCamb:', error);
+      showSnackbar('Error al guardar los cambios', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const PhotoModal = ({ open, onClose, onCapture }) => {
+    const [capturedImage, setCapturedImage] = useState(null);
+
+    const handleFileUpload = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        setCapturedImage(URL.createObjectURL(file));
+        onCapture(file);
+      }
+    };
+
+    return (
+      <Dialog open={open} onClose={onClose} fullScreen={isMobile}>
+        <AppBar position="sticky" elevation={1}>
+          <Toolbar>
+            <IconButton edge="start" color="inherit" onClick={onClose}>
+              <Close />
+            </IconButton>
+            <Typography variant="h6" sx={{ flexGrow: 1 }}>
+              Agregar Evidencia
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <DialogContent>
+          <Box textAlign="center" py={3}>
+            <CloudUpload sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
+            <Typography variant="h6" gutterBottom>
+              Agregar Evidencia Fotográfica
+            </Typography>
+            <Typography variant="body2" color="textSecondary" gutterBottom>
+              Selecciona una imagen para agregar como evidencia
+            </Typography>
+            <Typography variant="caption" color="textSecondary">
+              Formatos soportados: JPG, PNG, GIF • Máximo 4 imágenes por requisito
+            </Typography>
+          </Box>
+          <input
+            accept="image/*"
+            style={{ display: 'none' }}
+            id="photo-upload"
+            type="file"
+            onChange={handleFileUpload}
+          />
+          <label htmlFor="photo-upload">
+            <Button 
+              variant="contained" 
+              component="span" 
+              fullWidth 
+              size="large"
+              startIcon={<PhotoCamera />}
+              sx={{ mb: 2 }}
+            >
+              Seleccionar Imagen
+            </Button>
+          </label>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={onClose} fullWidth variant="outlined">
+            Cancelar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+
+  const ImagePreviewModal = () => (
+    <Dialog 
+      open={imagePreviewOpen} 
+      onClose={() => setImagePreviewOpen(false)}
+      fullScreen={isMobile}
+    >
+      <AppBar position="sticky" elevation={1}>
+        <Toolbar>
+          <IconButton edge="start" color="inherit" onClick={() => setImagePreviewOpen(false)}>
+            <Close />
+          </IconButton>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Vista Previa
+          </Typography>
+          <Button
+            color="error"
+            startIcon={<Delete />}
+            onClick={() => handleDeleteImage(selectedImageDocId, selectedImageIndex, selectedImage)}
+          >
+            Eliminar
+          </Button>
+        </Toolbar>
+      </AppBar>
+      <DialogContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img
+          src={selectedImage}
+          alt="Vista previa"
+          style={{ 
+            maxWidth: '100%', 
+            maxHeight: '100%', 
+            borderRadius: 8,
+            objectFit: 'contain'
+          }}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+
+  // Renderizado móvil
+  const renderMobileView = () => (
+    <Box sx={{ pb: 7 }}>
+      {/* Header Móvil */}
+      <AppBar position="sticky" color="primary" elevation={1}>
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={() => setMobileDrawerOpen(true)}
+            sx={{ mr: 2 }}
+          >
+            <Menu />
+          </IconButton>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Auditorías
+          </Typography>
+          <Chip 
+            label={datos.length} 
+            color="secondary" 
+            size="small"
+          />
+        </Toolbar>
+      </AppBar>
+
+      {/* Contenido Principal Móvil */}
+      <Box sx={{ p: 2 }}>
+        {datos.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <CheckCircle sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
+            <Typography variant="h6" gutterBottom color="textSecondary">
+              No hay auditorías pendientes
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Todas las auditorías asignadas han sido completadas
+            </Typography>
+          </Box>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {datos.map((dato, periodIdx) => (
+              <Card key={periodIdx} elevation={2}>
+                <CardContent sx={{ p: 2 }}>
+                  {/* Header de Auditoría Móvil */}
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 2, 
+                      mb: 2,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handlePeriodToggle(dato._id)}
+                  >
+                    <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>
+                      <CalendarToday />
+                    </Avatar>
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography variant="subtitle1" fontWeight="600">
+                        {dato.Duracion}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        {dato.TipoAuditoria}
+                      </Typography>
+                    </Box>
+                    <StatusChip
+                      label={dato.Estado}
+                      status={dato.Estado}
+                      size="small"
+                    />
+                  </Box>
+
+                  {/* Información adicional */}
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                    <Chip
+                      icon={<Person />}
+                      label={dato.AuditorLider}
+                      size="small"
+                      variant="outlined"
+                    />
+                    {dato.EquipoAuditor.length > 0 && (
+                      <Chip
+                        icon={<Group />}
+                        label={`+${dato.EquipoAuditor.length}`}
+                        size="small"
+                        variant="outlined"
+                      />
                     )}
-                </div>
-            </div>
-            <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />
-            {imageModalOpen && (
-                <div className="modal-overlay" onClick={closeModal}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <img src={selectedImage} alt="Ampliada" className="modal-image" />
-                        {/* Botón para eliminar la imagen */}
-                        <button
-                            className="delete-button"
-                            onClick={() => {
-                                // Puedes utilizar selectedImageIndex y selectedImageDocId para eliminar la imagen
-                                handleDeleteImage(selectedImageDocId, selectedImageIndex, selectedImage);
-                                closeModal(); // Cierra el modal después de eliminar
-                            }}
+                  </Box>
+
+                  {expandedPeriods.includes(dato._id) && (
+                    <Box sx={{ mt: 2 }}>
+                      {/* Comentario del Auditor */}
+                      {dato.Comentario && (
+                        <Alert severity="info" sx={{ mb: 2 }}>
+                          <Typography variant="subtitle2">Comentario:</Typography>
+                          {dato.Comentario}
+                        </Alert>
+                      )}
+
+                      {/* Botones de Acción Móviles */}
+                      <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
+                        <Button
+                          variant="contained"
+                          startIcon={<Save />}
+                          onClick={() => handleGuardarCamb(periodIdx, dato._id)}
+                          fullWidth
+                          size="small"
                         >
-                            Eliminar Imagen
-                        </button>
-                    </div>
-                </div>
-            )}
+                          Guardar
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="success"
+                          startIcon={<CheckCircle />}
+                          onClick={() => handleUpdatePeriod(periodIdx, dato._id)}
+                          fullWidth
+                          size="small"
+                        >
+                          Reporte
+                        </Button>
+                      </Box>
 
+                      {/* Programas Móviles */}
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {dato.Programa.map((programa, programIdx) => {
+                          const programKey = `${periodIdx}_${programIdx}`;
+                          const percentage = percentages[programKey] || 0;
 
-        </div> 
-    ); 
+                          return (
+                            <Paper key={programIdx} elevation={1} sx={{ p: 2 }}>
+                              {/* Header del Programa Móvil */}
+                              <Box sx={{ mb: 2 }}>
+                                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                                  {programa.Nombre}
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                                  <Typography variant="body2" fontWeight="500">
+                                    {percentage.toFixed(2)}%
+                                  </Typography>
+                                  <ProgressBar 
+                                    variant="determinate" 
+                                    value={percentage} 
+                                    percentage={percentage}
+                                    sx={{ flexGrow: 1 }}
+                                  />
+                                </Box>
+                              </Box>
 
+                              {/* Requisitos Móviles */}
+                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                {programa.Descripcion.map((desc, descIdx) => {
+                                  const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+                                  const imageSrcs = (capturedPhotos[fieldKey] || [])
+                                    .map(file => typeof file === "object" && file instanceof File ? URL.createObjectURL(file) : file)
+                                    .concat(Array.isArray(desc.Hallazgo) ? desc.Hallazgo : []);
+
+                                  return (
+                                    <Paper key={descIdx} variant="outlined" sx={{ p: 2 }}>
+                                      {/* ID y Requisito */}
+                                      <Box sx={{ mb: 2 }}>
+                                        <Typography variant="caption" color="primary" fontWeight="600">
+                                          {desc.ID}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                          {desc.Requisito}
+                                        </Typography>
+                                      </Box>
+
+                                      {/* Selector de Conformidad Móvil */}
+                                      <MobileConformitySelector
+                                        selectedValue={selectedCheckboxes[fieldKey]}
+                                        onSelect={(value) => handleCheckboxChange(periodIdx, programIdx, descIdx, value)}
+                                        fieldKey={fieldKey}
+                                      />
+
+                                      {/* Campos de Texto Móviles */}
+                                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+                                        <TextField
+                                          name={`Problemas_${periodIdx}_${programIdx}_${descIdx}`}
+                                          defaultValue={desc.Problema}
+                                          placeholder="Describa el problema..."
+                                          size="small"
+                                          multiline
+                                          rows={2}
+                                          fullWidth
+                                        />
+                                        <TextField
+                                          name={`Observaciones_${periodIdx}_${programIdx}_${descIdx}`}
+                                          defaultValue={desc.Observacion}
+                                          placeholder="Agregue observaciones..."
+                                          size="small"
+                                          multiline
+                                          rows={2}
+                                          fullWidth
+                                        />
+                                      </Box>
+
+                                      {/* Gestor de Fotos Móvil */}
+                                      <MobilePhotoManager
+                                        photos={imageSrcs}
+                                        onAddPhoto={() => handleOpenPhotoModal(fieldKey)}
+                                        onDeletePhoto={(index) => {
+                                          if (imageSrcs[index].startsWith("blob:")) {
+                                            setCapturedPhotos(prevState => ({
+                                              ...prevState,
+                                              [fieldKey]: prevState[fieldKey].filter((_, idx) => idx !== index)
+                                            }));
+                                          } else {
+                                            handleDeleteImage(dato._id, index, imageSrcs[index]);
+                                          }
+                                        }}
+                                        onPreviewPhoto={(image, index) => handleImagePreview(image, index, dato._id)}
+                                        fieldKey={fieldKey}
+                                      />
+                                    </Paper>
+                                  );
+                                })}
+                              </Box>
+                            </Paper>
+                          );
+                        })}
+                      </Box>
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        )}
+      </Box>
+
+      {/* Navegación Inferior Móvil */}
+      <BottomNavigation
+        value={mobileNavValue}
+        onChange={(event, newValue) => setMobileNavValue(newValue)}
+        sx={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          borderTop: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        <BottomNavigationAction label="Inicio" icon={<Home />} />
+        <BottomNavigationAction label="Auditorías" icon={<Assessment />} />
+        <BottomNavigationAction label="Progreso" icon={<CheckCircle />} />
+      </BottomNavigation>
+    </Box>
+  );
+
+  // Renderizado desktop (código original)
+  const renderDesktopView = () => (
+    <Box sx={{ minHeight: '100vh', py: 3 }}>
+      {/* Header */}
+      <AppBar position="static" color="transparent" elevation={0} sx={{ mb: 3 }}>
+        <Toolbar>
+          <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
+            <Task />
+          </Avatar>
+          <Typography variant="h4" component="h1" sx={{ flexGrow: 1, fontWeight: 700 }}>
+            Auditorías Pendientes
+          </Typography>
+          <Chip 
+            icon={<Assignment />} 
+            label={`${datos.length} Auditorías`} 
+            color="primary" 
+            variant="outlined"
+          />
+        </Toolbar>
+      </AppBar>
+
+      <Box sx={{ maxWidth: 1400, mx: 'auto', px: 2 }}>
+        {datos.length === 0 ? (
+          <StyledCard>
+            <CardContent sx={{ textAlign: 'center', py: 8 }}>
+              <CheckCircle sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
+              <Typography variant="h5" gutterBottom color="textSecondary">
+                No hay auditorías pendientes
+              </Typography>
+              <Typography variant="body1" color="textSecondary">
+                Todas las auditorías asignadas han sido completadas
+              </Typography>
+            </CardContent>
+          </StyledCard>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {datos.map((dato, periodIdx) => (
+              <StyledCard key={periodIdx}>
+                <CardContent sx={{ p: 0 }}>
+                  {/* Header del Período */}
+                  <Box
+                    sx={{
+                      p: 3,
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      cursor: 'pointer',
+                      backgroundColor: 'background.paper',
+                      '&:hover': {
+                        backgroundColor: 'action.hover',
+                      }
+                    }}
+                    onClick={() => handlePeriodToggle(dato._id)}
+                  >
+                    <Grid container alignItems="center" spacing={2}>
+                      <Grid item xs={12} md={6}>
+                        <Box display="flex" alignItems="center" gap={2}>
+                          <Avatar sx={{ bgcolor: 'primary.main' }}>
+                            <CalendarToday />
+                          </Avatar>
+                          <Box>
+                            <Typography variant="h6" component="h2">
+                              Período: {dato.Duracion}
+                            </Typography>
+                            <Typography variant="body2" color="textSecondary">
+                              {dato.TipoAuditoria} • {dato.Departamento}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <Box display="flex" gap={1} justifyContent="flex-end" flexWrap="wrap">
+                          <StatusChip
+                            label={dato.Estado}
+                            status={dato.Estado}
+                            size="small"
+                          />
+                          <Chip
+                            icon={<Person />}
+                            label={dato.AuditorLider}
+                            variant="outlined"
+                            size="small"
+                          />
+                          {dato.EquipoAuditor.length > 0 && (
+                            <Chip
+                              icon={<Group />}
+                              label={`+${dato.EquipoAuditor.length}`}
+                              variant="outlined"
+                              size="small"
+                            />
+                          )}
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Box>
+
+                  {/* Contenido del Período */}
+                  {expandedPeriods.includes(dato._id) && (
+                    <Box sx={{ p: 3 }}>
+                      {/* Barra de Acciones */}
+                      <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                        <ActionButton
+                          variant="contained"
+                          varianttype="save"
+                          startIcon={<Save />}
+                          onClick={() => handleGuardarCamb(periodIdx, dato._id)}
+                        >
+                          Guardar Cambios
+                        </ActionButton>
+                        <ActionButton
+                          variant="contained"
+                          varianttype="generate"
+                          startIcon={<CheckCircle />}
+                          onClick={() => handleUpdatePeriod(periodIdx, dato._id)}
+                        >
+                          Generar Reporte
+                        </ActionButton>
+                      </Box>
+
+                      {/* Comentario del Auditor */}
+                      {dato.Comentario && (
+                        <Alert severity="info" sx={{ mb: 3 }}>
+                          <Typography variant="subtitle2">Comentario:</Typography>
+                          {dato.Comentario}
+                        </Alert>
+                      )}
+
+                      {/* Programas */}
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {dato.Programa.map((programa, programIdx) => {
+                          const programKey = `${periodIdx}_${programIdx}`;
+                          const percentage = percentages[programKey] || 0;
+
+                          return (
+                            <Paper key={programIdx} variant="outlined" sx={{ p: 3 }}>
+                              {/* Header del Programa */}
+                              <Box sx={{ mb: 3 }}>
+                                <Grid container alignItems="center" spacing={2}>
+                                  <Grid item xs={12} md={8}>
+                                    <Typography variant="h6" gutterBottom>
+                                      {programa.Nombre}
+                                    </Typography>
+                                  </Grid>
+                                  <Grid item xs={12} md={4}>
+                                    <Box textAlign={{ md: 'right' }}>
+                                      <Typography variant="subtitle1" gutterBottom>
+                                        Cumplimiento: {percentage.toFixed(2)}%
+                                      </Typography>
+                                      <ProgressBar 
+                                        variant="determinate" 
+                                        value={percentage} 
+                                        percentage={percentage}
+                                        sx={{ mt: 1 }}
+                                      />
+                                    </Box>
+                                  </Grid>
+                                </Grid>
+                              </Box>
+
+                              {/* Tabla de Requisitos */}
+                              <TableContainer>
+                                <Table size="small">
+                                  <TableHead>
+                                    <TableRow>
+                                      <TableCell width="8%"><strong>ID</strong></TableCell>
+                                      <TableCell width="32%"><strong>Requisito</strong></TableCell>
+                                      <TableCell align="center" width="6%"><strong>Cf</strong></TableCell>
+                                      <TableCell align="center" width="6%"><strong>m</strong></TableCell>
+                                      <TableCell align="center" width="6%"><strong>M</strong></TableCell>
+                                      <TableCell align="center" width="6%"><strong>C</strong></TableCell>
+                                      <TableCell align="center" width="6%"><strong>NA</strong></TableCell>
+                                      <TableCell width="20%"><strong>Problema/Hallazgos</strong></TableCell>
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    {programa.Descripcion.map((desc, descIdx) => {
+                                      const fieldKey = `${periodIdx}_${programIdx}_${descIdx}`;
+                                      const imageSrcs = (capturedPhotos[fieldKey] || [])
+                                        .map(file => typeof file === "object" && file instanceof File ? URL.createObjectURL(file) : file)
+                                        .concat(Array.isArray(desc.Hallazgo) ? desc.Hallazgo : []);
+
+                                      return (
+                                        <TableRow key={descIdx} hover>
+                                          <TableCell>
+                                            <Typography variant="body2" fontWeight="medium">
+                                              {desc.ID}
+                                            </Typography>
+                                          </TableCell>
+                                          <TableCell>
+                                            <Typography variant="body2">
+                                              {desc.Requisito}
+                                            </Typography>
+                                          </TableCell>
+                                          {['Conforme', 'm', 'M', 'C', 'NA'].map((checkboxName) => (
+                                            <ConformityCell
+                                              key={checkboxName}
+                                              selected={selectedCheckboxes[fieldKey] === checkboxName}
+                                              type={checkboxName}
+                                              onClick={() => handleCheckboxChange(periodIdx, programIdx, descIdx, checkboxName)}
+                                            >
+                                              <Checkbox
+                                                checked={selectedCheckboxes[fieldKey] === checkboxName}
+                                                onChange={() => handleCheckboxChange(periodIdx, programIdx, descIdx, checkboxName)}
+                                                sx={{ p: 0 }}
+                                              />
+                                            </ConformityCell>
+                                          ))}
+                                          <TableCell>
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                              <TextField
+                                                name={`Problemas_${periodIdx}_${programIdx}_${descIdx}`}
+                                                defaultValue={desc.Problema}
+                                                placeholder="Problema..."
+                                                size="small"
+                                                multiline
+                                                rows={2}
+                                                fullWidth
+                                              />
+                                              <TextField
+                                                name={`Observaciones_${periodIdx}_${programIdx}_${descIdx}`}
+                                                defaultValue={desc.Observacion}
+                                                placeholder="Hallazgo..."
+                                                size="small"
+                                                multiline
+                                                rows={2}
+                                                fullWidth
+                                              />
+                                            </Box>
+                                          </TableCell>
+                                          <TableCell>
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                              <Tooltip title="Agregar evidencia fotográfica">
+                                                <IconButton
+                                                  color="primary"
+                                                  onClick={() => handleOpenPhotoModal(fieldKey)}
+                                                  size="small"
+                                                >
+                                                  <AddAPhoto />
+                                                </IconButton>
+                                              </Tooltip>
+                                              
+                                              {imageSrcs.length > 0 && (
+                                                <ImageGallery cols={2} gap={4}>
+                                                  {imageSrcs.slice(0, 4).map((src, idx) => (
+                                                    <ImageListItem key={idx}>
+                                                      <img
+                                                        src={src}
+                                                        alt={`Evidencia ${idx + 1}`}
+                                                        loading="lazy"
+                                                        style={{ 
+                                                          cursor: 'pointer',
+                                                          borderRadius: 4,
+                                                          height: 60,
+                                                          objectFit: 'cover'
+                                                        }}
+                                                        onClick={() => handleImagePreview(src, idx, dato._id)}
+                                                      />
+                                                      <ImageListItemBar
+                                                        position="top"
+                                                        actionIcon={
+                                                          <IconButton
+                                                            size="small"
+                                                            sx={{ color: 'white', background: 'rgba(0,0,0,0.5)' }}
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              handleDeleteImage(dato._id, idx, src);
+                                                            }}
+                                                          >
+                                                            <Delete fontSize="small" />
+                                                          </IconButton>
+                                                        }
+                                                      />
+                                                    </ImageListItem>
+                                                  ))}
+                                                </ImageGallery>
+                                              )}
+                                            </Box>
+                                          </TableCell>
+                                        </TableRow>
+                                      );
+                                    })}
+                                  </TableBody>
+                                </Table>
+                              </TableContainer>
+                            </Paper>
+                          );
+                        })}
+                      </Box>
+                    </Box>
+                  )}
+                </CardContent>
+              </StyledCard>
+            ))}
+          </Box>
+        )}
+      </Box>
+    </Box>
+  );
+
+  return (
+    <ThemeProvider theme={theme}>
+      {isMobile ? renderMobileView() : renderDesktopView()}
+
+      {/* Modales */}
+      <PhotoModal
+        open={photoModalOpen}
+        onClose={() => setPhotoModalOpen(false)}
+        onCapture={handleCapture}
+      />
+
+      <ImagePreviewModal />
+
+      {/* Loading Backdrop */}
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={loading}
+      >
+        <Box textAlign="center">
+          <CircularProgress color="inherit" />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Procesando...
+          </Typography>
+        </Box>
+      </Backdrop>
+
+      {/* Snackbar para notificaciones */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </ThemeProvider>
+  );
 };
 
 export default Pendientes;
