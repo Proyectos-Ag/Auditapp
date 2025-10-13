@@ -8,7 +8,8 @@ const {
   eliminarObjetivo,
   agregarAccionCorrectiva,
   getAccionesCorrectivasByArea,
-  reprogramarFechaCompromiso // Nueva función
+  reprogramarFechaCompromiso,
+  actualizarAccionCorrectiva // Nueva función
 } = require("../controllers/ObjetivoController");
 
 // GET /api/objetivos?area=INGENIERIA
@@ -45,5 +46,8 @@ router.post("/:id/acciones-correctivas", agregarAccionCorrectiva);
 
 // PUT /api/objetivos/acciones/:id/reprogramar
 router.put("/acciones/:id/reprogramar", reprogramarFechaCompromiso);
+
+// PUT /api/objetivos/acciones/:id
+router.put("/acciones/:id", actualizarAccionCorrectiva);
 
 module.exports = router;

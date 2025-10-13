@@ -36,7 +36,14 @@ app.use(cookieParser());
 const mongo = require('./config/dbconfig');
 
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://auditapp-dqej.onrender.com', 'http://192.168.1.71:3000'],
+  origin: [
+    'http://localhost:3000', 
+    'https://localhost:3000',
+    'https://auditapp-dqej.onrender.com', 
+    'http://192.168.1.71:3000',
+    'https://192.168.0.75:3000', // Añade HTTPS
+    'https://192.168.0.75:3443'  // Puerto HTTPS
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,

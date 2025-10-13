@@ -1,127 +1,228 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './css/Datos.css';
-import logo from "../assets/img/logoAguida.png";
+import {
+  Box,
+  Stepper,
+  Step,
+  StepLabel,
+  Button,
+  Card,
+  CardContent,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
+  FormControlLabel,
+  Chip,
+  Grid,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  Snackbar,
+  AppBar,
+  Toolbar,
+  Avatar,
+  Divider,
+  InputAdornment,
+  Tooltip,
+  Fade
+} from '@mui/material';
+import {
+  Add,
+  Remove,
+  ArrowBack,
+  ArrowForward,
+  CheckCircle,
+  Schedule,
+  Person,
+  Assignment,
+  Dashboard,
+  Send,
+  Cancel,
+  Visibility
+} from '@mui/icons-material';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 import Swal from 'sweetalert2';
 import Historial from './HistorialAuditorias';
 
+// Tema personalizado
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#2E7D32',
+      light: '#4CAF50',
+      dark: '#1B5E20'
+    },
+    secondary: {
+      main: '#FF6F00',
+      light: '#FF9800',
+      dark: '#E65100'
+    },
+    background: {
+      default: '#f8f9fa',
+      paper: '#ffffff'
+    }
+  },
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h4: {
+      fontWeight: 600,
+    },
+    h6: {
+      fontWeight: 500,
+    }
+  },
+  shape: {
+    borderRadius: 12
+  }
+});
+
+// Componentes estilizados
+const StyledCard = styled(Card)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+  border: `1px solid ${theme.palette.divider}`,
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    boxShadow: '0 12px 48px rgba(0,0,0,0.12)',
+  }
+}));
+
+const StepIconRoot = styled('div')(({ theme, ownerState }) => ({
+  backgroundColor: ownerState.active || ownerState.completed 
+    ? theme.palette.primary.main 
+    : theme.palette.grey[300],
+  color: ownerState.active || ownerState.completed ? '#fff' : theme.palette.grey[500],
+  width: 40,
+  height: 40,
+  display: 'flex',
+  borderRadius: '50%',
+  justifyContent: 'center',
+  alignItems: 'center',
+  fontWeight: 600,
+  fontSize: '1rem',
+  transition: 'all 0.3s ease',
+}));
+
+const StyledStepper = styled(Stepper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  backgroundColor: 'transparent',
+  '& .MuiStepConnector-line': {
+    borderColor: theme.palette.grey[300],
+  }
+}));
+
+const StyledTable = styled(TableContainer)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius,
+  border: `1px solid ${theme.palette.divider}`,
+  '& .MuiTableCell-head': {
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.common.white,
+    fontWeight: 600,
+  }
+}));
+
+const ProgressButton = styled(Button)(({ theme }) => ({
+  position: 'relative',
+  overflow: 'hidden',
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)`,
+    transition: 'left 0.5s',
+  },
+  '&:hover::after': {
+    left: '100%',
+  }
+}));
+
+const steps = ['Datos Generales', 'Equipo Auditor', 'Programas', 'Revisión Final'];
+
 const Datos = () => {
+  const [formStep, setFormStep] = useState(0);
   const [formData, setFormData] = useState({
     TipoAuditoria: '',
     Duracion: '',
     FechaInicio: '',
     FechaFin: '',
-    Departamento:'',
+    Departamento: '',
     AreasAudi: [],
     Auditados: [],
     AuditorLider: '',
-    AuditorLiderEmail: '', 
+    AuditorLiderEmail: '',
     EquipoAuditor: [],
     Observador: false,
     NombresObservadores: '',
     Programa: [],
-    Estado: '',
-    PorcentajeTotal: '',
-    FechaElaboracion:'',
-    Comentario:'',
-    Estatus:''
+    Estado: 'pendiente',
+    PorcentajeTotal: '0',
+    FechaElaboracion: '',
+    Comentario: '',
+    Estatus: ''
   });
 
   const [areasSeleccionadas, setAreasSeleccionadas] = useState([]);
-
-  const [buttonText, setButtonText] = useState({
-    button1: 'Datos generales',
-    button2: 'Datos del Auditor',
-    button3: 'Programas'
-  });
-
   const [selectedDepartamento, setSelectedDepartamento] = useState('');
   const [filteredAreas, setFilteredAreas] = useState([]);
-  const [formStep, setFormStep] = useState(1);
   const [areas, setAreas] = useState([]);
   const [programas, setProgramas] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
-  const [showOtherAreaInput] = useState(false);
   const [auditorLiderSeleccionado, setAuditorLiderSeleccionado] = useState('');
-  const [auditadosSeleccionados, setAuditadosSeleccionados] = useState(false);
   const [equipoAuditorDisabled, setEquipoAuditorDisabled] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [previewOpen, setPreviewOpen] = useState(false);
 
+  // Efectos para cargar datos
   useEffect(() => {
-    const fetchAreas = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/areas`);
-        setAreas(response.data);
+        const [areasRes, programasRes, usuariosRes] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_BACKEND_URL}/areas`),
+          axios.get(`${process.env.REACT_APP_BACKEND_URL}/programas`),
+          axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`)
+        ]);
+        setAreas(areasRes.data);
+        setProgramas(programasRes.data);
+        setUsuarios(usuariosRes.data);
       } catch (error) {
-        console.error("Error al obtener las áreas", error);
+        console.error("Error al cargar datos", error);
+        showSnackbar('Error al cargar datos iniciales', 'error');
       }
     };
-
-    fetchAreas();
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    const fetchProgramas = async () => {
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/programas`);
-        setProgramas(response.data);
-      } catch (error) {
-        console.error("Error al obtener los programas", error);
-      }
-    };
-
-    fetchProgramas();
-  }, []);
-  
-
-  useEffect(() => {
-    const fetchUsuarios = async () => {
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
-        setUsuarios(response.data);
-      } catch (error) {
-        console.error("Error al obtener los usuarios", error);
-      }
-    };
-  
-    fetchUsuarios();
-  }, []);
-
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
 
   const handleChange = async (e) => {
     const { name, value, type, checked } = e.target;
     let newFormData = { ...formData, [name]: type === 'checkbox' ? checked : value };
-  
+
     if (name === 'AuditorLider') {
-      setAuditorLiderSeleccionado(value);
-      
-      // Obtener el correo del auditor líder
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombre/${encodeURIComponent(value)}`);
-        console.log(response);
-        const email = response.data.email;
-        newFormData = { ...newFormData, AuditorLiderEmail: email };
-      } catch (error) {
-        console.error("Error al obtener el correo electrónico del auditor líder", error);
-        newFormData = { ...newFormData, AuditorLiderEmail: '' };
-      }
-    } else if (name === 'EquipoAuditor') {
-      if (value === 'No aplica') {
-        newFormData = {
-          ...newFormData,
-          EquipoAuditor: []
-        };
-        setEquipoAuditorDisabled(true);
-      } else {
-        setEquipoAuditorDisabled(false);
-        newFormData = {
-          ...newFormData,
-          EquipoAuditor: newFormData.EquipoAuditor.includes(value)
-            ? newFormData.EquipoAuditor.filter(e => e !== value)
-            : [...newFormData.EquipoAuditor, value]
-        };
-      }
+      await handleAuditorLiderChange(value);
+      return;
     }
-  
+
     if (name === 'FechaInicio' || name === 'FechaFin') {
       const { FechaInicio, FechaFin } = newFormData;
       if (FechaInicio && FechaFin) {
@@ -136,235 +237,107 @@ const Datos = () => {
             newFormData.Duracion = `del ${inicio.getDate()} de ${inicioMes} al ${fin.getDate()} de ${finMes} ${inicio.getFullYear()}`;
           }
         } else {
-          alert("La fecha de fin debe ser mayor o igual a la fecha de inicio.");
-          newFormData[name] = formData[name];
+          showSnackbar('La fecha de fin debe ser mayor o igual a la fecha de inicio', 'error');
+          return;
         }
       }
     }
-  
+
     setFormData(newFormData);
   };
-  
-  const handleAreaChange = (e) => {
-    const { value } = e.target;
-    if (value === 'No aplica') {
-      setAreasSeleccionadas([]);
-      setFormData(prevFormData => ({
-        ...prevFormData,
-        AreasAudi: []
-      }));
-    } else {
-      setAreasSeleccionadas(prevAreas => {
-        const newAreas = prevAreas.includes(value)
-          ? prevAreas.filter(area => area !== value)
-          : [...prevAreas, value];
-  
-        setFormData(prevFormData => ({
-          ...prevFormData,
-          AreasAudi: newAreas
-        }));
-  
-        return newAreas;
-      });
-    }
-  }; 
 
-  const handleAreaRemove = (area) => {
-    setAreasSeleccionadas(prevAreas => {
-      const newAreas = prevAreas.filter(a => a !== area);
-      
-      setFormData(prevFormData => ({
-        ...prevFormData,
-        AreasAudi: newAreas
-      }));
-  
-      return newAreas;
-    });
-  };
-  
-  const handlePrevious = () => {
-    setFormStep(prevStep => prevStep - 1);
-  };
-
-  const handleNext = async (e) => {
-    e.preventDefault();
-    if (showOtherAreaInput) {
-    }
-    setFormStep(prevStep => prevStep + 1);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    try {
-      const defaultEstado = "pendiente";
-      const defaultPorcentaje = "0";
-
-      const formDataWithAreas = {
-        ...formData,
-        AreasAudi: areasSeleccionadas,
-        Auditados: auditadosSeleccionados,
-        Estado: defaultEstado,
-        PorcentajeTotal: defaultPorcentaje
-      };
-  
-      const formDataWithDefaults = {
-        ...formData,
-        Estado: defaultEstado,
-        PorcentajeTotal: defaultPorcentaje
-      };
-  
-      if (formData.Programa.length === 0) {
-        alert("Por favor, seleccione al menos un programa.");
-        return; // Detener el envío del formulario si no se ha seleccionado ningún programa
-      }
-  
-      console.log('Datos a enviar:', formDataWithDefaults);
-  
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/datos`, formDataWithDefaults, formDataWithAreas);
-      Swal.fire({
-        title: 'Auditoria generada con éxito',
-        icon: 'success',
-        confirmButtonText: 'Aceptar',
-        confirmButtonColor: '#3ccc37'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.reload();
-        }
-      });      
-      console.log(response.data);
-  
-      // Limpiar los campos del formulario después de agregar un usuario exitosamente
-      setFormData({
-        TipoAuditoria: '',
-        Duracion: '',
-        FechaInicio: '',
-        FechaFin: '',
-        Departamento:'',
-        AreasAudi: [],
-        Auditados: [],
-        AuditorLider: '',
-        AuditorLiderEmail: '', 
-        EquipoAuditor: [],
-        Observador: false,
-        NombresObservadores: '',
-        Programa: [],
-        Estado: '',
-        PorcentajeTotal: '',
-      });
-      setFormStep(1);
-    } catch (error) {
-      console.error('Error al guardar los datos:', error);
-      alert("Error al guardar los datos");
-    }
-  };
-
-  const handleAuditorLiderChange = async (e) => {
-    const { value } = e.target;
+  const handleAuditorLiderChange = async (value) => {
     setAuditorLiderSeleccionado(value);
-    // Obtener el correo del auditor líder
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombre/${encodeURIComponent(value)}`);
-      console.log(response);
-      const email = response.data.Correo;
-      setFormData(prevFormData => ({
-        ...prevFormData,
+      const email = response.data.Correo || response.data.email;
+      setFormData(prev => ({
+        ...prev,
         AuditorLider: value,
         AuditorLiderEmail: email
       }));
     } catch (error) {
-      console.error("Error al obtener el correo electrónico del auditor líder", error);
-      setFormData(prevFormData => ({
-        ...prevFormData,
+      console.error("Error al obtener el correo del auditor líder", error);
+      setFormData(prev => ({
+        ...prev,
         AuditorLider: value,
         AuditorLiderEmail: ''
       }));
     }
-  };  
-
-  const handleAuditados = async (e) => {
-    const { value } = e.target;
-    setAuditadosSeleccionados(false);
-      if (!auditadosSeleccionados) {
-        // Obtener el correo del miembro del equipo auditor seleccionado
-        try {
-          const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombre/${encodeURIComponent(value)}`);
-          const email = response.data.Correo;
-          
-          // Actualizar el estado formData con el nuevo miembro y su correo
-          setFormData(prevFormData => ({
-            ...prevFormData,
-            Auditados: [
-              ...prevFormData.Auditados,
-              { Nombre: value, Correo: email }
-            ]
-          }));
-        } catch (error) {
-          console.error("Error al obtener el correo electrónico del miembro del equipo auditor", error);
-        }
-      }
   };
-  
+
+  const handleAreaChange = (e) => {
+    const { value } = e.target;
+    if (value === 'No aplica') {
+      setAreasSeleccionadas([]);
+      setFormData(prev => ({ ...prev, AreasAudi: [] }));
+    } else if (value && !areasSeleccionadas.includes(value)) {
+      const newAreas = [...areasSeleccionadas, value];
+      setAreasSeleccionadas(newAreas);
+      setFormData(prev => ({ ...prev, AreasAudi: newAreas }));
+    }
+  };
+
+  const handleAreaRemove = (area) => {
+    const newAreas = areasSeleccionadas.filter(a => a !== area);
+    setAreasSeleccionadas(newAreas);
+    setFormData(prev => ({ ...prev, AreasAudi: newAreas }));
+  };
+
+  const handleAuditadosChange = async (e) => {
+    const { value } = e.target;
+    if (value && !formData.Auditados.some(a => a.Nombre === value)) {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombre/${encodeURIComponent(value)}`);
+        const email = response.data.Correo;
+        setFormData(prev => ({
+          ...prev,
+          Auditados: [...prev.Auditados, { Nombre: value, Correo: email }]
+        }));
+      } catch (error) {
+        console.error("Error al obtener el correo del auditado", error);
+      }
+    }
+  };
+
+  const handleAuditadosRemove = (auditado) => {
+    setFormData(prev => ({
+      ...prev,
+      Auditados: prev.Auditados.filter(a => a.Nombre !== auditado.Nombre)
+    }));
+  };
+
   const handleEquipChange = async (e) => {
     const { value } = e.target;
     if (value === "No aplica") {
       setEquipoAuditorDisabled(true);
-      setFormData({
-        ...formData,
-        EquipoAuditor: []
-      });
-    } else {
-      setEquipoAuditorDisabled(false);
-      if (!equipoAuditorDisabled) {
-        // Obtener el correo del miembro del equipo auditor seleccionado
-        try {
-          const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombre/${encodeURIComponent(value)}`);
-          const email = response.data.Correo;
-          
-          // Actualizar el estado formData con el nuevo miembro y su correo
-          setFormData(prevFormData => ({
-            ...prevFormData,
-            EquipoAuditor: [
-              ...prevFormData.EquipoAuditor,
-              { Nombre: value, Correo: email }
-            ]
-          }));
-        } catch (error) {
-          console.error("Error al obtener el correo electrónico del miembro del equipo auditor", error);
-        }
+      setFormData(prev => ({ ...prev, EquipoAuditor: [] }));
+    } else if (value && !formData.EquipoAuditor.some(e => e.Nombre === value)) {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombre/${encodeURIComponent(value)}`);
+        const email = response.data.Correo;
+        setFormData(prev => ({
+          ...prev,
+          EquipoAuditor: [...prev.EquipoAuditor, { Nombre: value, Correo: email }]
+        }));
+      } catch (error) {
+        console.error("Error al obtener el correo del equipo auditor", error);
       }
     }
   };
-  
-  
-  const handleCancel = () => {
-    setEquipoAuditorDisabled(false);
-    setFormData({
-      ...formData,
-      EquipoAuditor: []
-    });
-  };
 
   const handleEquipRemove = (equip) => {
-    setFormData({
-      ...formData,
-      EquipoAuditor: formData.EquipoAuditor.filter(e => e !== equip)
-    });
-  };
-
-  const handleAuditadosRemove = (auditado) => {
-    setFormData({
-      ...formData,
-      Auditados: formData.Auditados.filter(e => e !== auditado)
-    });
+    setFormData(prev => ({
+      ...prev,
+      EquipoAuditor: prev.EquipoAuditor.filter(e => e.Nombre !== equip.Nombre)
+    }));
   };
 
   const handleProgramChange = async (e) => {
     const { value } = e.target;
     const selectedProgram = programas.find(programa => programa.Nombre === value);
-  
-    if (selectedProgram) {
-      // Modificar el objeto seleccionado para que tenga la estructura esperada por el esquema
+
+    if (selectedProgram && !formData.Programa.some(p => p.Nombre === value)) {
       const formattedProgram = {
         Porcentaje: '0',
         Nombre: selectedProgram.Nombre,
@@ -372,395 +345,687 @@ const Datos = () => {
           ID: desc.ID,
           Criterio: desc.Criterio || null,
           Requisito: desc.Requisito,
-          Observacion:"",
+          Observacion: "",
           Hallazgo: [],
           FechaElaboracion: "",
           Comentario: "",
           Estatus: ""
         }))
       };
-      console.log(selectedProgram);
 
-      setFormData(prevFormData => ({
-        ...prevFormData,
-        Programa: [
-          ...prevFormData.Programa,
-          formattedProgram
-        ]
+      setFormData(prev => ({
+        ...prev,
+        Programa: [...prev.Programa, formattedProgram]
       }));
     }
   };
 
-  const handleStepChange = (step) => {
-    setFormStep(step);
-  };
-
   const handleProgramRemove = (program) => {
-    setFormData({
-      ...formData,
-      Programa: formData.Programa.filter(p => p !== program)
-    });
+    setFormData(prev => ({
+      ...prev,
+      Programa: prev.Programa.filter(p => p.Nombre !== program.Nombre)
+    }));
   };
 
   const handleDepartamentoChange = (e) => {
     const selectedDept = e.target.value;
     setSelectedDepartamento(selectedDept);
-    
     const dept = areas.find(area => area.departamento === selectedDept);
     setFilteredAreas(dept ? dept.areas : []);
-    
-    setFormData({
-      ...formData,
-      Departamento: selectedDept
-    });
+    setFormData(prev => ({ ...prev, Departamento: selectedDept }));
   };
 
-  const isFormComplete = (step) => {
-    const formDataForStep = getFormDataForStep(step);
-    const requiredFields = getRequiredFieldsForStep(step);
-  
-    for (const field of requiredFields) {
-      if (!formDataForStep[field]) {
-        return false;
-      }
-    }
-    return true;
-  };
-  
-  const getFormDataForStep = (step) => {
-    switch (step) {
-      case 2:
-        return {
-          TipoAuditoria: formData.TipoAuditoria,
-          Duracion: formData.Duracion,
-          FechaInicio: formData.FechaInicio,
-          FechaFin: formData.FechaFin,
-          AreasAudi: formData.AreasAudi,
-          Auditados: formData.Auditados
-        };
-      case 3:
-        return {
-          TipoAuditoria: formData.TipoAuditoria,
-          Duracion: formData.Duracion,
-          FechaInicio: formData.FechaInicio,
-          FechaFin: formData.FechaFin,
-          AreasAudi: formData.AreasAudi,
-          Auditados: formData.Auditados,
-          AuditorLider: formData.AuditorLider,
-          NombresObservadores: formData.NombresObservadores
-        };
-      default:
-        return {};
-    }
-  };
-  
-  
-  const getRequiredFieldsForStep = (step) => {
-    switch (step) {
-      case 2:
-        return ['TipoAuditoria', 'Duracion', 'FechaInicio', 'FechaFin', 'AreasAudi', 'Auditados'];
-      case 3:
-        if (formData.Observador) {
-          return ['TipoAuditoria', 'Duracion', 'FechaInicio', 'FechaFin', 'AreasAudi', 'Auditados',
-          'AuditorLider', 'NombresObservadores'];
-        } else {
-          return ['TipoAuditoria', 'Duracion', 'FechaInicio', 'FechaFin', 'AreasAudi', 'Auditados',
-          'AuditorLider','AuditorLider'];
-        }
-      default:
-        return [];
-    }
-  };
-
-  const updateButtonText = () => {
-    if (window.innerWidth <= 770) {
-      setButtonText({
-        button1: 'Generales',
-        button2: 'Auditor',
-        button3: 'Programas'
-      });
+  const handleNext = () => {
+    if (formStep === steps.length - 1) {
+      handleSubmit();
     } else {
-      setButtonText({
-        button1: 'Datos generales',
-        button2: 'Datos del Auditor',
-        button3: 'Programas'
-      });
+      setFormStep(prev => prev + 1);
     }
   };
 
-  useEffect(() => {
-    updateButtonText();
-    window.addEventListener('resize', updateButtonText);
+  const handleBack = () => {
+    setFormStep(prev => prev - 1);
+  };
 
-    return () => {
-      window.removeEventListener('resize', updateButtonText);
+  const handleSubmit = async () => {
+    try {
+      if (formData.Programa.length === 0) {
+        showSnackbar('Por favor, seleccione al menos un programa', 'error');
+        return;
+      }
+
+      const formDataWithDefaults = {
+        ...formData,
+        Estado: "pendiente",
+        PorcentajeTotal: "0"
+      };
+
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/datos`, formDataWithDefaults);
+      
+      Swal.fire({
+        title: '¡Auditoría generada con éxito!',
+        icon: 'success',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#2E7D32'
+      }).then(() => {
+        // Reset form
+        setFormData({
+          TipoAuditoria: '',
+          Duracion: '',
+          FechaInicio: '',
+          FechaFin: '',
+          Departamento: '',
+          AreasAudi: [],
+          Auditados: [],
+          AuditorLider: '',
+          AuditorLiderEmail: '',
+          EquipoAuditor: [],
+          Observador: false,
+          NombresObservadores: '',
+          Programa: [],
+          Estado: 'pendiente',
+          PorcentajeTotal: '0',
+          FechaElaboracion: '',
+          Comentario: '',
+          Estatus: ''
+        });
+        setAreasSeleccionadas([]);
+        setFormStep(0);
+      });
+      
+    } catch (error) {
+      console.error('Error al guardar los datos:', error);
+      showSnackbar('Error al guardar los datos', 'error');
+    }
+  };
+
+  const isStepComplete = (step) => {
+    switch (step) {
+      case 0:
+        return formData.TipoAuditoria && formData.FechaInicio && formData.FechaFin && 
+               formData.Departamento && areasSeleccionadas.length > 0 && formData.Auditados.length > 0;
+      case 1:
+        return formData.AuditorLider && (!formData.Observador || formData.NombresObservadores);
+      case 2:
+        return formData.Programa.length > 0;
+      default:
+        return true;
+    }
+  };
+
+  const CustomStepIcon = (props) => {
+    const { active, completed, icon } = props;
+    const icons = {
+      1: <Dashboard />,
+      2: <Person />,
+      3: <Assignment />,
+      4: <CheckCircle />
     };
-  }, []);
-    
+
+    return (
+      <StepIconRoot ownerState={{ active, completed }}>
+        {completed ? <CheckCircle /> : icons[icon] || icon}
+      </StepIconRoot>
+    );
+  };
+
+  const renderStepContent = (step) => {
+    switch (step) {
+      case 0:
+        return (
+          <Fade in={true} timeout={500}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth required>
+                  <InputLabel>Tipo de auditoría</InputLabel>
+                  <Select
+                    name="TipoAuditoria"
+                    value={formData.TipoAuditoria}
+                    onChange={handleChange}
+                    label="Tipo de auditoría"
+                  >
+                    <MenuItem value="Interna">Interna</MenuItem>
+                    <MenuItem value="Externa">Externa</MenuItem>
+                    <MenuItem value="FSSC 22000">FSSC 22000</MenuItem>
+                    <MenuItem value="Responsabilidad social">Responsabilidad Social</MenuItem>
+                    <MenuItem value="Inspección de autoridades">Inspección de Autoridades</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Duración"
+                  value={formData.Duracion}
+                  InputProps={{
+                    readOnly: true,
+                    startAdornment: <InputAdornment position="start"><Schedule /></InputAdornment>,
+                  }}
+                  helperText="Calculado automáticamente"
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  type="date"
+                  name="FechaInicio"
+                  label="Fecha de inicio"
+                  value={formData.FechaInicio}
+                  onChange={handleChange}
+                  InputLabelProps={{ shrink: true }}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  type="date"
+                  name="FechaFin"
+                  label="Fecha de fin"
+                  value={formData.FechaFin}
+                  onChange={handleChange}
+                  InputLabelProps={{ shrink: true }}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth required>
+                  <InputLabel>Departamento</InputLabel>
+                  <Select
+                    value={selectedDepartamento}
+                    onChange={handleDepartamentoChange}
+                    label="Departamento"
+                  >
+                    {areas.map(area => (
+                      <MenuItem key={area.departamento} value={area.departamento}>
+                        {area.departamento}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Áreas</InputLabel>
+                  <Select
+                    value=""
+                    onChange={handleAreaChange}
+                    label="Áreas"
+                  >
+                    <MenuItem value="No aplica">No aplica</MenuItem>
+                    {filteredAreas.map((area, index) => (
+                      <MenuItem key={index} value={area}>{area}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {areasSeleccionadas.length > 0 && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Áreas seleccionadas:
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {areasSeleccionadas.map((area, index) => (
+                      <Chip
+                        key={index}
+                        label={area}
+                        onDelete={() => handleAreaRemove(area)}
+                        color="primary"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Box>
+                </Grid>
+              )}
+
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Auditados</InputLabel>
+                  <Select
+                    value=""
+                    onChange={handleAuditadosChange}
+                    label="Auditados"
+                  >
+                    {usuarios.filter(usuario => usuario.Departamento === selectedDepartamento).map(usuario => (
+                      <MenuItem key={usuario._id} value={usuario.Nombre}>
+                        {usuario.Nombre}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {formData.Auditados.length > 0 && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Auditados seleccionados:
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {formData.Auditados.map((auditado, index) => (
+                      <Chip
+                        key={index}
+                        label={auditado.Nombre}
+                        onDelete={() => handleAuditadosRemove(auditado)}
+                        color="secondary"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Box>
+                </Grid>
+              )}
+            </Grid>
+          </Fade>
+        );
+
+      case 1:
+        return (
+          <Fade in={true} timeout={500}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel>Auditor Líder</InputLabel>
+                  <Select
+                    name="AuditorLider"
+                    value={formData.AuditorLider}
+                    onChange={(e) => handleAuditorLiderChange(e.target.value)}
+                    label="Auditor Líder"
+                  >
+                    {usuarios.filter(usuario => 
+                      ['auditor', 'administrador'].includes(usuario.TipoUsuario)
+                    ).map(usuario => (
+                      <MenuItem key={usuario._id} value={usuario.Nombre}>
+                        {usuario.Nombre}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12}>
+                <FormControl fullWidth disabled={equipoAuditorDisabled}>
+                  <InputLabel>Equipo Auditor</InputLabel>
+                  <Select
+                    value=""
+                    onChange={handleEquipChange}
+                    label="Equipo Auditor"
+                  >
+                    <MenuItem value="No aplica">No aplica</MenuItem>
+                    {usuarios.filter(usuario => 
+                      ['auditor', 'administrador'].includes(usuario.TipoUsuario) && 
+                      usuario.Nombre !== auditorLiderSeleccionado
+                    ).map(usuario => (
+                      <MenuItem key={usuario._id} value={usuario.Nombre}>
+                        {usuario.Nombre}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {formData.EquipoAuditor.length > 0 && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Equipo auditor seleccionado:
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {formData.EquipoAuditor.map((equip, index) => (
+                      <Chip
+                        key={index}
+                        label={equip.Nombre}
+                        onDelete={() => handleEquipRemove(equip)}
+                        color="primary"
+                      />
+                    ))}
+                  </Box>
+                </Grid>
+              )}
+
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      name="Observador"
+                      checked={formData.Observador}
+                      onChange={handleChange}
+                      color="primary"
+                    />
+                  }
+                  label="Incluir observador"
+                />
+              </Grid>
+
+              {formData.Observador && (
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    name="NombresObservadores"
+                    label="Nombre(s) del observador(es)"
+                    value={formData.NombresObservadores}
+                    onChange={handleChange}
+                    required
+                  />
+                </Grid>
+              )}
+            </Grid>
+          </Fade>
+        );
+
+      case 2:
+        return (
+          <Fade in={true} timeout={500}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Programas</InputLabel>
+                  <Select
+                    value=""
+                    onChange={handleProgramChange}
+                    label="Programas"
+                  >
+                    {programas
+                      .filter(programa => !formData.Programa.some(selected => selected.Nombre === programa.Nombre))
+                      .map(programa => (
+                        <MenuItem key={programa._id} value={programa.Nombre}>
+                          {programa.Nombre}
+                        </MenuItem>
+                      ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {formData.Programa.length > 0 && (
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom>
+                    Programas seleccionados ({formData.Programa.length})
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {formData.Programa.map((program, index) => (
+                      <Grid item xs={12} md={6} key={index}>
+                        <Paper 
+                          variant="outlined" 
+                          sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                        >
+                          <Typography variant="body1">{program.Nombre}</Typography>
+                          <IconButton 
+                            color="error" 
+                            onClick={() => handleProgramRemove(program)}
+                            size="small"
+                          >
+                            <Remove />
+                          </IconButton>
+                        </Paper>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Grid>
+              )}
+            </Grid>
+          </Fade>
+        );
+
+      case 3:
+        return (
+          <Fade in={true} timeout={500}>
+            <Box>
+              <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h6">
+                  Vista previa de la auditoría
+                </Typography>
+                <Button
+                  startIcon={<Visibility />}
+                  onClick={() => setPreviewOpen(true)}
+                  variant="outlined"
+                >
+                  Vista completa
+                </Button>
+              </Box>
+
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Paper sx={{ p: 2 }}>
+                    <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                      Información general
+                    </Typography>
+                    <Typography variant="body2"><strong>Tipo:</strong> {formData.TipoAuditoria}</Typography>
+                    <Typography variant="body2"><strong>Duración:</strong> {formData.Duracion}</Typography>
+                    <Typography variant="body2"><strong>Departamento:</strong> {formData.Departamento}</Typography>
+                  </Paper>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Paper sx={{ p: 2 }}>
+                    <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                      Equipo
+                    </Typography>
+                    <Typography variant="body2"><strong>Auditor Líder:</strong> {formData.AuditorLider}</Typography>
+                    <Typography variant="body2"><strong>Equipo:</strong> {formData.EquipoAuditor.length} miembros</Typography>
+                    <Typography variant="body2"><strong>Programas:</strong> {formData.Programa.length} seleccionados</Typography>
+                  </Paper>
+                </Grid>
+
+                {formData.Programa.slice(0, 1).map((program, index) => (
+                  <Grid item xs={12} key={index}>
+                    <StyledTable component={Paper}>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell colSpan={2} align="center" sx={{ fontWeight: 600 }}>
+                              {program.Nombre}
+                            </TableCell>
+                            <TableCell colSpan={5} align="center" sx={{ fontWeight: 600 }}>
+                              Cumplimiento
+                            </TableCell>
+                            <TableCell></TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>ID</TableCell>
+                            <TableCell>Requisitos</TableCell>
+                            <TableCell>Conforme</TableCell>
+                            <TableCell>m</TableCell>
+                            <TableCell>M</TableCell>
+                            <TableCell>C</TableCell>
+                            <TableCell>NA</TableCell>
+                            <TableCell>Hallazgos/Observaciones</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {program.Descripcion.slice(0, 3).map((desc, idx) => (
+                            <TableRow key={idx}>
+                              <TableCell>{desc.ID}</TableCell>
+                              <TableCell>{desc.Requisito}</TableCell>
+                              <TableCell><Checkbox /></TableCell>
+                              <TableCell><Checkbox /></TableCell>
+                              <TableCell><Checkbox /></TableCell>
+                              <TableCell><Checkbox /></TableCell>
+                              <TableCell><Checkbox /></TableCell>
+                              <TableCell>
+                                <TextField size="small" multiline rows={1} fullWidth />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </StyledTable>
+                    {program.Descripcion.length > 3 && (
+                      <Typography variant="body2" sx={{ mt: 1, textAlign: 'center', color: 'text.secondary' }}>
+                        ... y {program.Descripcion.length - 3} requisitos más
+                      </Typography>
+                    )}
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          </Fade>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const PreviewDialog = () => (
+    <Dialog 
+      open={previewOpen} 
+      onClose={() => setPreviewOpen(false)}
+      maxWidth="lg"
+      fullWidth
+    >
+      <DialogTitle>
+        Vista previa completa - {formData.TipoAuditoria}
+      </DialogTitle>
+      <DialogContent dividers>
+        {formData.Programa.map((program, index) => (
+          <Box key={index} sx={{ mb: 4 }}>
+            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+              {program.Nombre}
+            </Typography>
+            <StyledTable>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell>Requisitos</TableCell>
+                    <TableCell>Conforme</TableCell>
+                    <TableCell>m</TableCell>
+                    <TableCell>M</TableCell>
+                    <TableCell>C</TableCell>
+                    <TableCell>NA</TableCell>
+                    <TableCell>Hallazgos/Observaciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {program.Descripcion.map((desc, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>{desc.ID}</TableCell>
+                      <TableCell>{desc.Requisito}</TableCell>
+                      <TableCell><Checkbox /></TableCell>
+                      <TableCell><Checkbox /></TableCell>
+                      <TableCell><Checkbox /></TableCell>
+                      <TableCell><Checkbox /></TableCell>
+                      <TableCell><Checkbox /></TableCell>
+                      <TableCell>
+                        <TextField size="small" multiline rows={2} fullWidth />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </StyledTable>
+          </Box>
+        ))}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setPreviewOpen(false)}>Cerrar</Button>
+      </DialogActions>
+    </Dialog>
+  );
+
   return (
-      <div className="contenedor-datos">
-        <div className="centrado">
-        <div>
-          <Historial />
-        </div>
-        <div className="navigation-buttons">
-      {formStep !== 4 && (
-        <>
-          <button onClick={() => handleStepChange(1)} className={formStep === 1 ? 'active' : ''} disabled={!isFormComplete(1)}>
-            {buttonText.button1}
-          </button>
-          <button onClick={() => handleStepChange(2)} className={formStep === 2 ? 'active' : ''} disabled={!isFormComplete(2)}>
-            {buttonText.button2}
-          </button>
-          <button onClick={() => handleStepChange(3)} className={formStep === 3 ? 'active' : ''} disabled={!isFormComplete(3)}>
-            {buttonText.button3}
-          </button>
-        </>
-      )}
-    </div>
-        {formStep === 1 && (
-          <div className="datos-container">
-          <form onSubmit={handleNext}>
-          <h3 className="h3-small-margin">Datos generales</h3>
-            <div className="registro-form-datos">
-            <div className="form-group-datos" >
-              <label>Tipo de auditoría:</label>
-              <select name="TipoAuditoria" value={formData.TipoAuditoria} onChange={handleChange} required>
-                <option value="">Seleccione...</option>
-                <option value="Interna">Interna</option>
-                <option value="Externa">Externa</option>
-                <option value="FSSC 22000">FSSC 22000</option>
-                <option value="Responsabilidad social">Responsabilidad Social</option>
-                <option value="Inspección de autoridades">Inspección de Autoridades</option>
-              </select>
-            </div>
-            <div className="form-dates-datos">
-                <div className="form-group-datos">
-                  <label>Fecha de inicio:</label>
-                  <input type="date" name="FechaInicio" value={formData.FechaInicio} onChange={handleChange} required />
-                </div>
-                <div className="form-group-datos">
-                  <label>Fecha de fin:</label>
-                  <input type="date" name="FechaFin" value={formData.FechaFin} onChange={handleChange} required />
-                </div>
-              </div>
-              <div className="form-group-datos">
-                <label>Duración de la auditoría:</label>
-                <input type="text" name="Duracion" value={formData.Duracion} onChange={handleChange} required/>
-              </div>
-            <div className="form-group-datos-container">
-              <div className="form-group-datos">
-              <label>Departamento:</label>
-              <select name="Departamento" value={selectedDepartamento} onChange={handleDepartamentoChange} required>
-                <option value="">Seleccione...</option>
-                {areas.map(area => (
-                  <option key={area.departamento} value={area.departamento}>{area.departamento}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group-datos">
-              <label>Área:</label>
-              <select name="AreasAudi" value="" onChange={handleAreaChange}>
-                <option value="">Seleccione...</option>
-                {filteredAreas.map((area, index) => (
-                  <option key={index} value={area}>{area}</option>
-                ))}
-              </select>
-            </div>
-            </div>
-            <div className="selected-areas">
-              {areasSeleccionadas.map((area, index) => (
-                <div key={index} className="selected-area">
-                  {area}
-                  <button type="button" onClick={() => handleAreaRemove(area)} className="remove-button">X</button>
-                </div>
-              ))}
-            </div>
-            <div className="form-group-datos">
-              <label>Auditados:</label>
-              <select
-                id="Auditados"
-                name="Auditados"
-                value=""
-                onChange={handleAuditados}
+    <ThemeProvider theme={theme}>
+      <Box sx={{ minHeight: '100vh', py: 3 }}>
+        <Container maxWidth="lg">
+          {/* Header */}
+          <AppBar position="static" color="transparent" elevation={0}>
+            <Toolbar>
+              <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
+                <Assignment />
+              </Avatar>
+              <Typography variant="h4" component="h1" sx={{ flexGrow: 1 }}>
+                Nueva Auditoría
+              </Typography>
+              <Historial />
+            </Toolbar>
+          </AppBar>
+
+          <Box sx={{ mt: 4 }}>
+            {/* Stepper */}
+            <StyledCard>
+              <CardContent>
+                <StyledStepper activeStep={formStep} alternativeLabel>
+                  {steps.map((label) => (
+                    <Step key={label}>
+                      <StepLabel StepIconComponent={CustomStepIcon}>
+                        {label}
+                      </StepLabel>
+                    </Step>
+                  ))}
+                </StyledStepper>
+              </CardContent>
+            </StyledCard>
+
+            {/* Form Content */}
+            <StyledCard sx={{ mt: 3 }}>
+              <CardContent sx={{ p: 4 }}>
+                {renderStepContent(formStep)}
+              </CardContent>
+            </StyledCard>
+
+            {/* Navigation Buttons */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+              <Button
+                startIcon={<ArrowBack />}
+                onClick={handleBack}
+                disabled={formStep === 0}
+                variant="outlined"
+                size="large"
               >
-                <option value="">Seleccione...</option>
-                {usuarios && usuarios.filter(usuario => usuario.Departamento === selectedDepartamento).map(usuario => (
-            <option key={usuario._id} value={usuario.Nombre}>{usuario.Nombre}</option>
-          ))}
-              </select>
-            </div>
-            <div className="selected-auditados">
-              {formData.Auditados.map((auditado, index) => (
-                <div key={index} className="selected-auditado">
-                  {auditado.Nombre}
-                  <button type="button" onClick={() => handleAuditadosRemove(auditado)} className="remove-button">X</button>
-                </div>
-              ))}
-            </div>
-            
-            </div>
-            <div className="header-container-datos2">
-            <div className="button-group-datos">
-            {formStep > 1 && <button type="button" className="btn-registrar-datos" onClick={handlePrevious}>Regresar</button>}
-              <button type="submit" className="btn-registrar-datos">Siguiente</button>
-            </div>
-            </div>
-        </form>
-      </div>
-  )}
+                Anterior
+              </Button>
 
-{formStep === 2 && (
-  <div className="datos-container">
-    <form onSubmit={handleNext}>
-      <h3 className="h3-small-margin">Datos del Auditor:</h3>
-      <div className="registro-form-datos">
-      <div className="form-group-datos">
-        <label>Auditor Líder:</label>
-        <select name="AuditorLider" value={formData.AuditorLider} onChange={handleAuditorLiderChange} required>
-          <option value="">Seleccione...</option>
-          {usuarios && usuarios.filter(usuario => (usuario.TipoUsuario === 'auditor' || usuario.TipoUsuario === 'administrador')).map(usuario => (
-            <option key={usuario._id} value={usuario.Nombre}>{usuario.Nombre}</option>
-          ))}
-        </select>
-      </div>
-      <div className="form-group-datos">
-        <label>Equipo Auditor:</label>
-        <select name="Equipo Auditor" value="" onChange={handleEquipChange} disabled={equipoAuditorDisabled}>
-          <option value="">Seleccione...</option>
-          <option value="No aplica">No aplica</option>
-          {usuarios && usuarios.filter(usuario => (usuario.TipoUsuario === 'auditor' || usuario.TipoUsuario === 'administrador') && usuario.Nombre !== auditorLiderSeleccionado).map(usuario => (
-            <option key={usuario._id} value={usuario.Nombre}>{usuario.Nombre}</option>
-          ))}
-        </select>
-      </div>
-      <div className="selected-programs">
-        {formData.EquipoAuditor.map((equip, index) => (
-          <div key={index} className="selected-program">
-            {equip.Nombre} {/* Renderizar solo el nombre del miembro */}
-            <button type="button" onClick={() => handleEquipRemove(equip) } className="remove-button">X</button>
-          </div>
-        ))}
-      </div>
-      {equipoAuditorDisabled && (
-        <div className="form-group-datos">
-          <button type="button" onClick={handleCancel}>Cancelar</button>
-        </div>
-      )}
-      <div className="form-group-datos">
-        <label>
-          Observador
-          <input type="checkbox" name="Observador" checked={formData.Observador} onChange={handleChange} />
-        </label>
-      </div>
-      {formData.Observador && (
-        <div className="form-group-datos">
-          <label>Nombre(s) observador(es):</label>
-          <input type="text" name="NombresObservadores" value={formData.NombresObservadores} onChange={handleChange} required/>
-        </div>
-      )}
-      </div>
-      <div className="header-container-datos2">
-      <div className="button-group-datos">
-      <button type="button" className="btn-registrar-datos" onClick={handlePrevious}>Regresar</button>
-      <button type="submit" className="btn-registrar-datos">Siguiente</button>
-      </div>
-      </div>
-    </form>
-  </div>
-)}
+              <ProgressButton
+                endIcon={formStep === steps.length - 1 ? <Send /> : <ArrowForward />}
+                onClick={handleNext}
+                disabled={!isStepComplete(formStep)}
+                variant="contained"
+                size="large"
+                color={formStep === steps.length - 1 ? "success" : "primary"}
+              >
+                {formStep === steps.length - 1 ? 'Generar Auditoría' : 'Siguiente'}
+              </ProgressButton>
+            </Box>
+          </Box>
+        </Container>
 
-{formStep === 3 && (
-  <div className="datos-container">
-    <form onSubmit={handleNext}>
-      <h3 className="h3-small-margin">Programas:</h3>
-      <div className="registro-form-datos">
-      <div className="form-group-datos">
-        <label>Programa:</label>
-        <select name="Programa" value="" onChange={handleProgramChange}>
-          <option value="">Seleccione...</option>
-          {programas
-            .filter(programa => !formData.Programa.some(selected => selected.Nombre === programa.Nombre))
-            .map(programa => (
-              <option key={programa._id} value={programa.Nombre}>{programa.Nombre}</option>
-            ))}
-        </select>
-      </div>
-      <div className="selected-programs">
-        {formData.Programa.map((program, index) => (
-          <div key={index} className="selected-program">
-            <p className="program-name">{program.Nombre}</p>
-            <button type="button" onClick={() => handleProgramRemove(program)} className="remove-button">X</button>
-          </div>
-        ))}
-      </div>
-      </div>
-      <div className="header-container-datos2">
-      <div className="button-group-datos">
-          <button type="button" className="btn-registrar-datos" onClick={handlePrevious}>Regresar</button>
-          <button type="submit" className="btn-registrar-datos" disabled={formData.Programa.length === 0}>Siguiente</button>
-      </div>
-      </div>
-    </form>
-  </div>
-)}
-</div>
+        {/* Preview Dialog */}
+        <PreviewDialog />
 
-{formStep === 4 && (
-  <div className="datos-container2">
-    <form onSubmit={handleSubmit}>
-      <div className="header-container-datos">
-        <img src={logo} alt="Logo Empresa" className="logo-empresa-ad" />
-        <div className="button-group-datos">
-          <button type="button" className="btn-registrar-datos" onClick={handlePrevious}>Regresar</button>
-          <button type="submit" className="btn-registrar-datos">Generar</button>
-        </div>
-      </div>
-      <div className="form-group-datos">
-        {formData.Programa.map((program, index) => (
-          <div key={index}>
-            <table key={index}>
-              <thead>
-                <tr>
-                  <th colSpan="2">{program.Nombre}</th>
-                  <th colSpan="5" className="conformity-header">Cumplimiento</th> 
-                  <th colSpan="1"></th>
-                </tr>
-                <tr>
-                  <th>ID</th>
-                  <th>Requisitos</th>
-                  <th>Conforme</th>
-                  <th>m</th>
-                  <th>M</th>
-                  <th>C</th>
-                  <th>NA</th>
-                  <th>Hallazgos/Observaciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {program.Descripcion.map((desc, idx) => (
-                  <tr key={idx}>
-                    <td>{desc.ID}</td>
-                    <td>{desc.Requisito}</td>
-                    <td><input type="checkbox" name={`Conforme_${index}`} /></td>
-                    <td><input type="checkbox" name={`m_${index}`} /></td>
-                    <td><input type="checkbox" name={`M_${index}`} /></td>
-                    <td><input type="checkbox" name={`C_${index}`} /></td>
-                    <td><input type="checkbox" name={`NA_${index}`} /></td>
-                    <td><textarea name={`Observaciones_${index}`} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ))}
-      </div>
-    </form>
-  </div>
-)}
-
-    </div>
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert 
+            severity={snackbar.severity} 
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Box>
+    </ThemeProvider>
   );
 };
+
+// Container component para mantener la estructura
+const Container = ({ children, maxWidth = 'lg', ...props }) => (
+  <Box
+    {...props}
+    sx={{
+      maxWidth: maxWidth === 'lg' ? 1200 : maxWidth,
+      mx: 'auto',
+      px: 3,
+      ...props.sx
+    }}
+  >
+    {children}
+  </Box>
+);
 
 export default Datos;
