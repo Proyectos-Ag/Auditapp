@@ -3,102 +3,124 @@
 /**
  * Module dependencies.
  */
-var app = require('../app');
-var debug = require('debug')('server:server');
-var https = require('https');
-var http = require('http');
-var fs = require('fs');
-var dotenv = require('dotenv');
-var os = require('os');  // ← AÑADIR ESTO
+const app = require('../app');
+const debug = require('debug')('server:server');
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
-/**
- * Obtener IP local automáticamente
+/** ===== Modo de ejecución =====
+ * isRender: Render (o producción), no crear HTTPS propio.
+ * HTTPS_DEV: fuerza HTTPS local con certificados (solo si NO es Render).
  */
-function getLocalIP() {
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      // Buscar IPv4 que no sea localhost y no sea virtual
-      if (iface.family === 'IPv4' && !iface.internal && !name.includes('VirtualBox')) {
-        return iface.address;
-      }
-    }
+const isRender =
+  !!process.env.RENDER ||
+  !!process.env.RENDER_EXTERNAL_URL ||
+  process.env.NODE_ENV === 'production';
+
+const HTTPS_DEV = process.env.HTTPS_DEV === 'true' && !isRender;
+
+/**
+ * Puertos
+ * - PORT: puerto HTTP (Render lo inyecta)
+ * - HTTPS_PORT: puerto HTTPS local (por defecto 3443)
+ */
+const httpPort = normalizePort(process.env.PORT || '3002');
+const httpsPort = normalizePort(process.env.HTTPS_PORT || '3443');
+
+/** Host para bind en desarrollo (LAN); en prod siempre 0.0.0.0 */
+const devHost = (process.env.DEV_LAN_HOST || '127.0.0.1').trim();
+
+app.set('port', httpPort);
+
+/** Detrás de proxy (Render) conviene confiar en X-Forwarded-* */
+if (isRender || process.env.FORCE_SSL === 'true') {
+  app.set('trust proxy', 1);
+  // Redirección a HTTPS a nivel app (opcional, controlado por FORCE_SSL=true)
+  if (process.env.FORCE_SSL === 'true') {
+    app.use((req, res, next) => {
+      const xfProto = req.headers['x-forwarded-proto'];
+      if (req.secure || xfProto === 'https') return next();
+      return res.redirect(301, 'https://' + req.headers.host + req.url);
+    });
   }
-  return '0.0.0.0';
+}
+
+let server;           // servidor principal (HTTP en Render / HTTPS en dev)
+let httpRedirectSrv;  // HTTP->HTTPS solo en dev
+
+if (HTTPS_DEV) {
+  // ======== Entorno local con HTTPS de desarrollo ========
+  const keyPath = process.env.SSL_KEY_PATH || './key.pem';
+  const certPath = process.env.SSL_CERT_PATH || './cert.pem';
+
+  let creds;
+  try {
+    creds = {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath),
+    };
+  } catch (e) {
+    console.warn(
+      `[WARN] No se pudieron leer certificados (${keyPath}, ${certPath}): ${e.message}\n` +
+      `Cayendo a HTTP simple en ${devHost}:${httpPort}`
+    );
+  }
+
+  if (creds) {
+    // HTTPS principal en IP LAN definida por variable de entorno
+    server = https.createServer(creds, app);
+    server.listen(httpsPort, devHost);
+    server.on('error', (err) => onError(err, httpsPort));
+    server.on('listening', () => onListening(server, 'https'));
+
+    // HTTP solo para redirigir a HTTPS local, usando el mismo host LAN
+    const publicHost = (process.env.PUBLIC_HOST || devHost).trim();
+    httpRedirectSrv = http.createServer((req, res) => {
+      res.writeHead(301, { Location: `https://${publicHost}:${httpsPort}${req.url}` });
+      res.end();
+    });
+    httpRedirectSrv.listen(httpPort, devHost);
+    httpRedirectSrv.on('listening', () =>
+      console.log(`HTTP redirect listening on ${devHost}:${httpPort} -> https://${publicHost}:${httpsPort}`)
+    );
+  } else {
+    // Sin certificados → HTTP puro en IP LAN definida
+    server = http.createServer(app);
+    server.listen(httpPort, devHost);
+    server.on('error', (err) => onError(err, httpPort));
+    server.on('listening', () => onListening(server, 'http'));
+  }
+} else {
+  // ======== Render / Producción (o local sin HTTPS_DEV) ========
+  // IMPORTANTE: no fijes una IP privada aquí; escucha en todas.
+  server = http.createServer(app);
+  server.listen(httpPort, '0.0.0.0');
+  server.on('error', (err) => onError(err, httpPort));
+  server.on('listening', () => onListening(server, 'http'));
 }
 
 /**
- * Get port from environment and store in Express.
- */
-var port = normalizePort(process.env.PORT || '3002');
-var httpsPort = normalizePort(process.env.HTTPS_PORT || '3443');
-var host = process.env.HOST || getLocalIP();  // ← AÑADIR ESTO
-
-app.set('port', port);
-
-/**
- * Configuración SSL
- */
-var httpsOptions = {
-  key: fs.readFileSync('./key.pem'),
-  cert: fs.readFileSync('./cert.pem')
-};
-
-/**
- * Create HTTPS server.
- */
-var httpsServer = https.createServer(httpsOptions, app);
-
-/**
- * Create HTTP server (opcional, para redirigir a HTTPS)
- */
-var httpServer = http.createServer(function(req, res) {
-  res.writeHead(301, { "Location": "https://" + req.headers['host'].split(':')[0] + ':' + httpsPort + req.url });
-  res.end();
-});
-
-/**
- * Listen on provided port, on all network interfaces.
- */
-httpsServer.listen(httpsPort, host);  // ← USA LA VARIABLE host
-httpsServer.on('error', onError);
-httpsServer.on('listening', function() {
-  console.log('HTTPS Server listening on ' + host + ':' + httpsPort);  // ← MOSTRAR IP
-});
-
-// Servidor HTTP solo para redirección
-httpServer.listen(port, host);  // ← USA LA VARIABLE host
-httpServer.on('listening', function() {
-  console.log('HTTP Server listening on ' + host + ':' + port + ' (redirecting to HTTPS)');  // ← MOSTRAR IP
-});
-
-/**
- * Normalize a port into a number, string, or false.
+ * Normaliza un puerto a número, string (pipe) o false.
  */
 function normalizePort(val) {
-  var port = parseInt(val, 10);
-  if (isNaN(port)) {
-    return val;
-  }
-  if (port >= 0) {
-    return port;
-  }
+  const port = parseInt(val, 10);
+  if (isNaN(port)) return val;   // named pipe
+  if (port >= 0) return port;    // port number
   return false;
 }
 
 /**
- * Event listener for HTTP server "error" event.
+ * Manejador de errores de "listen".
  */
-function onError(error) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
-  
+function onError(error, port) {
+  if (error.syscall !== 'listen') throw error;
+
+  const bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
+
   switch (error.code) {
     case 'EACCES':
       console.error(bind + ' requires elevated privileges');
@@ -108,7 +130,21 @@ function onError(error) {
       console.error(bind + ' is already in use');
       process.exit(1);
       break;
+    case 'EADDRNOTAVAIL':
+      console.error(bind + ' address not available (la IP de DEV_LAN_HOST debe estar asignada en tu equipo)');
+      process.exit(1);
+      break;
     default:
       throw error;
   }
+}
+
+/**
+ * Log de "listening".
+ */
+function onListening(srv, proto) {
+  const addr = srv.address();
+  const bind = typeof addr === 'string' ? 'pipe ' + addr : `${proto}://${addr.address}:${addr.port}`;
+  debug('Listening on ' + bind);
+  console.log('Listening on ' + bind);
 }
