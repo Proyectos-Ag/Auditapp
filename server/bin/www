@@ -3,102 +3,117 @@
 /**
  * Module dependencies.
  */
+
 var app = require('../app');
 var debug = require('debug')('server:server');
-var https = require('https');
 var http = require('http');
+var https = require('https');
 var fs = require('fs');
-var dotenv = require('dotenv');
-var os = require('os');  // ← AÑADIR ESTO
-
-dotenv.config();
-
-/**
- * Obtener IP local automáticamente
- */
-function getLocalIP() {
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      // Buscar IPv4 que no sea localhost y no sea virtual
-      if (iface.family === 'IPv4' && !iface.internal && !name.includes('VirtualBox')) {
-        return iface.address;
-      }
-    }
-  }
-  return '0.0.0.0';
-}
+var path = require('path');
 
 /**
  * Get port from environment and store in Express.
  */
-var port = normalizePort(process.env.PORT || '3002');
+
+var httpPort = normalizePort(process.env.PORT || '3002');
 var httpsPort = normalizePort(process.env.HTTPS_PORT || '3443');
-var host = process.env.HOST || getLocalIP();  // ← AÑADIR ESTO
 
-app.set('port', port);
-
-/**
- * Configuración SSL
- */
-var httpsOptions = {
-  key: fs.readFileSync('./key.pem'),
-  cert: fs.readFileSync('./cert.pem')
-};
+app.set('port', httpPort);
 
 /**
- * Create HTTPS server.
+ * Create HTTP server.
  */
-var httpsServer = https.createServer(httpsOptions, app);
 
-/**
- * Create HTTP server (opcional, para redirigir a HTTPS)
- */
-var httpServer = http.createServer(function(req, res) {
-  res.writeHead(301, { "Location": "https://" + req.headers['host'].split(':')[0] + ':' + httpsPort + req.url });
-  res.end();
-});
+var httpServer = http.createServer(app);
 
 /**
  * Listen on provided port, on all network interfaces.
  */
-httpsServer.listen(httpsPort, host);  // ← USA LA VARIABLE host
-httpsServer.on('error', onError);
-httpsServer.on('listening', function() {
-  console.log('HTTPS Server listening on ' + host + ':' + httpsPort);  // ← MOSTRAR IP
+
+httpServer.listen(httpPort, '0.0.0.0', () => {
+  console.log('=================================');
+  console.log('🚀 Servidor HTTP iniciado');
+  console.log('=================================');
+  console.log('📡 Puerto HTTP:', httpPort);
+  console.log('🌐 Local: http://localhost:' + httpPort);
+  console.log('🌐 Red: http://192.168.100.30:' + httpPort);
+  console.log('🔧 Entorno:', process.env.NODE_ENV || 'development');
+  console.log('=================================');
 });
 
-// Servidor HTTP solo para redirección
-httpServer.listen(port, host);  // ← USA LA VARIABLE host
-httpServer.on('listening', function() {
-  console.log('HTTP Server listening on ' + host + ':' + port + ' (redirecting to HTTPS)');  // ← MOSTRAR IP
-});
+httpServer.on('error', onError);
+
+/**
+ * Create HTTPS server
+ */
+
+try {
+  // Rutas a los certificados SSL
+  const keyPath = path.join(__dirname, '../ssl/key.pem');
+  const certPath = path.join(__dirname, '../ssl/cert.pem');
+  
+  console.log('📂 Buscando certificados SSL...');
+  console.log('   Key:', keyPath);
+  console.log('   Cert:', certPath);
+  
+  const privateKey = fs.readFileSync(keyPath, 'utf8');
+  const certificate = fs.readFileSync(certPath, 'utf8');
+  
+  const credentials = { key: privateKey, cert: certificate };
+  var httpsServer = https.createServer(credentials, app);
+
+  httpsServer.listen(httpsPort, '0.0.0.0', () => {
+    console.log('=================================');
+    console.log('🔒 Servidor HTTPS iniciado');
+    console.log('=================================');
+    console.log('📡 Puerto HTTPS:', httpsPort);
+    console.log('🌐 Local: https://localhost:' + httpsPort);
+    console.log('🌐 Red: https://192.168.100.30:' + httpsPort);
+    console.log('⚠️  Certificado autofirmado - El navegador mostrará advertencia');
+    console.log('=================================');
+  });
+
+  httpsServer.on('error', onError);
+} catch (err) {
+  console.error('❌ Error al cargar certificados SSL:', err.message);
+  console.log('⚠️  Solo servidor HTTP disponible');
+  console.log('💡 Para habilitar HTTPS:');
+  console.log('   1. cd ssl');
+  console.log('   2. openssl req -nodes -new -x509 -keyout key.pem -out cert.pem -days 365');
+  console.log('=================================');
+}
 
 /**
  * Normalize a port into a number, string, or false.
  */
+
 function normalizePort(val) {
   var port = parseInt(val, 10);
+
   if (isNaN(port)) {
     return val;
   }
+
   if (port >= 0) {
     return port;
   }
+
   return false;
 }
 
 /**
  * Event listener for HTTP server "error" event.
  */
+
 function onError(error) {
   if (error.syscall !== 'listen') {
     throw error;
   }
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
-  
+
+  var bind = typeof this.address === 'function'
+    ? 'Port ' + this.address().port
+    : 'Port';
+
   switch (error.code) {
     case 'EACCES':
       console.error(bind + ' requires elevated privileges');

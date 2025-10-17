@@ -97,19 +97,16 @@ const Navbar = () => {
       navigate('/'); // Ruta por defecto si no existe TipoUsuario
       return;
     }
-  
-    switch (userData.TipoUsuario) {
-      case 'auditado':
-        navigate('/auditado');
-        break;
-      case 'auditor':
-        navigate('/auditor');
-        break;
-      case 'administrador':
-        navigate('/admin');
-        break;
-      default:
-        navigate('/');
+    // Invitados ven la UI de administrador (solo lectura) — mapearlos a /admin
+    const tipo = (userData.TipoUsuario || '').toLowerCase();
+    if (tipo === 'auditado') {
+      navigate('/auditado');
+    } else if (tipo === 'auditor') {
+      navigate('/auditor');
+    } else if (tipo === 'administrador' || tipo === 'invitado') {
+      navigate('/admin');
+    } else {
+      navigate('/');
     }
   };  
 
@@ -142,7 +139,7 @@ const Navbar = () => {
       style={{ cursor: 'pointer' }}/>
         <Divider sx={{backgroundColor:'#000000'}}/>
 
-        {userData?.TipoUsuario === 'administrador' && (
+  {['administrador','invitado'].includes(userData?.TipoUsuario) && (
           <>
         {/*Administrador*/}
         <br />

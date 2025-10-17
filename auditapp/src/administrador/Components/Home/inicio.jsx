@@ -123,6 +123,15 @@ const Inicio = () => {
     <div className="conten-funcion" style={{marginTop:'-18%'}}>
     <h1>Administración</h1>
     <div className="contenedor-home">
+      <div className="card-home" onClick={() => navigate("/generar-invitacion") } style={{display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center'}}>
+        Generar
+        <br />
+        Invitación
+        <br />
+        <br />
+        <img src={programas} alt="programas" className='imagen-mini' style={{width:'55%'}} />
+      </div>
+
       <div className="card-home" onClick={() => navigate("/evuaauditor")}>
         Realizar Evaluación
         <br /><br />

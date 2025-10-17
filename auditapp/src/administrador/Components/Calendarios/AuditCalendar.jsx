@@ -242,15 +242,68 @@ const AuditCalendar = () => {
   useEffect(() => {
     const fetchAuditorias = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
-        setAuditorias(response.data);
+        // traer datos de ambos endpoints
+        const [datosRes, progRes] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`),
+          axios.get(`${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits`)
+        ]);
 
-        const pendingAudits = response.data.filter(audit => 
-          audit.Estado === 'pendiente' || audit.Estado === 'Terminada' || audit.Estado === 'Devuelto'
-        );
-        setPendingAudits(pendingAudits);
+        const datos = Array.isArray(datosRes.data) ? datosRes.data : [];
+        const prog = Array.isArray(progRes.data) ? progRes.data : [];
 
-        calculateStats(response.data);
+        // Normalizar estados entre ambas fuentes
+        const normalizeStatus = (item, source) => {
+          // source: 'datos' or 'program'
+          let status = 'Desconocido';
+          if (source === 'program') {
+            // programar-audi status enums: Realizada, Programada, No ejecutada, Por Confirmar, En Curso
+            switch ((item.status || '').toString()) {
+              case 'Realizada': status = 'Realizada'; break;
+              case 'Programada': status = 'Programada'; break;
+              case 'No ejecutada': status = 'No ejecutada'; break;
+              case 'Por Confirmar': status = 'Por Confirmar'; break;
+              case 'En Curso': status = 'En Curso'; break;
+              default: status = item.status || 'Desconocido';
+            }
+          } else {
+            // datos.Estado possible values used across app: pendiente, Terminada, Devuelto, etc.
+            const e = (item.Estado || item.Estatus || '').toString().toLowerCase();
+            if (e.includes('pend') || e.includes('pendiente')) status = 'Programada';
+            else if (e.includes('termin') || e.includes('finaliz')) status = 'Realizada';
+            else if (e.includes('devuelto')) status = 'Devuelto';
+            else if (e.includes('cancel')) status = 'Cancelada';
+            else if (e.includes('no ejecutada') || e.includes('no ejecutado')) status = 'No ejecutada';
+            else status = item.Estado || item.Estatus || 'Desconocido';
+          }
+          return status;
+        };
+
+        // Mapear cada fuente a una estructura común, manteniendo campos originales
+        const mappedDatos = datos.map(d => ({
+          ...d,
+          _source: 'datos',
+          normalizedStatus: normalizeStatus(d, 'datos'),
+          start: d.FechaInicio || d.FechaElaboracion || null,
+          end: d.FechaFin || null,
+        }));
+
+        const mappedProg = prog.map(p => ({
+          ...p,
+          _source: 'program',
+          normalizedStatus: normalizeStatus(p, 'program'),
+          start: p.fechaInicio || null,
+          end: p.fechaFin || null,
+        }));
+
+        const combined = [...mappedDatos, ...mappedProg];
+
+        setAuditorias(combined);
+
+        // pendingAudits: aquellos que aún no están realizados (Programada, Por Confirmar, En Curso)
+        const pending = combined.filter(a => ['Programada', 'Por Confirmar', 'En Curso'].includes(a.normalizedStatus));
+        setPendingAudits(pending);
+
+        calculateStats(combined);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -285,16 +338,29 @@ const AuditCalendar = () => {
   };
 
   const getFilteredAudits = () => {
+    // Map tabValue to normalizedStatus filter (tab 0 = all)
+    const statusByTab = {
+      1: 'Realizada',
+      2: 'Programada',
+      3: 'No ejecutada',
+      4: 'En Curso',
+      5: 'Por Confirmar'
+    };
+
+    const desiredStatus = statusByTab[tabValue] || null; // null => todas
+
     return auditorias.filter(audit => {
-      if (audit.Estado !== 'Finalizado') return false;
-      
-      const acceptability = getAcceptability(audit.PorcentajeTotal);
-      const year = new Date(audit.FechaInicio).getFullYear().toString();
-      
+      // If a specific status is selected, filter by normalizedStatus
+      if (desiredStatus && audit.normalizedStatus !== desiredStatus) return false;
+
+  const acceptability = getAcceptability(audit.PorcentajeTotal);
+  const startDate = getStartDate(audit);
+  const year = startDate ? startDate.getFullYear().toString() : '';
+
       return (
-        (filters.auditorLider === '' || audit.AuditorLider === filters.auditorLider) &&
-        (filters.tipoAuditoria === '' || audit.TipoAuditoria === filters.tipoAuditoria) &&
-        (filters.departamento === '' || audit.Departamento === filters.departamento) &&
+        (filters.auditorLider === '' || (audit.AuditorLider && audit.AuditorLider === filters.auditorLider)) &&
+        (filters.tipoAuditoria === '' || (audit.TipoAuditoria && audit.TipoAuditoria === filters.tipoAuditoria)) &&
+        (filters.departamento === '' || (audit.Departamento && audit.Departamento === filters.departamento)) &&
         (filters.aceptibilidad === '' || acceptability === filters.aceptibilidad) &&
         (filters.year === '' || year === filters.year)
       );
@@ -309,11 +375,13 @@ const AuditCalendar = () => {
       if (pendingFilters.tipoAuditoria && audit.TipoAuditoria !== pendingFilters.tipoAuditoria) {
         return false;
       }
-      if (pendingFilters.fechaInicio && new Date(audit.FechaInicio) < new Date(pendingFilters.fechaInicio)) {
-        return false;
+      if (pendingFilters.fechaInicio) {
+        const s = getStartDate(audit);
+        if (!s || s < new Date(pendingFilters.fechaInicio)) return false;
       }
-      if (pendingFilters.fechaFin && new Date(audit.FechaFin) > new Date(pendingFilters.fechaFin)) {
-        return false;
+      if (pendingFilters.fechaFin) {
+        const e = getEndDate(audit);
+        if (!e || e > new Date(pendingFilters.fechaFin)) return false;
       }
       return true;
     });
@@ -327,10 +395,69 @@ const AuditCalendar = () => {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
 
+  // Normalized date helpers: prefer mapped `start`/`end`, then legacy fields
+  const getStartDate = (audit) => {
+    if (!audit) return null;
+    const s = audit.start || audit.FechaInicio || audit.fechaInicio || audit.FechaElaboracion;
+    return s ? new Date(s) : null;
+  };
+
+  const getEndDate = (audit) => {
+    if (!audit) return null;
+    const e = audit.end || audit.FechaFin || audit.fechaFin;
+    return e ? new Date(e) : null;
+  };
+
+  // Display helpers to provide sensible fallbacks for program-scheduled audits
+  const getDisplayTitle = (audit) => {
+    if (!audit) return '';
+    if (audit._source === 'program') return audit.cliente || `Auditoría programada`;
+    return audit.TipoAuditoria || audit.cliente || 'Auditoría';
+  };
+
+  const getDisplaySubtitle = (audit) => {
+    if (!audit) return '';
+    if (audit._source === 'program') return audit.modalidad || audit.status || '';
+    return audit.Departamento || '';
+  };
+
+  const getDisplayLeader = (audit) => {
+    if (!audit) return 'N/A';
+    return audit.AuditorLider || audit.auditorLider || 'N/A';
+  };
+
+  const getDisplayDuration = (audit) => {
+    if (!audit) return '';
+    // For program entries, show fecha range if available
+    if (audit._source === 'program') {
+      const s = audit.fechaInicio || audit.start;
+      const e = audit.fechaFin || audit.end;
+      if (s && e) {
+        try {
+          return `${new Date(s).toLocaleDateString()} - ${new Date(e).toLocaleDateString()}`;
+        } catch (err) {
+          return `${s} - ${e}`;
+        }
+      }
+      return `${s || ''}`;
+    }
+    return audit.Duracion || '';
+  };
+
+  const getDisplayPercentage = (audit) => {
+    if (!audit) return '';
+    return audit.PorcentajeTotal ? `${audit.PorcentajeTotal}%` : '';
+  };
+
+  const getDisplayStatus = (audit) => {
+    if (!audit) return '';
+    return audit.normalizedStatus || audit.status || audit.Estado || '';
+  };
+
   const getAuditsForDate = (date) => {
     return auditorias.filter(audit => {
-      const auditDate = new Date(audit.FechaInicio);
-      return auditDate.toDateString() === date.toDateString();
+      const auditDate = getStartDate(audit);
+      return auditDate && auditDate.toDateString() === date.toDateString();
     });
   };
 
@@ -911,7 +1038,7 @@ const AuditCalendar = () => {
                         {auditsOnDate.slice(0, 3).map((audit, idx) => (
                           <Tooltip 
                             key={idx} 
-                            title={`${audit.TipoAuditoria} - ${audit.Departamento} - ${audit.AuditorLider}`}
+                            title={`${getDisplayTitle(audit)} - ${getDisplaySubtitle(audit)} - ${getDisplayLeader(audit)}`}
                             placement="top"
                           >
                             <Box
@@ -939,7 +1066,7 @@ const AuditCalendar = () => {
                                   fontSize: '0.7rem'
                                 }}
                               >
-                                {audit.TipoAuditoria}
+                                {getDisplayTitle(audit)}
                               </Typography>
                               <Typography 
                                 variant="caption" 
@@ -952,7 +1079,7 @@ const AuditCalendar = () => {
                                   fontSize: '0.65rem'
                                 }}
                               >
-                                {audit.Departamento}
+                                {getDisplaySubtitle(audit)}
                               </Typography>
                             </Box>
                           </Tooltip>
@@ -1152,10 +1279,10 @@ const AuditCalendar = () => {
           </Avatar>
           <Box flex={1}>
             <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-              {audit.TipoAuditoria}
+              {getDisplayTitle(audit)}
             </Typography>
             <Typography variant="caption" color="textSecondary">
-              {audit.Departamento}
+              {getDisplaySubtitle(audit)}
             </Typography>
           </Box>
           <IconButton size="small" color="primary">
@@ -1168,56 +1295,71 @@ const AuditCalendar = () => {
             <Box display="flex" alignItems="center" gap={1}>
               <Person fontSize="small" color="action" />
               <Typography variant="caption">
-                {audit.AuditorLider}
+                {getDisplayLeader(audit)}
               </Typography>
             </Box>
             <Typography variant="caption" color="textSecondary">
-              {audit.Duracion}
+              {getDisplayDuration(audit)}
             </Typography>
           </Box>
 
-          {audit.Estado === 'Finalizado' && (
-            <>
-              <Box>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
-                  <Typography variant="caption" color="textSecondary">
-                    Resultado
-                  </Typography>
-                  <Typography variant="body2" fontWeight="700">
-                    {audit.PorcentajeTotal}%
-                  </Typography>
-                </Box>
-                <ProgressBar 
-                  variant="determinate" 
-                  value={parseFloat(audit.PorcentajeTotal) || 0} 
-                  percentage={parseFloat(audit.PorcentajeTotal) || 0}
-                />
-              </Box>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="caption" color="textSecondary">
-                  Aceptabilidad
-                </Typography>
-                <AcceptabilityChip 
-                  label={getAcceptability(audit.PorcentajeTotal)} 
-                  acceptability={getAcceptability(audit.PorcentajeTotal)}
-                  size="small"
-                />
-              </Box>
-            </>
-          )}
+                  {audit._source === 'program' ? (
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                      <Typography variant="caption" color="textSecondary">
+                        Estado
+                      </Typography>
+                      <StatusChip 
+                        label={getDisplayStatus(audit)} 
+                        status={getDisplayStatus(audit)}
+                        size="small"
+                      />
+                    </Box>
+                  ) : (
+                    <>
+                      {(audit.Estado === 'Finalizado' || audit.normalizedStatus === 'Realizada') && (
+                        <>
+                          <Box>
+                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
+                              <Typography variant="caption" color="textSecondary">
+                                Resultado
+                              </Typography>
+                              <Typography variant="body2" fontWeight="700">
+                                {getDisplayPercentage(audit)}
+                              </Typography>
+                            </Box>
+                            <ProgressBar 
+                              variant="determinate" 
+                              value={parseFloat(audit.PorcentajeTotal) || 0} 
+                              percentage={parseFloat(audit.PorcentajeTotal) || 0}
+                            />
+                          </Box>
+                          <Box display="flex" justifyContent="space-between" alignItems="center">
+                            <Typography variant="caption" color="textSecondary">
+                              Aceptabilidad
+                            </Typography>
+                            <AcceptabilityChip 
+                              label={getAcceptability(audit.PorcentajeTotal)} 
+                              acceptability={getAcceptability(audit.PorcentajeTotal)}
+                              size="small"
+                            />
+                          </Box>
+                        </>
+                      )}
 
-          {audit.Estado !== 'Finalizado' && (
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="caption" color="textSecondary">
-                Estado
-              </Typography>
-              <StatusChip 
-                label={audit.Estado} 
-                status={audit.Estado}
-                size="small"
-              />
-            </Box>
-          )}
+                      {audit.Estado !== 'Finalizado' && (
+                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                          <Typography variant="caption" color="textSecondary">
+                            Estado
+                          </Typography>
+                          <StatusChip 
+                            label={audit.Estado} 
+                            status={audit.Estado}
+                            size="small"
+                          />
+                        </Box>
+                      )}
+                    </>
+                  )}
         </Box>
       </CardContent>
     </StyledCard>
@@ -1250,21 +1392,24 @@ const AuditCalendar = () => {
 
         {tabValue === 1 ? (
           <Box display="flex" flexDirection="column" gap={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Año</InputLabel>
-              <Select
-                value={filters.year}
-                onChange={handleFilterChange}
-                label="Año"
-                name="year"
-              >
-                {[...new Set(auditorias.map(audit => new Date(audit.FechaInicio).getFullYear()))].map((year, index) => (
-                  <MenuItem key={index} value={year.toString()}>
-                    {year}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                <FormControl fullWidth size="small">
+                    <InputLabel>Año</InputLabel>
+                    <Select
+                      value={filters.year}
+                      onChange={handleFilterChange}
+                      label="Año"
+                      name="year"
+                    >
+                      {[...new Set(auditorias.map(audit => {
+                        const s = getStartDate(audit);
+                        return s ? s.getFullYear() : null;
+                      }).filter(Boolean))].map((year, index) => (
+                        <MenuItem key={index} value={year.toString()}>
+                          {year}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
             <FormControl fullWidth size="small">
               <InputLabel>Auditor Líder</InputLabel>
               <Select
@@ -1435,22 +1580,15 @@ const AuditCalendar = () => {
               value={tabValue} 
               onChange={(e, newValue) => setTabValue(newValue)}
               sx={{ px: 2 }}
+              variant="scrollable"
+              scrollButtons="auto"
             >
-              <Tab 
-                icon={<CalendarToday />} 
-                label="Vista Calendario" 
-                iconPosition="start"
-              />
-              <Tab 
-                icon={<BarChart />} 
-                label="Auditorías Realizadas" 
-                iconPosition="start"
-              />
-              <Tab 
-                icon={<Pending />} 
-                label="Auditorías Pendientes" 
-                iconPosition="start"
-              />
+              <Tab icon={<CalendarToday />} label="Calendario" iconPosition="start" />
+              <Tab icon={<CheckCircle />} label="Realizadas" iconPosition="start" />
+              <Tab icon={<Schedule />} label="Programadas" iconPosition="start" />
+              <Tab icon={<EventBusy />} label="No ejecutada" iconPosition="start" />
+              <Tab icon={<EventAvailable />} label="En Curso" iconPosition="start" />
+              <Tab icon={<Pending />} label="Por Confirmar" iconPosition="start" />
             </Tabs>
           </Box>
 
@@ -1524,7 +1662,10 @@ const AuditCalendar = () => {
                       label="Año"
                       name="year"
                     >
-                      {[...new Set(auditorias.map(audit => new Date(audit.FechaInicio).getFullYear()))].map((year, index) => (
+                      {[...new Set(auditorias.map(audit => {
+                        const s = getStartDate(audit);
+                        return s ? s.getFullYear() : null;
+                      }).filter(Boolean))].map((year, index) => (
                         <MenuItem key={index} value={year.toString()}>
                           {year}
                         </MenuItem>
@@ -1609,36 +1750,36 @@ const AuditCalendar = () => {
                             </Avatar>
                             <Box>
                               <Typography variant="h6" gutterBottom>
-                                {audit.TipoAuditoria}
+                                {getDisplayTitle(audit)}
                               </Typography>
                               <Typography variant="body2" color="textSecondary">
-                                {audit.Departamento}
+                                {getDisplaySubtitle(audit)}
                               </Typography>
                             </Box>
                           </Box>
                         </Grid>
                         <Grid item xs={12} md={2}>
                           <Typography variant="body2" gutterBottom>
-                            {audit.Duracion}
+                            {getDisplayDuration(audit)}
                           </Typography>
                           <Typography variant="caption" color="textSecondary">
                             Duración
                           </Typography>
                         </Grid>
                         <Grid item xs={12} md={2}>
-                          <Box display="flex" alignItems="center" gap={1}>
+                            <Box display="flex" alignItems="center" gap={1}>
                             <Avatar sx={{ width: 32, height: 32, bgcolor: 'grey.300' }}>
                               <Person />
                             </Avatar>
                             <Typography variant="body2">
-                              {audit.AuditorLider}
+                              {getDisplayLeader(audit)}
                             </Typography>
                           </Box>
                         </Grid>
                         <Grid item xs={12} md={2}>
                           <Box>
                             <Typography variant="body2" fontWeight="600" gutterBottom>
-                              {audit.PorcentajeTotal}%
+                              {getDisplayPercentage(audit)}
                             </Typography>
                             <ProgressBar 
                               variant="determinate" 
@@ -1761,17 +1902,17 @@ const AuditCalendar = () => {
                             </Avatar>
                             <Box>
                               <Typography variant="h6" gutterBottom>
-                                {audit.TipoAuditoria}
+                                {getDisplayTitle(audit)}
                               </Typography>
                               <Typography variant="body2" color="textSecondary">
-                                {audit.Departamento}
+                                {getDisplaySubtitle(audit)}
                               </Typography>
                             </Box>
                           </Box>
                         </Grid>
                         <Grid item xs={12} md={2}>
                           <Typography variant="body2" gutterBottom>
-                            {audit.Duracion}
+                            {getDisplayDuration(audit)}
                           </Typography>
                           <Typography variant="caption" color="textSecondary">
                             Programada
@@ -1783,19 +1924,19 @@ const AuditCalendar = () => {
                               <Person />
                             </Avatar>
                             <Typography variant="body2">
-                              {audit.AuditorLider}
+                              {getDisplayLeader(audit)}
                             </Typography>
                           </Box>
                         </Grid>
                         <Grid item xs={12} md={2}>
                           <StatusChip 
-                            label={audit.Estado} 
-                            status={audit.Estado}
+                            label={getDisplayStatus(audit)} 
+                            status={getDisplayStatus(audit)}
                           />
                         </Grid>
                         <Grid item xs={12} md={2}>
                           <Typography variant="body2" gutterBottom>
-                            {new Date(audit.FechaInicio).toLocaleDateString()}
+                            {getStartDate(audit) ? getStartDate(audit).toLocaleDateString() : ''}
                           </Typography>
                           <Typography variant="caption" color="textSecondary">
                             Inicio

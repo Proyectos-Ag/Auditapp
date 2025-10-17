@@ -122,9 +122,10 @@ const IconMenu = () => {
   };
 
   const handleNavigateToInicio = () => {
-    const ruta = userData?.TipoUsuario === 'administrador' ? '/admin'
-      : userData?.TipoUsuario === 'auditado' ? '/auditado'
-      : userData?.TipoUsuario === 'auditor' ? '/auditor'
+    const tipo = (userData?.TipoUsuario || '').toLowerCase();
+    const ruta = (tipo === 'administrador' || tipo === 'invitado') ? '/admin'
+      : tipo === 'auditado' ? '/auditado'
+      : tipo === 'auditor' ? '/auditor'
       : '/';
     navigate(ruta, { state: { showModal: true } });
     setOpenAccountMenu(false);

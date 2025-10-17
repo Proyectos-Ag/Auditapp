@@ -9,16 +9,24 @@ const iniciarSesion = async (req, res) => {
   const { Correo, Contraseña } = req.body;
 
   try {
+    // Validar que se enviaron los datos
+    if (!Correo || !Contraseña) {
+      return res.status(400).json({ error: 'Correo y contraseña son requeridos' });
+    }
+
+    // Buscar usuario
     const usuario = await Usuarios.findOne({ Correo });
     if (!usuario) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
+    // Verificar contraseña
     const esContraseñaCorrecta = await bcrypt.compare(Contraseña, usuario.Contraseña);
     if (!esContraseñaCorrecta) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
+    // Determinar tipo de usuario
     let tipoUsuario = '';
     switch (usuario.TipoUsuario) {
       case 'administrador':
@@ -35,17 +43,36 @@ const iniciarSesion = async (req, res) => {
         break;
     }
 
-    // Generar el token JWT con una validez de 8 horas
-    const token = jwt.sign({ userId: usuario._id }, process.env.JWT_SECRET, { expiresIn: '8h' });
+    // Generar token JWT con validez de 8 horas
+    const token = jwt.sign(
+      { 
+        userId: usuario._id,
+        correo: usuario.Correo,
+        tipoUsuario: usuario.TipoUsuario
+      }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '8h' }
+    );
     
-    // Establecer el token en una cookie HttpOnly
-    res.cookie('token', token, {
+    // Configuración de cookie consistente
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 8 * 60 * 60 * 1000, // 8 horas en milisegundos
-    });
+      secure: true, // true porque usarás HTTPS
+      sameSite: 'none', // 'none' es requerido para HTTPS con CORS
+      maxAge: 8 * 60 * 60 * 1000, // 8 horas
+      path: '/'
+    };
+
+    // Establecer cookie
+    res.cookie('token', token, cookieOptions);
     
+    console.log('Login exitoso para:', usuario.Correo);
+    console.log('Token generado y cookie establecida');
+    
+    // Responder con datos del usuario (sin enviar el token en el body)
     return res.status(200).json({
+      success: true,
+      message: 'Login exitoso',
       usuario: {
         Correo: usuario.Correo, 
         Nombre: usuario.Nombre, 
@@ -58,7 +85,7 @@ const iniciarSesion = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error en iniciarSesion:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };

@@ -45,7 +45,11 @@ const BotonesRol = () => {
   };
 
   const currentTabs = userData ? tabsByRole[userData?.TipoUsuario] || [] : [];
-  if (!currentTabs.length) return null;
+  // Map 'invitado' to administrador tabs for UI visibility (server still enforces readonly)
+  const tipo = userData?.TipoUsuario;
+  const effectiveTipo = tipo === 'invitado' ? 'administrador' : tipo;
+  const tabs = userData ? tabsByRole[effectiveTipo] || [] : [];
+  if (!tabs.length) return null;
 
   return (
     <Box sx={{ width: '100%', bgcolor: 'background.paper', mb: 2, overflowX: isSmall ? 'auto' : 'hidden' }}>
@@ -76,7 +80,7 @@ const BotonesRol = () => {
           }
         }}
       >
-        {currentTabs.map(({ label, path }) => (
+        {tabs.map(({ label, path }) => (
           <Tab key={path} label={label} value={path} />
         ))}
       </Tabs>

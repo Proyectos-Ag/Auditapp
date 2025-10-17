@@ -16,6 +16,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   // Verificar si el rol del usuario está permitido
   if (allowedRoles && !allowedRoles.includes(userData.TipoUsuario)) {
+    // Permitir a los invitados ver páginas protegidas (solo lectura)
+    if (userData.TipoUsuario === 'invitado') return children;
+
+    // Permitir también si el usuario tiene un grant temporal activo (readonly)
+    if (userData.temporaryGrant && userData.temporaryGrant.permisos === 'readonly') return children;
     return <UnauthorizedPage />; // O a una página de acceso denegado
   }
 
