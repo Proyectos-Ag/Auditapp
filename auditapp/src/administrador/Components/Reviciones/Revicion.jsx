@@ -18,11 +18,11 @@ const Reporte = () => {
     const [visibleTextAreas, setVisibleTextAreas] = useState({});
     const [hiddenRows, setHiddenRows] = useState({}); 
     const [conteoCriteriosOcultos, setConteoCriteriosOcultos] = useState({});
+    const [imageErrors, setImageErrors] = useState({}); // Para manejar errores de carga
     const {_id} = useParams();
     const [isLoading, setIsLoading] = useState(false);
     const [progress, setProgress] = useState(0);
     const navigate = useNavigate();
-
 
     console.log('Aquiiiiiiiii',conteoCriteriosOcultos);
 
@@ -167,7 +167,6 @@ const Reporte = () => {
                 icon: 'success',
                 confirmButtonText: 'Aceptar'
             }).then(() => {
-                // Redirige después de aceptar la alerta
                 navigate('/revish');
             });
         } catch (error) {
@@ -190,7 +189,7 @@ const Reporte = () => {
         }));
     }, 100); 
     
-     const notaCorreccion = (e, id) => {
+    const notaCorreccion = (e, id) => {
         const newNotas = { ...notas, [id]: e.target.value };
         setNotas(newNotas);
     };
@@ -210,9 +209,9 @@ const Reporte = () => {
             actualizarEstadoADevuelto(id, AuditorLiderEmail);
           }
         });
-      };
+    };
 
-      const Aprobar = async (id, puntuacionObtenida, confExternas, estatus, porcentajeTotal, AuditorLiderEmail) => {
+    const Aprobar = async (id, puntuacionObtenida, confExternas, estatus, porcentajeTotal, AuditorLiderEmail) => {
         Swal.fire({
           title: '¿Estás seguro de querer aprobar este reporte?',
           text: '¡Será enviado al auditado!',
@@ -227,9 +226,9 @@ const Reporte = () => {
             actualizarEstadoTerminada(id, puntuacionObtenida,confExternas, estatus, porcentajeTotal, AuditorLiderEmail);
           }
         });
-      };
+    };
 
-      const eliminarReporte = async (id) => {
+    const eliminarReporte = async (id) => {
         Swal.fire({
             title: '¿Estás seguro de querer eliminar este reporte?',
             text: '¡El reporte será eliminado permanentemente!',
@@ -253,6 +252,150 @@ const Reporte = () => {
         });
     };
 
+    // Función para limpiar y decodificar URLs de Firebase
+    const cleanFirebaseUrl = (url) => {
+        if (!url || typeof url !== 'string') return url;
+        
+        try {
+            // Si el URL contiene %2F, decodificar completamente
+            let cleanUrl = url;
+            while (cleanUrl.includes('%2F') || cleanUrl.includes('%2f')) {
+                cleanUrl = decodeURIComponent(cleanUrl);
+            }
+            
+            // Asegurar que tenga el formato correcto
+            // El path después de /o/ debe estar codificado correctamente
+            if (cleanUrl.includes('/o/')) {
+                const parts = cleanUrl.split('/o/');
+                if (parts.length === 2) {
+                    const baseUrl = parts[0] + '/o/';
+                    const pathAndQuery = parts[1];
+                    
+                    // Separar el path del query string
+                    const queryIndex = pathAndQuery.indexOf('?');
+                    if (queryIndex > -1) {
+                        const path = pathAndQuery.substring(0, queryIndex);
+                        const query = pathAndQuery.substring(queryIndex);
+                        
+                        // Re-codificar solo el path (no el query string)
+                        const encodedPath = encodeURIComponent(path);
+                        cleanUrl = baseUrl + encodedPath + query;
+                    }
+                }
+            }
+            
+            return cleanUrl;
+        } catch (e) {
+            console.error('Error procesando URL:', e);
+            return url;
+        }
+    };
+
+    // Función mejorada para verificar si es una imagen
+    const isFirebaseImage = (url) => {
+        if (!url || typeof url !== 'string') return false;
+        return url.includes('firebasestorage.googleapis.com') || 
+               url.includes('https://firebasestorage') ||
+               url.includes('firebaseapp.appspot.com');
+    };
+
+    // Manejador de error de imagen
+    const handleImageError = (imageKey, url) => {
+        console.error(`Error al cargar la imagen: ${imageKey}`);
+        console.error(`URL problemático: ${url}`);
+        setImageErrors(prev => ({
+            ...prev,
+            [imageKey]: true
+        }));
+    };
+
+    // Componente para renderizar imagen con manejo de errores
+    const ImagenHallazgo = ({ src, alt, imageKey }) => {
+        const [loading, setLoading] = useState(true);
+        const hasError = imageErrors[imageKey];
+        
+        // Limpiar y decodificar el URL
+        const cleanedUrl = cleanFirebaseUrl(src);
+
+        if (hasError) {
+            return (
+                <div style={{ 
+                    padding: '10px', 
+                    backgroundColor: '#fff3cd', 
+                    border: '1px solid #ffc107',
+                    borderRadius: '4px',
+                    textAlign: 'center'
+                }}>
+                    <p style={{ margin: 0, color: '#856404', marginBottom: '8px' }}>
+                        ⚠️ Error al cargar la imagen
+                    </p>
+                    <a 
+                        href={cleanedUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        style={{ 
+                            fontSize: '0.85em', 
+                            color: '#0066cc',
+                            wordBreak: 'break-all',
+                            display: 'block',
+                            marginBottom: '5px'
+                        }}
+                    >
+                        Ver imagen original
+                    </a>
+                    <div style={{ 
+                        fontSize: '0.75em', 
+                        color: '#666',
+                        maxHeight: '60px',
+                        overflow: 'auto',
+                        marginTop: '8px',
+                        padding: '5px',
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: '3px'
+                    }}>
+                        {cleanedUrl}
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div style={{ position: 'relative' }}>
+                {loading && (
+                    <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        alignItems: 'center',
+                        padding: '20px'
+                    }}>
+                        <CircularProgress size={24} />
+                    </div>
+                )}
+                <img
+                    src={cleanedUrl}
+                    alt={alt}
+                    className="hallazgo-imagen"
+                    crossOrigin="anonymous"
+                    referrerPolicy="no-referrer"
+                    onLoad={() => {
+                        console.log('Imagen cargada exitosamente:', cleanedUrl);
+                        setLoading(false);
+                    }}
+                    onError={(e) => {
+                        console.error('Error al cargar imagen:', e);
+                        setLoading(false);
+                        handleImageError(imageKey, cleanedUrl);
+                    }}
+                    style={{ 
+                        display: loading ? 'none' : 'block',
+                        maxWidth: '100%',
+                        height: 'auto'
+                    }}
+                />
+            </div>
+        );
+    };
+
     const handlePrintPDF = () => {
         setIsLoading(true);
         setProgress(0);
@@ -265,7 +408,12 @@ const Reporte = () => {
         const part2 = document.getElementById('pdf-content-part2');
     
         const addPartAsImage = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
-            const canvas = await html2canvas(element, { scale: 2.5, useCORS: true });
+            const canvas = await html2canvas(element, { 
+                scale: 2.5, 
+                useCORS: true,
+                allowTaint: true,
+                logging: false
+            });
             const imgWidth = pageWidth - marginLeft - marginRight;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
@@ -278,7 +426,7 @@ const Reporte = () => {
             pdf.addImage(imgData, 'JPEG', marginLeft, yOffset, imgWidth, imgHeight);
             yOffset += imgHeight;
     
-            updateProgress(20); // Incrementa el progreso de forma proporcional
+            updateProgress(20);
             return yOffset;
         };
     
@@ -287,10 +435,15 @@ const Reporte = () => {
                 return row.style.display !== "none" && row.offsetParent !== null;
             });
     
-            const progressIncrement = 30 / rows.length; // Progreso proporcional por fila
+            const progressIncrement = 30 / rows.length;
     
             for (const row of rows) {
-                const rowCanvas = await html2canvas(row, { scale: 2.5, useCORS: true });
+                const rowCanvas = await html2canvas(row, { 
+                    scale: 2.5, 
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false
+                });
                 const rowHeight = (rowCanvas.height * (pageWidth - marginLeft - marginRight)) / rowCanvas.width;
     
                 if (yOffset + rowHeight + bottomMargin > pageHeight) {
@@ -302,7 +455,7 @@ const Reporte = () => {
                 pdf.addImage(rowImgData, 'JPEG', marginLeft, yOffset, pageWidth - marginLeft - marginRight, rowHeight);
                 yOffset += rowHeight;
     
-                updateProgress(progressIncrement); // Incrementa el progreso por cada fila
+                updateProgress(progressIncrement);
             }
     
             return yOffset;
@@ -310,11 +463,11 @@ const Reporte = () => {
     
         const addPartWithRowControl = async (element, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin) => {
             const tables = element.querySelectorAll('table');
-            const progressIncrement = tables.length > 0 ? 20 / tables.length : 0; // Progreso proporcional por tabla
+            const progressIncrement = tables.length > 0 ? 20 / tables.length : 0;
     
             for (const table of tables) {
                 yOffset = await processElementRows(table, pdf, yOffset, pageWidth, pageHeight, marginLeft, marginRight, bottomMargin);
-                updateProgress(progressIncrement); // Incrementa el progreso por cada tabla
+                updateProgress(progressIncrement);
             }
     
             return yOffset;
@@ -342,68 +495,63 @@ const Reporte = () => {
             })
             .catch((error) => {
                 console.error('Error generating PDF:', error);
+                Swal.fire('Error', 'No se pudo generar el PDF. Verifica las imágenes.', 'error');
                 setIsLoading(false);
             });
     };    
 
-
     return (
         <div className='espacio-repo'>
-            {/*Mensaje de generacion*/}
             {isLoading && (
                 <div className="loading-overlay">
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <CircularProgress variant="determinate" value={progress} />
-                        <p>{progress}%</p> {/* Muestra el porcentaje debajo del spinner */}
+                        <p>{progress}%</p>
                     </div>
                 </div>
             )}
 
-            
             <div className="datos-container-repo">
-            <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Revisión de Reporte</h1>
+                <h1 style={{fontSize:'3rem', display:'flex' ,justifyContent:'center', marginTop:'0'}}>Revisión de Reporte</h1>
 
-              {datos.length === 0?(
-                <div className='aviso'>No hay reportes por revisar... 🏜️</div>
-              ):('')}
+                {datos.length === 0 ? (
+                    <div className='aviso'>No hay reportes por revisar... 🏜️</div>
+                ) : ('')}
 
                 <div className="form-group-datos"> 
-                {datos.map((dato, periodIdx) => {
-                    let conteo = {};
-                    let total = 0;
+                    {datos.map((dato, periodIdx) => {
+                        let conteo = {};
+                        let total = 0;
 
-                    dato.Programa.forEach(programa => {
-                        programa.Descripcion.forEach(desc => {
-                          const crit = desc.Criterio;
-                          // Solo contamos si no es undefined/null, no es 'NA' y no es 'O'/'o'
-                          if (
-                            crit &&
-                            crit !== 'NA' &&
-                            crit.toLowerCase() !== 'o'
-                          ) {
-                            // Conteo por criterio (incluye cualquier otra letra distinta de 'O'/'o')
-                            conteo[crit] = (conteo[crit] || 0) + 1;
-                            // Sólo incrementamos el total si pasa esas mismas condiciones
-                            total++;
-                          }
+                        dato.Programa.forEach(programa => {
+                            programa.Descripcion.forEach(desc => {
+                                const crit = desc.Criterio;
+                                if (
+                                    crit &&
+                                    crit !== 'NA' &&
+                                    crit.toLowerCase() !== 'o'
+                                ) {
+                                    conteo[crit] = (conteo[crit] || 0) + 1;
+                                    total++;
+                                }
+                            });
                         });
-                      });
 
-                    const puntosObtenidos = calcularPuntosTotales(conteo);
-                    const conteoCriteriosTabla = conteoCriteriosOcultos[periodIdx] || { m: 0, M: 0, C: 0 };
-                    const confExternas = dato.PuntuacionMaxima - total;
-                    const PuntuacionObtenida = dato.PuntuacionMaxima ? (confExternas + ((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100)) : 
-                        ((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100).toFixed(2);
+                        const puntosObtenidos = calcularPuntosTotales(conteo);
+                        const conteoCriteriosTabla = conteoCriteriosOcultos[periodIdx] || { m: 0, M: 0, C: 0 };
+                        const confExternas = dato.PuntuacionMaxima - total;
+                        const PuntuacionObtenida = dato.PuntuacionMaxima ? (confExternas + ((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100)) : 
+                            ((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100).toFixed(2);
 
-                    const resultado = dato.PuntuacionMaxima ? (((confExternas + ((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100)) * 100)/ dato.PuntuacionMaxima) : 
-                    (((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100).toFixed(2)) * 100 / total;
+                        const resultado = dato.PuntuacionMaxima ? (((confExternas + ((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100)) * 100)/ dato.PuntuacionMaxima) : 
+                        (((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100).toFixed(2)) * 100 / total;
 
-                    const porcentajeTotal = dato.PuntuacionMaxima ? (((confExternas + ((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100)) * 100)/ dato.PuntuacionMaxima).toFixed(2) :
-                    (((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100) * 100 / total).toFixed(2)
+                        const porcentajeTotal = dato.PuntuacionMaxima ? (((confExternas + ((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100)) * 100)/ dato.PuntuacionMaxima).toFixed(2) :
+                        (((puntosObtenidos * 100 + ((conteoCriteriosTabla.m * 0.3) + (conteoCriteriosTabla.M * 0.7) + conteoCriteriosTabla.C) * 100) / 100) * 100 / total).toFixed(2)
 
-                    const estatus = resultado >= 90 ? "Bueno" :
-                                    resultado >= 80 ? "Aceptable" :
-                                    resultado >= 60 ? "No Aceptable" : "Crítico";
+                        const estatus = resultado >= 90 ? "Bueno" :
+                                        resultado >= 80 ? "Aceptable" :
+                                        resultado >= 60 ? "No Aceptable" : "Crítico";
 
                         return (
                             <div key={periodIdx}>
@@ -416,186 +564,189 @@ const Reporte = () => {
 
                                 <div className={`update-button-container ${hiddenDurations.includes(dato.Duracion) ? 'hidden' : ''}`}>
                                     <div className='contenedor-repo'>
-                                    <div className='buttons-estado'>
-                                    <button onClick={() => toggleTextAreaVisibility(dato._id)}>
-                                            {visibleTextAreas[dato._id] ? 'Ocultar Nota' : 'Escribir Nota'}
-                                        </button>
-                                        <button className='boton-rechazar' onClick={() => Rechazar(dato._id, dato.AuditorLiderEmail)}>Rechazar</button>
-                                        <button onClick={() => Aprobar(dato._id, PuntuacionObtenida, confExternas,estatus, porcentajeTotal, dato.AuditorLiderEmail)}>Aprobar</button>
-                                        <button onClick={() => eliminarReporte(dato._id)} className='btn-eliminar'>
-                                    Eliminar Reporte
-                                    </button>
-                                    </div> 
+                                        <div className='buttons-estado'>
+                                            <button onClick={() => toggleTextAreaVisibility(dato._id)}>
+                                                {visibleTextAreas[dato._id] ? 'Ocultar Nota' : 'Escribir Nota'}
+                                            </button>
+                                            <button className='boton-rechazar' onClick={() => Rechazar(dato._id, dato.AuditorLiderEmail)}>Rechazar</button>
+                                            <button onClick={() => Aprobar(dato._id, PuntuacionObtenida, confExternas,estatus, porcentajeTotal, dato.AuditorLiderEmail)}>Aprobar</button>
+                                            <button onClick={() => eliminarReporte(dato._id)} className='btn-eliminar'>
+                                                Eliminar Reporte
+                                            </button>
+                                        </div> 
                                     </div>    
                                     {visibleTextAreas[dato._id] && (
                                         <textarea
                                             className='textarea-mod'
                                             value={notas[dato._id] || ''}
                                             onChange={(e) => notaCorreccion(e, dato._id)}
-                                         placeholder='Razón del rechazo. . .'></textarea>
+                                            placeholder='Razón del rechazo. . .'
+                                        />
                                     )}
 
                                     <div id='pdf-content-part1' className='contenedor-repo-fin'>
                                         <div className="header-container-datos-repo-fin">
                                             <img src={logo} alt="Logo Empresa" className="logo-empresa-repo" />
                                             <div className='encabezado'>
-                                            <h1>REPORTE DE AUDITORÍA</h1>
+                                                <h1>REPORTE DE AUDITORÍA</h1>
                                             </div>
                                         </div>
                                         <div className='mover'>
-                                        <div className={`grupo-izquierda ${!dato.Cliente ? 'sin-cliente' : ''}`}>
-                                        <div className="dato">
-                                            <span className="bold-text">Duración de la auditoría:</span> {dato.Duracion}
-                                        </div>
-                                        <div className="dato">
-                                            <span className="bold-text">Tipo de auditoría:</span> {dato.TipoAuditoria}
-                                        </div>
-                                        {dato.Cliente && (
-                                            <div className="dato">
-                                                <span className="bold-text">Cliente:</span> {dato.Cliente}
+                                            <div className={`grupo-izquierda ${!dato.Cliente ? 'sin-cliente' : ''}`}>
+                                                <div className="dato">
+                                                    <span className="bold-text">Duración de la auditoría:</span> {dato.Duracion}
+                                                </div>
+                                                <div className="dato">
+                                                    <span className="bold-text">Tipo de auditoría:</span> {dato.TipoAuditoria}
+                                                </div>
+                                                {dato.Cliente && (
+                                                    <div className="dato">
+                                                        <span className="bold-text">Cliente:</span> {dato.Cliente}
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
 
-                                        <div className="grupo-derecha">
-                                        {dato.Cliente && (
-                                            <div className="dato-right">
-                                                <span className="bold-text">Fecha de auditoría:</span> {(dato.FechaEvaluacion)}
+                                            <div className="grupo-derecha">
+                                                {dato.Cliente && (
+                                                    <div className="dato-right">
+                                                        <span className="bold-text">Fecha de auditoría:</span> {(dato.FechaEvaluacion)}
+                                                    </div>
+                                                )}
+                                                <div className="dato-right">
+                                                    <span className="bold-text">Fecha de elaboración de reporte:</span> {formatDate(dato.FechaElaboracion)}
+                                                </div>
                                             </div>
-                                            )}
-                                            <div className="dato-right">
-                                                <span className="bold-text">Fecha de elaboración de reporte:</span> {formatDate(dato.FechaElaboracion)}
-                                            </div>
-                                        </div>
                                         </div>
                                         <div className='tabla-reporte'>
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th colSpan="1" className="conformity-header-repo">Puntos Obtenidos</th>
-                                                </tr>
-                                            </thead>
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th colSpan="1" className="conformity-header-repo">Puntos Obtenidos</th>
+                                                    </tr>
+                                                </thead>
                                         
-                                        <div className="horizontal-container">
-                                            <div className="horizontal-group">
-                                                <div className="horizontal-item">
-                                                    <div className="horizontal-inline">
-                                                        <div>Conforme: </div>
-                                                        <div style={{marginLeft:'3px'}}>{dato.PuntuacionMaxima ? confExternas : ''}</div>
-                                                        {Object.keys(contarCriteriosPorTipo(conteo, 'Conforme')).map(criterio => (
-                                                            <div key={criterio} className="horizontal-inline-item">
-                                                            {conteo[criterio] + (conteoCriteriosTabla.M + conteoCriteriosTabla.m + conteoCriteriosTabla.C)}
+                                                <div className="horizontal-container">
+                                                    <div className="horizontal-group">
+                                                        <div className="horizontal-item">
+                                                            <div className="horizontal-inline">
+                                                                <div>Conforme: </div>
+                                                                <div style={{marginLeft:'3px'}}>{dato.PuntuacionMaxima ? confExternas : ''}</div>
+                                                                {Object.keys(contarCriteriosPorTipo(conteo, 'Conforme')).map(criterio => (
+                                                                    <div key={criterio} className="horizontal-inline-item">
+                                                                        {conteo[criterio] + (conteoCriteriosTabla.M + conteoCriteriosTabla.m + conteoCriteriosTabla.C)}
+                                                                    </div>
+                                                                ))}
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                                <div className="horizontal-item">
-                                                <div className="horizontal-inline">
-                                                    <div>NC Menor:</div>
-                                                    {Object.keys(contarCriteriosPorTipo(conteo, 'm')).map(criterio => (
-                                                        <div key={criterio} className="horizontal-inline-item">
-                                                            {conteo[criterio] - conteoCriteriosTabla.m}
                                                         </div>
-                                                    ))}
-                                                </div>
-                                                </div>
-                                            </div>
-                                            <div className="horizontal-group">
-                                                <div className="horizontal-item">
-                                                    <div className="horizontal-inline"> 
-                                                        <div>NC Mayor:</div>
-                                                        {Object.keys(contarCriteriosPorTipo(conteo, 'M')).map(criterio => (
-                                                            <div key={criterio} className="horizontal-inline-item"> 
-                                                            {conteo[criterio] - conteoCriteriosTabla.M}
+                                                        <div className="horizontal-item">
+                                                            <div className="horizontal-inline">
+                                                                <div>NC Menor:</div>
+                                                                {Object.keys(contarCriteriosPorTipo(conteo, 'm')).map(criterio => (
+                                                                    <div key={criterio} className="horizontal-inline-item">
+                                                                        {conteo[criterio] - conteoCriteriosTabla.m}
+                                                                    </div>
+                                                                ))}
                                                             </div>
-                                                        ))}
+                                                        </div>
+                                                    </div>
+                                                    <div className="horizontal-group">
+                                                        <div className="horizontal-item">
+                                                            <div className="horizontal-inline"> 
+                                                                <div>NC Mayor:</div>
+                                                                {Object.keys(contarCriteriosPorTipo(conteo, 'M')).map(criterio => (
+                                                                    <div key={criterio} className="horizontal-inline-item"> 
+                                                                        {conteo[criterio] - conteoCriteriosTabla.M}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        <div className="horizontal-item">
+                                                            <div className="horizontal-inline"> 
+                                                                <div>NC Crítica:</div>
+                                                                {Object.keys(contarCriteriosPorTipo(conteo, 'C')).map(criterio => (
+                                                                    <div key={criterio} className="horizontal-inline-item"> 
+                                                                        {conteo[criterio] - conteoCriteriosTabla.C}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="horizontal-group">
+                                                        <div className="horizontal-item">Puntuación Máxima: {dato.PuntuacionMaxima ? dato.PuntuacionMaxima : total}</div>
+                                                        <div className="horizontal-item">
+                                                            Puntuación Obtenida: {PuntuacionObtenida}
+                                                        </div>
+                                                    </div>
+                                                    <div className="horizontal-group">
+                                                        <div className="horizontal-item">Porcentaje: {porcentajeTotal}%</div>
+                                                        <div className="horizontal-item">Estatus: {estatus}</div>
                                                     </div>
                                                 </div>
-                                                <div className="horizontal-item">
-                                                    <div className="horizontal-inline"> 
-                                                        <div>NC Crítica:</div>
-                                                        {Object.keys(contarCriteriosPorTipo(conteo, 'C')).map(criterio => (
-                                                            <div key={criterio} className="horizontal-inline-item"> 
-                                                            {conteo[criterio] - conteoCriteriosTabla.C}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="horizontal-group">
-                                                <div className="horizontal-item">Puntuación Máxima: {dato.PuntuacionMaxima ? dato.PuntuacionMaxima : total}</div>
-                                                <div className="horizontal-item">
-                                                    Puntuación Obtenida: {PuntuacionObtenida}
-                                                </div>
-                                            </div>
-                                            <div className="horizontal-group">
-                                                <div className="horizontal-item">Porcentaje: {porcentajeTotal}%</div>
-                                                <div className="horizontal-item">Estatus: {estatus}</div>
-                                            </div>
-                                        </div>
-                                        </table>
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th colSpan="1" className="conformity-header-repo">Objetivo</th>
-                                                </tr>
-                                            </thead>
-                                            <div>{dato.Objetivo ? dato.Objetivo : 'Garantizar que el Sistema cumpla continuamente con los requisitos internacionales, lo que da como resultado una certificación que asegura el suministro de productos seguros a los consumidores en todo el mundo.'}</div>
-                                        </table>
+                                            </table>
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th colSpan="1" className="conformity-header-repo">Objetivo</th>
+                                                    </tr>
+                                                </thead>
+                                                <div>{dato.Objetivo ? dato.Objetivo : 'Garantizar que el Sistema cumpla continuamente con los requisitos internacionales, lo que da como resultado una certificación que asegura el suministro de productos seguros a los consumidores en todo el mundo.'}</div>
+                                            </table>
 
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th colSpan="2" className="conformity-header-repo">Alcance</th>
-                                                </tr>
-                                                <tr>
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th colSpan="2" className="conformity-header-repo">Alcance</th>
+                                                    </tr>
+                                                    <tr>
                                                         <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold', width:'50%'}}>Documento de Referencia</td>
                                                         <td style={{backgroundColor:'#bdfdbd', fontWeight: 'bold'}}>Alcance de Auditoría</td>
                                                     </tr>
                                                     <tr>
-                                                    <td>
-                                                        {dato.Referencia ? (
-                                                            <div>{dato.Referencia}</div>
-                                                        ) : (
-                                                            dato.Programa.map((programa, programIdx) => (
-                                                                <div key={programIdx}>{programa.Nombre}</div>
-                                                            ))
-                                                        )}
-                                                    </td>
+                                                        <td>
+                                                            {dato.Referencia ? (
+                                                                <div>{dato.Referencia}</div>
+                                                            ) : (
+                                                                dato.Programa.map((programa, programIdx) => (
+                                                                    <div key={programIdx}>{programa.Nombre}</div>
+                                                                ))
+                                                            )}
+                                                        </td>
                                                         <td>{dato.Alcance? dato.Alcance: dato.AreasAudi}</td>
                                                     </tr>
-                                                <tr>
-                                                    <th className="table-header">Equipo Auditor</th>
-                                                    <th className="table-header">Participantes en el Área del Recorrido</th>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        <div>Auditor Líder: {dato.AuditorLider}</div>
-                                                        <div>
-                                                        {dato.EquipoAuditor.map((equipo, equipoIdx) => (
-                                                            <div key={equipoIdx}>
-                                                              Equipo Auditor: {equipo.Nombre}
+                                                    <tr>
+                                                        <th className="table-header">Equipo Auditor</th>
+                                                        <th className="table-header">Participantes en el Área del Recorrido</th>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div>Auditor Líder: {dato.AuditorLider}</div>
+                                                            <div>
+                                                                {dato.EquipoAuditor.map((equipo, equipoIdx) => (
+                                                                    <div key={equipoIdx}>
+                                                                        Equipo Auditor: {equipo.Nombre}
+                                                                    </div>
+                                                                ))}
                                                             </div>
-                                                        ))}</div>
-                                                        {dato.NombresObservadores && (
-                                                            <div>Observador(es): {dato.NombresObservadores}</div>
+                                                            {dato.NombresObservadores && (
+                                                                <div>Observador(es): {dato.NombresObservadores}</div>
                                                             )}
-                                                    </td>
-                                                    <td>
-                                                    <div>
-                                                        {dato.Auditados.map((audita, audIdx) => (
-                                                            <div key={audIdx}>
-                                                            {audita.Nombre}
+                                                        </td>
+                                                        <td>
+                                                            <div>
+                                                                {dato.Auditados.map((audita, audIdx) => (
+                                                                    <div key={audIdx}>
+                                                                        {audita.Nombre}
+                                                                    </div>
+                                                                ))}
                                                             </div>
-                                                        ))}</div>
-                                                    </td>
-                                                </tr>
-                                            </thead>
-                                        </table>
+                                                        </td>
+                                                    </tr>
+                                                </thead>
+                                            </table>
                                         </div>
-                                        </div>
+                                    </div>
 
-                                        <div>
+                                    <div>
                                         <div id='pdf-content-part2' className='contenedor-repo-fin-2'>
                                             <table>
                                                 <thead>
@@ -616,76 +767,85 @@ const Reporte = () => {
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                {dato.Programa.map((programa, programIdx) => (
-                                                    programa.Descripcion.map((desc, descIdx) => {
-                                                        const firePrefix = 'https://firebasestorage';
-                                                        const isFireImage = desc.Hallazgo.includes(firePrefix);
+                                                    {dato.Programa.map((programa, programIdx) => (
+                                                        programa.Descripcion.map((desc, descIdx) => {
+                                                            const rowId = `${periodIdx}-${programIdx}-${descIdx}`;
+                                                            const isHidden = hiddenRows[rowId];
+                                                            const imageKey = `${rowId}-image`;
+                                                            
+                                                            // Convertir Hallazgo a string si no lo es
+                                                            const hallazgoStr = desc.Hallazgo ? String(desc.Hallazgo) : '';
+                                                            
+                                                            // Debug: Log para ver qué está pasando
+                                                            const esImagenFirebase = isFirebaseImage(hallazgoStr);
+                                                            console.log('Hallazgo:', hallazgoStr);
+                                                            console.log('Tipo de Hallazgo:', typeof desc.Hallazgo);
+                                                            console.log('Es imagen Firebase:', esImagenFirebase);
 
-                                                        const rowId = `${periodIdx}-${programIdx}-${descIdx}`;
-                                                        const isHidden = hiddenRows[rowId];
-
-                                                        if ((desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') || desc.Observacion.length !== 0) {
-                                                            return (
-                                                                <React.Fragment key={descIdx}>
-                                                                    <tr style={{ display: isHidden ? 'none' : 'table-row' }}>
-                                                                        <td>{desc.ID}</td>
-                                                                        <td className='alingR2'>{programa.Nombre}</td>
-                                                                        <td className='alingR'>{desc.Requisito}</td>
-                                                                        <td>{desc.Criterio}</td>
-                                                                        <td style={{ textAlign: 'initial' }}>
-                                                                        {desc.Problema && (
-                                                                            <>
-                                                                            Problema: {desc.Problema}
-                                                                            <br />
-                                                                            <br />
-                                                                            </>
-                                                                        )}
-                                                                        {desc.Observacion}
-                                                                        </td>
-                                                                        <td className='alingR' key={descIdx}>
-                                                                            {desc.Hallazgo ? (
-                                                                                isFireImage ? (
-                                                                                    <img
-                                                                                        src={desc.Hallazgo}
-                                                                                        alt="Evidencia"
-                                                                                        className="hallazgo-imagen"
-                                                                                    />
+                                                            if ((desc.Criterio !== 'NA' && desc.Criterio !== 'Conforme') || desc.Observacion.length !== 0) {
+                                                                return (
+                                                                    <React.Fragment key={descIdx}>
+                                                                        <tr style={{ display: isHidden ? 'none' : 'table-row' }}>
+                                                                            <td>{desc.ID}</td>
+                                                                            <td className='alingR2'>{programa.Nombre}</td>
+                                                                            <td className='alingR'>{desc.Requisito}</td>
+                                                                            <td>{desc.Criterio}</td>
+                                                                            <td style={{ textAlign: 'initial' }}>
+                                                                                {desc.Problema && (
+                                                                                    <>
+                                                                                        Problema: {desc.Problema}
+                                                                                        <br />
+                                                                                        <br />
+                                                                                    </>
+                                                                                )}
+                                                                                {desc.Observacion}
+                                                                            </td>
+                                                                            <td className='alingR'>
+                                                                                {hallazgoStr && hallazgoStr.trim() !== '' ? (
+                                                                                    esImagenFirebase ? (
+                                                                                        <ImagenHallazgo 
+                                                                                            src={hallazgoStr}
+                                                                                            alt="Evidencia"
+                                                                                            imageKey={imageKey}
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <span>{hallazgoStr}</span>
+                                                                                    )
                                                                                 ) : (
-                                                                                    <span>{desc.Hallazgo}</span>
-                                                                                )
-                                                                            ) : null}
-                                                                        </td>
-                                                                        <td>
-                                                                            <button className='button-oculto' onClick={() => handleToggleRowVisibility(periodIdx, programIdx, descIdx)}>
-                                                                               Ocultar
-                                                                            </button>
-                                                                        </td>
-                                                                        <td>{}</td>
-                                                                        <td>{}</td>
-                                                                        <td>{}</td>
-                                                                    </tr>
-                                                                </React.Fragment>
-                                                            );
-                                                        } else {
-                                                            return null;
-                                                        }
-                                                    })
-                                                ))}
+                                                                                    <span>Sin hallazgo</span>
+                                                                                )}
+                                                                            </td>
+                                                                            <td>
+                                                                                <button 
+                                                                                    className='button-oculto' 
+                                                                                    onClick={() => handleToggleRowVisibility(periodIdx, programIdx, descIdx)}
+                                                                                >
+                                                                                    Ocultar
+                                                                                </button>
+                                                                            </td>
+                                                                            <td>{}</td>
+                                                                            <td>{}</td>
+                                                                            <td>{}</td>
+                                                                        </tr>
+                                                                    </React.Fragment>
+                                                                );
+                                                            } else {
+                                                                return null;
+                                                            }
+                                                        })
+                                                    ))}
                                                 </tbody>
-
                                             </table>
-                                            </div>
-                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
                         );
                     })}
                 </div>
             </div>
         </div>
-        
     );
-    
 };
 
 export default Reporte;
