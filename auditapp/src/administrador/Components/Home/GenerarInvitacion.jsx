@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import Swal from 'sweetalert2';
 import { 
   Dialog, 
@@ -63,8 +63,8 @@ const GenerarInvitacion = ({ open, onClose, auditoriaId = null }) => {
         ? `/api/invitaciones/crear-especifica/${auditoriaId}`
         : '/api/invitaciones/crear-general';
 
-      const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}${endpoint}`,
+      const response = await api.post(
+        `${endpoint}`,
         formData,
         { withCredentials: true }
       );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import {
   Typography, Button, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
   TextField, Select, MenuItem, Paper, Card, CardContent, Grid, Divider, Checkbox,
@@ -144,9 +144,9 @@ const Evaluaciones = () => {
   useEffect(() => {
     const obtenerAuditores = async () => {
       try {
-        const responseEvaluacion = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/evaluacion`);
+        const responseEvaluacion = await api.get('/evaluacion');
         setEvaluacionEx(responseEvaluacion.data);
-        const responseDatos = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/aud-lid`);
+        const responseDatos = await api.get('/datos/aud-lid');
         const auditoresLider = responseDatos.data.map(dato => ({
           idRegistro: dato._id,
           nombreLider: dato.AuditorLider,
@@ -159,7 +159,7 @@ const Evaluaciones = () => {
           return;
         }
         
-        const responseUsuarios = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
+        const responseUsuarios = await api.get('/usuarios');
         const auditoresFiltrados = auditoresLider.map(({ idRegistro, nombreLider, duracion, tipoAuditoria }) => {
           const usuarioEncontrado = responseUsuarios.data.find(usuario => usuario.Nombre === nombreLider);
           if (usuarioEncontrado) {
@@ -391,7 +391,7 @@ const Evaluaciones = () => {
   
       let evaluacionExistente = null;
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/${selectedFolio}`);
+        const response = await api.get(`/evaluacion/${selectedFolio}`);
         evaluacionExistente = response.data;
       } catch (error) {
         if (error.response && error.response.status === 404) {
@@ -403,7 +403,7 @@ const Evaluaciones = () => {
       }
   
       if (evaluacionExistente) {
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/folio/${selectedFolio}`, {
+        await api.put(`/evaluacion/folio/${selectedFolio}`, {
           folio: selectedFolio,
           cursos: cursosArray,
           conocimientosHabilidades: conocimientosHabilidadesArray,
@@ -415,7 +415,7 @@ const Evaluaciones = () => {
         });
         alert(`Evaluación actualizada como ${estado}`);
       } else {
-        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/evaluacion`, {
+        await api.post('/evaluacion', {
           folio: selectedFolio,
           auditoriaId: selectedAuditoria,
           auditorId: selectedAudi,

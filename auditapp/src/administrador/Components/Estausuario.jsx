@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import {
   Box,
   Typography,
@@ -357,7 +357,7 @@ const EstadisticasPersonasMejoradas = () => {
         // Obtener usuarios (solo si es admin)
         if (isAdmin) {
           try {
-            const usuariosResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
+            const usuariosResponse = await api.get(`/usuarios`);
             setUsuarios(usuariosResponse.data);
           } catch (error) {
             console.error('Error cargando usuarios:', error);
@@ -366,7 +366,7 @@ const EstadisticasPersonasMejoradas = () => {
 
         // Obtener auditorías
         try {
-          const auditoriasResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+          const auditoriasResponse = await api.get(`/datos`);
           const filteredAudits = auditoriasResponse.data.filter(audit => 
             audit.Estado && ['Finalizado', 'Terminada', 'Realizada', 'Devuelto', 'Completado'].includes(audit.Estado)
           );
@@ -377,7 +377,7 @@ const EstadisticasPersonasMejoradas = () => {
 
         // Obtener ishikawas con normalización de estados
         try {
-          const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+          const ishikawaResponse = await api.get(`/ishikawa`);
           const normalizedIshikawas = normalizeIshikawaStates(ishikawaResponse.data);
           setIshikawas(normalizedIshikawas);
         } catch (error) {

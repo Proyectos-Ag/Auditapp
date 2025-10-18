@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import {
   Box,
   Button,
@@ -332,7 +332,7 @@ const ProfessionalUserModal = ({ show, handleClose }) => {
     const fetchAreas = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/areas`);
+        const response = await api.get(`/areas`);
         setAreas(response.data);
         setLoading(false);
       } catch (error) {
@@ -401,7 +401,7 @@ const ProfessionalUserModal = ({ show, handleClose }) => {
     }
 
     try {
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/usuarios`, data);
+      await api.post(`/usuarios`, data);
       
       setSuccess(true);
       setTimeout(() => {

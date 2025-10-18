@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import html2canvas from "html2canvas";
+import api from '../../../services/api';
 import { 
   Backdrop, 
   CircularProgress, 
@@ -172,7 +172,7 @@ const AuditTable = () => {
   const fetchAudits = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits`);
+      const response = await api.get(`/programas-anuales/audits`);
       setAudits(response.data);
     } catch (error) {
       console.error("Error al obtener las auditorías:", error);
@@ -320,8 +320,8 @@ const AuditTable = () => {
   
     try {
       setEmailLoading(true);
-      await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits/send-email`,
+      await api.post(
+        `/programas-anuales/audits/send-email`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -360,8 +360,8 @@ const AuditTable = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits`,
+      const response = await api.post(
+        `/programas-anuales/audits`,
         auditData
       );
       
@@ -407,8 +407,8 @@ const AuditTable = () => {
 
     try {
       setLoading(true);
-      await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits/${editingAudit._id}`,
+      await api.put(
+        `/programas-anuales/audits/${editingAudit._id}`,
         editingAudit
       );
       
@@ -442,8 +442,8 @@ const AuditTable = () => {
     try {
       setLoading(true);
       
-      const response = await axios.delete(
-        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits/${auditId}`
+      const response = await api.delete(
+        `/programas-anuales/audits/${auditId}`
       );
       
       if (response.data.success) {
@@ -476,8 +476,8 @@ const AuditTable = () => {
   const handleOpenNotesDialog = async (auditId, cliente) => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits/${auditId}/notas`
+      const response = await api.get(
+        `/programas-anuales/audits/${auditId}/notas`
       );
       
       setCurrentNotes(response.data.notas || '');
@@ -502,8 +502,8 @@ const AuditTable = () => {
   const handleSaveNotes = async () => {
     try {
       setLoading(true);
-      await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits/${currentAuditId}/notas`,
+      await api.put(
+        `/programas-anuales/audits/${currentAuditId}/notas`,
         { notas: currentNotes }
       );
       

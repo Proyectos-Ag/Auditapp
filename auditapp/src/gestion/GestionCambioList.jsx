@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
-import axios from "axios";
+import api from "../services/api";
 import { useParams, useNavigate } from "react-router-dom";
 import GestionCambioPDF from "./GestionCambioPDF";
 import SignaturePopup from "./SignaturePopup";
@@ -184,8 +184,8 @@ const GestionCambioList = () => {
         setLoading(true);
         const userName = encodeURIComponent(userData?.Nombre || '');
         const userEmail = encodeURIComponent(userData?.Correo || userData?.correo || userData?.email || '');
-        const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${recordId}?userName=${userName}&userEmail=${userEmail}`
+        const res = await api.get(
+          `/api/gestion-cambio/${recordId}?userName=${userName}&userEmail=${userEmail}`
         );
         if (!cancelled) {
           // mapear firmadoPor si viene (backend devuelve firmadoPor filtrado)
@@ -258,8 +258,8 @@ const userIsInValidado = Boolean(
       cargo: userData?.cargo,
       dataURL
     };
-    const res = await axios.post(
-      `${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${id}/sign`,
+    const res = await api.post(
+      `/api/gestion-cambio/${id}/sign`,
       payload
     );
     const data = res.data;

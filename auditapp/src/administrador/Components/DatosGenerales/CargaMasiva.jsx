@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
@@ -244,7 +244,7 @@ const CargaMasiva = () => {
         setProgress(80);
 
         try {
-          const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/datos/carga-masiva`, transformedData, {
+          const response = await api.post('/datos/carga-masiva', transformedData, {
             headers: {
               'Content-Type': 'application/json',
             },
@@ -300,7 +300,7 @@ const CargaMasiva = () => {
               setProgress(60);
               
               try {
-                const overwriteResponse = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/datos/carga-masiva`, transformedData, {
+                const overwriteResponse = await api.post('/datos/carga-masiva', transformedData, {
                   headers: {
                     'Content-Type': 'application/json',
                   },

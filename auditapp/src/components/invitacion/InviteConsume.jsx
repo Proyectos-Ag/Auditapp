@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import { Box, Card, CardContent, Typography, Button, CircularProgress, Alert, Stack, IconButton, Tooltip, TextField } from '@mui/material';
 import { UserContext } from '../../App';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -19,7 +19,7 @@ export default function InviteConsume() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/invitacion/consume/${token}`, { withCredentials: true });
+        const res = await api.get(`/invitacion/consume/${token}`, { withCredentials: true });
         setInvInfo(res.data);
       } catch (err) {
         console.error('Error validando invitación', err);
@@ -33,13 +33,13 @@ export default function InviteConsume() {
   const aceptar = async () => {
     try {
       setLoading(true);
-      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/invitacion/consume/${token}/accept`, {}, { withCredentials: true });
+      const res = await api.post(`/invitacion/consume/${token}/accept`, {}, { withCredentials: true });
       // If backend returned grantId, it's a grant to an existing user
       if (res.data.grantId) {
         setCreatedUser({ message: 'Permisos otorgados a usuario existente', grantId: res.data.grantId });
         // intentar refrescar perfil si el usuario está autenticado en esta sesión
         try {
-          const verify = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/auth/verifyToken`, { withCredentials: true });
+          const verify = await api.get(`/auth/verifyToken`, { withCredentials: true });
           if (verify.data) {
             setUserData({ ...verify.data });
           }

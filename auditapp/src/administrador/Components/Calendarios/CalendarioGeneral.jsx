@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import './css/PendingAuditsCalendar.css';
 
 const PendingAuditsCalendar = () => {
@@ -13,7 +13,7 @@ const PendingAuditsCalendar = () => {
   useEffect(() => {
     const fetchAudits = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+        const response = await api.get('/datos');
         console.log('Respuesta de la API:', response.data); // Log the response to check the data
         const pendingAudits = response.data.filter(audit => audit.Estado === 'pendiente' || audit.Estado === 'Terminada' || audit.Estado === 'Devuelto');
         const sortedAudits = pendingAudits.sort((a, b) => new Date(b.FechaInicio) - new Date(a.FechaInicio));

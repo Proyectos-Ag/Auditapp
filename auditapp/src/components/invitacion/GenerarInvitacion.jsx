@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { UserContext } from '../../App';
 import { Box, Card, CardContent, Typography, Button, TextField, IconButton, Tooltip, CircularProgress } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -18,7 +18,7 @@ export default function GenerarInvitacion() {
   const searchUsers = async (q) => {
     if (!q || q.length < 3) return setSearchResults([]);
     try {
-      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/search?search=${encodeURIComponent(q)}`, { withCredentials: true });
+      const res = await api.get(`/usuarios/search?search=${encodeURIComponent(q)}`, { withCredentials: true });
       setSearchResults(res.data);
     } catch (err) {
       console.warn('Error buscando usuarios', err);
@@ -33,7 +33,7 @@ export default function GenerarInvitacion() {
       const payload = {};
       if (selectedUser) payload.targetUserId = selectedUser._id || selectedUser.id;
       if (duration) payload.durationHours = duration;
-      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/invitacion/generar`, payload, { withCredentials: true });
+      const res = await api.post(`/invitacion/generar`, payload, { withCredentials: true });
       const token = res.data.token;
       const inviteLink = `${process.env.REACT_APP_FRONTEND_URL}/invite/${token}`;
       setLink(inviteLink);
@@ -51,7 +51,7 @@ export default function GenerarInvitacion() {
   const fetchGrants = async () => {
     try {
       setLoadingGrants(true);
-      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/invitacion/grants`, { withCredentials: true });
+      const res = await api.get(`/invitacion/grants`, { withCredentials: true });
       setGrants(res.data || []);
     } catch (err) {
       console.warn('Error obteniendo grants', err);
@@ -62,7 +62,7 @@ export default function GenerarInvitacion() {
 
   const revoke = async (grantId) => {
     try {
-      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/invitacion/grants/${grantId}/revoke`, {}, { withCredentials: true });
+      const res = await api.post(`/invitacion/grants/${grantId}/revoke`, {}, { withCredentials: true });
       if (res.data && res.data.success) {
         // refresh list
         await fetchGrants();

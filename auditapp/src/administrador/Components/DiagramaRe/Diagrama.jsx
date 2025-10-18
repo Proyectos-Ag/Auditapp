@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import './css/Diagrama.css'
 import Logo from "../assets/img/logoAguida.png";
 import Swal from 'sweetalert2';
@@ -51,7 +51,7 @@ const Diagrama = () => {
 
     const fetchData = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/vac/por/${_id}`);
+            const response = await api.get(`/ishikawa/vac/por/${_id}`);
             const ishikawasRecibidos = Array.isArray(response.data) ? response.data : [response.data];
             setIshikawas(ishikawasRecibidos);
         } catch (error) {
@@ -97,8 +97,8 @@ const Diagrama = () => {
     const handleAprobar = async (id, participantes) => {
         try {
           // 1. Marcar como aprobado en el backend
-          await axios.put(
-            `${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${id}`,
+          await api.put(
+            `/ishikawa/completo/${id}`,
             { estado: 'Aprobado' }
           );
       
@@ -197,7 +197,7 @@ const Diagrama = () => {
                 };
         
                 // Realiza la solicitud PUT al backend con los datos optimizados
-                const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/fin/${_id}`, dataToSend, {
+                const response = await api.put(`/ishikawa/fin/${_id}`, dataToSend, {
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -239,7 +239,7 @@ const Diagrama = () => {
 
     const handleGuardarRechazo = async (id) => {
         try {
-            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
+            await api.put(`/ishikawa/completo/${_id}`, {
                 estado: 'Rechazado',
                 notaRechazo 
             });
@@ -277,7 +277,7 @@ const Diagrama = () => {
 
           const handleEliminarDiagrama = async (id) => {
             try {
-                await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/delete/${id}`);
+                await api.delete(`/ishikawa/delete/${id}`);
         
                 Swal.fire({
                     title: 'Éxito!',
@@ -412,7 +412,7 @@ const Diagrama = () => {
 
     const handleEliminarEvidencia = async (index, idIsh, idCorr ) => {
         try {
-            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/eliminar-evidencia/${index}/${idIsh}/${idCorr}`);
+            const response = await api.put(`/ishikawa/eliminar-evidencia/${index}/${idIsh}/${idCorr}`);
             
             if (response.status === 200) {
                 // Actualizar el estado local después de eliminar la evidencia en la base de datos
@@ -501,7 +501,7 @@ const Diagrama = () => {
             }));
     
             // Realiza la solicitud PUT al backend con los datos optimizados
-            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, dataToSend, {
+            const response = await api.put(`/ishikawa/${_id}`, dataToSend, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -666,8 +666,8 @@ const Diagrama = () => {
               const formData = new FormData();
               formData.append('pdf', file);
               formData.append('participantes', participantes);
-              await axios.post(
-                `${process.env.REACT_APP_BACKEND_URL}/ishikawa/enviar-pdf-dos`,
+              await api.post(
+                '/ishikawa/enviar-pdf-dos',
                 formData
               );
             }

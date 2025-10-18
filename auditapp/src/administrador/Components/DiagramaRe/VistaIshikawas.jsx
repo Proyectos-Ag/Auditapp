@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import logo from '../assets/img/logoAguida-min.png';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,8 +13,8 @@ const VistaIshikawas = () => {
   useEffect(() => {
     const fetchDatos = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/ishesp`);
-        const responseInc = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/ishesp-inc`);
+        const response = await api.get('/ishikawa/ishesp');
+        const responseInc = await api.get('/ishikawa/ishesp-inc');
         setIshikawas(response.data);
         setIshikawasInc(responseInc.data);
         

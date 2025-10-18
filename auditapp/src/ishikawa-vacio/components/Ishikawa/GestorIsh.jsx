@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import {
   Dialog,
   DialogTitle,
@@ -42,8 +42,8 @@ export default function GestorIsh({ open, onClose, onSelect }) {
       setLoading(true);
       setError(null);
       try {
-        const { data } = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/ishikawa/ishesp-vac`,
+        const { data } = await api.get(
+          `/ishikawa/ishesp-vac`,
           { params: { nombre } }
         );
         const filtered = data.filter(item => 

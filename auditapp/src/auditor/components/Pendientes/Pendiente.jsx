@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import { UserContext } from '../../../App';
 import {
   Box,
@@ -454,7 +454,7 @@ const Pendientes = () => {
 
     const obtenerDatos = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+        const response = await api.get(`/datos`);
         if (userData && userData.Correo) {
           const datosFiltrados = response.data.filter((dato) => 
             (dato.AuditorLiderEmail === userData.Correo || 
@@ -590,7 +590,7 @@ const Pendientes = () => {
     }
 
     try {
-      await fetch(`${process.env.REACT_APP_BACKEND_URL}/datos/eliminarImagen`, {
+      await fetch(`/datos/eliminarImagen`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ docId, imageUrl })
@@ -691,7 +691,7 @@ const Pendientes = () => {
         const percentage = percentages[`${periodIdx}_${programIdx}`] || 0;
         totalPorcentage += percentage;
 
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
+        await api.put(`/datos/${datos[periodIdx]._id}`, {
           programIdx,
           observaciones,
           percentage,
@@ -699,7 +699,7 @@ const Pendientes = () => {
       }
 
       const totalPorcentageAvg = (totalPorcentage / numPrograms).toFixed(2);
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
+      await api.put(`/datos/${datos[periodIdx]._id}`, {
         PorcentajeTotal: totalPorcentageAvg,
         Estado: 'Realizado',
         usuario: userData.Nombre
@@ -754,7 +754,7 @@ const Pendientes = () => {
         const percentage = percentages[`${periodIdx}_${programIdx}`] || 0;
         totalPorcentage += percentage;
 
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
+        await api.put(`/datos/${datos[periodIdx]._id}`, {
           programIdx,
           observaciones,
           percentage,
@@ -762,7 +762,7 @@ const Pendientes = () => {
       }
 
       const totalPorcentageAvg = (totalPorcentage / numPrograms).toFixed(2);
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/${datos[periodIdx]._id}`, {
+      await api.put(`/datos/${datos[periodIdx]._id}`, {
         PorcentajeTotal: totalPorcentageAvg,
         Estado: 'pendiente',
       });

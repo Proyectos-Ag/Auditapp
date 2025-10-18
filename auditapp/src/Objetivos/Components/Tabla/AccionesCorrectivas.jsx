@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../../../services/api';
 import Swal from "sweetalert2";
 import "./RegistroAccionCorrectiva.css";
 
@@ -123,8 +123,8 @@ const RegistroAccionCorrectiva = () => {
         area: label // Asegurarnos de incluir el área
       };
 
-      const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/api/objetivos/${idObjetivo}/acciones-correctivas`,
+      const response = await api.post(
+        `/api/objetivos/${idObjetivo}/acciones-correctivas`,
         datosParaBackend,
         {
           headers: {

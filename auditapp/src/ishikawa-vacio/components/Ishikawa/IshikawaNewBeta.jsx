@@ -1,5 +1,5 @@
 import React, { useEffect,useContext, useState, useRef } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import ShareIcon from '@mui/icons-material/Share';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import SaveIcon from '@mui/icons-material/Save';
@@ -121,7 +121,7 @@ const CreacionIshikawa2 = () => {
 
   const fetchIshikawaRecords = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+      const response = await api.get(`/ishikawa`);
       const filtered = response.data.filter(item => {
         const auditadoMatch = item.auditado?.toLowerCase() === userData.Nombre?.toLowerCase();
         const accesoMatch = Array.isArray(item.acceso) &&
@@ -298,7 +298,7 @@ const CreacionIshikawa2 = () => {
   
       // Solo procede si el usuario confirma
       if (result.isConfirmed) {
-        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+        await api.post(`/ishikawa`, data);
         Swal.fire('Enviado', 'El diagrama ha sido enviado.', 'success');
         navigate('/diagramas');
       }
@@ -338,12 +338,12 @@ const CreacionIshikawa2 = () => {
   
       if (selectedRecordId) {
         // Actualizando registro existente
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${selectedRecordId}`, data);
+        await api.put(`/ishikawa/completo/${selectedRecordId}`, data);
         Swal.fire('Cambios Actualizados', 'El registro ha sido actualizado.', 'success');
       } else {
         // Creando un nuevo registro
         data.folio = generateFolio(userData);
-        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+        const response = await api.post(`/ishikawa`, data);
         setSelectedRecordId(response.data._id);
         Swal.fire('Registro Guardado', 'El nuevo registro ha sido creado.', 'success');
       }
@@ -386,7 +386,7 @@ const CreacionIshikawa2 = () => {
   
       // Solo procede si el usuario confirma
       if (result.isConfirmed) {
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${selectedRecordId}`, data);
+        await api.put(`/ishikawa/completo/${selectedRecordId}`, data);
         Swal.fire('Enviado', 'El diagrama ha sido enviado.', 'success');
         navigate('/diagramas');
       }
@@ -661,15 +661,13 @@ const CreacionIshikawa2 = () => {
                     }
                 }).then((emailResult) => {
                     if (emailResult.isConfirmed) {
-                        const emailArray = emailResult.value.split(',').map(e => e.trim());
-                        const formData = new FormData();
-                        formData.append('pdf', pdf.output('blob'), 'diagrama_ishikawa.pdf');
-                        formData.append('emails', JSON.stringify(emailArray));
+                      const emailArray = emailResult.value.split(',').map(e => e.trim()).filter(Boolean);
 
-                        return fetch(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/enviar-pdf`, {
-                            method: 'POST',
-                            body: formData
-                        });
+                      const formData = new FormData();
+                      formData.append('pdf', pdf.output('blob'), 'diagrama_ishikawa.pdf');
+                      formData.append('emails', JSON.stringify(emailArray));
+
+                      return api.post('/ishikawa/enviar-pdf', formData);
                     }
                 });
             }
@@ -703,7 +701,7 @@ useEffect(() => {
   }
 
   const delayDebounceFn = setTimeout(() => {
-    axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/search?search=${encodeURIComponent(searchTerm)}`)
+    api.get(`/usuarios/search?search=${encodeURIComponent(searchTerm)}`)
       .then(response => {
         setSuggestions(response.data);
         

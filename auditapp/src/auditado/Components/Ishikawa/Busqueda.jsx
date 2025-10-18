@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Paper, List, ListItem, TextField } from '@mui/material';
-import axios from 'axios';
+import api from '../../../services/api';
 
 const Busqueda = ({ onSelect, placeholder = "Buscar nombre..." }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -13,7 +13,7 @@ const Busqueda = ({ onSelect, placeholder = "Buscar nombre..." }) => {
     }
 
     const delayDebounceFn = setTimeout(() => {
-      axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/search?search=${encodeURIComponent(searchTerm)}`)
+      api.get(`/usuarios/search?search=${encodeURIComponent(searchTerm)}`)
         .then(response => {
           setSuggestions(response.data);
         })

@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
-import axios from 'axios';
+import api from '../services/api';
 import './css/estilos.css';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Grow from '@mui/material/Grow';
@@ -60,7 +60,7 @@ const IconMenu = () => {
   // Fetch pending activities count
   useEffect(() => {
     if (!userData?.Nombre) return;
-    axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/activities/${userData.Nombre}`)
+    api.get(`/ishikawa/activities/${userData.Nombre}`)
       .then(res => {
         const pendientes = res.data.filter(a => !a.concluido).length;
         setPendingCount(pendientes);
@@ -77,7 +77,7 @@ const IconMenu = () => {
 
   // Fetch avisos once and compute unseen
   /*useEffect(() => {
-    axios.get(`${process.env.REACT_APP_BACKEND_URL}/avisos`)
+    api.get(`/avisos`)
       .then(res => {
         const combined = [...fixedAnnouncements, ...res.data];
         setAllAvisos(combined);
@@ -144,7 +144,7 @@ const IconMenu = () => {
     });
 
     if (result.isConfirmed) {
-      try { await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/logout`); } catch {}
+      try { await api.post(`/auth/logout`); } catch {}
       localStorage.removeItem('breadcrumbHistory');
       setUserData(null);
       setOpenAccountMenu(false);

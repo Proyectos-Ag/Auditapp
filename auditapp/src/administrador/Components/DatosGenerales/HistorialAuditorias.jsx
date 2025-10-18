@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import api from '../../../services/api';
 import {
   Table,
   TableBody,
@@ -23,7 +24,7 @@ const Historial = () => {
   useEffect(() => {
     const fetchDatos = async () => {
       try {
-        const response =  await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/esp-historial`);
+        const response =  await api.get('/datos/esp-historial');
         setDatos(response.data);
       } catch (error) {
         console.error('Error al obtener los datos:', error);

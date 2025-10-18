@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import {
@@ -68,7 +68,7 @@ export default function AsignarIshikawaModal({
 
   const cargarUsuarios = async () => {
     try {
-      const r = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
+      const r = await api.get(`/usuarios`);
       setUsuarios(r.data || []);
     } catch (e) {
       console.error(e);
@@ -79,7 +79,7 @@ export default function AsignarIshikawaModal({
   const buscarExistente = async () => {
     try {
       setBuscando(true);
-      const r = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, {
+      const r = await api.get(`/ishikawa`, {
         params: { idRep, idReq, proName }
       });
       const lista = Array.isArray(r.data) ? r.data : [];
@@ -110,7 +110,7 @@ export default function AsignarIshikawaModal({
   }, [open, idRep, idReq, proName]);
 
   const handleReasignar = async (registroId) => {
-    await axios.patch(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/asig/${registroId}`, {
+    await api.patch(`/ishikawa/asig/${registroId}`, {
       auditado: valorSeleccionado,
       correo: correoSeleccionado
     });
@@ -135,7 +135,7 @@ export default function AsignarIshikawaModal({
       actividades: [[]],
       estado: 'Asignado'
     };
-    await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+    await api.post(`/ishikawa`, data);
   };
 
   const confirmarAsignacion = () => {

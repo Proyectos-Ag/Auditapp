@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import api from '../../../services/api';
 import Swal from "sweetalert2";
 import {
   Box, Button, Card, CardContent, Typography, TextField, 
@@ -116,7 +116,7 @@ const Programas = () => {
     formData.append('file', file);
 
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/programas/carga-masiva`, formData, {
+      const response = await api.post(`/programas/carga-masiva`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -182,7 +182,7 @@ const Programas = () => {
 
   const fetchProgramas = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/programas`);
+      const response = await api.get(`/programas`);
       setProgramas(response.data);
       const initialVisibility = response.data.reduce((acc, programa) => {
         acc[programa._id] = false;
@@ -231,7 +231,7 @@ const Programas = () => {
     e.preventDefault();
     try {
       if (editingPrograma) {
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/programas/${editingPrograma}`, {
+        await api.put(`/programas/${editingPrograma}`, {
           Nombre: nombre,
           Descripcion: requisitos
         });
@@ -241,7 +241,7 @@ const Programas = () => {
           confirmButtonText: 'Aceptar'
         });
       } else {
-        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/programas`, {
+        await api.post(`/programas`, {
           Nombre: nombre,
           Descripcion: requisitos
         });
@@ -282,7 +282,7 @@ const Programas = () => {
         return programa;
       });
 
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/programas/${editingRequisito.programaId}`, {
+      await api.put(`/programas/${editingRequisito.programaId}`, {
         Descripcion: updatedProgramas.find(p => p._id === editingRequisito.programaId).Descripcion
       });
 
@@ -328,7 +328,7 @@ const Programas = () => {
           return programa;
         });
 
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/programas/${programaId}`, {
+        await api.put(`/programas/${programaId}`, {
           Descripcion: updatedProgramas.find(p => p._id === programaId).Descripcion
         });
 
@@ -364,7 +364,7 @@ const Programas = () => {
 
     if (confirmResult.isConfirmed) {
       try {
-        await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/programas/${programaId}`);
+        await api.delete(`/programas/${programaId}`);
         fetchProgramas();
         Swal.fire({
           title: 'Programa eliminado',

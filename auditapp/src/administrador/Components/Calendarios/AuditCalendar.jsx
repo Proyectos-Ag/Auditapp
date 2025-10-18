@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import {
   Box,
   Container,
@@ -244,8 +244,8 @@ const AuditCalendar = () => {
       try {
         // traer datos de ambos endpoints
         const [datosRes, progRes] = await Promise.all([
-          axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`),
-          axios.get(`${process.env.REACT_APP_BACKEND_URL}/programas-anuales/audits`)
+          api.get('/datos'),
+          api.get('/programas-anuales/audits')
         ]);
 
         const datos = Array.isArray(datosRes.data) ? datosRes.data : [];

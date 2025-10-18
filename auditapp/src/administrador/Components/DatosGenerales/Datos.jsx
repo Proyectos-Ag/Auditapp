@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import {
   Box,
   Stepper,
@@ -192,9 +192,9 @@ const Datos = () => {
     const fetchData = async () => {
       try {
         const [areasRes, programasRes, usuariosRes] = await Promise.all([
-          axios.get(`${process.env.REACT_APP_BACKEND_URL}/areas`),
-          axios.get(`${process.env.REACT_APP_BACKEND_URL}/programas`),
-          axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`)
+          api.get('/areas'),
+          api.get('/programas'),
+          api.get('/usuarios')
         ]);
         setAreas(areasRes.data);
         setProgramas(programasRes.data);
@@ -246,7 +246,7 @@ const Datos = () => {
   const handleAuditorLiderChange = async (value) => {
     setAuditorLiderSeleccionado(value);
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombre/${encodeURIComponent(value)}`);
+      const response = await api.get(`/usuarios/nombre/${encodeURIComponent(value)}`);
       const email = response.data.Correo || response.data.email;
       setFormData(prev => ({
         ...prev,
@@ -285,7 +285,7 @@ const Datos = () => {
     const { value } = e.target;
     if (value && !formData.Auditados.some(a => a.Nombre === value)) {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombre/${encodeURIComponent(value)}`);
+        const response = await api.get(`/usuarios/nombre/${encodeURIComponent(value)}`);
         const email = response.data.Correo;
         setFormData(prev => ({
           ...prev,
@@ -311,7 +311,7 @@ const Datos = () => {
       setFormData(prev => ({ ...prev, EquipoAuditor: [] }));
     } else if (value && !formData.EquipoAuditor.some(e => e.Nombre === value)) {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombre/${encodeURIComponent(value)}`);
+        const response = await api.get(`/usuarios/nombre/${encodeURIComponent(value)}`);
         const email = response.data.Correo;
         setFormData(prev => ({
           ...prev,
@@ -397,7 +397,7 @@ const Datos = () => {
         PorcentajeTotal: "0"
       };
 
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/datos`, formDataWithDefaults);
+      await api.post('/datos', formDataWithDefaults);
       
       Swal.fire({
         title: '¡Auditoría generada con éxito!',

@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../services/api";
 import React from 'react';
 
 // Método para eliminar un registro y los Ishikawas asociados
@@ -9,7 +9,7 @@ export const eliminarRegistro = async (id) => {
   
       // Intentar eliminar los Ishikawas
       try {
-        responseIshikawa = await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/eliminar/${idRep}`);
+        responseIshikawa = await api.delete(`/ishikawa/eliminar/${idRep}`);
         if (responseIshikawa.status === 404) {
           console.log('No se encontraron Ishikawas para eliminar, procediendo con la eliminación del reporte.');
         } else {
@@ -27,7 +27,7 @@ export const eliminarRegistro = async (id) => {
       }
   
       // Eliminar el reporte
-      const responseReporte = await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/datos/eliminar/${id}`);
+      const responseReporte = await api.delete(`/datos/eliminar/${id}`);
   
       if (responseReporte.status !== 200) {
         console.error('Error al eliminar el reporte:', responseReporte.data);

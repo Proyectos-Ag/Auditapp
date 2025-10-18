@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../../../services/api';
 import Swal from "sweetalert2";
 import { UserContext } from "../../../App";
 import "./ObjetivosTabla.css";
@@ -37,7 +37,7 @@ const ObjetivosTabla = () => {
   const fetchObjetivos = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos`, {
+      const response = await api.get(`/api/objetivos`, {
         params: { area: label },
       });
 
@@ -171,7 +171,7 @@ const ObjetivosTabla = () => {
     try {
       if (id.startsWith("temp-")) {
         const { _id, promedioENEABR, promedioMAYOAGO, promedioSEPDIC, ...filaSinId } = fila;
-        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos`, filaSinId);
+        const response = await api.post(`/api/objetivos`, filaSinId);
         const objetivoCreado = response.data;
 
         setTablaData((prevData) =>
@@ -183,7 +183,7 @@ const ObjetivosTabla = () => {
         });
       } else {
         const { promedioENEABR, promedioMAYOAGO, promedioSEPDIC, ...filaParaGuardar } = fila;
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos/${id}`, filaParaGuardar);
+        await api.put(`/api/objetivos/${id}`, filaParaGuardar);
         setModoEdicion((prev) => ({ ...prev, [id]: false }));
       }
 
@@ -232,7 +232,7 @@ const ObjetivosTabla = () => {
     if (!result.isConfirmed) return;
 
     try {
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos/${id}`);
+      await api.delete(`/api/objetivos/${id}`);
       setTablaData((prev) => prev.filter((item) => item._id !== id));
 
       Swal.fire({

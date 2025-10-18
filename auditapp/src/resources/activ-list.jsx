@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -19,8 +19,8 @@ export default function ActivList({ onNavigate }) {
 
   useEffect(() => {
     if (!userData?.Nombre) return;
-    axios
-      .get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/activities/${userData.Nombre}`)
+    api
+      .get(`/ishikawa/activities/${userData.Nombre}`)
       .then(({ data }) => {
         console.log('Data received:', data);
         setActivities(data);
@@ -42,8 +42,8 @@ export default function ActivList({ onNavigate }) {
     if (!result.isConfirmed) return;
 
     try {
-      await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/ishikawa/actividad/concluido`,
+      await api.put(
+        `/ishikawa/actividad/concluido`,
         { ishikawaId, actividadId, actividad, user: userData.Nombre, concluido: true }
       );
       setActivities(prev => {

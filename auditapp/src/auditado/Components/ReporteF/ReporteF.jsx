@@ -1,5 +1,5 @@
 import React, {  useMemo,useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import { UserContext } from '../../../App';
 import logo from "../assets/img/logoAguida.png";
 import './css/ReporteF.css'; 
@@ -17,13 +17,13 @@ const ReporteF = () => {
         const obtenerDatos = async () => {
           try {
             // Obtener datos principales
-            const responseDatos = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/por/${_id}`);
+            const responseDatos = await api.get(`/datos/por/${_id}`);
             setDatos([responseDatos.data]);
 
             console.log("Datos",[responseDatos.data]);
       
             // Obtener datos de Ishikawa
-            const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/pordato/${_id}`,{
+            const responseIshikawa = await api.get(`/ishikawa/pordato/${_id}`,{
                 params: { nombre: userData.Nombre }
             });
             setIshikawas(Array.isArray(responseIshikawa.data) ? responseIshikawa.data : [responseIshikawa.data]);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import './css/usuarios.css';
 
 const RegistroUsuario = () => {
@@ -29,7 +29,7 @@ const RegistroUsuario = () => {
       return;
     }
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/usuarios`, formData);
+      const response = await api.post(`/usuarios`, formData);
       alert("Usuario registrado con éxito");
       console.log(response.data);
 

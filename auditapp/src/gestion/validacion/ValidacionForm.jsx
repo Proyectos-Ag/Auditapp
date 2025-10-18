@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import axios from "axios";
+import api from "../../services/api";
 import "./css/ValidacionForm.css";
 import FileUploader from "../../components/fileUploader/FileUploader";
 import NameSearchAutocomplete from "../../resources/NameSearchAutocomplete";
@@ -60,16 +60,15 @@ export default function ValidacionForm({ cambioId, prefillElaboro = null }) {
     const fetch = async () => {
       setLoading(true);
       try {
-        const base = process.env.REACT_APP_BACKEND_URL || "";
         const urlsToTry = [
-          `${base}/api/validaciones/gestion/${cambioId}`,
-          `${base}/api/validaciones/${cambioId}`
+          `/api/validaciones/gestion/${cambioId}`,
+          `/api/validaciones/${cambioId}`
         ];
 
         let res = null;
         for (const u of urlsToTry) {
           try {
-            res = await axios.get(u);
+            res = await api.get(u);
             if (res && res.data) break;
           } catch (err) {
             res = null;
@@ -284,15 +283,14 @@ export default function ValidacionForm({ cambioId, prefillElaboro = null }) {
         ...(typeof estadoToSet !== "undefined" ? { estado: estadoToSet } : {})
       };
 
-      const base = process.env.REACT_APP_BACKEND_URL || "";
-      const res = await axios.put(`${base}/api/validaciones/${validationId}`, payload, {
+      const res = await api.put(`/api/validaciones/${validationId}`, payload, {
         headers: { "Content-Type": "application/json" }
       });
 
       let saved = res?.data;
       if (!saved || !Object.keys(saved).length) {
         try {
-          const getRes = await axios.get(`${base}/api/validaciones/${validationId}`);
+          const getRes = await api.get(`${base}/api/validaciones/${validationId}`);
           saved = getRes.data;
         } catch (err) {
           console.warn("No se pudo reobtener la validación tras el PUT:", err);

@@ -3,6 +3,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import PropTypes from 'prop-types';
 import Cargando from '../components/cargando/Cargando';
+import api from '../services/api';
 
 const Logo = 'https://firebasestorage.googleapis.com/v0/b/imagenes-auditapp.appspot.com/o/assets%2FlogoAguida.png?alt=media&token=8e2f91d8-78cf-4a0a-888b-64d2e3e26fb1';
 
@@ -54,15 +55,26 @@ const GestionCambioPDF = ({ registroId }) => {
 
   // Obtiene registro desde API por id
   const fetchRegistro = async () => {
-    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/completa/${registroId}`);
-    if (!res.ok) {
-      const txt = await res.text().catch(() => null);
-      throw new Error(txt || `Error ${res.status}`);
-    }
-    const json = await res.json();
-    console.log('Registro obtenido para PDF:', json);
-    return json;
-  };
+  try {
+    const id = encodeURIComponent(registroId);
+    // OJO: este endpoint en tu back está montado con prefijo /api
+    const { data } = await api.get(`/api/gestion-cambio/completa/${id}`);
+    console.log('Registro obtenido para PDF:', data);
+    return data;
+  } catch (err) {
+    const status = err?.response?.status;
+    const payload = err?.response?.data;
+    const msg =
+      (typeof payload === 'string' && payload) ||
+      payload?.message ||
+      payload?.error ||
+      err.message ||
+      `Error ${status || ''}`.trim();
+
+    // Re-lanzamos un Error para que el caller lo maneje igual que antes
+    throw new Error(msg);
+  }
+};
 
   // Helper: convierte booleanos a SI/NO y fechas a string local
   const fmt = (v) => {

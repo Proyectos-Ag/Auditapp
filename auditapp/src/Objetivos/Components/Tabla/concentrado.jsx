@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import './concentrado.css'; // Asegúrate de importar el archivo CSS actualizado
 import { UserContext } from '../../../App';
 
@@ -14,7 +14,7 @@ const ObjetivosComponent = () => {
     const fetchObjetivos = async () => {
       try {
         // Suponiendo que el endpoint de los objetivos está en esta ruta
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos`);
+        const response = await api.get(`/api/objetivos`);
         let data = response.data;
 
         // Obtener área del usuario

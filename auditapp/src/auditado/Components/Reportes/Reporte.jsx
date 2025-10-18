@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import { UserContext } from '../../../App';
 import logo from "../assets/img/logoAguida.png";
 import './css/Reporte.css';
@@ -42,7 +42,7 @@ const Reporte = () => {
     useEffect(() => {
         const obtenerDatos = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+                const response = await api.get(`/datos`);
                 if (userData && userData.Correo) {
                     const { datosFiltrados, conteo, total } = procesarDatos(response, userData);
                     setDatos(datosFiltrados);

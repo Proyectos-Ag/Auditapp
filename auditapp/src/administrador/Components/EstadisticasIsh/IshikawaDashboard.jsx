@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../../../services/api';
 import "./css/estadisticas-ish.css";
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsivePie } from '@nivo/pie';
@@ -17,7 +17,7 @@ const IshikawaDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+        const response = await api.get('/ishikawa');
         const data = response.data;
         const filteredIshikawas = data.filter(ishikawa => ishikawa.tipo === "vacio");
         setTotalIshikawas(filteredIshikawas.length);

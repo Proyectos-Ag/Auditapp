@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import './css/Ishikawa.css';
 import Logo from "../assets/img/logoAguida.png";
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../../services/api';
 import { UserContext } from '../../../App';
 import Swal from 'sweetalert2'; 
 import withReactContent from 'sweetalert2-react-content';
@@ -77,7 +77,7 @@ const Ishikawa = () => {
   useEffect(() => {
     const obtenerDatos = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+        const response = await api.get(`/datos`);
         if (userData && userData.Correo) {
           const datosFiltrados = response.data.find(dato => dato._id === _id);
           if (datosFiltrados) {
@@ -144,7 +144,7 @@ useEffect(() => {
   }
 
   const delayDebounceFn = setTimeout(() => {
-    axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/search?search=${encodeURIComponent(searchTerm)}`)
+    api.get(`/usuarios/search?search=${encodeURIComponent(searchTerm)}`)
       .then(response => {
         setSuggestions(response.data);
         
@@ -159,7 +159,7 @@ useEffect(() => {
 
 const verificarRegistro = async () => {
   try {
-    const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, {
+    const response = await api.get(`/ishikawa`, {
       params: {
         idRep: _id,
         idReq: id,
@@ -254,7 +254,7 @@ const handleTempFechaChange = (value) => {
         usuario: userData.Nombre
       };
   
-      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, data);
+      const response = await api.put(`/ishikawa/completo/${_id}`, data);
       console.log('Datos actualizados:', response.data);
       Swal.fire({
         title: 'Actualizado',
@@ -312,7 +312,7 @@ const handleTempFechaChange = (value) => {
         actividades
       };
   
-      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, data);
+      const response = await api.put(`/ishikawa/completo/${_id}`, data);
       console.log('Datos actualizados:', response.data);
       Swal.fire({
         title: 'Actualizado',
@@ -353,7 +353,7 @@ const handleTempFechaChange = (value) => {
         estado: 'Pendiente'
       };
       // Realizar la llamada a la API para guardar los datos
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+      const response = await api.post(`/ishikawa`, data);
       console.log('Datos guardados:', response.data);
       // Llamar a verificarRegistro después de confirmar
       verificarRegistro();
@@ -424,7 +424,7 @@ const handleTempFechaChange = (value) => {
     // Si el usuario confirma (presiona el botón de confirmación)
     if (result.isConfirmed) {
       // Realizar la llamada a la API para guardar los datos
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+      const response = await api.post(`/ishikawa`, data);
       console.log('Datos guardados:', response.data);
       // Llamar a verificarRegistro después de confirmar
       verificarRegistro();
@@ -455,7 +455,7 @@ const handleTempFechaChange = (value) => {
 
 const handleSaveOrUpdate = async () => {
   try {
-    const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, {
+    const response = await api.get(`/ishikawa`, {
       params: {
           idRep: _id,
           idReq: id,
@@ -541,7 +541,7 @@ const ajustarTamanoFuente = (textarea) => {
   
       const { _id } = registro[0];
   
-      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/fecha/${_id}`, updatedData);
+      const response = await api.put(`/ishikawa/fecha/${_id}`, updatedData);
       console.log('Datos actualizados:', response.data);
       verificarRegistro();
       Swal.fire('Fecha actualizada', `La nueva fecha de compromiso es: ${nuevaFecha}`, 'success');

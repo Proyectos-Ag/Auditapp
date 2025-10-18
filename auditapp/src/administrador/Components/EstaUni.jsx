@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsivePie } from '@nivo/pie';
 import { ResponsiveLine } from '@nivo/line';
@@ -19,18 +19,18 @@ const EstadisticasPersonas = () => {
     const fetchData = async () => {
       try {
         // Obtener usuarios
-        const usuariosResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
+        const usuariosResponse = await api.get(`/usuarios`);
         setUsuarios(usuariosResponse.data);
 
         // Obtener auditorías
-        const auditoriasResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+        const auditoriasResponse = await api.get(`/datos`);
         const filteredAudits = auditoriasResponse.data.filter(audit => 
           ['Finalizado', 'Terminada', 'Realizada', 'Devuelto'].includes(audit.Estado)
         );
         setAuditorias(filteredAudits);
 
         // Obtener ishikawas
-        const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+        const ishikawaResponse = await api.get(`/ishikawa`);
         setIshikawas(ishikawaResponse.data);
 
       } catch (error) {

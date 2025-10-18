@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -7,6 +7,7 @@ import './css/Estadisticas.css';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsivePie } from '@nivo/pie';
 import { ResponsiveLine } from '@nivo/line';
+import { Api } from '@mui/icons-material';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -26,7 +27,7 @@ const Estadisticas = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos`);
+        const response = await api.get('/datos');
         const filteredAudits = response.data.filter(audit => 
           audit.Estado === 'Finalizado' || 
           audit.Estado === 'Terminada' || 
@@ -48,7 +49,7 @@ const Estadisticas = () => {
         setObservations(observationsData);
 
         // CORRECCIÓN: Usar idRep consistentemente
-        const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+        const ishikawaResponse = await api.get('/ishikawa');
         const reviewedObservationsData = ishikawaResponse.data.filter(
           ishikawa => 
             (ishikawa.estado === 'Revisado' || 
@@ -154,7 +155,7 @@ const Estadisticas = () => {
         const yearAuditIds = yearAudits.map(audit => audit._id);
 
         try {
-          const ishikawaResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+          const ishikawaResponse = await api.get('/ishikawa');
 
           // Solo los que están actualmente en estado 'Aprobado'
           const aprobados = ishikawaResponse.data.filter(

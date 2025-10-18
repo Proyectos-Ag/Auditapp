@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import './css/Info.css';
 import { UserContext } from '../../App';
 import Swal from 'sweetalert2';
@@ -53,8 +53,8 @@ const Informacion = () => {
     const _id = userData.ID;
 
     try {
-      await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/usuarios/cambiarPassword/${_id}`,
+      await api.put(
+        `/usuarios/cambiarPassword/${_id}`,
         { password: newPassword },
         {
           headers: {
@@ -127,8 +127,8 @@ const Informacion = () => {
       const imageUrl = await uploadImageToFirebase(selectedFile, fileName);
       
       // Envía la URL al backend para actualizar el campo Foto del usuario
-      await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/usuarios/actualizarFoto/${_id}`,
+      await api.put(
+        `/usuarios/actualizarFoto/${_id}`,
         { url: imageUrl },
         {
           headers: {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import './css/Diagrama.css'
 import Logo from "../assets/img/logoAguida.png";
 import NewIshikawaFin from '../Ishikawa/NewIshikawaFin';
@@ -13,8 +13,8 @@ const Diagrama = ({ recordId }) =>  {
     
         const fetchData = async () => {
           try {
-            const response = await axios.get(
-              `${process.env.REACT_APP_BACKEND_URL}/ishikawa/vac/por/${recordId}`
+            const response = await api.get(
+              `/ishikawa/vac/por/${recordId}`
             );
             setIshikawa(response.data);
           } catch (error) {

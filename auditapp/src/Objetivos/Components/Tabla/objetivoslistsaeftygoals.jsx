@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import api from "../../../services/api";
 import { UserContext } from "../../../App";
 import './ObjetivosList.css';  // Asegúrate de importar el archivo CSS actualizado
 
@@ -22,7 +22,7 @@ const ObjetivosComponent = () => {
           return;
         }
 
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos`);
+        const response = await api.get(`/api/objetivos`);
         let data = response.data;
 
         console.log("Objetivos obtenidos antes del filtro:", data);

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import api from '../../services/api';
 
 // Logo público (puedes cambiar por el tuyo)
 const Logo = 'https://firebasestorage.googleapis.com/v0/b/imagenes-auditapp.appspot.com/o/assets%2FlogoAguida.png?alt=media&token=8e2f91d8-78cf-4a0a-888b-64d2e3e26fb1';
@@ -21,41 +22,6 @@ const ValidacionPDF = ({ validationId, form: formProp }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Convierte una URL pública a dataURL (útil para logo y firmas remotas)
-  const loadImageAsDataUrl = async (url) => {
-    if (!url) throw new Error('URL vacía');
-    if (typeof url === 'string' && url.startsWith('data:')) return url;
-    // usar fetch para obtener blob y luego FileReader
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('No se pudo cargar la imagen');
-    const blob = await res.blob();
-    return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error('Error leyendo blob'));
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  // Normaliza posibles formatos de firma -> dataURL | ''
-  const toDataUrlOrEmpty = async (firma) => {
-    if (!firma) return '';
-    const s = String(firma || '').trim();
-    try {
-      if (!s) return '';
-      if (s.startsWith('data:')) return s;
-      if (/^https?:\/\//i.test(s)) {
-        return await loadImageAsDataUrl(s);
-      }
-      // asumir base64 cruda
-      const clean = s.replace(/\s/g, '');
-      return `data:image/png;base64,${clean}`;
-    } catch (err) {
-      console.warn('toDataUrlOrEmpty err', err);
-      return '';
-    }
-  };
-
   // Formatea valores simples
   const fmt = (v) => {
     if (v === undefined || v === null) return '';
@@ -66,25 +32,55 @@ const ValidacionPDF = ({ validationId, form: formProp }) => {
     return String(v);
   };
 
-  // Fetch record desde backend (intenta varios endpoints parecidos a tu form original)
-  const fetchValidation = async () => {
-    if (formProp) return formProp;
-    if (!validationId) throw new Error('No se proporcionó validationId ni form');
-    const base = process.env.REACT_APP_BACKEND_URL || '';
-    const urls = [`${base}/api/validaciones/${validationId}`];
-    for (const u of urls) {
-      try {
-        const res = await fetch(u);
-        if (!res.ok) continue;
-        const json = await res.json();
-        // si backend devuelve array
-        return Array.isArray(json) ? (json[0] || {}) : json;
-      } catch (e) {
-        // intentar siguiente
-      }
+  const loadImageAsDataUrl = async (url) => {
+  if (!url) throw new Error('URL vacía');
+  if (typeof url === 'string' && url.startsWith('data:')) return url;
+
+  // Usa tu cliente axios. Como es URL absoluta, NO se antepone baseURL.
+  // Forzamos withCredentials:false para no mandar cookies a dominios externos (Firebase, etc.).
+  const { data: blob } = await api.get(url, {
+    responseType: 'blob',
+    withCredentials: false,
+    headers: { Accept: 'image/*' },
+  });
+
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Error leyendo blob'));
+    reader.readAsDataURL(blob);
+  });
+};
+
+// --- sin fetch, mismo comportamiento ---
+const toDataUrlOrEmpty = async (firma) => {
+  if (!firma) return '';
+  const s = String(firma || '').trim();
+  try {
+    if (!s) return '';
+    if (s.startsWith('data:')) return s;
+    if (/^https?:\/\//i.test(s)) {
+      return await loadImageAsDataUrl(s);
     }
-    throw new Error('No se pudo obtener la validación desde el servidor');
-  };
+    // asumir base64 cruda
+    const clean = s.replace(/\s/g, '');
+    return `data:image/png;base64,${clean}`;
+  } catch (err) {
+    console.warn('toDataUrlOrEmpty err', err);
+    return '';
+  }
+};
+
+// --- reemplaza fetchValidation para usar tu API client ---
+const fetchValidation = async () => {
+  if (formProp) return formProp;
+  if (!validationId) throw new Error('No se proporcionó validationId ni form');
+
+  // Usa ruta relativa; tu api ya resuelve baseURL (/api o el host que tengas configurado)
+  const { data } = await api.get(`/validaciones/${validationId}`);
+  // por si el backend devuelve array
+  return Array.isArray(data) ? (data[0] || {}) : data;
+};
 
   // Genera el PDF
   const generatePDF = async () => {

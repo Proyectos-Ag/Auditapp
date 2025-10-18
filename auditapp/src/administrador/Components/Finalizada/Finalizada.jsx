@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import { UserContext } from '../../../App';
 import logo from "../assets/img/logoAguida.png";
 import { useNavigate } from 'react-router-dom';
@@ -34,7 +34,7 @@ const Finalizada = () => {
 
     const obtenerDatos = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/por/${_id}`);
+            const response = await api.get(`/datos/por/${_id}`);
             const datosRecibidos = Array.isArray(response.data) ? response.data : [response.data];
     
             setDatos(datosRecibidos);
@@ -45,7 +45,7 @@ const Finalizada = () => {
 
     const fetchData = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/por/${_id}`);
+            const response = await api.get(`/ishikawa/por/${_id}`);
             setIshikawas(Array.isArray(response.data) ? response.data : [response.data]); 
         } catch (error) {
             console.error('Error fetching data:', error);

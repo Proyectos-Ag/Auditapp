@@ -5,6 +5,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { v4 as uuidv4 } from 'uuid';
 import 'reactjs-popup/dist/index.css';
 import './css/Signature.css';
+import api from '../services/api';
 
 const SignaturePopup = ({ open, role, onSave, onClose }) => {
   const sigPadRef = useRef(null);
@@ -33,23 +34,33 @@ const SignaturePopup = ({ open, role, onSave, onClose }) => {
 
   // Polling a servidor para recibir firma remota — solo si open y sessionId existen
   useEffect(() => {
-    if (!open || !sessionId) return;
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/signatures/${sessionId}`);
-        if (!res.ok) return;
-        const { dataURL } = await res.json();
-        if (dataURL && dataURL[role]) {
-          console.log('Firma remota recibida para', role, dataURL[role]);
-          onSave(role, dataURL[role]);
-          clearInterval(interval);
-        }
-      } catch (err) {
-        console.error('Error polling signature:', err);
+  if (!open || !sessionId) return;
+
+  let stopped = false; // evita ejecutar después del cleanup
+  const id = encodeURIComponent(sessionId);
+
+  const interval = setInterval(async () => {
+    if (stopped) return;
+    try {
+      const { data } = await api.get(`/api/signatures/${id}`);
+      const dataURL = data?.dataURL;
+
+      if (dataURL && dataURL[role]) {
+        console.log('Firma remota recibida para', role, dataURL[role]);
+        onSave(role, dataURL[role]);
+        clearInterval(interval);
       }
-    }, 1500);
-    return () => clearInterval(interval);
-  }, [open, sessionId, role, onSave]);
+    } catch (err) {
+      console.error('Error polling signature:', err?.response?.data || err);
+      // opcional: podrías decidir limpiar el intervalo en ciertos códigos (404/410)
+    }
+  }, 1500);
+
+  return () => {
+    stopped = true;
+    clearInterval(interval);
+  };
+}, [open, sessionId, role, onSave]);
 
   // Ajusta el canvas para que ocupe el ancho del contenedor y tenga buena resolución en DPR alta
   const resizeCanvasToContainer = useCallback(() => {

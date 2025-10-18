@@ -1,6 +1,6 @@
 // src/features/auditoria/hooks/useAuditData.js
 import { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 export default function useAuditData({_id, withIshikawa = false}) {
   const [datos, setDatos] = useState([]);
@@ -9,12 +9,12 @@ export default function useAuditData({_id, withIshikawa = false}) {
   const [error, setError] = useState(null);
 
   const obtenerDatos = async () => {
-    const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/por/${_id}`);
+    const res = await api.get(`/datos/por/${_id}`);
     return Array.isArray(res.data) ? res.data : [res.data];
   };
 
   const obtenerIshikawa = async () => {
-    const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/por/${_id}`);
+    const res = await api.get(`/ishikawa/por/${_id}`);
     return Array.isArray(res.data) ? res.data : [res.data];
   };
 

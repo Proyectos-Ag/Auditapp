@@ -1,7 +1,7 @@
 import React, { useEffect, useState,useCallback,useContext, useRef } from 'react';
 import Logo from "../assets/img/logoAguida.png";
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../../services/api';
 import { UserContext } from '../../../App';
 import Swal from 'sweetalert2';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
@@ -92,7 +92,7 @@ const IshikawaRev = () => {
 
     const fetchData = useCallback(async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, {
+        const response = await api.get(`/ishikawa`, {
             params: {
                 idRep: _id,
                 idReq: id,
@@ -116,7 +116,7 @@ const IshikawaRev = () => {
   useEffect(() => {
     const obtenerDatos = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/datos-filtrados`, {
+            const response = await api.get(`/datos/datos-filtrados`, {
                 params: {
                     _id: _id,
                     id: id,
@@ -175,7 +175,7 @@ useEffect(() => {
 useEffect(() => {
     const fetchUsuarios = async () => {
         try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
+        const response = await api.get(`/usuarios`);
         setUsuarios(response.data);
         } catch (error) {
         console.error("Error al obtener los usuarios", error);
@@ -302,7 +302,7 @@ const handleCorreccionChange = (index, field, value) => {
             }));
     
             // Realiza la solicitud PUT al backend con los datos optimizados
-            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${_id}`, dataToSend, {
+            const response = await api.put(`/ishikawa/${_id}`, dataToSend, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -399,7 +399,7 @@ const handleCorreccionChange = (index, field, value) => {
             };
     
             // Realiza la solicitud PUT al backend con los datos optimizados
-            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/fin/${_id}`, dataToSend, {
+            const response = await api.put(`/ishikawa/fin/${_id}`, dataToSend, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -436,7 +436,7 @@ const handleCorreccionChange = (index, field, value) => {
         return;
       }
 
-      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/estado/${_id}`, {
+      const response = await api.put(`/ishikawa/estado/${_id}`, {
         estado: selectedOption // Usamos la opción seleccionada
       });
 
@@ -477,7 +477,7 @@ const handleCorreccionChange = (index, field, value) => {
         const handleGuardarAprobacion = async () => {
             try {
                 const { _id } = filteredIshikawas[0];
-                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${_id}`, {
+                await api.put(`/ishikawa/completo/${_id}`, {
                     estado: 'Aprobado',
                     usuario: ishikawas[0].auditado,
                     programa: ishikawas[0].proName,
@@ -532,8 +532,8 @@ const handleGuardarRechazo = async (nota) => {
   try {
     const { _id: registroId, auditado, proName, correo } = filteredIshikawas[0];
 
-    await axios.put(
-      `${process.env.REACT_APP_BACKEND_URL}/ishikawa/completo/${registroId}`,
+    await api.put(
+      `/ishikawa/completo/${registroId}`,
       {
         estado: 'Rechazado',
         notaRechazo: nota,       // aquí uso la nota recibida por parámetro
@@ -605,7 +605,7 @@ useEffect(() => {
 
 const verificarRegistro = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, {
+            const response = await api.get(`/ishikawa`, {
                 params: {
                     idRep: _id,
                     idReq: id,
@@ -656,12 +656,12 @@ const handleSave = async () => {
             if (rechazo.length > 0) {
                 // Actualizar registro existente
                 const { _id: registroId } = rechazo[0];
-                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/${registroId}`, data);
+                await api.put(`/ishikawa/${registroId}`, data);
                 Swal.fire('Reasignado', 'El diagrama ha sido reasignado.', 'success');
                 verificarRegistro();
             } else {
                 // Crear nuevo registro
-                await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+                await api.post(`/ishikawa`, data);
                 Swal.fire('Asignado', 'La asignación se realizó exitosamente.', 'success');
                 verificarRegistro();
             }
@@ -675,8 +675,8 @@ const handleSave = async () => {
 
 const handleReasignar = async (registroId) => {
   try {
-    await axios.patch(
-      `${process.env.REACT_APP_BACKEND_URL}/ishikawa/asig/${registroId}`,
+    await api.patch(
+      `/ishikawa/asig/${registroId}`,
       {
         auditado: valorSeleccionado,
         correo: CorreoSeleccionado,
@@ -733,8 +733,8 @@ const handleUpdateFechaCompromiso = async (ishikawaId, actividadId, index) => {
       };      
   
       // Aquí se usa el id del documento Ishikawa, no el id de la actividad
-      const response = await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/ishikawa/fecha/${ishikawaId}`,
+      const response = await api.put(
+        `/ishikawa/fecha/${ishikawaId}`,
         updatedData
       );
       console.log('Datos actualizados:', response.data);
@@ -839,7 +839,7 @@ const handleUploadFile = (fieldKey) => {
 
 const handleEliminarEvidencia = async (index, idIsh, idCorr ) => {
     try {
-        const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/eliminar-evidencia/${index}/${idIsh}/${idCorr}`);
+        const response = await api.put(`/ishikawa/eliminar-evidencia/${index}/${idIsh}/${idCorr}`);
         
         if (response.status === 200) {
             // Actualizar el estado local después de eliminar la evidencia en la base de datos

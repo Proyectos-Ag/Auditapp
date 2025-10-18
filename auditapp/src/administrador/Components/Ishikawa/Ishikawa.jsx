@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import './css/Ishikawa.css'
 import Logo from "../assets/img/logoAguida.png";
 import Ishikawa from '../assets/img/Ishikawa-transformed.webp';
@@ -92,7 +92,7 @@ const CreacionIshikawa = () => {
         cancelButtonText: 'Cancelar'
       });
       if (result.isConfirmed) {
-        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`, data);
+        const response = await api.post(`/ishikawa`, data);
         console.log('Datos guardados:', response.data);
         navigate('/diagrama');
       } else {

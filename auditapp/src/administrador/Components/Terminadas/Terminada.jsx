@@ -1,5 +1,5 @@
 import React, { useMemo,useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import { UserContext } from '../../../App';
 import logo from "../assets/img/logoAguida.png";
 import './css/Terminada.css'; 
@@ -48,7 +48,7 @@ const Terminada = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/por/${_id}`);
+            const response = await api.get(`/datos/por/${_id}`);
             
             // Verifica si response.data es un array, si no, conviértelo en uno
             const datosRecibidos = Array.isArray(response.data) ? response.data : [response.data];
@@ -66,7 +66,7 @@ const Terminada = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/por/${_id}`);
+            const response = await api.get(`/ishikawa/por/${_id}`);
             setIshikawas(Array.isArray(response.data) ? response.data : [response.data]); 
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -114,7 +114,7 @@ const Terminada = () => {
 
     const actualizarEstadoFinalizado = async (id, porcentaje) => {
         try {
-            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
+            await api.put(`/datos/estado/${id}`, {
                 Estado: 'Finalizado',
                 PorcentajeCump: porcentaje
             });

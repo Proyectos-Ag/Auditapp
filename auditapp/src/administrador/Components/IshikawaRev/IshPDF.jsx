@@ -4,7 +4,7 @@ import html2canvas from 'html2canvas';
 import Cargando from '../../../components/cargando/Cargando';
 import NewIshikawaFin from '../../../ishikawa-vacio/components/Ishikawa/NewIshikawaFin';
 import './css/IshikawaRev.css';
-import axios from 'axios';
+import api from '../../../services/api';
 import Button from '@mui/material/Button';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import GroupIcon from '@mui/icons-material/Group';
@@ -1109,8 +1109,8 @@ if (espacioRestanteParaEfect < (headerHeightEfect + filaMinimaEfect + 6)) {
           }
         });
 
-        await axios.post(
-          `${process.env.REACT_APP_BACKEND_URL}/ishikawa/enviar-pdf-dos`,
+        await api.post(
+          `/ishikawa/enviar-pdf-dos`,
           formData
         );
       }

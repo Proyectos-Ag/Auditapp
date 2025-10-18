@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
-import axios from 'axios';
+import api from '../services/api';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 
@@ -19,7 +19,7 @@ export default function NameSearchAutocomplete({
   onChange = () => {},
   options = null,            // si provisto, se usa en lugar de la llamada remota
   fetch = true,             // por defecto consume el endpoint
-  fetchUrl = `${process.env.REACT_APP_BACKEND_URL}/usuarios/nombres`,
+  fetchUrl = `/usuarios/nombres`,
   placeholder = '',
   label = '',
   size = 'small',
@@ -38,7 +38,7 @@ export default function NameSearchAutocomplete({
       if (!fetch) return;
       setLoading(true);
       try {
-        const res = await axios.get(fetchUrl);
+        const res = await api.get(fetchUrl);
         if (!res || !res.data) {
           if (mounted) setRemoteOptions([]);
           return;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import { 
   Typography, Button, Card, CardContent, Table, TableBody, TableCell, 
   TableContainer, TableHead, TableRow, Grid, Box, Paper, Avatar, 
@@ -92,7 +92,7 @@ const AuditorEvaluaciones = () => {
   useEffect(() => {
     const obtenerAuditores = async () => {
       try {
-        const responseEvaluaciones = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/evaluacion/eva-esp`);
+        const responseEvaluaciones = await api.get(`/evaluacion/eva-esp`);
         setEvaluacionesDisp(responseEvaluaciones.data);
       } catch (error) {
         console.error('Error al obtener auditores:', error);
@@ -106,8 +106,8 @@ const AuditorEvaluaciones = () => {
     const fetchEvaluaciones = async () => {
       if (selectedFolio) {
         try {
-          const responseEvaluacion = await axios.get(
-            `${process.env.REACT_APP_BACKEND_URL}/evaluacion/${selectedFolio}`
+          const responseEvaluacion = await api.get(
+            `/evaluacion/${selectedFolio}`
           );
           setEvaluaciones(responseEvaluacion.data);
         } catch (error) {

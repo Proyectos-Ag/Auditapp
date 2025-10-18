@@ -1,6 +1,6 @@
 // ===================== IMPORTS Y CONTEXTOS =====================
 import React, { useState, useEffect, useRef, useContext} from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import SignaturePopup from './SignaturePopup';
 import { UserContext } from '../App';
@@ -75,7 +75,7 @@ export default function GestionCambioForm() {
   useEffect(() => {
   const loadNames = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios/nombres`);
+      const res = await api.get(`/usuarios/nombres`);
 if (!res || !res.data) return;
 
 // Si viene un array de strings, mantenemos compatibilidad.
@@ -108,8 +108,8 @@ if (Array.isArray(res.data) && res.data.length && typeof res.data[0] === 'string
         const userName = encodeURIComponent(userData?.Nombre || userData?.nombre || '');
         const userEmail = encodeURIComponent(userData?.Correo || userData?.email || userData?.correo || '');
 
-        const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${routeId}?userName=${userName}&userEmail=${userEmail}`
+        const res = await api.get(
+          `/api/gestion-cambio/${routeId}?userName=${userName}&userEmail=${userEmail}`
         );
         const data = res.data || {};
         const toInputDate = (d) => {
@@ -625,12 +625,12 @@ console.log('>>> firmadoPor antes de enviar:', JSON.stringify(formData.firmadoPo
 
       if (routeId || formData._id) {
         const target = routeId || formData._id;
-        const res = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${target}`, payload);
+        const res = await api.put(`/api/gestion-cambio/${target}`, payload);
 
         setAlertBanner({ type: 'success', text: 'Borrador guardado correctamente.' });
         if (!routeId && res.data._id) navigate(`/gestion-cambio/${res.data._id}`, { replace: true });
       } else {
-        const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio`, payload);
+        const res = await api.post(`/api/gestion-cambio`, payload);
 
         setAlertBanner({ type: 'success', text: 'Borrador creado correctamente.' });
         if (res.data._id) navigate(`/gestion-cambio/${res.data._id}`, { replace: true });
@@ -676,21 +676,21 @@ console.log('>>> firmadoPor antes de enviar:', JSON.stringify(formData.firmadoPo
 
       if (routeId || formData._id) {
         const target = routeId || formData._id;
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${target}`, payload);
+        await api.put(`/api/gestion-cambio/${target}`, payload);
         // endpoint enviar (server debe cambiar estado y devolver doc)
-        const resEnviar = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${target}/enviar`);
+        const resEnviar = await api.post(`/api/gestion-cambio/${target}/enviar`);
         setFormData(prev => ({ ...prev, ...resEnviar.data }));
         setSubmitted(true);
         setAlertBanner({ type: 'success', text: 'Solicitud enviada con éxito.' });
       } else {
         // create then send
-        const resCreate = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio`, { ...payload, estado: 'pendiente' });
+        const resCreate = await api.post(`/api/gestion-cambio`, { ...payload, estado: 'pendiente' });
         const newId = resCreate.data._id;
         if (!newId) {
           setAlertBanner({ type: 'error', text: 'Error inesperado al crear el registro.' });
           return;
         }
-        const resEnviar = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/${newId}/enviar`);
+        const resEnviar = await api.post(`/api/gestion-cambio/${newId}/enviar`);
         setFormData(prev => ({ ...prev, ...resEnviar.data }));
         setSubmitted(true);
         setAlertBanner({ type: 'success', text: 'Solicitud enviada con éxito.' });

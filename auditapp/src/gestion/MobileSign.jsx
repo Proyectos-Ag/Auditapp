@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 import { useLocation, useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 // recorta espacios en blanco (tu función original)
 const trimCanvas = (canvas) => {
@@ -99,28 +100,29 @@ export default function MobileSign() {
   };
 
   const submit = async () => {
-    if (!sigRef.current || sigRef.current.isEmpty()) {
-      return alert('Firma vacía');
-    }
-    // Obtenemos el canvas completo y lo recortamos
-    const fullCanvas = sigRef.current.getCanvas();
-    const trimmedCanvas = trimCanvas(fullCanvas);
-    const dataURL = trimmedCanvas.toDataURL('image/png');
+  if (!sigRef.current || sigRef.current.isEmpty()) {
+    alert('Firma vacía');
+    return;
+  }
 
-    try {
-      await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/signatures`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session, role, dataURL })
-      });
-      alert('Firma enviada correctamente');
-      // opcional: navegar a inicio o cerrar
-      navigate('/');
-    } catch (err) {
-      console.error('Error enviando firma:', err);
-      alert('Error enviando la firma');
-    }
-  };
+  // Obtenemos el canvas completo y lo recortamos
+  const fullCanvas = sigRef.current.getCanvas();
+  const trimmedCanvas = trimCanvas(fullCanvas);
+  const dataURL = trimmedCanvas.toDataURL('image/png');
+
+  try {
+    await api.post('/api/signatures', { session, role, dataURL });
+
+    alert('Firma enviada correctamente');
+    navigate('/'); // opcional: redirigir al inicio
+  } catch (err) {
+    const status = err?.response?.status;
+    const backendMsg = err?.response?.data?.message || err?.response?.data?.error;
+    console.error('Error enviando firma:', err?.response?.data || err);
+
+    alert(backendMsg || `Error enviando la firma${status ? ` (HTTP ${status})` : ''}`);
+  }
+};
 
   // estilos inline mínimos; te recomiendo extraerlos a CSS si prefieres
   const containerStyle = {

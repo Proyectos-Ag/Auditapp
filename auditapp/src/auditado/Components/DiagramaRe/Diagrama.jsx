@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import Logo from "../assets/img/logoAguida.png";
 import Ishikawa from '../assets/img/Ishikawa-transformed.webp';
 
@@ -9,7 +9,7 @@ const Diagrama = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa`);
+                const response = await api.get(`/ishikawa`);
                 setIshikawas(response.data);
             } catch (error) {
                 console.error('Error fetching data:', error);

@@ -2,7 +2,7 @@
 import React, { useContext, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import axios from 'axios';
+import api from '../../services/api';
 import { UserContext } from '../../App';
 
 import useAuditData from '../../hooks/useAuditData';
@@ -47,7 +47,7 @@ export default function AuditReportPage({ variant = 'revision' }) {
   };
 
   const actualizarEstadoADevuelto = async (id, AuditorLiderEmail) => {
-    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
+    await api.put(`/datos/estado/${id}`, {
       Estado: 'Devuelto',
       Comentario: notas[id] || '',
       AuditorLiderEmail
@@ -55,14 +55,14 @@ export default function AuditReportPage({ variant = 'revision' }) {
   };
 
   const actualizarEstadoTerminada = async (id, payload) => {
-    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
+    await api.put(`/datos/estado/${id}`, {
       Estado: 'Terminada',
       ...payload
     });
   };
 
   const actualizarEstadoFinalizado = async (id, porcentaje) => {
-    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
+    await api.put(`/datos/estado/${id}`, {
       Estado: 'Finalizado',
       PorcentajeCump: porcentaje
     });
@@ -78,7 +78,7 @@ export default function AuditReportPage({ variant = 'revision' }) {
       cancelButtonText: 'Cancelar'
     });
     if (confirm.isConfirmed) {
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/datos/${id}`);
+      await api.delete(`/datos/${id}`);
       Swal.fire('Eliminado', 'El reporte fue eliminado', 'success');
       navigate('/revish');
     }

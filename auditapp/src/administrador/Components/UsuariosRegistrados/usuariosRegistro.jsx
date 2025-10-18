@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import { format } from 'date-fns';
 import {
   Box,
@@ -449,7 +449,7 @@ const UsuariosRegistro = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/usuarios`);
+        const response = await api.get(`/usuarios`);
         setUsers(response.data);
       } catch (error) {
         setError('Error al obtener los usuarios');
@@ -512,7 +512,7 @@ const UsuariosRegistro = () => {
     }
 
     try {
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/usuarios/cambiarPassword/${usuarioAEditar._id}`, {
+      await api.put(`/usuarios/cambiarPassword/${usuarioAEditar._id}`, {
         password: passwordFormData.password
       });
       setOpenPasswordModal(false);
@@ -561,7 +561,7 @@ const UsuariosRegistro = () => {
       calificaciones: [...usuarioAEditar.calificaciones, ...calificaciones]
     };
 
-    axios.put(`${process.env.REACT_APP_BACKEND_URL}/usuarios/${usuarioAEditar._id}`, updatedUser)
+    api.put(`/usuarios/${usuarioAEditar._id}`, updatedUser)
       .then(response => {
         setUsers(users.map(user => (user._id === usuarioAEditar._id ? response.data : user)));
         setUsuarioAEditar(null);
@@ -597,8 +597,8 @@ const UsuariosRegistro = () => {
 
     try {
       const updatedFormData = { ...editFormData };
-      const response = await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/usuarios/${usuarioAEditar._id}`, 
+      const response = await api.put(
+        `/usuarios/${usuarioAEditar._id}`, 
         updatedFormData
       );
       setUsers(users.map(user => (user._id === usuarioAEditar._id ? response.data : user)));
@@ -613,7 +613,7 @@ const UsuariosRegistro = () => {
   const handleDeleteClick = async (userId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
       try {
-        await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/usuarios/${userId}`);
+        await api.delete(`/usuarios/${userId}`);
         setUsers(users.filter(user => user._id !== userId));
       } catch (error) {
         console.error('Error al eliminar el usuario:', error);
@@ -625,8 +625,8 @@ const UsuariosRegistro = () => {
     try {
       const userToDegradar = users.find(user => user._id === userId);
       if (userToDegradar && userToDegradar.PromedioEvaluacion < 80) {
-        const response = await axios.put(
-          `${process.env.REACT_APP_BACKEND_URL}/usuarios/${userId}`, 
+        const response = await api.put(
+          `/usuarios/${userId}`, 
           { TipoUsuario: 'auditado' }
         );
         setUsers(users.map(user => (user._id === userId ? response.data : user)));
@@ -643,8 +643,8 @@ const UsuariosRegistro = () => {
     try {
       const userToPromote = users.find(user => user._id === userId);
       if (userToPromote && userToPromote.PromedioEvaluacion >= 80) {
-        const response = await axios.put(
-          `${process.env.REACT_APP_BACKEND_URL}/usuarios/${userId}`, 
+        const response = await api.put(
+          `/usuarios/${userId}`, 
           { TipoUsuario: 'auditor' }
         );
         setUsers(users.map(user => (user._id === userId ? response.data : user)));

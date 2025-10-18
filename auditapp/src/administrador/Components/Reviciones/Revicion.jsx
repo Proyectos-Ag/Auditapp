@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import { UserContext } from '../../../App';
 import logo from "../assets/img/logoAguida.png";
 import jsPDF from 'jspdf';
@@ -41,7 +41,7 @@ const Reporte = () => {
     
     const obtenerDatos = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/por/${_id}`);
+            const response = await api.get(`/datos/por/${_id}`);
             const datosRecibidos = Array.isArray(response.data) ? response.data : [response.data];
     
             setDatos(datosRecibidos);
@@ -138,7 +138,7 @@ const Reporte = () => {
 
     const actualizarEstadoADevuelto = async (id, AuditorLiderEmail) => {
         try {
-            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
+            await api.put(`/datos/estado/${id}`, {
                 Estado: 'Devuelto',
                 Comentario: notas[id] || '' ,
                 AuditorLiderEmail
@@ -152,7 +152,7 @@ const Reporte = () => {
     const actualizarEstadoTerminada = async (id, puntuacionObtenida, confExternas, estatus, porcentajeTotal, AuditorLiderEmail) => {
         
         try {
-            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/datos/estado/${id}`, {
+            await api.put(`/datos/estado/${id}`, {
                 Estado: 'Terminada',
                 PuntuacionObten: puntuacionObtenida,
                 PuntuacionConf: confExternas,
@@ -241,7 +241,7 @@ const Reporte = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/datos/${id}`);
+                    await api.delete(`/datos/${id}`);
                     obtenerDatos();
                     Swal.fire('Eliminado', 'El reporte ha sido eliminado.', 'success');
                 } catch (error) {

@@ -18,7 +18,7 @@ import {
   Divider,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import axios from "axios";
+import api from "../../../services/api";
 import { UserContext } from "../../../App";
 
 const AccesoModal = ({ open, handleClose, idIshikawa, problemaIshikawa, estado }) => {
@@ -38,8 +38,8 @@ const AccesoModal = ({ open, handleClose, idIshikawa, problemaIshikawa, estado }
 
     if (idIshikawa) {
       // 2. cargar accesos existentes
-      axios
-        .get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/acceso/${idIshikawa}`)
+      api
+        .get(`/ishikawa/acceso/${idIshikawa}`)
         .then(res => {
           // asumo que el backend devuelve { acceso: [...] }
           setAccesos(res.data.acceso || []);
@@ -64,9 +64,9 @@ const AccesoModal = ({ open, handleClose, idIshikawa, problemaIshikawa, estado }
       return;
     }
     const delay = setTimeout(() => {
-      axios
+      api
         .get(
-          `${process.env.REACT_APP_BACKEND_URL}/usuarios/search?search=${encodeURIComponent(
+          `/usuarios/search?search=${encodeURIComponent(
             searchTerm
           )}`
         )
@@ -135,8 +135,8 @@ const AccesoModal = ({ open, handleClose, idIshikawa, problemaIshikawa, estado }
       return;
     }
     try {
-      await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/ishikawa/acceso/${idIshikawa}`,
+      await api.put(
+        `/ishikawa/acceso/${idIshikawa}`,
         { acceso: accesos }
       );
       Swal.fire({

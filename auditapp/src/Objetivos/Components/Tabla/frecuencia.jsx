@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import './css/TablaObjetivosArea.css';
@@ -73,8 +73,8 @@ const TablaObjetivosArea = () => {
   useEffect(() => {
     async function fetchObjetivos() {
       try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/objetivos`,
+        const response = await api.get(
+          `/api/objetivos`,
           { params: { area: label } }
         );
         const objetivosData = response.data;
@@ -180,11 +180,11 @@ const TablaObjetivosArea = () => {
               acc[semana] = valores[`${objetivoId}.${campo}.${semana}`] || "";
               return acc;
             }, {});
-            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos/${objetivoId}`, {
+            await api.put(`/api/objetivos/${objetivoId}`, {
               [campo]: indicadorData,
             });
           } else {
-            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/objetivos/${objetivoId}`, {
+            await api.put(`/api/objetivos/${objetivoId}`, {
               [campo]: isNaN(valores[key]) ? valores[key] : Number(valores[key]),
             });
           }

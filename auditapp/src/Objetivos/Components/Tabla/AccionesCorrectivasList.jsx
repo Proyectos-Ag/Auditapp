@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import { useParams } from 'react-router-dom';
 import {
   Box,
@@ -681,8 +681,8 @@ const ListaAccionFrecu = () => {
   const fetchAcciones = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/api/objetivos/acciones`,
+      const response = await api.get(
+        `/api/objetivos/acciones`,
         { params: { area: label } }
       );
       
@@ -721,8 +721,8 @@ const ListaAccionFrecu = () => {
     
     setSaving(true);
     try {
-      await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/api/objetivos/acciones/${selectedAccion._id}`,
+      await api.put(
+        `/api/objetivos/acciones/${selectedAccion._id}`,
         {
           responsable: editData.responsable,
           efectividad: editData.efectividad + ' indicador',
@@ -752,8 +752,8 @@ const ListaAccionFrecu = () => {
       const [year, month, day] = nuevaFecha.split('-');
       const utcDate = new Date(Date.UTC(year, month - 1, day));
       
-      await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/api/objetivos/acciones/${selectedAccion._id}/reprogramar`,
+      await api.put(
+        `/api/objetivos/acciones/${selectedAccion._id}/reprogramar`,
         { 
           nuevaFecha: utcDate.toISOString(),
           nuevaFechaLocal: formatDateFromInput(nuevaFecha)

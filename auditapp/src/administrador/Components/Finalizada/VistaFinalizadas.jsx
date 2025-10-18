@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import logo from '../assets/img/logoAguida-min.png';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,7 +10,7 @@ const VistaFinalizadas = () => {
   useEffect(() => {
     const fetchDatos = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/espfin`);
+        const response = await api.get(`/datos/espfin`);
         setDatos(response.data);
       } catch (error) {
         console.error('Error al obtener los datos:', error);

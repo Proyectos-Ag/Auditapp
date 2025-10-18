@@ -1,5 +1,5 @@
 import React, { useEffect, useState,useContext } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import './css/VistaR.css'
 import logo from '../assets/img/logoAguida-min.png';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +15,7 @@ const VistaReportes = () => {
       try {
         // Hacer la petición para obtener los datos de Ishikawa
         const encodedNombre = encodeURIComponent(userData.Nombre);
-        const responseIshikawa = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/ishikawa/por/vista/${encodedNombre}`);
+        const responseIshikawa = await api.get(`/ishikawa/por/vista/${encodedNombre}`);
   
         // Verificar que la respuesta tenga datos
         const respIsh = Array.isArray(responseIshikawa.data) ? responseIshikawa.data : [responseIshikawa.data];
@@ -43,7 +43,7 @@ const VistaReportes = () => {
   
           // Hacer la solicitud de datos basados en idRep
           try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/datos/esp/aud`, {
+            const response = await api.get(`/datos/esp/aud`, {
               params: { idRep },
             });
             console.log(response.data);

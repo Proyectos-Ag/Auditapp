@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import api from '../services/api';
 import "./css/VistaR.css";
 import logo from "../assets/img/logoAguida-min.png";
 import { useNavigate } from "react-router-dom";
@@ -80,8 +80,8 @@ const VistaSolicitudesCambios = () => {
         if (estadoFilter) params.estado = estadoFilter;
         params.userName = userData?.Nombre;
         params.tipoUsuario = (userData?.TipoUsuario).toString();
-        const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/gestion-cambio/resumen`,
+        const res = await api.get(
+          `/api/gestion-cambio/resumen`,
           { params }
         );
         setSolicitudes(Array.isArray(res.data) ? res.data : []);
