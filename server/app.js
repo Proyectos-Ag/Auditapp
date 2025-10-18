@@ -32,9 +32,6 @@ const objetivosRoutes = require("./routes/ObjetivosRoutes");
 const gestionCambio = require("./routes/gestionCambioRoutes");
 const signatureRoutes = require('./routes/signatureRoutes');
 const validacionRoutes = require('./routes/validacionRoutes');
-const invitacionRoutes = require('./routes/invitacionRoutes');
-const { router: webhookRoutes, setAutoUpdateInstance } = require('./routes/webhookRoutes');
-
 const app = express();
 
 // Configuración de vistas
@@ -45,13 +42,13 @@ app.set('view engine', 'ejs');
 const corsOptions = {
   origin: [
     'http://localhost:3000',
-    'https://192.168.0.35localhost:3000',
-    'http://192.168.0.35:3000',
-    'https://172.16.10.178:3000',
+    'https://localhost:3000',
+    'http://192.168.0.182:3000',
+    'https://192.168.0.182:3000',
     'https://auditapp-dqej.onrender.com',
-    'http://172.16.10.178:3000',
-    'https://192.168.0.75:3000',
-    'https://192.168.0.35:3443'
+    'http://192.168.0.182:3000',
+    'https://192.168.0.182:3000',
+    'https://192.168.0.182:3443'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -122,13 +119,12 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Bienvenido a la API de Aguida',
-    version: '1.2',
+    version: '1.1',
     status: 'OK',
     autoUpdate: {
       enabled: process.env.GIT_AUTO_UPDATE === 'true',
       repository: process.env.GIT_REPO_URL || 'No configurado',
-      branch: process.env.GIT_BRANCH || 'No configurado',
-      webhookEnabled: !!process.env.GITHUB_WEBHOOK_SECRET
+      branch: process.env.GIT_BRANCH || 'No configurado'
     }
   });
 });
@@ -140,6 +136,8 @@ app.use('/datos', datosRoutes);
 app.use('/programas', programasRoutes);
 app.use('/areas', areasRoutes);
 app.use('/auth', authRoutes);
+// Rutas de invitación
+const invitacionRoutes = require('./routes/invitacionRoutes');
 app.use('/invitacion', invitacionRoutes);
 app.use('/ishikawa', ishikawa);
 app.use('/evaluacion', evaluacionRoutes);
@@ -148,8 +146,6 @@ app.use('/api/objetivos', objetivosRoutes);
 app.use('/api/gestion-cambio', gestionCambio);
 app.use('/api/signatures', signatureRoutes);
 app.use('/api/validaciones', validacionRoutes);
-app.use('/webhook', webhookRoutes); // Ruta para webhooks de GitHub
-
 // ========================================
 // Sistema de Auto-actualización Git
 // ========================================
@@ -163,26 +159,12 @@ const autoUpdate = new GitAutoUpdate({
 if (process.env.GIT_AUTO_UPDATE === 'true') {
   autoUpdate.initialize().then(success => {
     if (success) {
-      // Conectar el webhook con la instancia de autoUpdate
-      setAutoUpdateInstance(autoUpdate);
-      
-      // Solo iniciar verificación periódica si no hay webhook configurado
-      if (!process.env.GITHUB_WEBHOOK_SECRET) {
-        console.log('\n⚠️  Sin webhook configurado, usando verificación periódica');
-        autoUpdate.startAutoUpdate();
-      } else {
-        console.log('\n✅ Webhook configurado - actualizaciones instantáneas habilitadas');
-        console.log('🔗 URL del webhook: https://tu-servidor.com/webhook/github');
-        console.log('💡 El servidor se actualizará automáticamente con cada push\n');
-      }
+      autoUpdate.startAutoUpdate();
     } else {
       console.log('⚠️  Sistema de auto-actualización no disponible');
       console.log('💡 Asegúrate de que el proyecto sea un repositorio Git');
     }
   });
-} else {
-  console.log('\n⚠️  Auto-actualización deshabilitada');
-  console.log('💡 Para habilitar, configura GIT_AUTO_UPDATE=true en .env\n');
 }
 
 // Ruta para verificar estado de actualización (solo administradores)
@@ -196,7 +178,6 @@ app.get('/api/update-status', (req, res) => {
     repository: process.env.GIT_REPO_URL || 'No configurado',
     branch: process.env.GIT_BRANCH || 'No configurado',
     checkInterval: parseInt(process.env.GIT_CHECK_INTERVAL) || 300000,
-    webhookEnabled: !!process.env.GITHUB_WEBHOOK_SECRET,
     isUpdating: autoUpdate.isUpdating
   });
 });

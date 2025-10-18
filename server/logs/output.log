@@ -1,0 +1,1622 @@
+2025-10-18T09:26:34: Ejecución de tarea a las: 18/10/2025, 09:26:34
+2025-10-18T09:26:34: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:26:34: 📂 Buscando certificados SSL...
+2025-10-18T09:26:34:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T09:26:34:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T09:26:34: =================================
+2025-10-18T09:26:34: 🚀 Servidor HTTP iniciado
+2025-10-18T09:26:34: =================================
+2025-10-18T09:26:34: 📡 Puerto HTTP: 3002
+2025-10-18T09:26:34: 🌐 Local: http://localhost:3002
+2025-10-18T09:26:34: 🌐 Red: http://192.168.0.182:3002
+2025-10-18T09:26:34: 🔧 Entorno: development
+2025-10-18T09:26:34: =================================
+2025-10-18T09:26:34: =================================
+2025-10-18T09:26:34: 🔒 Servidor HTTPS iniciado
+2025-10-18T09:26:34: =================================
+2025-10-18T09:26:34: 📡 Puerto HTTPS: 3443
+2025-10-18T09:26:34: 🌐 Local: https://localhost:3443
+2025-10-18T09:26:34: 🌐 Red: https://192.168.0.182:3443
+2025-10-18T09:26:34: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T09:26:34: =================================
+2025-10-18T09:26:34: Conexión exitosa a MongoDB
+2025-10-18T09:26:34: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:26:34: Usuario root ya existe
+2025-10-18T09:26:34: Número de actividades para mañana: 0
+2025-10-18T09:26:34: Número de actividades para dentro de 3 días: 0
+2025-10-18T09:26:34: 🌿 Rama actual: Completo
+2025-10-18T09:26:34: 
+=================================
+2025-10-18T09:26:34: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T09:26:34: =================================
+2025-10-18T09:26:34: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T09:26:34: 🌿 Rama: Completo
+2025-10-18T09:26:34: ⏱️  Intervalo: 5 minutos
+2025-10-18T09:26:34: =================================
+
+2025-10-18T09:26:34: 
+🔍 Verificando actualizaciones...
+2025-10-18T09:26:35: 🆕 ¡Nueva versión disponible!
+2025-10-18T09:26:35: 🔄 Iniciando actualización desde Git...
+2025-10-18T09:26:35: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T09:26:35: 🌿 Rama: Completo
+2025-10-18T09:26:35: 💾 Guardando cambios locales...
+2025-10-18T09:26:36: ⬇️  Descargando actualizaciones...
+2025-10-18T09:26:36: 📦 Verificando dependencias...
+2025-10-18T09:26:41: ℹ️  No había cambios locales guardados
+2025-10-18T09:26:41: ✅ ¡Actualización completada exitosamente!
+2025-10-18T09:26:41: 🔄 El servidor se reiniciará en 3 segundos...
+2025-10-18T09:26:44: 🔄 Reiniciando servidor...
+2025-10-18T09:27:42: Ejecución de tarea a las: 18/10/2025, 09:27:42
+2025-10-18T09:27:42: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:27:42: 📂 Buscando certificados SSL...
+2025-10-18T09:27:42:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T09:27:42:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T09:27:42: =================================
+2025-10-18T09:27:42: 🚀 Servidor HTTP iniciado
+2025-10-18T09:27:42: =================================
+2025-10-18T09:27:42: 📡 Puerto HTTP: 3002
+2025-10-18T09:27:42: 🌐 Local: http://localhost:3002
+2025-10-18T09:27:42: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T09:27:42: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T09:27:42: 🔧 Entorno: development
+2025-10-18T09:27:42: =================================
+2025-10-18T09:27:42: Listening on http://0.0.0.0:3002
+2025-10-18T09:27:42: =================================
+2025-10-18T09:27:42: 🔒 Servidor HTTPS iniciado
+2025-10-18T09:27:42: =================================
+2025-10-18T09:27:42: 📡 Puerto HTTPS: 3443
+2025-10-18T09:27:42: 🌐 Local: https://localhost:3443
+2025-10-18T09:27:42: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T09:27:42: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T09:27:42: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T09:27:42: =================================
+2025-10-18T09:27:42: Listening on https://0.0.0.0:3443
+2025-10-18T09:27:42: Conexión exitosa a MongoDB
+2025-10-18T09:27:42: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:27:42: Usuario root ya existe
+2025-10-18T09:27:42: Número de actividades para mañana: 0
+2025-10-18T09:27:42: Número de actividades para dentro de 3 días: 0
+2025-10-18T09:27:42: 🌿 Rama actual: Completo
+2025-10-18T09:27:42: 
+=================================
+2025-10-18T09:27:42: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T09:27:42: =================================
+2025-10-18T09:27:42: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T09:27:42: 🌿 Rama: Completo
+2025-10-18T09:27:42: ⏱️  Intervalo: 5 minutos
+2025-10-18T09:27:42: =================================
+
+2025-10-18T09:27:42: 
+🔍 Verificando actualizaciones...
+2025-10-18T09:27:43: ✅ El servidor está actualizado
+2025-10-18T09:32:42: 
+🔍 Verificando actualizaciones...
+2025-10-18T09:32:43: 🆕 ¡Nueva versión disponible!
+2025-10-18T09:32:43: 🔄 Iniciando actualización desde Git...
+2025-10-18T09:32:43: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T09:32:43: 🌿 Rama: Completo
+2025-10-18T09:32:43: 💾 Guardando cambios locales...
+2025-10-18T09:32:44: ⬇️  Descargando actualizaciones...
+2025-10-18T09:32:45: 📦 Verificando dependencias...
+2025-10-18T09:32:50: ✅ Cambios locales aplicados
+2025-10-18T09:32:50: ✅ ¡Actualización completada exitosamente!
+2025-10-18T09:32:50: 🔄 El servidor se reiniciará en 3 segundos...
+2025-10-18T09:32:53: 🔄 Reiniciando servidor...
+2025-10-18T09:32:53: Ejecución de tarea a las: 18/10/2025, 09:32:53
+2025-10-18T09:32:54: Ejecución de tarea a las: 18/10/2025, 09:32:54
+2025-10-18T09:32:55: Ejecución de tarea a las: 18/10/2025, 09:32:55
+2025-10-18T09:32:56: Ejecución de tarea a las: 18/10/2025, 09:32:56
+2025-10-18T09:32:57: Ejecución de tarea a las: 18/10/2025, 09:32:57
+2025-10-18T09:32:58: Ejecución de tarea a las: 18/10/2025, 09:32:58
+2025-10-18T09:32:59: Ejecución de tarea a las: 18/10/2025, 09:32:59
+2025-10-18T09:32:59: Ejecución de tarea a las: 18/10/2025, 09:32:59
+2025-10-18T09:33:00: Ejecución de tarea a las: 18/10/2025, 09:33:00
+2025-10-18T09:33:01: Ejecución de tarea a las: 18/10/2025, 09:33:01
+2025-10-18T09:33:02: Ejecución de tarea a las: 18/10/2025, 09:33:02
+2025-10-18T09:33:03: Ejecución de tarea a las: 18/10/2025, 09:33:03
+2025-10-18T09:33:04: Ejecución de tarea a las: 18/10/2025, 09:33:04
+2025-10-18T09:33:05: Ejecución de tarea a las: 18/10/2025, 09:33:05
+2025-10-18T09:33:06: Ejecución de tarea a las: 18/10/2025, 09:33:06
+2025-10-18T09:33:07: Ejecución de tarea a las: 18/10/2025, 09:33:07
+2025-10-18T09:33:08: Ejecución de tarea a las: 18/10/2025, 09:33:07
+2025-10-18T09:33:08: Ejecución de tarea a las: 18/10/2025, 09:33:08
+2025-10-18T09:33:09: Ejecución de tarea a las: 18/10/2025, 09:33:09
+2025-10-18T09:33:10: Ejecución de tarea a las: 18/10/2025, 09:33:10
+2025-10-18T09:33:11: Ejecución de tarea a las: 18/10/2025, 09:33:11
+2025-10-18T09:33:12: Ejecución de tarea a las: 18/10/2025, 09:33:12
+2025-10-18T09:33:13: Ejecución de tarea a las: 18/10/2025, 09:33:13
+2025-10-18T09:33:14: Ejecución de tarea a las: 18/10/2025, 09:33:14
+2025-10-18T09:33:15: Ejecución de tarea a las: 18/10/2025, 09:33:15
+2025-10-18T09:33:15: Ejecución de tarea a las: 18/10/2025, 09:33:15
+2025-10-18T09:33:16: Ejecución de tarea a las: 18/10/2025, 09:33:16
+2025-10-18T09:33:17: Ejecución de tarea a las: 18/10/2025, 09:33:17
+2025-10-18T09:33:18: Ejecución de tarea a las: 18/10/2025, 09:33:18
+2025-10-18T09:33:19: Ejecución de tarea a las: 18/10/2025, 09:33:19
+2025-10-18T09:33:20: Ejecución de tarea a las: 18/10/2025, 09:33:20
+2025-10-18T09:33:21: Ejecución de tarea a las: 18/10/2025, 09:33:21
+2025-10-18T09:33:22: Ejecución de tarea a las: 18/10/2025, 09:33:22
+2025-10-18T09:33:23: Ejecución de tarea a las: 18/10/2025, 09:33:23
+2025-10-18T09:33:24: Ejecución de tarea a las: 18/10/2025, 09:33:24
+2025-10-18T09:33:24: Ejecución de tarea a las: 18/10/2025, 09:33:24
+2025-10-18T09:33:25: Ejecución de tarea a las: 18/10/2025, 09:33:25
+2025-10-18T09:33:26: Ejecución de tarea a las: 18/10/2025, 09:33:26
+2025-10-18T09:33:27: Ejecución de tarea a las: 18/10/2025, 09:33:27
+2025-10-18T09:33:28: Ejecución de tarea a las: 18/10/2025, 09:33:28
+2025-10-18T09:33:29: Ejecución de tarea a las: 18/10/2025, 09:33:29
+2025-10-18T09:33:30: Ejecución de tarea a las: 18/10/2025, 09:33:30
+2025-10-18T09:33:31: Ejecución de tarea a las: 18/10/2025, 09:33:31
+2025-10-18T09:33:32: Ejecución de tarea a las: 18/10/2025, 09:33:32
+2025-10-18T09:33:33: Ejecución de tarea a las: 18/10/2025, 09:33:33
+2025-10-18T09:33:33: Ejecución de tarea a las: 18/10/2025, 09:33:33
+2025-10-18T09:33:34: Ejecución de tarea a las: 18/10/2025, 09:33:34
+2025-10-18T09:33:35: Ejecución de tarea a las: 18/10/2025, 09:33:35
+2025-10-18T09:33:36: Ejecución de tarea a las: 18/10/2025, 09:33:36
+2025-10-18T09:33:37: Ejecución de tarea a las: 18/10/2025, 09:33:37
+2025-10-18T09:33:38: Ejecución de tarea a las: 18/10/2025, 09:33:38
+2025-10-18T09:33:39: Ejecución de tarea a las: 18/10/2025, 09:33:39
+2025-10-18T09:33:40: Ejecución de tarea a las: 18/10/2025, 09:33:40
+2025-10-18T09:33:41: Ejecución de tarea a las: 18/10/2025, 09:33:41
+2025-10-18T09:33:42: Ejecución de tarea a las: 18/10/2025, 09:33:42
+2025-10-18T09:33:42: Ejecución de tarea a las: 18/10/2025, 09:33:42
+2025-10-18T09:33:43: Ejecución de tarea a las: 18/10/2025, 09:33:43
+2025-10-18T09:33:44: Ejecución de tarea a las: 18/10/2025, 09:33:44
+2025-10-18T09:33:45: Ejecución de tarea a las: 18/10/2025, 09:33:45
+2025-10-18T09:33:46: Ejecución de tarea a las: 18/10/2025, 09:33:46
+2025-10-18T09:33:47: Ejecución de tarea a las: 18/10/2025, 09:33:47
+2025-10-18T09:33:48: Ejecución de tarea a las: 18/10/2025, 09:33:48
+2025-10-18T09:33:49: Ejecución de tarea a las: 18/10/2025, 09:33:49
+2025-10-18T09:33:50: Ejecución de tarea a las: 18/10/2025, 09:33:50
+2025-10-18T09:33:51: Ejecución de tarea a las: 18/10/2025, 09:33:51
+2025-10-18T09:33:52: Ejecución de tarea a las: 18/10/2025, 09:33:52
+2025-10-18T09:33:53: Ejecución de tarea a las: 18/10/2025, 09:33:53
+2025-10-18T09:33:54: Ejecución de tarea a las: 18/10/2025, 09:33:54
+2025-10-18T09:33:55: Ejecución de tarea a las: 18/10/2025, 09:33:55
+2025-10-18T09:33:56: Ejecución de tarea a las: 18/10/2025, 09:33:56
+2025-10-18T09:33:57: Ejecución de tarea a las: 18/10/2025, 09:33:57
+2025-10-18T09:33:57: Ejecución de tarea a las: 18/10/2025, 09:33:57
+2025-10-18T09:33:58: Ejecución de tarea a las: 18/10/2025, 09:33:58
+2025-10-18T09:33:59: Ejecución de tarea a las: 18/10/2025, 09:33:59
+2025-10-18T09:34:00: Ejecución de tarea a las: 18/10/2025, 09:34:00
+2025-10-18T09:34:01: Ejecución de tarea a las: 18/10/2025, 09:34:01
+2025-10-18T09:34:02: Ejecución de tarea a las: 18/10/2025, 09:34:02
+2025-10-18T09:34:03: Ejecución de tarea a las: 18/10/2025, 09:34:03
+2025-10-18T09:34:04: Ejecución de tarea a las: 18/10/2025, 09:34:04
+2025-10-18T09:34:05: Ejecución de tarea a las: 18/10/2025, 09:34:05
+2025-10-18T09:34:06: Ejecución de tarea a las: 18/10/2025, 09:34:06
+2025-10-18T09:34:07: Ejecución de tarea a las: 18/10/2025, 09:34:07
+2025-10-18T09:34:08: Ejecución de tarea a las: 18/10/2025, 09:34:08
+2025-10-18T09:34:09: Ejecución de tarea a las: 18/10/2025, 09:34:09
+2025-10-18T09:34:10: Ejecución de tarea a las: 18/10/2025, 09:34:10
+2025-10-18T09:34:11: Ejecución de tarea a las: 18/10/2025, 09:34:11
+2025-10-18T09:34:11: Ejecución de tarea a las: 18/10/2025, 09:34:11
+2025-10-18T09:34:12: Ejecución de tarea a las: 18/10/2025, 09:34:12
+2025-10-18T09:34:13: Ejecución de tarea a las: 18/10/2025, 09:34:13
+2025-10-18T09:34:14: Ejecución de tarea a las: 18/10/2025, 09:34:14
+2025-10-18T09:34:15: Ejecución de tarea a las: 18/10/2025, 09:34:15
+2025-10-18T09:34:16: Ejecución de tarea a las: 18/10/2025, 09:34:16
+2025-10-18T09:34:17: Ejecución de tarea a las: 18/10/2025, 09:34:17
+2025-10-18T09:34:18: Ejecución de tarea a las: 18/10/2025, 09:34:18
+2025-10-18T09:34:19: Ejecución de tarea a las: 18/10/2025, 09:34:19
+2025-10-18T09:34:20: Ejecución de tarea a las: 18/10/2025, 09:34:20
+2025-10-18T09:34:21: Ejecución de tarea a las: 18/10/2025, 09:34:21
+2025-10-18T09:34:22: Ejecución de tarea a las: 18/10/2025, 09:34:22
+2025-10-18T09:34:23: Ejecución de tarea a las: 18/10/2025, 09:34:23
+2025-10-18T09:34:23: Ejecución de tarea a las: 18/10/2025, 09:34:23
+2025-10-18T09:34:24: Ejecución de tarea a las: 18/10/2025, 09:34:24
+2025-10-18T09:34:25: Ejecución de tarea a las: 18/10/2025, 09:34:25
+2025-10-18T09:34:26: Ejecución de tarea a las: 18/10/2025, 09:34:26
+2025-10-18T09:34:27: Ejecución de tarea a las: 18/10/2025, 09:34:27
+2025-10-18T09:34:28: Ejecución de tarea a las: 18/10/2025, 09:34:28
+2025-10-18T09:34:29: Ejecución de tarea a las: 18/10/2025, 09:34:29
+2025-10-18T09:34:30: Ejecución de tarea a las: 18/10/2025, 09:34:30
+2025-10-18T09:34:31: Ejecución de tarea a las: 18/10/2025, 09:34:31
+2025-10-18T09:34:32: Ejecución de tarea a las: 18/10/2025, 09:34:32
+2025-10-18T09:34:33: Ejecución de tarea a las: 18/10/2025, 09:34:33
+2025-10-18T09:34:34: Ejecución de tarea a las: 18/10/2025, 09:34:34
+2025-10-18T09:34:34: Ejecución de tarea a las: 18/10/2025, 09:34:34
+2025-10-18T09:34:35: Ejecución de tarea a las: 18/10/2025, 09:34:35
+2025-10-18T09:34:36: Ejecución de tarea a las: 18/10/2025, 09:34:36
+2025-10-18T09:34:37: Ejecución de tarea a las: 18/10/2025, 09:34:37
+2025-10-18T09:34:38: Ejecución de tarea a las: 18/10/2025, 09:34:38
+2025-10-18T09:34:39: Ejecución de tarea a las: 18/10/2025, 09:34:39
+2025-10-18T09:34:40: Ejecución de tarea a las: 18/10/2025, 09:34:40
+2025-10-18T09:34:41: Ejecución de tarea a las: 18/10/2025, 09:34:41
+2025-10-18T09:34:42: Ejecución de tarea a las: 18/10/2025, 09:34:42
+2025-10-18T09:34:43: Ejecución de tarea a las: 18/10/2025, 09:34:43
+2025-10-18T09:34:44: Ejecución de tarea a las: 18/10/2025, 09:34:44
+2025-10-18T09:34:45: Ejecución de tarea a las: 18/10/2025, 09:34:45
+2025-10-18T09:34:46: Ejecución de tarea a las: 18/10/2025, 09:34:46
+2025-10-18T09:34:47: Ejecución de tarea a las: 18/10/2025, 09:34:47
+2025-10-18T09:34:48: Ejecución de tarea a las: 18/10/2025, 09:34:48
+2025-10-18T09:34:49: Ejecución de tarea a las: 18/10/2025, 09:34:49
+2025-10-18T09:34:49: Ejecución de tarea a las: 18/10/2025, 09:34:49
+2025-10-18T09:34:50: Ejecución de tarea a las: 18/10/2025, 09:34:50
+2025-10-18T09:34:51: Ejecución de tarea a las: 18/10/2025, 09:34:51
+2025-10-18T09:34:52: Ejecución de tarea a las: 18/10/2025, 09:34:52
+2025-10-18T09:34:53: Ejecución de tarea a las: 18/10/2025, 09:34:53
+2025-10-18T09:34:54: Ejecución de tarea a las: 18/10/2025, 09:34:54
+2025-10-18T09:34:55: Ejecución de tarea a las: 18/10/2025, 09:34:55
+2025-10-18T09:34:56: Ejecución de tarea a las: 18/10/2025, 09:34:56
+2025-10-18T09:34:57: Ejecución de tarea a las: 18/10/2025, 09:34:57
+2025-10-18T09:34:58: Ejecución de tarea a las: 18/10/2025, 09:34:58
+2025-10-18T09:34:59: Ejecución de tarea a las: 18/10/2025, 09:34:58
+2025-10-18T09:34:59: Ejecución de tarea a las: 18/10/2025, 09:34:59
+2025-10-18T09:35:00: Ejecución de tarea a las: 18/10/2025, 09:35:00
+2025-10-18T09:35:01: Ejecución de tarea a las: 18/10/2025, 09:35:01
+2025-10-18T09:35:02: Ejecución de tarea a las: 18/10/2025, 09:35:02
+2025-10-18T09:35:03: Ejecución de tarea a las: 18/10/2025, 09:35:03
+2025-10-18T09:35:04: Ejecución de tarea a las: 18/10/2025, 09:35:04
+2025-10-18T09:35:05: Ejecución de tarea a las: 18/10/2025, 09:35:05
+2025-10-18T09:35:06: Ejecución de tarea a las: 18/10/2025, 09:35:06
+2025-10-18T09:35:07: Ejecución de tarea a las: 18/10/2025, 09:35:07
+2025-10-18T09:35:08: Ejecución de tarea a las: 18/10/2025, 09:35:08
+2025-10-18T09:35:08: Ejecución de tarea a las: 18/10/2025, 09:35:08
+2025-10-18T09:35:09: Ejecución de tarea a las: 18/10/2025, 09:35:09
+2025-10-18T09:35:10: Ejecución de tarea a las: 18/10/2025, 09:35:10
+2025-10-18T09:35:11: Ejecución de tarea a las: 18/10/2025, 09:35:11
+2025-10-18T09:35:12: Ejecución de tarea a las: 18/10/2025, 09:35:12
+2025-10-18T09:35:13: Ejecución de tarea a las: 18/10/2025, 09:35:13
+2025-10-18T09:35:14: Ejecución de tarea a las: 18/10/2025, 09:35:14
+2025-10-18T09:35:15: Ejecución de tarea a las: 18/10/2025, 09:35:15
+2025-10-18T09:35:16: Ejecución de tarea a las: 18/10/2025, 09:35:16
+2025-10-18T09:35:17: Ejecución de tarea a las: 18/10/2025, 09:35:17
+2025-10-18T09:35:17: Ejecución de tarea a las: 18/10/2025, 09:35:17
+2025-10-18T09:35:18: Ejecución de tarea a las: 18/10/2025, 09:35:18
+2025-10-18T09:35:19: Ejecución de tarea a las: 18/10/2025, 09:35:19
+2025-10-18T09:35:20: Ejecución de tarea a las: 18/10/2025, 09:35:20
+2025-10-18T09:35:21: Ejecución de tarea a las: 18/10/2025, 09:35:21
+2025-10-18T09:35:22: Ejecución de tarea a las: 18/10/2025, 09:35:22
+2025-10-18T09:35:23: Ejecución de tarea a las: 18/10/2025, 09:35:23
+2025-10-18T09:35:24: Ejecución de tarea a las: 18/10/2025, 09:35:24
+2025-10-18T09:35:25: Ejecución de tarea a las: 18/10/2025, 09:35:25
+2025-10-18T09:35:26: Ejecución de tarea a las: 18/10/2025, 09:35:26
+2025-10-18T09:35:27: Ejecución de tarea a las: 18/10/2025, 09:35:27
+2025-10-18T09:35:28: Ejecución de tarea a las: 18/10/2025, 09:35:28
+2025-10-18T09:35:28: Ejecución de tarea a las: 18/10/2025, 09:35:28
+2025-10-18T09:35:29: Ejecución de tarea a las: 18/10/2025, 09:35:29
+2025-10-18T09:35:30: Ejecución de tarea a las: 18/10/2025, 09:35:30
+2025-10-18T09:35:31: Ejecución de tarea a las: 18/10/2025, 09:35:31
+2025-10-18T09:35:32: Ejecución de tarea a las: 18/10/2025, 09:35:32
+2025-10-18T09:35:33: Ejecución de tarea a las: 18/10/2025, 09:35:33
+2025-10-18T09:35:34: Ejecución de tarea a las: 18/10/2025, 09:35:34
+2025-10-18T09:35:35: Ejecución de tarea a las: 18/10/2025, 09:35:35
+2025-10-18T09:35:36: Ejecución de tarea a las: 18/10/2025, 09:35:36
+2025-10-18T09:35:37: Ejecución de tarea a las: 18/10/2025, 09:35:37
+2025-10-18T09:35:38: Ejecución de tarea a las: 18/10/2025, 09:35:38
+2025-10-18T09:35:39: Ejecución de tarea a las: 18/10/2025, 09:35:39
+2025-10-18T09:35:40: Ejecución de tarea a las: 18/10/2025, 09:35:40
+2025-10-18T09:35:41: Ejecución de tarea a las: 18/10/2025, 09:35:41
+2025-10-18T09:35:41: Ejecución de tarea a las: 18/10/2025, 09:35:41
+2025-10-18T09:35:42: Ejecución de tarea a las: 18/10/2025, 09:35:42
+2025-10-18T09:35:43: Ejecución de tarea a las: 18/10/2025, 09:35:43
+2025-10-18T09:35:44: Ejecución de tarea a las: 18/10/2025, 09:35:44
+2025-10-18T09:35:45: Ejecución de tarea a las: 18/10/2025, 09:35:45
+2025-10-18T09:35:46: Ejecución de tarea a las: 18/10/2025, 09:35:46
+2025-10-18T09:35:47: Ejecución de tarea a las: 18/10/2025, 09:35:47
+2025-10-18T09:35:48: Ejecución de tarea a las: 18/10/2025, 09:35:48
+2025-10-18T09:35:49: Ejecución de tarea a las: 18/10/2025, 09:35:49
+2025-10-18T09:35:50: Ejecución de tarea a las: 18/10/2025, 09:35:50
+2025-10-18T09:35:51: Ejecución de tarea a las: 18/10/2025, 09:35:51
+2025-10-18T09:35:52: Ejecución de tarea a las: 18/10/2025, 09:35:52
+2025-10-18T09:35:53: Ejecución de tarea a las: 18/10/2025, 09:35:53
+2025-10-18T09:35:54: Ejecución de tarea a las: 18/10/2025, 09:35:54
+2025-10-18T09:35:55: Ejecución de tarea a las: 18/10/2025, 09:35:55
+2025-10-18T09:35:56: Ejecución de tarea a las: 18/10/2025, 09:35:56
+2025-10-18T09:35:57: Ejecución de tarea a las: 18/10/2025, 09:35:57
+2025-10-18T09:35:58: Ejecución de tarea a las: 18/10/2025, 09:35:58
+2025-10-18T09:35:58: Ejecución de tarea a las: 18/10/2025, 09:35:58
+2025-10-18T09:35:59: Ejecución de tarea a las: 18/10/2025, 09:35:59
+2025-10-18T09:36:00: Ejecución de tarea a las: 18/10/2025, 09:36:00
+2025-10-18T09:36:01: Ejecución de tarea a las: 18/10/2025, 09:36:01
+2025-10-18T09:36:02: Ejecución de tarea a las: 18/10/2025, 09:36:02
+2025-10-18T09:36:03: Ejecución de tarea a las: 18/10/2025, 09:36:03
+2025-10-18T09:36:04: Ejecución de tarea a las: 18/10/2025, 09:36:04
+2025-10-18T09:36:05: Ejecución de tarea a las: 18/10/2025, 09:36:05
+2025-10-18T09:36:06: Ejecución de tarea a las: 18/10/2025, 09:36:06
+2025-10-18T09:36:07: Ejecución de tarea a las: 18/10/2025, 09:36:07
+2025-10-18T09:36:08: Ejecución de tarea a las: 18/10/2025, 09:36:08
+2025-10-18T09:36:09: Ejecución de tarea a las: 18/10/2025, 09:36:09
+2025-10-18T09:36:10: Ejecución de tarea a las: 18/10/2025, 09:36:10
+2025-10-18T09:36:11: Ejecución de tarea a las: 18/10/2025, 09:36:11
+2025-10-18T09:36:12: Ejecución de tarea a las: 18/10/2025, 09:36:12
+2025-10-18T09:36:13: Ejecución de tarea a las: 18/10/2025, 09:36:13
+2025-10-18T09:36:14: Ejecución de tarea a las: 18/10/2025, 09:36:14
+2025-10-18T09:36:15: Ejecución de tarea a las: 18/10/2025, 09:36:15
+2025-10-18T09:36:16: Ejecución de tarea a las: 18/10/2025, 09:36:16
+2025-10-18T09:36:17: Ejecución de tarea a las: 18/10/2025, 09:36:17
+2025-10-18T09:36:18: Ejecución de tarea a las: 18/10/2025, 09:36:18
+2025-10-18T09:36:19: Ejecución de tarea a las: 18/10/2025, 09:36:19
+2025-10-18T09:36:20: Ejecución de tarea a las: 18/10/2025, 09:36:20
+2025-10-18T09:36:21: Ejecución de tarea a las: 18/10/2025, 09:36:21
+2025-10-18T09:36:22: Ejecución de tarea a las: 18/10/2025, 09:36:22
+2025-10-18T09:36:23: Ejecución de tarea a las: 18/10/2025, 09:36:23
+2025-10-18T09:36:24: Ejecución de tarea a las: 18/10/2025, 09:36:24
+2025-10-18T09:36:25: Ejecución de tarea a las: 18/10/2025, 09:36:25
+2025-10-18T09:36:26: Ejecución de tarea a las: 18/10/2025, 09:36:26
+2025-10-18T09:36:27: Ejecución de tarea a las: 18/10/2025, 09:36:27
+2025-10-18T09:36:28: Ejecución de tarea a las: 18/10/2025, 09:36:28
+2025-10-18T09:36:29: Ejecución de tarea a las: 18/10/2025, 09:36:29
+2025-10-18T09:36:30: Ejecución de tarea a las: 18/10/2025, 09:36:30
+2025-10-18T09:36:31: Ejecución de tarea a las: 18/10/2025, 09:36:31
+2025-10-18T09:36:32: Ejecución de tarea a las: 18/10/2025, 09:36:32
+2025-10-18T09:36:33: Ejecución de tarea a las: 18/10/2025, 09:36:33
+2025-10-18T09:36:34: Ejecución de tarea a las: 18/10/2025, 09:36:34
+2025-10-18T09:36:35: Ejecución de tarea a las: 18/10/2025, 09:36:35
+2025-10-18T09:36:36: Ejecución de tarea a las: 18/10/2025, 09:36:36
+2025-10-18T09:36:37: Ejecución de tarea a las: 18/10/2025, 09:36:37
+2025-10-18T09:36:38: Ejecución de tarea a las: 18/10/2025, 09:36:38
+2025-10-18T09:36:39: Ejecución de tarea a las: 18/10/2025, 09:36:39
+2025-10-18T09:36:40: Ejecución de tarea a las: 18/10/2025, 09:36:40
+2025-10-18T09:36:41: Ejecución de tarea a las: 18/10/2025, 09:36:41
+2025-10-18T09:36:42: Ejecución de tarea a las: 18/10/2025, 09:36:42
+2025-10-18T09:36:43: Ejecución de tarea a las: 18/10/2025, 09:36:43
+2025-10-18T09:36:45: Ejecución de tarea a las: 18/10/2025, 09:36:45
+2025-10-18T09:36:46: Ejecución de tarea a las: 18/10/2025, 09:36:46
+2025-10-18T09:36:47: Ejecución de tarea a las: 18/10/2025, 09:36:47
+2025-10-18T09:36:48: Ejecución de tarea a las: 18/10/2025, 09:36:48
+2025-10-18T09:36:49: Ejecución de tarea a las: 18/10/2025, 09:36:49
+2025-10-18T09:36:50: Ejecución de tarea a las: 18/10/2025, 09:36:50
+2025-10-18T09:36:51: Ejecución de tarea a las: 18/10/2025, 09:36:51
+2025-10-18T09:36:52: Ejecución de tarea a las: 18/10/2025, 09:36:52
+2025-10-18T09:36:53: Ejecución de tarea a las: 18/10/2025, 09:36:53
+2025-10-18T09:36:53: Ejecución de tarea a las: 18/10/2025, 09:36:53
+2025-10-18T09:36:54: Ejecución de tarea a las: 18/10/2025, 09:36:54
+2025-10-18T09:36:55: Ejecución de tarea a las: 18/10/2025, 09:36:55
+2025-10-18T09:36:56: Ejecución de tarea a las: 18/10/2025, 09:36:56
+2025-10-18T09:36:57: Ejecución de tarea a las: 18/10/2025, 09:36:57
+2025-10-18T09:36:59: Ejecución de tarea a las: 18/10/2025, 09:36:59
+2025-10-18T09:37:00: Ejecución de tarea a las: 18/10/2025, 09:37:00
+2025-10-18T09:37:00: Ejecución de tarea a las: 18/10/2025, 09:37:00
+2025-10-18T09:37:01: Ejecución de tarea a las: 18/10/2025, 09:37:01
+2025-10-18T09:37:02: Ejecución de tarea a las: 18/10/2025, 09:37:02
+2025-10-18T09:37:03: Ejecución de tarea a las: 18/10/2025, 09:37:03
+2025-10-18T09:37:04: Ejecución de tarea a las: 18/10/2025, 09:37:04
+2025-10-18T09:37:05: Ejecución de tarea a las: 18/10/2025, 09:37:05
+2025-10-18T09:37:06: Ejecución de tarea a las: 18/10/2025, 09:37:06
+2025-10-18T09:37:07: Ejecución de tarea a las: 18/10/2025, 09:37:07
+2025-10-18T09:37:08: Ejecución de tarea a las: 18/10/2025, 09:37:08
+2025-10-18T09:37:09: Ejecución de tarea a las: 18/10/2025, 09:37:09
+2025-10-18T09:37:10: Ejecución de tarea a las: 18/10/2025, 09:37:10
+2025-10-18T09:37:11: Ejecución de tarea a las: 18/10/2025, 09:37:11
+2025-10-18T09:37:12: Ejecución de tarea a las: 18/10/2025, 09:37:12
+2025-10-18T09:37:13: Ejecución de tarea a las: 18/10/2025, 09:37:13
+2025-10-18T09:37:14: Ejecución de tarea a las: 18/10/2025, 09:37:14
+2025-10-18T09:37:14: Ejecución de tarea a las: 18/10/2025, 09:37:14
+2025-10-18T09:37:15: Ejecución de tarea a las: 18/10/2025, 09:37:15
+2025-10-18T09:37:16: Ejecución de tarea a las: 18/10/2025, 09:37:16
+2025-10-18T09:37:17: Ejecución de tarea a las: 18/10/2025, 09:37:17
+2025-10-18T09:37:18: Ejecución de tarea a las: 18/10/2025, 09:37:18
+2025-10-18T09:37:19: Ejecución de tarea a las: 18/10/2025, 09:37:19
+2025-10-18T09:37:20: Ejecución de tarea a las: 18/10/2025, 09:37:20
+2025-10-18T09:37:20: Ejecución de tarea a las: 18/10/2025, 09:37:20
+2025-10-18T09:37:21: Ejecución de tarea a las: 18/10/2025, 09:37:21
+2025-10-18T09:37:22: Ejecución de tarea a las: 18/10/2025, 09:37:22
+2025-10-18T09:37:23: Ejecución de tarea a las: 18/10/2025, 09:37:23
+2025-10-18T09:37:24: Ejecución de tarea a las: 18/10/2025, 09:37:24
+2025-10-18T09:37:25: Ejecución de tarea a las: 18/10/2025, 09:37:25
+2025-10-18T09:37:26: Ejecución de tarea a las: 18/10/2025, 09:37:26
+2025-10-18T09:37:27: Ejecución de tarea a las: 18/10/2025, 09:37:27
+2025-10-18T09:37:27: Ejecución de tarea a las: 18/10/2025, 09:37:27
+2025-10-18T09:37:28: Ejecución de tarea a las: 18/10/2025, 09:37:28
+2025-10-18T09:37:29: Ejecución de tarea a las: 18/10/2025, 09:37:29
+2025-10-18T09:37:30: Ejecución de tarea a las: 18/10/2025, 09:37:30
+2025-10-18T09:37:31: Ejecución de tarea a las: 18/10/2025, 09:37:31
+2025-10-18T09:37:32: Ejecución de tarea a las: 18/10/2025, 09:37:32
+2025-10-18T09:37:33: Ejecución de tarea a las: 18/10/2025, 09:37:33
+2025-10-18T09:37:33: Ejecución de tarea a las: 18/10/2025, 09:37:33
+2025-10-18T09:37:34: Ejecución de tarea a las: 18/10/2025, 09:37:34
+2025-10-18T09:37:35: Ejecución de tarea a las: 18/10/2025, 09:37:35
+2025-10-18T09:37:36: Ejecución de tarea a las: 18/10/2025, 09:37:36
+2025-10-18T09:37:37: Ejecución de tarea a las: 18/10/2025, 09:37:37
+2025-10-18T09:37:38: Ejecución de tarea a las: 18/10/2025, 09:37:38
+2025-10-18T09:37:39: Ejecución de tarea a las: 18/10/2025, 09:37:39
+2025-10-18T09:37:39: Ejecución de tarea a las: 18/10/2025, 09:37:39
+2025-10-18T09:37:40: Ejecución de tarea a las: 18/10/2025, 09:37:40
+2025-10-18T09:37:41: Ejecución de tarea a las: 18/10/2025, 09:37:41
+2025-10-18T09:37:42: Ejecución de tarea a las: 18/10/2025, 09:37:42
+2025-10-18T09:37:43: Ejecución de tarea a las: 18/10/2025, 09:37:43
+2025-10-18T09:37:44: Ejecución de tarea a las: 18/10/2025, 09:37:44
+2025-10-18T09:37:45: Ejecución de tarea a las: 18/10/2025, 09:37:45
+2025-10-18T09:37:46: Ejecución de tarea a las: 18/10/2025, 09:37:46
+2025-10-18T09:37:47: Ejecución de tarea a las: 18/10/2025, 09:37:47
+2025-10-18T09:37:48: Ejecución de tarea a las: 18/10/2025, 09:37:48
+2025-10-18T09:37:49: Ejecución de tarea a las: 18/10/2025, 09:37:49
+2025-10-18T09:37:50: Ejecución de tarea a las: 18/10/2025, 09:37:50
+2025-10-18T09:37:51: Ejecución de tarea a las: 18/10/2025, 09:37:51
+2025-10-18T09:37:52: Ejecución de tarea a las: 18/10/2025, 09:37:52
+2025-10-18T09:37:52: Ejecución de tarea a las: 18/10/2025, 09:37:52
+2025-10-18T09:37:53: Ejecución de tarea a las: 18/10/2025, 09:37:53
+2025-10-18T09:37:54: Ejecución de tarea a las: 18/10/2025, 09:37:54
+2025-10-18T09:37:55: Ejecución de tarea a las: 18/10/2025, 09:37:55
+2025-10-18T09:37:56: Ejecución de tarea a las: 18/10/2025, 09:37:56
+2025-10-18T09:37:57: Ejecución de tarea a las: 18/10/2025, 09:37:57
+2025-10-18T09:37:58: Ejecución de tarea a las: 18/10/2025, 09:37:58
+2025-10-18T09:37:59: Ejecución de tarea a las: 18/10/2025, 09:37:59
+2025-10-18T09:38:00: Ejecución de tarea a las: 18/10/2025, 09:38:00
+2025-10-18T09:38:01: Ejecución de tarea a las: 18/10/2025, 09:38:01
+2025-10-18T09:38:01: Ejecución de tarea a las: 18/10/2025, 09:38:01
+2025-10-18T09:38:02: Ejecución de tarea a las: 18/10/2025, 09:38:02
+2025-10-18T09:38:03: Ejecución de tarea a las: 18/10/2025, 09:38:03
+2025-10-18T09:38:04: Ejecución de tarea a las: 18/10/2025, 09:38:04
+2025-10-18T09:38:05: Ejecución de tarea a las: 18/10/2025, 09:38:05
+2025-10-18T09:38:06: Ejecución de tarea a las: 18/10/2025, 09:38:06
+2025-10-18T09:38:07: Ejecución de tarea a las: 18/10/2025, 09:38:07
+2025-10-18T09:38:08: Ejecución de tarea a las: 18/10/2025, 09:38:08
+2025-10-18T09:38:09: Ejecución de tarea a las: 18/10/2025, 09:38:08
+2025-10-18T09:38:09: Ejecución de tarea a las: 18/10/2025, 09:38:09
+2025-10-18T09:38:10: Ejecución de tarea a las: 18/10/2025, 09:38:10
+2025-10-18T09:38:11: Ejecución de tarea a las: 18/10/2025, 09:38:11
+2025-10-18T09:38:12: Ejecución de tarea a las: 18/10/2025, 09:38:12
+2025-10-18T09:38:13: Ejecución de tarea a las: 18/10/2025, 09:38:13
+2025-10-18T09:38:14: Ejecución de tarea a las: 18/10/2025, 09:38:14
+2025-10-18T09:38:15: Ejecución de tarea a las: 18/10/2025, 09:38:15
+2025-10-18T09:38:15: Ejecución de tarea a las: 18/10/2025, 09:38:15
+2025-10-18T09:38:16: Ejecución de tarea a las: 18/10/2025, 09:38:16
+2025-10-18T09:38:17: Ejecución de tarea a las: 18/10/2025, 09:38:17
+2025-10-18T09:38:18: Ejecución de tarea a las: 18/10/2025, 09:38:18
+2025-10-18T09:38:19: Ejecución de tarea a las: 18/10/2025, 09:38:19
+2025-10-18T09:38:20: Ejecución de tarea a las: 18/10/2025, 09:38:20
+2025-10-18T09:38:21: Ejecución de tarea a las: 18/10/2025, 09:38:21
+2025-10-18T09:38:22: Ejecución de tarea a las: 18/10/2025, 09:38:22
+2025-10-18T09:38:23: Ejecución de tarea a las: 18/10/2025, 09:38:23
+2025-10-18T09:38:23: Ejecución de tarea a las: 18/10/2025, 09:38:23
+2025-10-18T09:38:24: Ejecución de tarea a las: 18/10/2025, 09:38:24
+2025-10-18T09:38:25: Ejecución de tarea a las: 18/10/2025, 09:38:25
+2025-10-18T09:38:26: Ejecución de tarea a las: 18/10/2025, 09:38:26
+2025-10-18T09:38:27: Ejecución de tarea a las: 18/10/2025, 09:38:27
+2025-10-18T09:38:28: Ejecución de tarea a las: 18/10/2025, 09:38:28
+2025-10-18T09:38:29: Ejecución de tarea a las: 18/10/2025, 09:38:29
+2025-10-18T09:38:30: Ejecución de tarea a las: 18/10/2025, 09:38:30
+2025-10-18T09:38:31: Ejecución de tarea a las: 18/10/2025, 09:38:31
+2025-10-18T09:38:32: Ejecución de tarea a las: 18/10/2025, 09:38:32
+2025-10-18T09:38:33: Ejecución de tarea a las: 18/10/2025, 09:38:33
+2025-10-18T09:38:33: Ejecución de tarea a las: 18/10/2025, 09:38:33
+2025-10-18T09:38:34: Ejecución de tarea a las: 18/10/2025, 09:38:34
+2025-10-18T09:38:35: Ejecución de tarea a las: 18/10/2025, 09:38:35
+2025-10-18T09:38:36: Ejecución de tarea a las: 18/10/2025, 09:38:36
+2025-10-18T09:38:37: Ejecución de tarea a las: 18/10/2025, 09:38:37
+2025-10-18T09:38:38: Ejecución de tarea a las: 18/10/2025, 09:38:38
+2025-10-18T09:38:39: Ejecución de tarea a las: 18/10/2025, 09:38:39
+2025-10-18T09:38:40: Ejecución de tarea a las: 18/10/2025, 09:38:40
+2025-10-18T09:38:41: Ejecución de tarea a las: 18/10/2025, 09:38:41
+2025-10-18T09:38:42: Ejecución de tarea a las: 18/10/2025, 09:38:42
+2025-10-18T09:38:43: Ejecución de tarea a las: 18/10/2025, 09:38:43
+2025-10-18T09:38:44: Ejecución de tarea a las: 18/10/2025, 09:38:44
+2025-10-18T09:38:45: Ejecución de tarea a las: 18/10/2025, 09:38:45
+2025-10-18T09:38:46: Ejecución de tarea a las: 18/10/2025, 09:38:46
+2025-10-18T09:38:47: Ejecución de tarea a las: 18/10/2025, 09:38:47
+2025-10-18T09:38:48: Ejecución de tarea a las: 18/10/2025, 09:38:48
+2025-10-18T09:38:48: Ejecución de tarea a las: 18/10/2025, 09:38:48
+2025-10-18T09:38:49: Ejecución de tarea a las: 18/10/2025, 09:38:49
+2025-10-18T09:38:50: Ejecución de tarea a las: 18/10/2025, 09:38:50
+2025-10-18T09:38:51: Ejecución de tarea a las: 18/10/2025, 09:38:51
+2025-10-18T09:38:52: Ejecución de tarea a las: 18/10/2025, 09:38:52
+2025-10-18T09:38:53: Ejecución de tarea a las: 18/10/2025, 09:38:53
+2025-10-18T09:38:54: Ejecución de tarea a las: 18/10/2025, 09:38:54
+2025-10-18T09:38:55: Ejecución de tarea a las: 18/10/2025, 09:38:55
+2025-10-18T09:38:56: Ejecución de tarea a las: 18/10/2025, 09:38:56
+2025-10-18T09:38:57: Ejecución de tarea a las: 18/10/2025, 09:38:57
+2025-10-18T09:38:58: Ejecución de tarea a las: 18/10/2025, 09:38:58
+2025-10-18T09:38:59: Ejecución de tarea a las: 18/10/2025, 09:38:59
+2025-10-18T09:39:00: Ejecución de tarea a las: 18/10/2025, 09:39:00
+2025-10-18T09:39:01: Ejecución de tarea a las: 18/10/2025, 09:39:01
+2025-10-18T09:39:01: Ejecución de tarea a las: 18/10/2025, 09:39:01
+2025-10-18T09:39:02: Ejecución de tarea a las: 18/10/2025, 09:39:02
+2025-10-18T09:39:03: Ejecución de tarea a las: 18/10/2025, 09:39:03
+2025-10-18T09:39:04: Ejecución de tarea a las: 18/10/2025, 09:39:04
+2025-10-18T09:39:05: Ejecución de tarea a las: 18/10/2025, 09:39:05
+2025-10-18T09:39:06: Ejecución de tarea a las: 18/10/2025, 09:39:06
+2025-10-18T09:39:07: Ejecución de tarea a las: 18/10/2025, 09:39:07
+2025-10-18T09:39:08: Ejecución de tarea a las: 18/10/2025, 09:39:08
+2025-10-18T09:39:09: Ejecución de tarea a las: 18/10/2025, 09:39:09
+2025-10-18T09:39:10: Ejecución de tarea a las: 18/10/2025, 09:39:10
+2025-10-18T09:39:11: Ejecución de tarea a las: 18/10/2025, 09:39:11
+2025-10-18T09:39:12: Ejecución de tarea a las: 18/10/2025, 09:39:12
+2025-10-18T09:39:13: Ejecución de tarea a las: 18/10/2025, 09:39:13
+2025-10-18T09:39:14: Ejecución de tarea a las: 18/10/2025, 09:39:14
+2025-10-18T09:39:14: Ejecución de tarea a las: 18/10/2025, 09:39:14
+2025-10-18T09:40:38: Ejecución de tarea a las: 18/10/2025, 09:40:38
+2025-10-18T09:40:39: Ejecución de tarea a las: 18/10/2025, 09:40:39
+2025-10-18T09:40:40: Ejecución de tarea a las: 18/10/2025, 09:40:40
+2025-10-18T09:40:41: Ejecución de tarea a las: 18/10/2025, 09:40:41
+2025-10-18T09:40:42: Ejecución de tarea a las: 18/10/2025, 09:40:42
+2025-10-18T09:40:43: Ejecución de tarea a las: 18/10/2025, 09:40:43
+2025-10-18T09:40:44: Ejecución de tarea a las: 18/10/2025, 09:40:44
+2025-10-18T09:40:44: Ejecución de tarea a las: 18/10/2025, 09:40:44
+2025-10-18T09:40:45: Ejecución de tarea a las: 18/10/2025, 09:40:45
+2025-10-18T09:40:46: Ejecución de tarea a las: 18/10/2025, 09:40:46
+2025-10-18T09:40:47: Ejecución de tarea a las: 18/10/2025, 09:40:47
+2025-10-18T09:40:48: Ejecución de tarea a las: 18/10/2025, 09:40:48
+2025-10-18T09:40:49: Ejecución de tarea a las: 18/10/2025, 09:40:49
+2025-10-18T09:40:50: Ejecución de tarea a las: 18/10/2025, 09:40:50
+2025-10-18T09:40:51: Ejecución de tarea a las: 18/10/2025, 09:40:51
+2025-10-18T09:40:52: Ejecución de tarea a las: 18/10/2025, 09:40:52
+2025-10-18T09:40:53: Ejecución de tarea a las: 18/10/2025, 09:40:53
+2025-10-18T09:41:57: Ejecución de tarea a las: 18/10/2025, 09:41:57
+2025-10-18T09:41:57: Ejecución de tarea a las: 18/10/2025, 09:41:57
+2025-10-18T09:41:58: Ejecución de tarea a las: 18/10/2025, 09:41:58
+2025-10-18T09:41:59: Ejecución de tarea a las: 18/10/2025, 09:41:59
+2025-10-18T09:42:00: Ejecución de tarea a las: 18/10/2025, 09:42:00
+2025-10-18T09:42:01: Ejecución de tarea a las: 18/10/2025, 09:42:01
+2025-10-18T09:42:02: Ejecución de tarea a las: 18/10/2025, 09:42:02
+2025-10-18T09:42:03: Ejecución de tarea a las: 18/10/2025, 09:42:03
+2025-10-18T09:42:04: Ejecución de tarea a las: 18/10/2025, 09:42:04
+2025-10-18T09:42:05: Ejecución de tarea a las: 18/10/2025, 09:42:05
+2025-10-18T09:42:05: Ejecución de tarea a las: 18/10/2025, 09:42:05
+2025-10-18T09:42:06: Ejecución de tarea a las: 18/10/2025, 09:42:06
+2025-10-18T09:42:07: Ejecución de tarea a las: 18/10/2025, 09:42:07
+2025-10-18T09:42:08: Ejecución de tarea a las: 18/10/2025, 09:42:08
+2025-10-18T09:42:09: Ejecución de tarea a las: 18/10/2025, 09:42:09
+2025-10-18T09:42:10: Ejecución de tarea a las: 18/10/2025, 09:42:10
+2025-10-18T09:42:11: Ejecución de tarea a las: 18/10/2025, 09:42:11
+2025-10-18T09:43:14: Ejecución de tarea a las: 18/10/2025, 09:43:14
+2025-10-18T09:43:15: Ejecución de tarea a las: 18/10/2025, 09:43:15
+2025-10-18T09:43:16: Ejecución de tarea a las: 18/10/2025, 09:43:16
+2025-10-18T09:43:17: Ejecución de tarea a las: 18/10/2025, 09:43:17
+2025-10-18T09:43:18: Ejecución de tarea a las: 18/10/2025, 09:43:18
+2025-10-18T09:43:19: Ejecución de tarea a las: 18/10/2025, 09:43:19
+2025-10-18T09:43:20: Ejecución de tarea a las: 18/10/2025, 09:43:20
+2025-10-18T09:43:21: Ejecución de tarea a las: 18/10/2025, 09:43:21
+2025-10-18T09:43:21: Ejecución de tarea a las: 18/10/2025, 09:43:21
+2025-10-18T09:43:22: Ejecución de tarea a las: 18/10/2025, 09:43:22
+2025-10-18T09:43:23: Ejecución de tarea a las: 18/10/2025, 09:43:23
+2025-10-18T09:43:24: Ejecución de tarea a las: 18/10/2025, 09:43:24
+2025-10-18T09:43:25: Ejecución de tarea a las: 18/10/2025, 09:43:25
+2025-10-18T09:43:26: Ejecución de tarea a las: 18/10/2025, 09:43:26
+2025-10-18T09:43:27: Ejecución de tarea a las: 18/10/2025, 09:43:27
+2025-10-18T09:43:28: Ejecución de tarea a las: 18/10/2025, 09:43:28
+2025-10-18T09:43:29: Ejecución de tarea a las: 18/10/2025, 09:43:29
+2025-10-18T09:43:30: Ejecución de tarea a las: 18/10/2025, 09:43:30
+2025-10-18T09:43:31: Ejecución de tarea a las: 18/10/2025, 09:43:31
+2025-10-18T09:43:32: Ejecución de tarea a las: 18/10/2025, 09:43:32
+2025-10-18T09:43:33: Ejecución de tarea a las: 18/10/2025, 09:43:33
+2025-10-18T09:43:34: Ejecución de tarea a las: 18/10/2025, 09:43:34
+2025-10-18T09:43:35: Ejecución de tarea a las: 18/10/2025, 09:43:34
+2025-10-18T09:43:35: Ejecución de tarea a las: 18/10/2025, 09:43:35
+2025-10-18T09:43:36: Ejecución de tarea a las: 18/10/2025, 09:43:36
+2025-10-18T09:43:37: Ejecución de tarea a las: 18/10/2025, 09:43:37
+2025-10-18T09:43:38: Ejecución de tarea a las: 18/10/2025, 09:43:38
+2025-10-18T09:43:39: Ejecución de tarea a las: 18/10/2025, 09:43:39
+2025-10-18T09:43:40: Ejecución de tarea a las: 18/10/2025, 09:43:40
+2025-10-18T09:43:41: Ejecución de tarea a las: 18/10/2025, 09:43:41
+2025-10-18T09:43:42: Ejecución de tarea a las: 18/10/2025, 09:43:42
+2025-10-18T09:43:43: Ejecución de tarea a las: 18/10/2025, 09:43:43
+2025-10-18T09:43:44: Ejecución de tarea a las: 18/10/2025, 09:43:44
+2025-10-18T09:43:44: Ejecución de tarea a las: 18/10/2025, 09:43:44
+2025-10-18T09:43:45: Ejecución de tarea a las: 18/10/2025, 09:43:45
+2025-10-18T09:43:46: Ejecución de tarea a las: 18/10/2025, 09:43:46
+2025-10-18T09:43:47: Ejecución de tarea a las: 18/10/2025, 09:43:47
+2025-10-18T09:43:48: Ejecución de tarea a las: 18/10/2025, 09:43:48
+2025-10-18T09:43:49: Ejecución de tarea a las: 18/10/2025, 09:43:49
+2025-10-18T09:43:50: Ejecución de tarea a las: 18/10/2025, 09:43:50
+2025-10-18T09:43:51: Ejecución de tarea a las: 18/10/2025, 09:43:51
+2025-10-18T09:43:52: Ejecución de tarea a las: 18/10/2025, 09:43:52
+2025-10-18T09:43:53: Ejecución de tarea a las: 18/10/2025, 09:43:53
+2025-10-18T09:43:54: Ejecución de tarea a las: 18/10/2025, 09:43:54
+2025-10-18T09:43:55: Ejecución de tarea a las: 18/10/2025, 09:43:55
+2025-10-18T09:43:56: Ejecución de tarea a las: 18/10/2025, 09:43:56
+2025-10-18T09:43:57: Ejecución de tarea a las: 18/10/2025, 09:43:57
+2025-10-18T09:43:57: Ejecución de tarea a las: 18/10/2025, 09:43:57
+2025-10-18T09:43:58: Ejecución de tarea a las: 18/10/2025, 09:43:58
+2025-10-18T09:43:59: Ejecución de tarea a las: 18/10/2025, 09:43:59
+2025-10-18T09:44:00: Ejecución de tarea a las: 18/10/2025, 09:44:00
+2025-10-18T09:44:01: Ejecución de tarea a las: 18/10/2025, 09:44:01
+2025-10-18T09:44:02: Ejecución de tarea a las: 18/10/2025, 09:44:02
+2025-10-18T09:44:03: Ejecución de tarea a las: 18/10/2025, 09:44:03
+2025-10-18T09:44:04: Ejecución de tarea a las: 18/10/2025, 09:44:04
+2025-10-18T09:44:05: Ejecución de tarea a las: 18/10/2025, 09:44:05
+2025-10-18T09:44:06: Ejecución de tarea a las: 18/10/2025, 09:44:06
+2025-10-18T09:44:07: Ejecución de tarea a las: 18/10/2025, 09:44:07
+2025-10-18T09:44:08: Ejecución de tarea a las: 18/10/2025, 09:44:08
+2025-10-18T09:44:09: Ejecución de tarea a las: 18/10/2025, 09:44:09
+2025-10-18T09:44:10: Ejecución de tarea a las: 18/10/2025, 09:44:10
+2025-10-18T09:44:11: Ejecución de tarea a las: 18/10/2025, 09:44:11
+2025-10-18T09:44:12: Ejecución de tarea a las: 18/10/2025, 09:44:12
+2025-10-18T09:44:13: Ejecución de tarea a las: 18/10/2025, 09:44:13
+2025-10-18T09:44:14: Ejecución de tarea a las: 18/10/2025, 09:44:13
+2025-10-18T09:44:14: Ejecución de tarea a las: 18/10/2025, 09:44:14
+2025-10-18T09:44:15: Ejecución de tarea a las: 18/10/2025, 09:44:15
+2025-10-18T09:44:16: Ejecución de tarea a las: 18/10/2025, 09:44:16
+2025-10-18T09:44:17: Ejecución de tarea a las: 18/10/2025, 09:44:17
+2025-10-18T09:44:18: Ejecución de tarea a las: 18/10/2025, 09:44:18
+2025-10-18T09:44:19: Ejecución de tarea a las: 18/10/2025, 09:44:19
+2025-10-18T09:44:20: Ejecución de tarea a las: 18/10/2025, 09:44:20
+2025-10-18T09:44:21: Ejecución de tarea a las: 18/10/2025, 09:44:21
+2025-10-18T09:44:22: Ejecución de tarea a las: 18/10/2025, 09:44:22
+2025-10-18T09:44:23: Ejecución de tarea a las: 18/10/2025, 09:44:23
+2025-10-18T09:44:24: Ejecución de tarea a las: 18/10/2025, 09:44:24
+2025-10-18T09:44:25: Ejecución de tarea a las: 18/10/2025, 09:44:25
+2025-10-18T09:44:26: Ejecución de tarea a las: 18/10/2025, 09:44:26
+2025-10-18T09:44:27: Ejecución de tarea a las: 18/10/2025, 09:44:27
+2025-10-18T09:44:28: Ejecución de tarea a las: 18/10/2025, 09:44:28
+2025-10-18T09:44:29: Ejecución de tarea a las: 18/10/2025, 09:44:29
+2025-10-18T09:44:30: Ejecución de tarea a las: 18/10/2025, 09:44:30
+2025-10-18T09:44:31: Ejecución de tarea a las: 18/10/2025, 09:44:31
+2025-10-18T09:44:32: Ejecución de tarea a las: 18/10/2025, 09:44:32
+2025-10-18T09:44:33: Ejecución de tarea a las: 18/10/2025, 09:44:33
+2025-10-18T09:44:34: Ejecución de tarea a las: 18/10/2025, 09:44:33
+2025-10-18T09:44:34: Ejecución de tarea a las: 18/10/2025, 09:44:34
+2025-10-18T09:44:35: Ejecución de tarea a las: 18/10/2025, 09:44:35
+2025-10-18T09:44:36: Ejecución de tarea a las: 18/10/2025, 09:44:36
+2025-10-18T09:44:37: Ejecución de tarea a las: 18/10/2025, 09:44:37
+2025-10-18T09:44:38: Ejecución de tarea a las: 18/10/2025, 09:44:38
+2025-10-18T09:44:39: Ejecución de tarea a las: 18/10/2025, 09:44:39
+2025-10-18T09:44:40: Ejecución de tarea a las: 18/10/2025, 09:44:40
+2025-10-18T09:44:41: Ejecución de tarea a las: 18/10/2025, 09:44:41
+2025-10-18T09:44:42: Ejecución de tarea a las: 18/10/2025, 09:44:42
+2025-10-18T09:44:43: Ejecución de tarea a las: 18/10/2025, 09:44:43
+2025-10-18T09:44:44: Ejecución de tarea a las: 18/10/2025, 09:44:44
+2025-10-18T09:44:44: Ejecución de tarea a las: 18/10/2025, 09:44:44
+2025-10-18T09:44:45: Ejecución de tarea a las: 18/10/2025, 09:44:45
+2025-10-18T09:45:11: Ejecución de tarea a las: 18/10/2025, 09:45:11
+2025-10-18T09:45:11: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:45:11: 📂 Buscando certificados SSL...
+2025-10-18T09:45:11:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T09:45:11:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T09:45:11: =================================
+2025-10-18T09:45:11: 🚀 Servidor HTTP iniciado
+2025-10-18T09:45:11: =================================
+2025-10-18T09:45:11: 📡 Puerto HTTP: 3002
+2025-10-18T09:45:11: 🌐 Local: http://localhost:3002
+2025-10-18T09:45:11: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T09:45:11: 🌐 Red: http://192.168.137.1:3002  (Local Area Connection* 2)
+2025-10-18T09:45:11: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T09:45:11: 🔧 Entorno: development
+2025-10-18T09:45:11: =================================
+2025-10-18T09:45:11: Listening on http://0.0.0.0:3002
+2025-10-18T09:45:11: =================================
+2025-10-18T09:45:11: 🔒 Servidor HTTPS iniciado
+2025-10-18T09:45:11: =================================
+2025-10-18T09:45:11: 📡 Puerto HTTPS: 3443
+2025-10-18T09:45:11: 🌐 Local: https://localhost:3443
+2025-10-18T09:45:11: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T09:45:11: 🌐 Red: https://192.168.137.1:3443  (Local Area Connection* 2)
+2025-10-18T09:45:11: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T09:45:11: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T09:45:11: =================================
+2025-10-18T09:45:11: Listening on https://0.0.0.0:3443
+2025-10-18T09:45:11: Conexión exitosa a MongoDB
+2025-10-18T09:45:11: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:45:11: Usuario root ya existe
+2025-10-18T09:45:11: Número de actividades para mañana: 0
+2025-10-18T09:45:11: Número de actividades para dentro de 3 días: 0
+2025-10-18T09:45:11: 🌿 Rama actual: Completo
+2025-10-18T09:45:11: 
+=================================
+2025-10-18T09:45:11: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T09:45:11: =================================
+2025-10-18T09:45:11: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T09:45:11: 🌿 Rama: Completo
+2025-10-18T09:45:11: ⏱️  Intervalo: 5 minutos
+2025-10-18T09:45:11: =================================
+
+2025-10-18T09:45:11: 
+🔍 Verificando actualizaciones...
+2025-10-18T09:45:12: 🆕 ¡Nueva versión disponible!
+2025-10-18T09:45:12: 🔄 Iniciando actualización desde Git...
+2025-10-18T09:45:12: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T09:45:12: 🌿 Rama: Completo
+2025-10-18T09:45:12: 💾 Guardando cambios locales...
+2025-10-18T09:45:13: ⬇️  Descargando actualizaciones...
+2025-10-18T09:45:14: 📦 Verificando dependencias...
+2025-10-18T09:45:18: ✅ Cambios locales aplicados
+2025-10-18T09:45:18: ✅ ¡Actualización completada exitosamente!
+2025-10-18T09:45:18: 🔄 El servidor se reiniciará en 3 segundos...
+2025-10-18T09:45:21: 🔄 Reiniciando servidor...
+2025-10-18T09:45:21: Ejecución de tarea a las: 18/10/2025, 09:45:21
+2025-10-18T09:45:21: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:45:22: 📂 Buscando certificados SSL...
+2025-10-18T09:45:22:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T09:45:22:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T09:45:22: =================================
+2025-10-18T09:45:22: 🚀 Servidor HTTP iniciado
+2025-10-18T09:45:22: =================================
+2025-10-18T09:45:22: 📡 Puerto HTTP: 3002
+2025-10-18T09:45:22: 🌐 Local: http://localhost:3002
+2025-10-18T09:45:22: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T09:45:22: 🌐 Red: http://192.168.137.1:3002  (Local Area Connection* 2)
+2025-10-18T09:45:22: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T09:45:22: 🔧 Entorno: development
+2025-10-18T09:45:22: =================================
+2025-10-18T09:45:22: Listening on http://0.0.0.0:3002
+2025-10-18T09:45:22: =================================
+2025-10-18T09:45:22: 🔒 Servidor HTTPS iniciado
+2025-10-18T09:45:22: =================================
+2025-10-18T09:45:22: 📡 Puerto HTTPS: 3443
+2025-10-18T09:45:22: 🌐 Local: https://localhost:3443
+2025-10-18T09:45:22: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T09:45:22: 🌐 Red: https://192.168.137.1:3443  (Local Area Connection* 2)
+2025-10-18T09:45:22: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T09:45:22: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T09:45:22: =================================
+2025-10-18T09:45:22: Listening on https://0.0.0.0:3443
+2025-10-18T09:45:22: Conexión exitosa a MongoDB
+2025-10-18T09:45:22: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:45:22: Usuario root ya existe
+2025-10-18T09:45:22: 🌿 Rama actual: Completo
+2025-10-18T09:45:22: Número de actividades para mañana: 0
+2025-10-18T09:45:22: Número de actividades para dentro de 3 días: 0
+2025-10-18T09:45:22: 
+=================================
+2025-10-18T09:45:22: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T09:45:22: =================================
+2025-10-18T09:45:22: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T09:45:22: 🌿 Rama: Completo
+2025-10-18T09:45:22: ⏱️  Intervalo: 5 minutos
+2025-10-18T09:45:22: =================================
+
+2025-10-18T09:45:22: 
+🔍 Verificando actualizaciones...
+2025-10-18T09:45:22: ✅ El servidor está actualizado
+2025-10-18T09:45:46: Verificando token...
+2025-10-18T09:45:46: Cookies recibidas: {
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmJhOTIyZWEyMmJkMDE2N2Y0MWZmMjIiLCJjb3JyZW8iOiJyY3J1Y2VzQGFndWlkYS5jb20iLCJ0aXBvVXN1YXJpbyI6ImFkbWluaXN0cmFkb3IiLCJpYXQiOjE3NjA4MDAxODMsImV4cCI6MTc2MDgyODk4M30.eHg_3Ft4Q1odZ3EQyqwRnbochdha3azSMgvGAxJcELY'
+}
+2025-10-18T09:45:46: Token: Existe
+2025-10-18T09:45:46: Token decodificado: {
+  userId: '66ba922ea22bd0167f41ff22',
+  correo: 'rcruces@aguida.com',
+  tipoUsuario: 'administrador',
+  iat: 1760800183,
+  exp: 1760828983
+}
+2025-10-18T09:45:46: Usuario encontrado: rcruces@aguida.com
+2025-10-18T09:45:46: [0mGET /auth/verifyToken [32m200[0m 14.877 ms - 429[0m
+2025-10-18T09:45:46: Verificando token...
+2025-10-18T09:45:46: Cookies recibidas: {
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmJhOTIyZWEyMmJkMDE2N2Y0MWZmMjIiLCJjb3JyZW8iOiJyY3J1Y2VzQGFndWlkYS5jb20iLCJ0aXBvVXN1YXJpbyI6ImFkbWluaXN0cmFkb3IiLCJpYXQiOjE3NjA4MDAxODMsImV4cCI6MTc2MDgyODk4M30.eHg_3Ft4Q1odZ3EQyqwRnbochdha3azSMgvGAxJcELY'
+}
+2025-10-18T09:45:46: Token: Existe
+2025-10-18T09:45:46: Token decodificado: {
+  userId: '66ba922ea22bd0167f41ff22',
+  correo: 'rcruces@aguida.com',
+  tipoUsuario: 'administrador',
+  iat: 1760800183,
+  exp: 1760828983
+}
+2025-10-18T09:45:46: Usuario encontrado: rcruces@aguida.com
+2025-10-18T09:45:46: [0mGET /auth/verifyToken [32m200[0m 11.784 ms - 429[0m
+2025-10-18T09:46:49: Verificando token...
+2025-10-18T09:46:49: Cookies recibidas: {
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmJhOTIyZWEyMmJkMDE2N2Y0MWZmMjIiLCJjb3JyZW8iOiJyY3J1Y2VzQGFndWlkYS5jb20iLCJ0aXBvVXN1YXJpbyI6ImFkbWluaXN0cmFkb3IiLCJpYXQiOjE3NjA4MDAxODMsImV4cCI6MTc2MDgyODk4M30.eHg_3Ft4Q1odZ3EQyqwRnbochdha3azSMgvGAxJcELY'
+}
+2025-10-18T09:46:49: Token: Existe
+2025-10-18T09:46:49: Token decodificado: {
+  userId: '66ba922ea22bd0167f41ff22',
+  correo: 'rcruces@aguida.com',
+  tipoUsuario: 'administrador',
+  iat: 1760800183,
+  exp: 1760828983
+}
+2025-10-18T09:46:49: Usuario encontrado: rcruces@aguida.com
+2025-10-18T09:46:49: [0mGET /auth/verifyToken [32m200[0m 12.963 ms - 429[0m
+2025-10-18T09:46:49: Verificando token...
+2025-10-18T09:46:49: Cookies recibidas: {
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmJhOTIyZWEyMmJkMDE2N2Y0MWZmMjIiLCJjb3JyZW8iOiJyY3J1Y2VzQGFndWlkYS5jb20iLCJ0aXBvVXN1YXJpbyI6ImFkbWluaXN0cmFkb3IiLCJpYXQiOjE3NjA4MDAxODMsImV4cCI6MTc2MDgyODk4M30.eHg_3Ft4Q1odZ3EQyqwRnbochdha3azSMgvGAxJcELY'
+}
+2025-10-18T09:46:49: Token: Existe
+2025-10-18T09:46:49: Token decodificado: {
+  userId: '66ba922ea22bd0167f41ff22',
+  correo: 'rcruces@aguida.com',
+  tipoUsuario: 'administrador',
+  iat: 1760800183,
+  exp: 1760828983
+}
+2025-10-18T09:46:49: Usuario encontrado: rcruces@aguida.com
+2025-10-18T09:46:49: [0mGET /auth/verifyToken [32m200[0m 10.365 ms - 429[0m
+2025-10-18T09:46:55: Login exitoso para: rcruces@aguida.com
+2025-10-18T09:46:55: Token generado y cookie establecida
+2025-10-18T09:46:55: [0mPOST /login [32m200[0m 94.190 ms - 482[0m
+2025-10-18T09:46:55: Verificando token...
+2025-10-18T09:46:55: Cookies recibidas: {
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmJhOTIyZWEyMmJkMDE2N2Y0MWZmMjIiLCJjb3JyZW8iOiJyY3J1Y2VzQGFndWlkYS5jb20iLCJ0aXBvVXN1YXJpbyI6ImFkbWluaXN0cmFkb3IiLCJpYXQiOjE3NjA4MDI0MTUsImV4cCI6MTc2MDgzMTIxNX0.HknykUkr5XUFJPUoOccaoZcpZavkcKaDqNAQyrtT2aA'
+}
+2025-10-18T09:46:55: Token: Existe
+2025-10-18T09:46:55: Token decodificado: {
+  userId: '66ba922ea22bd0167f41ff22',
+  correo: 'rcruces@aguida.com',
+  tipoUsuario: 'administrador',
+  iat: 1760802415,
+  exp: 1760831215
+}
+2025-10-18T09:46:55: Usuario encontrado: rcruces@aguida.com
+2025-10-18T09:46:55: [0mGET /auth/verifyToken [32m200[0m 8.793 ms - 429[0m
+2025-10-18T09:48:57: Ejecución de tarea a las: 18/10/2025, 09:48:57
+2025-10-18T09:48:57: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:48:57: 📂 Buscando certificados SSL...
+2025-10-18T09:48:57:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T09:48:57:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T09:48:57: =================================
+2025-10-18T09:48:57: 🚀 Servidor HTTP iniciado
+2025-10-18T09:48:57: =================================
+2025-10-18T09:48:57: 📡 Puerto HTTP: 3002
+2025-10-18T09:48:57: 🌐 Local: http://localhost:3002
+2025-10-18T09:48:57: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T09:48:57: 🌐 Red: http://192.168.137.1:3002  (Local Area Connection* 2)
+2025-10-18T09:48:57: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T09:48:57: 🔧 Entorno: development
+2025-10-18T09:48:57: =================================
+2025-10-18T09:48:57: Listening on http://0.0.0.0:3002
+2025-10-18T09:48:57: =================================
+2025-10-18T09:48:57: 🔒 Servidor HTTPS iniciado
+2025-10-18T09:48:57: =================================
+2025-10-18T09:48:57: 📡 Puerto HTTPS: 3443
+2025-10-18T09:48:57: 🌐 Local: https://localhost:3443
+2025-10-18T09:48:57: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T09:48:57: 🌐 Red: https://192.168.137.1:3443  (Local Area Connection* 2)
+2025-10-18T09:48:57: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T09:48:57: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T09:48:57: =================================
+2025-10-18T09:48:57: Listening on https://0.0.0.0:3443
+2025-10-18T09:48:57: Conexión exitosa a MongoDB
+2025-10-18T09:48:57: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:48:57: Usuario root ya existe
+2025-10-18T09:48:57: Número de actividades para mañana: 0
+2025-10-18T09:48:57: Número de actividades para dentro de 3 días: 0
+2025-10-18T09:48:57: 🌿 Rama actual: Completo
+2025-10-18T09:48:57: 
+=================================
+2025-10-18T09:48:57: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T09:48:57: =================================
+2025-10-18T09:48:57: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T09:48:57: 🌿 Rama: Completo
+2025-10-18T09:48:57: ⏱️  Intervalo: 5 minutos
+2025-10-18T09:48:57: =================================
+
+2025-10-18T09:48:57: 
+🔍 Verificando actualizaciones...
+2025-10-18T09:48:58: ✅ El servidor está actualizado
+2025-10-18T09:53:57: 
+🔍 Verificando actualizaciones...
+2025-10-18T09:53:58: 🆕 ¡Nueva versión disponible!
+2025-10-18T09:53:58: 🔄 Iniciando actualización desde Git...
+2025-10-18T09:53:58: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T09:53:58: 🌿 Rama: Completo
+2025-10-18T09:53:58: 💾 Guardando cambios locales...
+2025-10-18T09:53:58: ⬇️  Descargando actualizaciones...
+2025-10-18T09:53:59: 📦 Verificando dependencias...
+2025-10-18T09:54:03: ✅ Cambios locales aplicados
+2025-10-18T09:54:03: ✅ ¡Actualización completada exitosamente!
+2025-10-18T09:54:03: 🔄 El servidor se reiniciará en 3 segundos...
+2025-10-18T09:54:06: 🔄 Reiniciando servidor...
+2025-10-18T09:54:06: Ejecución de tarea a las: 18/10/2025, 09:54:06
+2025-10-18T09:54:06: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:54:07: 📂 Buscando certificados SSL...
+2025-10-18T09:54:07:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T09:54:07:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T09:54:07: =================================
+2025-10-18T09:54:07: 🚀 Servidor HTTP iniciado
+2025-10-18T09:54:07: =================================
+2025-10-18T09:54:07: 📡 Puerto HTTP: 3002
+2025-10-18T09:54:07: 🌐 Local: http://localhost:3002
+2025-10-18T09:54:07: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T09:54:07: 🌐 Red: http://192.168.137.1:3002  (Local Area Connection* 2)
+2025-10-18T09:54:07: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T09:54:07: 🔧 Entorno: development
+2025-10-18T09:54:07: =================================
+2025-10-18T09:54:07: Listening on http://0.0.0.0:3002
+2025-10-18T09:54:07: =================================
+2025-10-18T09:54:07: 🔒 Servidor HTTPS iniciado
+2025-10-18T09:54:07: =================================
+2025-10-18T09:54:07: 📡 Puerto HTTPS: 3443
+2025-10-18T09:54:07: 🌐 Local: https://localhost:3443
+2025-10-18T09:54:07: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T09:54:07: 🌐 Red: https://192.168.137.1:3443  (Local Area Connection* 2)
+2025-10-18T09:54:07: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T09:54:07: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T09:54:07: =================================
+2025-10-18T09:54:07: Listening on https://0.0.0.0:3443
+2025-10-18T09:54:07: Conexión exitosa a MongoDB
+2025-10-18T09:54:07: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:54:07: Usuario root ya existe
+2025-10-18T09:54:07: Número de actividades para mañana: 0
+2025-10-18T09:54:07: Número de actividades para dentro de 3 días: 0
+2025-10-18T09:54:07: 🌿 Rama actual: Completo
+2025-10-18T09:54:07: 
+=================================
+2025-10-18T09:54:07: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T09:54:07: =================================
+2025-10-18T09:54:07: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T09:54:07: 🌿 Rama: Completo
+2025-10-18T09:54:07: ⏱️  Intervalo: 5 minutos
+2025-10-18T09:54:07: =================================
+
+2025-10-18T09:54:07: 
+🔍 Verificando actualizaciones...
+2025-10-18T09:54:07: ✅ El servidor está actualizado
+2025-10-18T09:54:51: Verificando token...
+2025-10-18T09:54:51: Cookies recibidas: {
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmJhOTIyZWEyMmJkMDE2N2Y0MWZmMjIiLCJjb3JyZW8iOiJyY3J1Y2VzQGFndWlkYS5jb20iLCJ0aXBvVXN1YXJpbyI6ImFkbWluaXN0cmFkb3IiLCJpYXQiOjE3NjA4MDI0MTUsImV4cCI6MTc2MDgzMTIxNX0.HknykUkr5XUFJPUoOccaoZcpZavkcKaDqNAQyrtT2aA'
+}
+2025-10-18T09:54:51: Token: Existe
+2025-10-18T09:54:51: Token decodificado: {
+  userId: '66ba922ea22bd0167f41ff22',
+  correo: 'rcruces@aguida.com',
+  tipoUsuario: 'administrador',
+  iat: 1760802415,
+  exp: 1760831215
+}
+2025-10-18T09:54:51: Usuario encontrado: rcruces@aguida.com
+2025-10-18T09:54:51: [0mGET /auth/verifyToken [32m200[0m 15.360 ms - 429[0m
+2025-10-18T09:54:51: Verificando token...
+2025-10-18T09:54:51: Cookies recibidas: {
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmJhOTIyZWEyMmJkMDE2N2Y0MWZmMjIiLCJjb3JyZW8iOiJyY3J1Y2VzQGFndWlkYS5jb20iLCJ0aXBvVXN1YXJpbyI6ImFkbWluaXN0cmFkb3IiLCJpYXQiOjE3NjA4MDI0MTUsImV4cCI6MTc2MDgzMTIxNX0.HknykUkr5XUFJPUoOccaoZcpZavkcKaDqNAQyrtT2aA'
+}
+2025-10-18T09:54:51: Token: Existe
+2025-10-18T09:54:51: Token decodificado: {
+  userId: '66ba922ea22bd0167f41ff22',
+  correo: 'rcruces@aguida.com',
+  tipoUsuario: 'administrador',
+  iat: 1760802415,
+  exp: 1760831215
+}
+2025-10-18T09:54:51: Usuario encontrado: rcruces@aguida.com
+2025-10-18T09:54:51: [0mGET /auth/verifyToken [32m200[0m 11.972 ms - 429[0m
+2025-10-18T09:54:54: Verificando token...
+2025-10-18T09:54:54: Cookies recibidas: {
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmJhOTIyZWEyMmJkMDE2N2Y0MWZmMjIiLCJjb3JyZW8iOiJyY3J1Y2VzQGFndWlkYS5jb20iLCJ0aXBvVXN1YXJpbyI6ImFkbWluaXN0cmFkb3IiLCJpYXQiOjE3NjA4MDI0MTUsImV4cCI6MTc2MDgzMTIxNX0.HknykUkr5XUFJPUoOccaoZcpZavkcKaDqNAQyrtT2aA'
+}
+2025-10-18T09:54:54: Token: Existe
+2025-10-18T09:54:54: Token decodificado: {
+  userId: '66ba922ea22bd0167f41ff22',
+  correo: 'rcruces@aguida.com',
+  tipoUsuario: 'administrador',
+  iat: 1760802415,
+  exp: 1760831215
+}
+2025-10-18T09:54:54: Usuario encontrado: rcruces@aguida.com
+2025-10-18T09:54:54: [0mGET /auth/verifyToken [32m200[0m 13.269 ms - 429[0m
+2025-10-18T09:54:54: Verificando token...
+2025-10-18T09:54:54: Cookies recibidas: {
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmJhOTIyZWEyMmJkMDE2N2Y0MWZmMjIiLCJjb3JyZW8iOiJyY3J1Y2VzQGFndWlkYS5jb20iLCJ0aXBvVXN1YXJpbyI6ImFkbWluaXN0cmFkb3IiLCJpYXQiOjE3NjA4MDI0MTUsImV4cCI6MTc2MDgzMTIxNX0.HknykUkr5XUFJPUoOccaoZcpZavkcKaDqNAQyrtT2aA'
+}
+2025-10-18T09:54:54: Token: Existe
+2025-10-18T09:54:54: Token decodificado: {
+  userId: '66ba922ea22bd0167f41ff22',
+  correo: 'rcruces@aguida.com',
+  tipoUsuario: 'administrador',
+  iat: 1760802415,
+  exp: 1760831215
+}
+2025-10-18T09:54:54: Usuario encontrado: rcruces@aguida.com
+2025-10-18T09:54:54: [0mGET /auth/verifyToken [32m200[0m 9.862 ms - 429[0m
+2025-10-18T09:54:57: Ruta no encontrada: POST /login
+2025-10-18T09:54:57: [0mPOST /login [33m404[0m 15.541 ms - 935[0m
+2025-10-18T09:54:59: Ruta no encontrada: POST /login
+2025-10-18T09:54:59: [0mPOST /login [33m404[0m 6.180 ms - 935[0m
+2025-10-18T09:59:07: 
+🔍 Verificando actualizaciones...
+2025-10-18T09:59:09: 🆕 ¡Nueva versión disponible!
+2025-10-18T09:59:09: 🔄 Iniciando actualización desde Git...
+2025-10-18T09:59:09: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T09:59:09: 🌿 Rama: Completo
+2025-10-18T09:59:09: 💾 Guardando cambios locales...
+2025-10-18T09:59:10: ⬇️  Descargando actualizaciones...
+2025-10-18T09:59:11: 📦 Verificando dependencias...
+2025-10-18T09:59:15: ✅ Cambios locales aplicados
+2025-10-18T09:59:15: ✅ ¡Actualización completada exitosamente!
+2025-10-18T09:59:15: 🔄 El servidor se reiniciará en 3 segundos...
+2025-10-18T09:59:18: 🔄 Reiniciando servidor...
+2025-10-18T09:59:18: Ejecución de tarea a las: 18/10/2025, 09:59:18
+2025-10-18T09:59:18: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:59:18: 📂 Buscando certificados SSL...
+2025-10-18T09:59:18:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T09:59:18:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T09:59:18: =================================
+2025-10-18T09:59:18: 🚀 Servidor HTTP iniciado
+2025-10-18T09:59:18: =================================
+2025-10-18T09:59:18: 📡 Puerto HTTP: 3002
+2025-10-18T09:59:18: 🌐 Local: http://localhost:3002
+2025-10-18T09:59:18: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T09:59:18: 🌐 Red: http://192.168.137.1:3002  (Local Area Connection* 2)
+2025-10-18T09:59:18: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T09:59:18: 🔧 Entorno: development
+2025-10-18T09:59:18: =================================
+2025-10-18T09:59:18: Listening on http://0.0.0.0:3002
+2025-10-18T09:59:18: =================================
+2025-10-18T09:59:18: 🔒 Servidor HTTPS iniciado
+2025-10-18T09:59:18: =================================
+2025-10-18T09:59:18: 📡 Puerto HTTPS: 3443
+2025-10-18T09:59:18: 🌐 Local: https://localhost:3443
+2025-10-18T09:59:18: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T09:59:18: 🌐 Red: https://192.168.137.1:3443  (Local Area Connection* 2)
+2025-10-18T09:59:18: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T09:59:18: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T09:59:18: =================================
+2025-10-18T09:59:18: Listening on https://0.0.0.0:3443
+2025-10-18T09:59:18: Conexión exitosa a MongoDB
+2025-10-18T09:59:18: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T09:59:18: Usuario root ya existe
+2025-10-18T09:59:18: Número de actividades para mañana: 0
+2025-10-18T09:59:18: Número de actividades para dentro de 3 días: 0
+2025-10-18T09:59:18: 🌿 Rama actual: Completo
+2025-10-18T09:59:19: 
+=================================
+2025-10-18T09:59:19: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T09:59:19: =================================
+2025-10-18T09:59:19: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T09:59:19: 🌿 Rama: Completo
+2025-10-18T09:59:19: ⏱️  Intervalo: 5 minutos
+2025-10-18T09:59:19: =================================
+
+2025-10-18T09:59:19: 
+🔍 Verificando actualizaciones...
+2025-10-18T09:59:19: ✅ El servidor está actualizado
+2025-10-18T09:59:27: Verificando token...
+2025-10-18T09:59:27: Cookies recibidas: {
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmJhOTIyZWEyMmJkMDE2N2Y0MWZmMjIiLCJjb3JyZW8iOiJyY3J1Y2VzQGFndWlkYS5jb20iLCJ0aXBvVXN1YXJpbyI6ImFkbWluaXN0cmFkb3IiLCJpYXQiOjE3NjA4MDI0MTUsImV4cCI6MTc2MDgzMTIxNX0.HknykUkr5XUFJPUoOccaoZcpZavkcKaDqNAQyrtT2aA'
+}
+2025-10-18T09:59:27: Token: Existe
+2025-10-18T09:59:27: Token decodificado: {
+  userId: '66ba922ea22bd0167f41ff22',
+  correo: 'rcruces@aguida.com',
+  tipoUsuario: 'administrador',
+  iat: 1760802415,
+  exp: 1760831215
+}
+2025-10-18T09:59:27: Usuario encontrado: rcruces@aguida.com
+2025-10-18T09:59:27: [0mGET /auth/verifyToken [32m200[0m 13.001 ms - 429[0m
+2025-10-18T09:59:27: Verificando token...
+2025-10-18T09:59:27: Cookies recibidas: {
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmJhOTIyZWEyMmJkMDE2N2Y0MWZmMjIiLCJjb3JyZW8iOiJyY3J1Y2VzQGFndWlkYS5jb20iLCJ0aXBvVXN1YXJpbyI6ImFkbWluaXN0cmFkb3IiLCJpYXQiOjE3NjA4MDI0MTUsImV4cCI6MTc2MDgzMTIxNX0.HknykUkr5XUFJPUoOccaoZcpZavkcKaDqNAQyrtT2aA'
+}
+2025-10-18T09:59:27: Token: Existe
+2025-10-18T09:59:27: Token decodificado: {
+  userId: '66ba922ea22bd0167f41ff22',
+  correo: 'rcruces@aguida.com',
+  tipoUsuario: 'administrador',
+  iat: 1760802415,
+  exp: 1760831215
+}
+2025-10-18T09:59:27: Usuario encontrado: rcruces@aguida.com
+2025-10-18T09:59:27: [0mGET /auth/verifyToken [32m200[0m 9.090 ms - 429[0m
+2025-10-18T09:59:31: Login exitoso para: rcruces@aguida.com
+2025-10-18T09:59:31: Token generado y cookie establecida
+2025-10-18T09:59:31: [0mPOST /login [32m200[0m 82.585 ms - 482[0m
+2025-10-18T09:59:31: Verificando token...
+2025-10-18T09:59:31: Cookies recibidas: {
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmJhOTIyZWEyMmJkMDE2N2Y0MWZmMjIiLCJjb3JyZW8iOiJyY3J1Y2VzQGFndWlkYS5jb20iLCJ0aXBvVXN1YXJpbyI6ImFkbWluaXN0cmFkb3IiLCJpYXQiOjE3NjA4MDMxNzEsImV4cCI6MTc2MDgzMTk3MX0.zded97jA5Vw93ApM09vNhXqZD2zTnwz6Mnf5KtSVQzk'
+}
+2025-10-18T09:59:31: Token: Existe
+2025-10-18T09:59:31: Token decodificado: {
+  userId: '66ba922ea22bd0167f41ff22',
+  correo: 'rcruces@aguida.com',
+  tipoUsuario: 'administrador',
+  iat: 1760803171,
+  exp: 1760831971
+}
+2025-10-18T09:59:31: Usuario encontrado: rcruces@aguida.com
+2025-10-18T09:59:31: [0mGET /auth/verifyToken [32m200[0m 8.746 ms - 429[0m
+2025-10-18T10:04:19: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:04:19: ✅ El servidor está actualizado
+2025-10-18T10:08:03: Ejecución de tarea a las: 18/10/2025, 10:08:03
+2025-10-18T10:08:03: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:08:04: 📂 Buscando certificados SSL...
+2025-10-18T10:08:04:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T10:08:04:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T10:08:04: =================================
+2025-10-18T10:08:04: 🚀 Servidor HTTP iniciado
+2025-10-18T10:08:04: =================================
+2025-10-18T10:08:04: 📡 Puerto HTTP: 3002
+2025-10-18T10:08:04: 🌐 Local: http://localhost:3002
+2025-10-18T10:08:04: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T10:08:04: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T10:08:04: 🔧 Entorno: development
+2025-10-18T10:08:04: =================================
+2025-10-18T10:08:04: Listening on http://0.0.0.0:3002
+2025-10-18T10:08:04: =================================
+2025-10-18T10:08:04: 🔒 Servidor HTTPS iniciado
+2025-10-18T10:08:04: =================================
+2025-10-18T10:08:04: 📡 Puerto HTTPS: 3443
+2025-10-18T10:08:04: 🌐 Local: https://localhost:3443
+2025-10-18T10:08:04: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T10:08:04: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T10:08:04: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T10:08:04: =================================
+2025-10-18T10:08:04: Listening on https://0.0.0.0:3443
+2025-10-18T10:08:04: Conexión exitosa a MongoDB
+2025-10-18T10:08:04: 🌿 Rama actual: Completo
+2025-10-18T10:08:04: Usuario root ya existe
+2025-10-18T10:08:04: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:08:04: Número de actividades para mañana: 0
+2025-10-18T10:08:04: Número de actividades para dentro de 3 días: 0
+2025-10-18T10:08:04: 
+=================================
+2025-10-18T10:08:04: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T10:08:04: =================================
+2025-10-18T10:08:04: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T10:08:04: 🌿 Rama: Completo
+2025-10-18T10:08:04: ⏱️  Intervalo: 5 minutos
+2025-10-18T10:08:04: =================================
+
+2025-10-18T10:08:04: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:08:05: ✅ El servidor está actualizado
+2025-10-18T10:09:00: Ejecución de tarea a las: 18/10/2025, 10:09:00
+2025-10-18T10:09:00: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:09:00: 📂 Buscando certificados SSL...
+2025-10-18T10:09:00:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T10:09:00:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T10:09:00: =================================
+2025-10-18T10:09:00: 🚀 Servidor HTTP iniciado
+2025-10-18T10:09:00: =================================
+2025-10-18T10:09:00: 📡 Puerto HTTP: 3002
+2025-10-18T10:09:00: 🌐 Local: http://localhost:3002
+2025-10-18T10:09:00: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T10:09:00: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T10:09:00: 🔧 Entorno: development
+2025-10-18T10:09:00: =================================
+2025-10-18T10:09:00: Listening on http://0.0.0.0:3002
+2025-10-18T10:09:00: =================================
+2025-10-18T10:09:00: 🔒 Servidor HTTPS iniciado
+2025-10-18T10:09:00: =================================
+2025-10-18T10:09:00: 📡 Puerto HTTPS: 3443
+2025-10-18T10:09:00: 🌐 Local: https://localhost:3443
+2025-10-18T10:09:00: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T10:09:00: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T10:09:00: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T10:09:00: =================================
+2025-10-18T10:09:00: Listening on https://0.0.0.0:3443
+2025-10-18T10:09:00: Conexión exitosa a MongoDB
+2025-10-18T10:09:00: Usuario root ya existe
+2025-10-18T10:09:00: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:09:00: 🌿 Rama actual: Completo
+2025-10-18T10:09:00: Número de actividades para mañana: 0
+2025-10-18T10:09:00: Número de actividades para dentro de 3 días: 0
+2025-10-18T10:09:00: 
+=================================
+2025-10-18T10:09:00: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T10:09:00: =================================
+2025-10-18T10:09:00: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T10:09:00: 🌿 Rama: Completo
+2025-10-18T10:09:00: ⏱️  Intervalo: 5 minutos
+2025-10-18T10:09:00: =================================
+
+2025-10-18T10:09:00: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:09:01: ✅ El servidor está actualizado
+2025-10-18T10:11:21: Ejecución de tarea a las: 18/10/2025, 10:11:21
+2025-10-18T10:11:21: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:11:22: 📂 Buscando certificados SSL...
+2025-10-18T10:11:22:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T10:11:22:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T10:11:22: =================================
+2025-10-18T10:11:22: 🚀 Servidor HTTP iniciado
+2025-10-18T10:11:22: =================================
+2025-10-18T10:11:22: 📡 Puerto HTTP: 3002
+2025-10-18T10:11:22: 🌐 Local: http://localhost:3002
+2025-10-18T10:11:22: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T10:11:22: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T10:11:22: 🔧 Entorno: development
+2025-10-18T10:11:22: =================================
+2025-10-18T10:11:22: Listening on http://0.0.0.0:3002
+2025-10-18T10:11:22: =================================
+2025-10-18T10:11:22: 🔒 Servidor HTTPS iniciado
+2025-10-18T10:11:22: =================================
+2025-10-18T10:11:22: 📡 Puerto HTTPS: 3443
+2025-10-18T10:11:22: 🌐 Local: https://localhost:3443
+2025-10-18T10:11:22: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T10:11:22: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T10:11:22: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T10:11:22: =================================
+2025-10-18T10:11:22: Listening on https://0.0.0.0:3443
+2025-10-18T10:11:22: Conexión exitosa a MongoDB
+2025-10-18T10:11:22: 🌿 Rama actual: Completo
+2025-10-18T10:11:22: Usuario root ya existe
+2025-10-18T10:11:22: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:11:22: Número de actividades para mañana: 0
+2025-10-18T10:11:22: Número de actividades para dentro de 3 días: 0
+2025-10-18T10:11:22: 
+=================================
+2025-10-18T10:11:22: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T10:11:22: =================================
+2025-10-18T10:11:22: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T10:11:22: 🌿 Rama: Completo
+2025-10-18T10:11:22: ⏱️  Intervalo: 5 minutos
+2025-10-18T10:11:22: =================================
+
+2025-10-18T10:11:22: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:11:23: ✅ El servidor está actualizado
+2025-10-18T10:15:43: Ejecución de tarea a las: 18/10/2025, 10:15:43
+2025-10-18T10:15:43: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:15:44: 📂 Buscando certificados SSL...
+2025-10-18T10:15:44:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T10:15:44:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T10:15:44: =================================
+2025-10-18T10:15:44: 🚀 Servidor HTTP iniciado
+2025-10-18T10:15:44: =================================
+2025-10-18T10:15:44: 📡 Puerto HTTP: 3002
+2025-10-18T10:15:44: 🌐 Local: http://localhost:3002
+2025-10-18T10:15:44: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T10:15:44: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T10:15:44: 🔧 Entorno: development
+2025-10-18T10:15:44: =================================
+2025-10-18T10:15:44: Listening on http://0.0.0.0:3002
+2025-10-18T10:15:44: =================================
+2025-10-18T10:15:44: 🔒 Servidor HTTPS iniciado
+2025-10-18T10:15:44: =================================
+2025-10-18T10:15:44: 📡 Puerto HTTPS: 3443
+2025-10-18T10:15:44: 🌐 Local: https://localhost:3443
+2025-10-18T10:15:44: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T10:15:44: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T10:15:44: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T10:15:44: =================================
+2025-10-18T10:15:44: Listening on https://0.0.0.0:3443
+2025-10-18T10:15:44: Conexión exitosa a MongoDB
+2025-10-18T10:15:44: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:15:44: Usuario root ya existe
+2025-10-18T10:15:44: Número de actividades para mañana: 0
+2025-10-18T10:15:44: Número de actividades para dentro de 3 días: 0
+2025-10-18T10:15:44: 🌿 Rama actual: Completo
+2025-10-18T10:15:44: 
+=================================
+2025-10-18T10:15:44: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T10:15:44: =================================
+2025-10-18T10:15:44: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T10:15:44: 🌿 Rama: Completo
+2025-10-18T10:15:44: ⏱️  Intervalo: 5 minutos
+2025-10-18T10:15:44: =================================
+
+2025-10-18T10:15:44: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:15:50: ✅ El servidor está actualizado
+2025-10-18T10:20:44: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:20:45: ✅ El servidor está actualizado
+2025-10-18T10:22:07: Ejecución de tarea a las: 18/10/2025, 10:22:07
+2025-10-18T10:22:07: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:22:08: 📂 Buscando certificados SSL...
+2025-10-18T10:22:08:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T10:22:08:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T10:22:08: =================================
+2025-10-18T10:22:08: 🚀 Servidor HTTP iniciado
+2025-10-18T10:22:08: =================================
+2025-10-18T10:22:08: 📡 Puerto HTTP: 3002
+2025-10-18T10:22:08: 🌐 Local: http://localhost:3002
+2025-10-18T10:22:08: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T10:22:08: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T10:22:08: 🔧 Entorno: development
+2025-10-18T10:22:08: =================================
+2025-10-18T10:22:08: Listening on http://0.0.0.0:3002
+2025-10-18T10:22:08: =================================
+2025-10-18T10:22:08: 🔒 Servidor HTTPS iniciado
+2025-10-18T10:22:08: =================================
+2025-10-18T10:22:08: 📡 Puerto HTTPS: 3443
+2025-10-18T10:22:08: 🌐 Local: https://localhost:3443
+2025-10-18T10:22:08: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T10:22:08: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T10:22:08: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T10:22:08: =================================
+2025-10-18T10:22:08: Listening on https://0.0.0.0:3443
+2025-10-18T10:22:08: Conexión exitosa a MongoDB
+2025-10-18T10:22:08: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:22:08: Usuario root ya existe
+2025-10-18T10:22:08: Número de actividades para mañana: 0
+2025-10-18T10:22:08: Número de actividades para dentro de 3 días: 0
+2025-10-18T10:22:08: 🌿 Rama actual: Completo
+2025-10-18T10:22:08: 
+=================================
+2025-10-18T10:22:08: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T10:22:08: =================================
+2025-10-18T10:22:08: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T10:22:08: 🌿 Rama: Completo
+2025-10-18T10:22:08: ⏱️  Intervalo: 5 minutos
+2025-10-18T10:22:08: =================================
+
+2025-10-18T10:22:08: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:22:08: ✅ El servidor está actualizado
+2025-10-18T10:24:35: Ejecución de tarea a las: 18/10/2025, 10:24:35
+2025-10-18T10:24:35: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:24:36: 📂 Buscando certificados SSL...
+2025-10-18T10:24:36:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T10:24:36:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T10:24:36: =================================
+2025-10-18T10:24:36: 🚀 Servidor HTTP iniciado
+2025-10-18T10:24:36: =================================
+2025-10-18T10:24:36: 📡 Puerto HTTP: 3002
+2025-10-18T10:24:36: 🌐 Local: http://localhost:3002
+2025-10-18T10:24:36: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T10:24:36: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T10:24:36: 🔧 Entorno: development
+2025-10-18T10:24:36: =================================
+2025-10-18T10:24:36: Listening on http://0.0.0.0:3002
+2025-10-18T10:24:36: =================================
+2025-10-18T10:24:36: 🔒 Servidor HTTPS iniciado
+2025-10-18T10:24:36: =================================
+2025-10-18T10:24:36: 📡 Puerto HTTPS: 3443
+2025-10-18T10:24:36: 🌐 Local: https://localhost:3443
+2025-10-18T10:24:36: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T10:24:36: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T10:24:36: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T10:24:36: =================================
+2025-10-18T10:24:36: Listening on https://0.0.0.0:3443
+2025-10-18T10:24:36: Conexión exitosa a MongoDB
+2025-10-18T10:24:36: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:24:36: Usuario root ya existe
+2025-10-18T10:24:36: 🌿 Rama actual: Completo
+2025-10-18T10:24:36: Número de actividades para mañana: 0
+2025-10-18T10:24:36: Número de actividades para dentro de 3 días: 0
+2025-10-18T10:24:36: 
+=================================
+2025-10-18T10:24:36: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T10:24:36: =================================
+2025-10-18T10:24:36: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T10:24:36: 🌿 Rama: Completo
+2025-10-18T10:24:36: ⏱️  Intervalo: 5 minutos
+2025-10-18T10:24:36: =================================
+
+2025-10-18T10:24:36: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:24:43: ✅ El servidor está actualizado
+2025-10-18T10:27:24: Ejecución de tarea a las: 18/10/2025, 10:27:24
+2025-10-18T10:27:24: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:27:24: 📂 Buscando certificados SSL...
+2025-10-18T10:27:24:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T10:27:24:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T10:27:24: =================================
+2025-10-18T10:27:24: 🚀 Servidor HTTP iniciado
+2025-10-18T10:27:24: =================================
+2025-10-18T10:27:24: 📡 Puerto HTTP: 3002
+2025-10-18T10:27:24: 🌐 Local: http://localhost:3002
+2025-10-18T10:27:24: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T10:27:24: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T10:27:24: 🔧 Entorno: development
+2025-10-18T10:27:24: =================================
+2025-10-18T10:27:24: Listening on http://0.0.0.0:3002
+2025-10-18T10:27:24: =================================
+2025-10-18T10:27:24: 🔒 Servidor HTTPS iniciado
+2025-10-18T10:27:24: =================================
+2025-10-18T10:27:24: 📡 Puerto HTTPS: 3443
+2025-10-18T10:27:24: 🌐 Local: https://localhost:3443
+2025-10-18T10:27:24: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T10:27:24: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T10:27:24: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T10:27:24: =================================
+2025-10-18T10:27:24: Listening on https://0.0.0.0:3443
+2025-10-18T10:27:24: Conexión exitosa a MongoDB
+2025-10-18T10:27:24: 🌿 Rama actual: Completo
+2025-10-18T10:27:24: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:27:24: Número de actividades para mañana: 0
+2025-10-18T10:27:24: Número de actividades para dentro de 3 días: 0
+2025-10-18T10:27:24: Usuario root ya existe
+2025-10-18T10:27:24: 
+=================================
+2025-10-18T10:27:24: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T10:27:24: =================================
+2025-10-18T10:27:24: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T10:27:24: 🌿 Rama: Completo
+2025-10-18T10:27:24: ⏱️  Intervalo: 5 minutos
+2025-10-18T10:27:24: =================================
+
+2025-10-18T10:27:24: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:27:25: ✅ El servidor está actualizado
+2025-10-18T10:44:50: Ejecución de tarea a las: 18/10/2025, 10:44:50
+2025-10-18T10:44:50: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:44:50: 📂 Buscando certificados SSL...
+2025-10-18T10:44:50:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T10:44:50:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T10:44:50: =================================
+2025-10-18T10:44:50: 🚀 Servidor HTTP iniciado
+2025-10-18T10:44:50: =================================
+2025-10-18T10:44:50: 📡 Puerto HTTP: 3002
+2025-10-18T10:44:50: 🌐 Local: http://localhost:3002
+2025-10-18T10:44:50: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T10:44:50: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T10:44:50: 🔧 Entorno: development
+2025-10-18T10:44:50: =================================
+2025-10-18T10:44:50: Listening on http://0.0.0.0:3002
+2025-10-18T10:44:50: =================================
+2025-10-18T10:44:50: 🔒 Servidor HTTPS iniciado
+2025-10-18T10:44:50: =================================
+2025-10-18T10:44:50: 📡 Puerto HTTPS: 3443
+2025-10-18T10:44:50: 🌐 Local: https://localhost:3443
+2025-10-18T10:44:50: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T10:44:50: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T10:44:50: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T10:44:50: =================================
+2025-10-18T10:44:50: Listening on https://0.0.0.0:3443
+2025-10-18T10:44:50: Conexión exitosa a MongoDB
+2025-10-18T10:44:50: 🌿 Rama actual: Completo
+2025-10-18T10:44:50: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:44:50: Usuario root ya existe
+2025-10-18T10:44:50: Número de actividades para mañana: 0
+2025-10-18T10:44:50: Número de actividades para dentro de 3 días: 0
+2025-10-18T10:44:50: 
+=================================
+2025-10-18T10:44:50: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T10:44:50: =================================
+2025-10-18T10:44:50: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T10:44:50: 🌿 Rama: Completo
+2025-10-18T10:44:50: ⏱️  Intervalo: 5 minutos
+2025-10-18T10:44:50: =================================
+
+2025-10-18T10:44:50: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:44:51: ✅ El servidor está actualizado
+2025-10-18T10:46:15: Ejecución de tarea a las: 18/10/2025, 10:46:15
+2025-10-18T10:46:15: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:46:15: 📂 Buscando certificados SSL...
+2025-10-18T10:46:15:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T10:46:15:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T10:46:15: =================================
+2025-10-18T10:46:15: 🚀 Servidor HTTP iniciado
+2025-10-18T10:46:15: =================================
+2025-10-18T10:46:15: 📡 Puerto HTTP: 3002
+2025-10-18T10:46:15: 🌐 Local: http://localhost:3002
+2025-10-18T10:46:15: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T10:46:15: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T10:46:15: 🔧 Entorno: development
+2025-10-18T10:46:15: =================================
+2025-10-18T10:46:15: Listening on http://0.0.0.0:3002
+2025-10-18T10:46:15: =================================
+2025-10-18T10:46:15: 🔒 Servidor HTTPS iniciado
+2025-10-18T10:46:15: =================================
+2025-10-18T10:46:15: 📡 Puerto HTTPS: 3443
+2025-10-18T10:46:15: 🌐 Local: https://localhost:3443
+2025-10-18T10:46:15: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T10:46:15: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T10:46:15: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T10:46:15: =================================
+2025-10-18T10:46:15: Listening on https://0.0.0.0:3443
+2025-10-18T10:46:15: Conexión exitosa a MongoDB
+2025-10-18T10:46:15: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:46:15: Usuario root ya existe
+2025-10-18T10:46:15: Número de actividades para mañana: 0
+2025-10-18T10:46:15: Número de actividades para dentro de 3 días: 0
+2025-10-18T10:46:15: 🌿 Rama actual: Completo
+2025-10-18T10:46:15: 
+=================================
+2025-10-18T10:46:15: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T10:46:15: =================================
+2025-10-18T10:46:15: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T10:46:15: 🌿 Rama: Completo
+2025-10-18T10:46:15: ⏱️  Intervalo: 5 minutos
+2025-10-18T10:46:15: =================================
+
+2025-10-18T10:46:15: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:46:16: ✅ El servidor está actualizado
+2025-10-18T10:47:58: Ejecución de tarea a las: 18/10/2025, 10:47:58
+2025-10-18T10:47:58: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:48:00: 📂 Buscando certificados SSL...
+2025-10-18T10:48:00:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T10:48:00:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T10:48:00: =================================
+2025-10-18T10:48:00: 🚀 Servidor HTTP iniciado
+2025-10-18T10:48:00: =================================
+2025-10-18T10:48:00: 📡 Puerto HTTP: 3002
+2025-10-18T10:48:00: 🌐 Local: http://localhost:3002
+2025-10-18T10:48:00: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T10:48:00: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T10:48:00: 🔧 Entorno: development
+2025-10-18T10:48:00: =================================
+2025-10-18T10:48:00: Listening on http://0.0.0.0:3002
+2025-10-18T10:48:00: =================================
+2025-10-18T10:48:00: 🔒 Servidor HTTPS iniciado
+2025-10-18T10:48:00: =================================
+2025-10-18T10:48:00: 📡 Puerto HTTPS: 3443
+2025-10-18T10:48:00: 🌐 Local: https://localhost:3443
+2025-10-18T10:48:00: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T10:48:00: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T10:48:00: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T10:48:00: =================================
+2025-10-18T10:48:00: Listening on https://0.0.0.0:3443
+2025-10-18T10:48:00: Conexión exitosa a MongoDB
+2025-10-18T10:48:00: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:48:00: Usuario root ya existe
+2025-10-18T10:48:00: Número de actividades para mañana: 0
+2025-10-18T10:48:00: Número de actividades para dentro de 3 días: 0
+2025-10-18T10:48:00: 🌿 Rama actual: Completo
+2025-10-18T10:48:00: 
+=================================
+2025-10-18T10:48:00: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T10:48:00: =================================
+2025-10-18T10:48:00: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T10:48:00: 🌿 Rama: Completo
+2025-10-18T10:48:00: ⏱️  Intervalo: 5 minutos
+2025-10-18T10:48:00: =================================
+
+2025-10-18T10:48:00: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:48:06: ✅ El servidor está actualizado
+2025-10-18T10:54:06: Ejecución de tarea a las: 18/10/2025, 10:54:06
+2025-10-18T10:54:06: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:54:06: 📂 Buscando certificados SSL...
+2025-10-18T10:54:06:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T10:54:06:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T10:54:06: =================================
+2025-10-18T10:54:06: 🚀 Servidor HTTP iniciado
+2025-10-18T10:54:06: =================================
+2025-10-18T10:54:06: 📡 Puerto HTTP: 3002
+2025-10-18T10:54:06: 🌐 Local: http://localhost:3002
+2025-10-18T10:54:06: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T10:54:06: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T10:54:06: 🔧 Entorno: development
+2025-10-18T10:54:06: =================================
+2025-10-18T10:54:06: Listening on http://0.0.0.0:3002
+2025-10-18T10:54:06: =================================
+2025-10-18T10:54:06: 🔒 Servidor HTTPS iniciado
+2025-10-18T10:54:06: =================================
+2025-10-18T10:54:06: 📡 Puerto HTTPS: 3443
+2025-10-18T10:54:06: 🌐 Local: https://localhost:3443
+2025-10-18T10:54:06: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T10:54:06: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T10:54:06: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T10:54:06: =================================
+2025-10-18T10:54:06: Listening on https://0.0.0.0:3443
+2025-10-18T10:54:06: Conexión exitosa a MongoDB
+2025-10-18T10:54:06: 🌿 Rama actual: Completo
+2025-10-18T10:54:06: Usuario root ya existe
+2025-10-18T10:54:06: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:54:06: Número de actividades para mañana: 0
+2025-10-18T10:54:06: Número de actividades para dentro de 3 días: 0
+2025-10-18T10:54:06: 
+=================================
+2025-10-18T10:54:06: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T10:54:06: =================================
+2025-10-18T10:54:06: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T10:54:06: 🌿 Rama: Completo
+2025-10-18T10:54:06: ⏱️  Intervalo: 5 minutos
+2025-10-18T10:54:06: =================================
+
+2025-10-18T10:54:06: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:54:07: ✅ El servidor está actualizado
+2025-10-18T10:59:45: Ejecución de tarea a las: 18/10/2025, 10:59:45
+2025-10-18T10:59:45: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:59:45: 📂 Buscando certificados SSL...
+2025-10-18T10:59:45:    Key: C:\Users\fredw\Desktop\otravez\server\ssl\key.pem
+2025-10-18T10:59:45:    Cert: C:\Users\fredw\Desktop\otravez\server\ssl\cert.pem
+2025-10-18T10:59:45: =================================
+2025-10-18T10:59:45: 🚀 Servidor HTTP iniciado
+2025-10-18T10:59:45: =================================
+2025-10-18T10:59:45: 📡 Puerto HTTP: 3002
+2025-10-18T10:59:45: 🌐 Local: http://localhost:3002
+2025-10-18T10:59:45: 🌐 Red: http://192.168.56.1:3002  (Ethernet 2)
+2025-10-18T10:59:45: 🌐 Red: http://192.168.0.182:3002  (Wi-Fi)
+2025-10-18T10:59:45: 🔧 Entorno: development
+2025-10-18T10:59:45: =================================
+2025-10-18T10:59:45: Listening on http://0.0.0.0:3002
+2025-10-18T10:59:45: =================================
+2025-10-18T10:59:45: 🔒 Servidor HTTPS iniciado
+2025-10-18T10:59:45: =================================
+2025-10-18T10:59:45: 📡 Puerto HTTPS: 3443
+2025-10-18T10:59:45: 🌐 Local: https://localhost:3443
+2025-10-18T10:59:45: 🌐 Red: https://192.168.56.1:3443  (Ethernet 2)
+2025-10-18T10:59:45: 🌐 Red: https://192.168.0.182:3443  (Wi-Fi)
+2025-10-18T10:59:45: ⚠️  Certificado autofirmado - El navegador mostrará advertencia
+2025-10-18T10:59:45: =================================
+2025-10-18T10:59:45: Listening on https://0.0.0.0:3443
+2025-10-18T10:59:45: Conexión exitosa a MongoDB
+2025-10-18T10:59:45: 🌿 Rama actual: Completo
+2025-10-18T10:59:45: comprobacion de fecha actual:  2025-10-18T06:00:00.000Z
+2025-10-18T10:59:45: Usuario root ya existe
+2025-10-18T10:59:45: Número de actividades para mañana: 0
+2025-10-18T10:59:45: Número de actividades para dentro de 3 días: 0
+2025-10-18T10:59:46: 
+=================================
+2025-10-18T10:59:46: 🔄 Sistema de auto-actualización iniciado
+2025-10-18T10:59:46: =================================
+2025-10-18T10:59:46: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T10:59:46: 🌿 Rama: Completo
+2025-10-18T10:59:46: ⏱️  Intervalo: 5 minutos
+2025-10-18T10:59:46: =================================
+
+2025-10-18T10:59:46: 
+🔍 Verificando actualizaciones...
+2025-10-18T10:59:47: 🆕 ¡Nueva versión disponible!
+2025-10-18T10:59:47: 🔄 Iniciando actualización desde Git...
+2025-10-18T10:59:47: 📦 Repositorio: https://github.com/FredWard87/otravez.git
+2025-10-18T10:59:47: 🌿 Rama: Completo
+2025-10-18T10:59:47: 💾 Guardando cambios locales...
+2025-10-18T10:59:48: ⬇️  Descargando actualizaciones...
+2025-10-18T10:59:49: 📦 Verificando dependencias...
+2025-10-18T10:59:54: ✅ Cambios locales aplicados
+2025-10-18T10:59:54: ✅ ¡Actualización completada exitosamente!
+2025-10-18T10:59:54: 🔄 El servidor se reiniciará en 3 segundos...
+2025-10-18T10:59:57: 🔄 Reiniciando servidor...
