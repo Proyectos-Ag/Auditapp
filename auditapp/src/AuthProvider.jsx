@@ -17,14 +17,15 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     const verifyToken = async () => {
       try {
-        console.log('Verificando token al cargar...');
-        console.log('URL Backend:', process.env.REACT_APP_BACKEND_URL);
+        console.log('🔄 Verificando token al cargar...');
+        console.log('🌐 URL Backend:', api.defaults.baseURL);
         
         const { data } = await api.get('/auth/verifyToken');
-      
-        setUserData({ ...data });
+        console.log('✅ Token verificado:', data.user.email);
+        
+        setUserData({ ...data.user });
       } catch (error) {
-        console.error('Error verificando token:', {
+        console.error('❌ Error verificando token:', {
           status: error.response?.status,
           message: error.response?.data?.error || error.message,
           url: error.config?.url
@@ -46,7 +47,7 @@ const AuthProvider = ({ children }) => {
         if (error.response) {
           // 401: token inválido/expirado
           if (error.response.status === 401) {
-            console.log('Error 401 - Sesión expirada o inválida');
+            console.log('🔐 Error 401 - Sesión expirada o inválida');
             setUserData(null);
 
             // No mostrar alerta si estamos en la página de login
