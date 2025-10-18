@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-//hola
+//hola buenas noches
 
 const EvaluacionesSchema = new mongoose.Schema({
   folio: {type: String},
@@ -44,4 +44,5 @@ const EvaluacionesSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("Evaluaciones", EvaluacionesSchema);
+
 
