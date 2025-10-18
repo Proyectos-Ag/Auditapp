@@ -38,7 +38,7 @@ httpServer.listen(httpPort, '0.0.0.0', () => {
   console.log('=================================');
   console.log('📡 Puerto HTTP:', httpPort);
   console.log('🌐 Local: http://localhost:' + httpPort);
-  console.log('🌐 Red: http://192.168.100.30:' + httpPort);
+  console.log('🌐 Red: http://192.168.0.35:' + httpPort);
   console.log('🔧 Entorno:', process.env.NODE_ENV || 'development');
   console.log('=================================');
 });
@@ -70,7 +70,7 @@ try {
     console.log('=================================');
     console.log('📡 Puerto HTTPS:', httpsPort);
     console.log('🌐 Local: https://localhost:' + httpsPort);
-    console.log('🌐 Red: https://192.168.100.30:' + httpsPort);
+    console.log('🌐 Red: https://192.168.0.35:' + httpsPort);
     console.log('⚠️  Certificado autofirmado - El navegador mostrará advertencia');
     console.log('=================================');
   });
