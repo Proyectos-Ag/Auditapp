@@ -1,4 +1,4 @@
-import React, { createContext, Suspense, lazy, useState, useEffect} from 'react';
+import React, { createContext, Suspense, lazy, useState, useEffect, useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation} from "react-router-dom";
 import axios from 'axios';
 import Login from './components/login/login.jsx';
@@ -82,6 +82,9 @@ import ValidacionForm from './gestion/validacion/ValidacionForm.jsx';
 //Paginas de error
 import UnauthorizedPage from './components/Pag-error/UnauthorizedPage.jsx';
 import NotFoundPage from './components/Pag-error/NotFoundPage.jsx';
+// Invitaciones
+import GenerarInvitacion from './components/invitacion/GenerarInvitacion';
+import InviteConsume from './components/invitacion/InviteConsume';
 
 // Cargar componentes según el rol correspondiente
 const Administrador = lazy(() => import('./administrador/Components/Home/inicio.jsx'));
@@ -97,15 +100,22 @@ export const UserContext = createContext(null);
 
   const MainContent = () => {
     const location = useLocation();
+    const { userData } = useContext(UserContext);
   
     // Rutas donde no queremos que se muestren MigasPan e IconMenu
     const excludedRoutes = ['/','/correo-prog-audi', '/mobile-sign'];
   
     return (
       <>
-        {!excludedRoutes.includes(location.pathname)&& UserContext && <Navbar />}
-        {!excludedRoutes.includes(location.pathname)&& UserContext && <MigasPan />}
-        {!excludedRoutes.includes(location.pathname)&& UserContext &&<IconMenu />}
+  {!excludedRoutes.includes(location.pathname)&& UserContext && <Navbar />}
+  {!excludedRoutes.includes(location.pathname)&& UserContext && <MigasPan />}
+  {!excludedRoutes.includes(location.pathname)&& UserContext &&<IconMenu />}
+        {/* Banner para modo solo lectura */}
+        {userData?.permisos === 'readonly' && (
+          <div style={{background:'#ffefc2',padding:8,textAlign:'center',borderBottom:'1px solid #e2c58a'}}>
+            Estás navegando con una cuenta invitada (solo lectura). No puedes crear ni editar registros.
+          </div>
+        )}
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
           <Route path="/" element={<Login />} /> 
@@ -187,6 +197,10 @@ export const UserContext = createContext(null);
               <Route path="/vista-solictudes-rev" element={<ProtectedRoute><RevisionSolicitudesCambios/></ProtectedRoute>}/>
               <Route path="/validacion-form" element={<ProtectedRoute><ValidacionForm/></ProtectedRoute>}/>
               <Route path="/mobile-sign" element={<MobileSign />} />
+              
+              {/* Invitaciones */}
+              <Route path="/generar-invitacion" element={<ProtectedRoute allowedRoles={["administrador"]}><GenerarInvitacion /></ProtectedRoute>} />
+              <Route path="/invite/:token" element={<InviteConsume />} />
 
               {/* Rutas protegidas para los componentes de usuario */}
 

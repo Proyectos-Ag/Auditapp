@@ -14,7 +14,7 @@ const LoginForm = () => {
   const { setUserData } = useContext(UserContext);
   const navigate = useNavigate();
   const MySwal = withReactContent(Swal);
-  const [showModal, setShowModal] = useState(false); // Estado para controlar el modal
+  const [showModal, setShowModal] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,10 +41,28 @@ const LoginForm = () => {
     mostrarCargando();
 
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, formData);
-      const { token, usuario } = response.data;
+      console.log('Intentando login con:', formData.Correo);
+      
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/login`, 
+        formData,
+        {
+          withCredentials: true, // IMPORTANTE: Enviar cookies
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-      if (usuario.TipoUsuario !== 'Administrador') {
+      console.log('Respuesta del servidor:', response.data);
+
+      const { usuario } = response.data;
+
+      // Verificar tipo de usuario (sin distinción de mayúsculas/minúsculas)
+      const tipoUsuarioLower = usuario.TipoUsuario.toLowerCase();
+      
+      if (tipoUsuarioLower !== 'administrador') {
+        ocultarCargando();
         Swal.fire({
           icon: 'error',
           title: 'Acceso denegado',
@@ -53,31 +71,49 @@ const LoginForm = () => {
         return;
       }
 
-      localStorage.setItem('token', token);
+      // NO usar localStorage - el token está en la cookie HttpOnly
+      // localStorage.setItem('token', token); // ❌ ELIMINAR ESTO
+      
+      // Actualizar contexto con datos del usuario
       setUserData(usuario);
+      
+      ocultarCargando();
+      
+      // Mostrar mensaje de éxito
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Bienvenido!',
+        text: `Hola ${usuario.Nombre}`,
+        timer: 1500,
+        showConfirmButton: false
+      });
+
+      // Navegar al home
       navigate('/home');
+      
     } catch (error) {
-      console.error(error);
+      console.error('Error en login:', error);
+      ocultarCargando();
+      
+      const errorMessage = error.response?.data?.error || 'Credenciales inválidas. Por favor, intenta de nuevo.';
+      
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'Credenciales inválidas. Por favor, intenta de nuevo.',
+        text: errorMessage,
       });
-    } finally {
-      ocultarCargando();
     }
   };
 
   const handleOpenModal = () => {
-    setShowModal(true); // Mostrar modal
+    setShowModal(true);
   };
 
   const handleCloseModal = () => {
-    setShowModal(false); // Ocultar modal
+    setShowModal(false);
   };
 
   const handleOverlayClick = (e) => {
-    // Si el clic es en el overlay (no dentro del contenido), cerramos el modal
     if (e.target.classList.contains('modal-overlay')) {
       handleCloseModal();
     }
@@ -121,7 +157,6 @@ const LoginForm = () => {
           <button type="submit" className="btn-login">Iniciar Sesión</button>
         </form>
 
-        {/* Texto que abre el modal */}
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <span 
             style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }} 
@@ -132,11 +167,9 @@ const LoginForm = () => {
           </span>
         </div>
 
-        {/* Modal */}
         {showModal && (
           <div className="modal-overlay" onClick={handleOverlayClick}>
             <div onClick={(e) => e.stopPropagation()}>
-              {/* El clic dentro del modal no lo cierra */}
               <DatosV />
             </div>
           </div>

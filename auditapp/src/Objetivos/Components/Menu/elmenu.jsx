@@ -146,9 +146,11 @@ const MenuByRoleAndArea = () => {
   }
 
   const tipoUsuario = userData.TipoUsuario.toLowerCase();
-  let filteredItems = menuItems.filter(item => item.roles.includes(tipoUsuario));
+  // Tratar a los invitados como administradores para visibilidad de menú (servidor sigue siendo readonly)
+  const effectiveTipo = tipoUsuario === 'invitado' ? 'administrador' : tipoUsuario;
+  let filteredItems = menuItems.filter(item => item.roles.includes(effectiveTipo));
 
-  if (tipoUsuario !== 'administrador') {
+  if (effectiveTipo !== 'administrador') {
     if (!userData.area) {
       return (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">

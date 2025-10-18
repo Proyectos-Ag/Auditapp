@@ -39,22 +39,41 @@ const Login = () => {
 
     try {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, formData);
-      const { usuario } = response.data;
-      setUserData(usuario);
-      console.log('informacion almacenada por user data: ',usuario);
+      // Llamada a login exitosa; el backend establece la cookie
+      // Ahora verificamos el token en el backend para obtener la información canónica del usuario
+      try {
+        const verify = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/auth/verifyToken`, { withCredentials: true });
+        const remoteUser = verify.data;
+        setUserData(remoteUser);
+        console.log('informacion almacenada por user data (verificada): ', remoteUser);
 
-      if (usuario.TipoUsuario === 'administrador') {
-        navigate('/admin',    { state: { showModal: true } });
-      } else if (usuario.TipoUsuario === 'auditado') {
-        navigate('/auditado', { state: { showModal: true } });
-      } else if (usuario.TipoUsuario === 'auditor') {
-        navigate('/auditor',  { state: { showModal: true } });
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Rol no permitido.',
-        });
+        const tipo = (remoteUser.TipoUsuario || '').toLowerCase();
+        // Invitados deben ver la UI de administrador pero permanecer en solo lectura en el servidor
+        if (tipo === 'administrador' || tipo === 'invitado') {
+          navigate('/admin', { state: { showModal: true } });
+        } else if (tipo === 'auditado') {
+          navigate('/auditado', { state: { showModal: true } });
+        } else if (tipo === 'auditor') {
+          navigate('/auditor', { state: { showModal: true } });
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: 'Rol no permitido.' });
+        }
+      } catch (errVerify) {
+        // Si no se pudo verificar, usa el usuario devuelto por login como fallback
+        const { usuario } = response.data;
+        setUserData(usuario);
+        console.warn('verifyToken falló, usando usuario local:', errVerify?.response?.data || errVerify.message);
+
+        const tipo = (usuario.TipoUsuario || '').toLowerCase();
+        if (tipo === 'administrador' || tipo === 'invitado') {
+          navigate('/admin', { state: { showModal: true } });
+        } else if (tipo === 'auditado') {
+          navigate('/auditado', { state: { showModal: true } });
+        } else if (tipo === 'auditor') {
+          navigate('/auditor', { state: { showModal: true } });
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: 'Rol no permitido.' });
+        }
       }
       ocultarCargando();
     } catch (error) {
