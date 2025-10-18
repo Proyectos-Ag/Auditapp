@@ -12,7 +12,9 @@ var fs = require('fs');
 var path = require('path');
 
 /**
- * Get port from environment and store in Express.
+ * Puertos
+ * - PORT: puerto HTTP (Render lo inyecta)
+ * - HTTPS_PORT: puerto HTTPS local (por defecto 3443)
  */
 
 var httpPort = normalizePort(process.env.PORT || '3002');
@@ -84,7 +86,7 @@ try {
 }
 
 /**
- * Normalize a port into a number, string, or false.
+ * Normaliza un puerto a número, string (pipe) o false.
  */
 
 function normalizePort(val) {
@@ -97,12 +99,11 @@ function normalizePort(val) {
   if (port >= 0) {
     return port;
   }
-
   return false;
 }
 
 /**
- * Event listener for HTTP server "error" event.
+ * Manejador de errores de "listen".
  */
 
 function onError(error) {
@@ -123,7 +124,21 @@ function onError(error) {
       console.error(bind + ' is already in use');
       process.exit(1);
       break;
+    case 'EADDRNOTAVAIL':
+      console.error(bind + ' address not available (la IP de DEV_LAN_HOST debe estar asignada en tu equipo)');
+      process.exit(1);
+      break;
     default:
       throw error;
   }
+}
+
+/**
+ * Log de "listening".
+ */
+function onListening(srv, proto) {
+  const addr = srv.address();
+  const bind = typeof addr === 'string' ? 'pipe ' + addr : `${proto}://${addr.address}:${addr.port}`;
+  debug('Listening on ' + bind);
+  console.log('Listening on ' + bind);
 }

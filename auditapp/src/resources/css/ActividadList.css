@@ -1,0 +1,11 @@
+/* fuerza que la capa de swal quede por encima del Dialog de MUI */
+.my-swal-container,
+.swal2-container {
+  z-index: 2000 !important;
+}
+
+/* popup mismo */
+.my-swal-popup,
+.swal2-popup {
+  z-index: 2001 !important;
+}
