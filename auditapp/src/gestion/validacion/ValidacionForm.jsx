@@ -289,12 +289,12 @@ export default function ValidacionForm({ cambioId, prefillElaboro = null }) {
 
       let saved = res?.data;
       if (!saved || !Object.keys(saved).length) {
-        try {
-          const getRes = await api.get(`${base}/api/validaciones/${validationId}`);
-          saved = getRes.data;
-        } catch (err) {
-          console.warn("No se pudo reobtener la validación tras el PUT:", err);
-        }
+       try {
+  const getRes = await api.get(`/api/validaciones/${validationId}`);
+  saved = getRes.data;
+} catch (err) {
+  console.warn("No se pudo reobtener la validación tras el PUT:", err);
+}
       }
 
       if (saved) {
