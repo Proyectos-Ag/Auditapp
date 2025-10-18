@@ -76,7 +76,7 @@ const IconMenu = () => {
   }, [pendingCount]);
 
   // Fetch avisos once and compute unseen
-  useEffect(() => {
+  /*useEffect(() => {
     axios.get(`${process.env.REACT_APP_BACKEND_URL}/avisos`)
       .then(res => {
         const combined = [...fixedAnnouncements, ...res.data];
@@ -90,7 +90,7 @@ const IconMenu = () => {
         }
       })
       .catch(console.error);
-  }, [showOnLogin]);
+  }, [showOnLogin]);*/
 
   // After showOnLogin handled, reset flag
   useEffect(() => {

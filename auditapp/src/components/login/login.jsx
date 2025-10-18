@@ -1,10 +1,10 @@
 import React, { useState, useContext } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../App';
 import './css/Login.css';
 import logo from '../../assets/img/logoAguida.png';
 import Swal from 'sweetalert2';
+import api from '../../services/api';
 
 const Login = () => {
   const [formData, setFormData] = useState({ Correo: '', Contraseña: '' });
@@ -38,11 +38,11 @@ const Login = () => {
     mostrarCargando();
 
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/login`, formData);
+      const response = await api.post('/login', formData);
       // Llamada a login exitosa; el backend establece la cookie
       // Ahora verificamos el token en el backend para obtener la información canónica del usuario
       try {
-        const verify = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/auth/verifyToken`, { withCredentials: true });
+        const verify = await api.get('/auth/verifyToken', { withCredentials: true });
         const remoteUser = verify.data;
         setUserData(remoteUser);
         console.log('informacion almacenada por user data (verificada): ', remoteUser);

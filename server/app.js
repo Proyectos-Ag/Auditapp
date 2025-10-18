@@ -56,6 +56,34 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// ================================ HEALTH CHECK =================================
+const mongoose = require('mongoose');
+const HEALTH_PATHS = ['/health', '/api/health'];
+
+app.get(HEALTH_PATHS, (req, res) => {
+  const mongoState = mongoose?.connection?.readyState; // 1=connected
+  const dbUp = mongoState === 1;
+
+  res.set('Cache-Control', 'no-store');
+  res.set('Access-Control-Allow-Origin', '*'); // seguro para health
+  res.status(200).json({
+    ok: true,
+    service: 'api',
+    status: 'up',
+    time: new Date().toISOString(),
+    uptimeSec: Math.round(process.uptime()),
+    db: { up: dbUp, state: mongoState }
+  });
+});
+
+// HEAD aún más barato (sin cuerpo)
+app.head(HEALTH_PATHS, (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.status(200).end();
+});
+
+//====================================================================================
+
 // Middleware en el orden correcto
 app.use(logger('dev'));
 app.use(express.json({ limit: '100mb' }));

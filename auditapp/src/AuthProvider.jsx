@@ -3,6 +3,7 @@ import axios from 'axios';
 import { UserContext } from './App';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import api from './services/api';
 
 const MySwal = withReactContent(Swal);
 
@@ -19,18 +20,9 @@ const AuthProvider = ({ children }) => {
         console.log('Verificando token al cargar...');
         console.log('URL Backend:', process.env.REACT_APP_BACKEND_URL);
         
-        const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/auth/verifyToken`,
-          {
-            withCredentials: true,
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        
-        console.log('Token verificado exitosamente:', response.data);
-        setUserData({ ...response.data });
+        const { data } = await api.get('/auth/verifyToken');
+      
+        setUserData({ ...data });
       } catch (error) {
         console.error('Error verificando token:', {
           status: error.response?.status,

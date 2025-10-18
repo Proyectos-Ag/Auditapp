@@ -35,9 +35,7 @@ import {
   AppBar,
   Toolbar,
   Avatar,
-  Divider,
   InputAdornment,
-  Tooltip,
   Fade
 } from '@mui/material';
 import {
@@ -51,7 +49,6 @@ import {
   Assignment,
   Dashboard,
   Send,
-  Cancel,
   Visibility
 } from '@mui/icons-material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
