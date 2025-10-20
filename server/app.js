@@ -32,42 +32,47 @@ const objetivosRoutes = require("./routes/ObjetivosRoutes");
 const gestionCambio = require("./routes/gestionCambioRoutes");
 const signatureRoutes = require('./routes/signatureRoutes');
 const validacionRoutes = require('./routes/validacionRoutes');
+
 const app = express();
 
-// Configuración de vistas
+// ======================= Vistas =======================
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-// Configuración CORS (DEBE IR PRIMERO)
-const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'https://localhost:3000',
-    'http://192.168.0.182:3000',
-    'https://192.168.0.182:3000',
-    'https://auditapp-dqej.onrender.com',
-    'http://192.168.0.182:3000',
-    'https://192.168.0.182:3000',
-    'https://192.168.0.182:3443'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  optionsSuccessStatus: 200
+// ======================= CORS (DEBE IR ANTES DE RUTAS) =======================
+app.set('trust proxy', 1); 
+app.use(cookieParser()); 
+
+const allowlist = new Set([
+  'https://auditapp-dqej.onrender.com',
+  process.env.FRONTEND_ORIGIN_DEV,
+].filter(Boolean));
+
+const corsOptionsDelegate = (req, cb) => {
+  const origin = req.header('Origin');
+  const isAllowed = origin && allowlist.has(origin);
+  cb(null, {
+    origin: isAllowed ? origin : false, 
+    credentials: true,
+    methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+    allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
+    optionsSuccessStatus: 200,
+  });
 };
 
-app.use(cors(corsOptions));
+app.use(cors(corsOptionsDelegate));
+app.options('*', cors(corsOptionsDelegate));
 
 // ================================ HEALTH CHECK =================================
 const mongoose = require('mongoose');
 const HEALTH_PATHS = ['/health', '/api/health'];
 
 app.get(HEALTH_PATHS, (req, res) => {
-  const mongoState = mongoose?.connection?.readyState; // 1=connected
+  const mongoState = mongoose?.connection?.readyState;
   const dbUp = mongoState === 1;
 
   res.set('Cache-Control', 'no-store');
-  res.set('Access-Control-Allow-Origin', '*'); // seguro para health
+  res.set('Access-Control-Allow-Origin', '*');
   res.status(200).json({
     ok: true,
     service: 'api',
@@ -86,22 +91,20 @@ app.head(HEALTH_PATHS, (req, res) => {
 
 //====================================================================================
 
-// Middleware en el orden correcto
+// ======================= Middlewares generales =======================
 app.use(logger('dev'));
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
-app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Middleware JWT: extrae cookie token y puebla req.user si existe
+// ======================= Auth middlewares =======================
 const jwtAuth = require('./middlewares/jwtAuth');
 app.use(jwtAuth);
 
-// Middleware to augment authenticated users with temporary grants (if any)
 const temporaryGrantAuth = require('./middlewares/temporaryGrantAuth');
 app.use(temporaryGrantAuth);
 
-// Middleware para aceptar tokens de invitación (establece req.user con permisos readonly)
+// Acepta tokens de invitación (readonly)
 const invitacionAuth = require('./middlewares/invitacionAuth');
 app.use(invitacionAuth);
 
@@ -109,15 +112,15 @@ app.use(invitacionAuth);
 const readonlyBlock = require('./middlewares/readonlyBlock');
 app.use(readonlyBlock);
 
-// Cache control
+// Cache-Control global
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');
   next();
 });
 
-// Manejar la ruta raíz
+// ======================= Raíz =======================
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'Bienvenido a la API de Aguida',
     version: '1.1',
     status: 'OK',
@@ -129,14 +132,13 @@ app.get('/', (req, res) => {
   });
 });
 
-// Configuración de rutas
+// ======================= Rutas =======================
 app.use('/usuarios', usuariosRouter);
-app.use('/', loginRoutes); 
+app.use('/', loginRoutes);
 app.use('/datos', datosRoutes);
 app.use('/programas', programasRoutes);
 app.use('/areas', areasRoutes);
 app.use('/auth', authRoutes);
-// Rutas de invitación
 const invitacionRoutes = require('./routes/invitacionRoutes');
 app.use('/invitacion', invitacionRoutes);
 app.use('/ishikawa', ishikawa);
@@ -146,6 +148,7 @@ app.use('/api/objetivos', objetivosRoutes);
 app.use('/api/gestion-cambio', gestionCambio);
 app.use('/api/signatures', signatureRoutes);
 app.use('/api/validaciones', validacionRoutes);
+
 // ========================================
 // Sistema de Auto-actualización Git
 // ========================================
@@ -155,7 +158,6 @@ const autoUpdate = new GitAutoUpdate({
   checkInterval: parseInt(process.env.GIT_CHECK_INTERVAL) || 5 * 60 * 1000 // 5 minutos
 });
 
-// Inicializar sistema de auto-actualización (solo si está habilitado)
 if (process.env.GIT_AUTO_UPDATE === 'true') {
   autoUpdate.initialize().then(success => {
     if (success) {
@@ -167,7 +169,7 @@ if (process.env.GIT_AUTO_UPDATE === 'true') {
   });
 }
 
-// Ruta para verificar estado de actualización (solo administradores)
+// ======================= Endpoints de actualización =======================
 app.get('/api/update-status', (req, res) => {
   if (req.user?.TipoUsuario !== 'administrador') {
     return res.status(403).json({ error: 'No autorizado' });
@@ -182,14 +184,13 @@ app.get('/api/update-status', (req, res) => {
   });
 });
 
-// Ruta para forzar actualización manual (solo administradores)
 app.post('/api/force-update', async (req, res) => {
   if (req.user?.TipoUsuario !== 'administrador') {
     return res.status(403).json({ error: 'No autorizado' });
   }
 
   if (process.env.GIT_AUTO_UPDATE !== 'true') {
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'Auto-actualización deshabilitada',
       message: 'Habilita GIT_AUTO_UPDATE=true en .env'
     });
@@ -197,7 +198,7 @@ app.post('/api/force-update', async (req, res) => {
 
   try {
     const success = await autoUpdate.forceUpdate();
-    res.json({ 
+    res.json({
       success,
       message: success ? 'Actualización iniciada. El servidor se reiniciará.' : 'Error al actualizar'
     });
@@ -209,14 +210,13 @@ app.post('/api/force-update', async (req, res) => {
   }
 });
 
-// Ruta para verificar actualizaciones sin aplicarlas (solo administradores)
 app.get('/api/check-updates', async (req, res) => {
   if (req.user?.TipoUsuario !== 'administrador') {
     return res.status(403).json({ error: 'No autorizado' });
   }
 
   if (process.env.GIT_AUTO_UPDATE !== 'true') {
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'Auto-actualización deshabilitada'
     });
   }
@@ -240,41 +240,34 @@ app.get('/api/check-updates', async (req, res) => {
   }
 });
 
-// Catch 404 and forward to error handler
+// ======================= 404 y Handler de errores =======================
 app.use(function(req, res, next) {
   console.log('Ruta no encontrada:', req.method, req.path);
   next(createError(404));
 });
 
-// Error handler (UN SOLO MANEJADOR)
 app.use(function(err, req, res, next) {
-  // Log del error
   console.error('Error capturado:');
   console.error('- Status:', err.status || 500);
   console.error('- Message:', err.message);
   console.error('- Path:', req.path);
   console.error('- Method:', req.method);
-  
   if (process.env.NODE_ENV === 'development') {
     console.error('- Stack:', err.stack);
   }
-  
-  // Set locals, only providing error in development
+
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // Responder según el tipo de solicitud
   res.status(err.status || 500);
-  
-  // Si es una solicitud de API (JSON), responder con JSON
-  if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+
+  if (req.xhr || req.headers.accept?.includes('json')) {
     res.json({
       error: err.message,
       status: err.status || 500,
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     });
   } else {
-    // Si es una solicitud de navegador, renderizar la página de error
     res.render('error', {
       message: err.message,
       error: process.env.NODE_ENV === 'development' ? err : {}
