@@ -1,37 +1,30 @@
-// src/services/api.js
 import axios from 'axios';
 import { initBackendRouter, getCurrentBase, subscribeBaseChange, maybeProbeLocalOnNetworkError } from './backendRouter';
 
 export const api = axios.create({
   baseURL: getCurrentBase(),
-  withCredentials: true,
   timeout: 15000,
   headers: { Accept: 'application/json' },
 });
 
-// Actualiza el baseURL cuando backendRouter cambie
-subscribeBaseChange((newBase) => {
-  api.defaults.baseURL = newBase;
+// Añade Authorization si hay token en localStorage
+api.interceptors.request.use((config) => {
+  const t = localStorage.getItem('authToken');
+  if (t) config.headers.Authorization = `Bearer ${t}`;
+  return config;
 });
 
-// Errores
+subscribeBaseChange((newBase) => { api.defaults.baseURL = newBase; });
+
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    // Si es un error de red/timeout, intentamos detectar si el local ya está disponible.
-    const isNetworkErr =
-      err.code === 'ECONNABORTED' ||
-      err.message === 'Network Error' ||
-      err?.response == null; // sin respuesta HTTP
-
-    if (isNetworkErr) {
-      maybeProbeLocalOnNetworkError();
-    }
+    const isNetworkErr = err.code === 'ECONNABORTED' || err.message === 'Network Error' || err?.response == null;
+    if (isNetworkErr) maybeProbeLocalOnNetworkError();
     return Promise.reject(err);
   }
 );
 
-// Inicialización explícita (se llama antes de montar la app)
 export async function initApi() {
   await initBackendRouter();
   api.defaults.baseURL = getCurrentBase();

@@ -7,9 +7,6 @@ import api from './services/api';
 
 const MySwal = withReactContent(Swal);
 
-// Configurar axios para enviar cookies
-axios.defaults.withCredentials = true;
-
 const AuthProvider = ({ children }) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -17,90 +14,55 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     const verifyToken = async () => {
       try {
-        console.log('🔄 Verificando token al cargar...');
-        console.log('🌐 URL Backend:', api.defaults.baseURL);
-        
-        const { data } = await api.get('/auth/verifyToken');
-        console.log('✅ Token verificado:', data.user.email);
-        
-        setUserData({ ...data.user });
+        const token = localStorage.getItem('authToken');
+        if (!token) { setUserData(null); return; }
+
+        const { data } = await api.get('/auth/verifyToken'); // Authorization ya va por interceptor
+        const user = data.user ?? data;
+        setUserData(user);
+        console.log('✅ Token verificado:', user.email ?? user.Correo);
       } catch (error) {
         console.error('❌ Error verificando token:', {
           status: error.response?.status,
           message: error.response?.data?.error || error.message,
           url: error.config?.url
         });
+        localStorage.removeItem('authToken'); // invalida token roto
         setUserData(null);
       } finally {
         setLoading(false);
       }
     };
-
     verifyToken();
   }, []);
 
-  // Interceptor para manejar errores 401
+  // Interceptor 401: limpia token y redirige (opcional)
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
-      response => response,
-      async error => {
-        if (error.response) {
-          // 401: token inválido/expirado
-          if (error.response.status === 401) {
-            console.log('🔐 Error 401 - Sesión expirada o inválida');
-            setUserData(null);
-
-            // No mostrar alerta si estamos en la página de login
-            if (!window.location.pathname.includes('/login')) {
-              MySwal.fire({
-                icon: 'warning',
-                title: 'Sesión Expirada',
-                text: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
-                confirmButtonText: 'Aceptar'
-              }).then(() => {
-                window.location.href = '/login';
-              });
-            }
-          }
-
-          // 403: acceso denegado (modo solo lectura)
-          else if (error.response.status === 403) {
-            // Mostrar un mensaje amable cuando se intente realizar una operación prohibida
-            MySwal.fire({
-              icon: 'info',
-              title: 'Acceso denegado',
-              text: 'No tienes permisos para realizar cambios. Tu sesión es de solo lectura (invitado).',
-              confirmButtonText: 'Entendido'
+      (resp) => resp,
+      async (error) => {
+        if (error?.response?.status === 401) {
+          localStorage.removeItem('authToken');
+          setUserData(null);
+          if (!window.location.pathname.includes('/login')) {
+            await MySwal.fire({
+              icon: 'warning',
+              title: 'Sesión Expirada',
+              text: 'Por favor, inicia sesión nuevamente.',
+              confirmButtonText: 'Aceptar'
             });
+            window.location.href = '/login';
           }
         }
         return Promise.reject(error);
       }
     );
-
-    // Limpiar interceptor al desmontar
-    return () => {
-      axios.interceptors.response.eject(interceptor);
-    };
+    return () => axios.interceptors.response.eject(interceptor);
   }, []);
 
-  if (loading) {
-    MySwal.fire({
-      title: 'Cargando...',
-      text: 'Por favor, espere',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
-    return null;
-  } else {
-    Swal.close();
-  }
-
+  if (loading) return null;
   return (
-    <UserContext.Provider value={{ userData, setUserData }}>
+    <UserContext.Provider value={{ userData, setUserData, loading }}>
       {children}
     </UserContext.Provider>
   );

@@ -144,12 +144,10 @@ const IconMenu = () => {
     });
 
     if (result.isConfirmed) {
-      try { await api.post(`/auth/logout`); } catch {}
-      localStorage.removeItem('breadcrumbHistory');
-      setUserData(null);
-      setOpenAccountMenu(false);
-      navigate('/');
-    }
+    localStorage.removeItem('authToken');
+    setUserData(null);
+    navigate('/login');
+  }
   };
 
   const handleNavigateToPerfil = () => {

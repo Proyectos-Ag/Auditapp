@@ -53,7 +53,7 @@ const corsOptionsDelegate = (req, cb) => {
   const isAllowed = origin && allowlist.has(origin);
   cb(null, {
     origin: isAllowed ? origin : false,
-    credentials: true,
+    credentials: false,
     methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
     allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
     optionsSuccessStatus: 200,

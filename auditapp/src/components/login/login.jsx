@@ -38,43 +38,28 @@ const Login = () => {
     mostrarCargando();
 
     try {
-      const response = await api.post('/login', formData);
-      // Llamada a login exitosa; el backend establece la cookie
-      // Ahora verificamos el token en el backend para obtener la información canónica del usuario
-      try {
-        const verify = await api.get('/auth/verifyToken', { withCredentials: true });
-        const remoteUser = verify.data;
-        setUserData(remoteUser);
-        console.log('informacion almacenada por user data (verificada): ', remoteUser);
+      const base = sessionStorage.getItem('AUTH_BASE') || api.defaults.baseURL;
+      sessionStorage.setItem('AUTH_BASE', base);
 
-        const tipo = (remoteUser.TipoUsuario || '').toLowerCase();
-        // Invitados deben ver la UI de administrador pero permanecer en solo lectura en el servidor
-        if (tipo === 'administrador' || tipo === 'invitado') {
-          navigate('/admin', { state: { showModal: true } });
-        } else if (tipo === 'auditado') {
-          navigate('/auditado', { state: { showModal: true } });
-        } else if (tipo === 'auditor') {
-          navigate('/auditor', { state: { showModal: true } });
-        } else {
-          Swal.fire({ icon: 'error', title: 'Error', text: 'Rol no permitido.' });
-        }
-      } catch (errVerify) {
-        // Si no se pudo verificar, usa el usuario devuelto por login como fallback
-        const { usuario } = response.data;
-        setUserData(usuario);
-        console.warn('verifyToken falló, usando usuario local:', errVerify?.response?.data || errVerify.message);
+      const { data } = await api.post('/login', formData, { baseURL: base });
+      // Guarda token
+      localStorage.setItem('authToken', data.token);
 
-        const tipo = (usuario.TipoUsuario || '').toLowerCase();
-        if (tipo === 'administrador' || tipo === 'invitado') {
-          navigate('/admin', { state: { showModal: true } });
-        } else if (tipo === 'auditado') {
-          navigate('/auditado', { state: { showModal: true } });
-        } else if (tipo === 'auditor') {
-          navigate('/auditor', { state: { showModal: true } });
-        } else {
-          Swal.fire({ icon: 'error', title: 'Error', text: 'Rol no permitido.' });
-        }
+      // Guarda usuario
+      const user = data.user ?? data.usuario ?? {};
+      setUserData(user);
+
+      const tipo = (user.tipoUsuario ?? user.TipoUsuario ?? '').toLowerCase();
+      if (tipo === 'administrador' || tipo === 'invitado') {
+        navigate('/admin', { state: { showModal: true } });
+      } else if (tipo === 'auditado') {
+        navigate('/auditado', { state: { showModal: true } });
+      } else if (tipo === 'auditor') {
+        navigate('/auditor', { state: { showModal: true } });
+      } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Rol no permitido.' });
       }
+
       ocultarCargando();
     } catch (error) {
       console.error(error);
@@ -82,10 +67,10 @@ const Login = () => {
         icon: 'error',
         title: 'Error',
         text: 'Credenciales inválidas. Por favor, intente de nuevo.',
-        timer: null,
         allowOutsideClick: false,
       });
     }
+
   };
 
   return (

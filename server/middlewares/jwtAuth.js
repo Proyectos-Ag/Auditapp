@@ -1,42 +1,18 @@
 const jwt = require('jsonwebtoken');
-const Usuarios = require('../models/usuarioSchema');
-const dotenv = require('dotenv');
 
-dotenv.config();
-
-module.exports = async function(req, res, next) {
+module.exports = function jwtAuth(req, _res, next) {
   try {
-    // If already set by other middleware, skip
     if (req.user) return next();
+    const a = req.headers.authorization || '';
+    if (!a.startsWith('Bearer ')) { req.user = null; return next(); }
 
-    // Look for token in cookies
-    const token = req.cookies?.token;
-    if (!token) return next();
+    const token = a.slice(7).trim();
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
-    // Verify
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Attach user info minimal (include permisos when present so readonlyBlock can act)
-    req.user = {
-      userId: decoded.userId,
-      correo: decoded.correo,
-      tipoUsuario: decoded.tipoUsuario,
-      permisos: decoded.permisos || null
-    };
-
-    // Optionally fetch more user data if needed
-    try {
-      const usuario = await Usuarios.findById(decoded.userId).select('Correo Nombre TipoUsuario area Foto Puesto Departamento');
-      if (usuario) req.user.profile = usuario;
-    } catch (err) {
-      // ignore profile enrichment errors
-    }
-
+    req.user = { userId: decoded.userId, correo: decoded.correo, tipoUsuario: decoded.tipoUsuario };
     return next();
-  } catch (err) {
-    // If token invalid/expired, clear cookie and continue without user
-    console.error('jwtAuth error:', err.message);
-    try { res.clearCookie('token', { path: '/' }); } catch (e) {}
+  } catch {
+    req.user = null;
     return next();
   }
 };
