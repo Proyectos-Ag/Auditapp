@@ -141,6 +141,15 @@ export default function AuditReportPage({ variant = 'revision' }) {
   const [ishMapOverride, setIshMapOverride] = useState(null);
   const combinedIshMap = ishMapOverride || ishikawasMap || {};
 
+   const isInTeam = React.useCallback((d) => {
+    const email = userData?.Correo;
+    if (!email) return false;
+    const inLeader = d?.AuditorLiderEmail === email;
+    const inTeamArr = Array.isArray(d?.EquipoAuditor) && d.EquipoAuditor.some(a => a?.Correo === email);
+    return inLeader || inTeamArr;
+  }, [userData?.Correo]);
+
+  // ¿Tiene asignaciones como AUDITOR en un reporte específico?
   const isAssignedToCurrentAuditor = React.useCallback((ish) => {
     if (!ish) return false;
     const eq = (a, b) => a && b && String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
@@ -166,32 +175,29 @@ export default function AuditReportPage({ variant = 'revision' }) {
     return false;
   }, [userData?.Correo, userData?.Nombre]);
 
-  // ¿Tiene asignaciones como AUDITADO o como AUDITOR?
+  // ⬅️ lista de ishikawas para búsquedas por reporte
   const values = Object.values(combinedIshMap || {});
-  const hasAssignedAsAuditado = values.some((ish) => ish?.auditado === userData?.Nombre);
-  const hasAssignedAsAuditor  = values.some((ish) => isAssignedToCurrentAuditor(ish));
-
-  // ⬅️ SOLO auditado o auditor entran a "solo asignados" (admin no)
-  const assignedOnly = isAuditado || (isAuditor && hasAssignedAsAuditor);
-
-  // ⬅️ Incluir reportes donde el auditor TIENE asignaciones aunque no esté en EquipoAuditor
   const reportHasAssignmentsForAuditor = React.useCallback((d) => {
-    const list = Object.values(combinedIshMap || {});
-    return list.some((ish) => ish?.idRep === d._id && isAssignedToCurrentAuditor(ish));
-  }, [combinedIshMap, isAssignedToCurrentAuditor]);
+    return values.some((ish) => ish?.idRep === d._id && isAssignedToCurrentAuditor(ish));
+  }, [values, isAssignedToCurrentAuditor]);
 
-  // ⬅️ visibleDatos
+  // visibleDatos (quién puede ver el reporte completo)
   const visibleDatos = isAdmin
     ? (datos || [])
     : isAuditado
     ? (datos || [])
     : (datos || []).filter(d => {
-        const inTeam = (d.AuditorLiderEmail === userData?.Correo) ||
-          (Array.isArray(d.EquipoAuditor) && d.EquipoAuditor.some(a => a?.Correo === userData?.Correo));
-        const hasMine = reportHasAssignmentsForAuditor(d);     // ⬅️ nuevo criterio
+        const inTeam = isInTeam(d);
+        const hasMine = reportHasAssignmentsForAuditor(d);
         const notHiddenState = !['pendiente','devuelto'].includes(String(d.Estado || '').toLowerCase());
         return (inTeam || hasMine) && notHiddenState;
       });
+
+  const hasAssignedAsAuditor  = values.some((ish) => isAssignedToCurrentAuditor(ish));
+
+  // ⬅️ SOLO auditado o auditor entran a "solo asignados" (admin no)
+  const assignedOnly = isAuditado || (isAuditor && hasAssignedAsAuditor);
+
 
   const variantForCard = estadoToVariant(visibleDatos[0]?.Estado);
 
@@ -375,7 +381,7 @@ export default function AuditReportPage({ variant = 'revision' }) {
   const fmt2 = (v) => Number.isFinite(v) ? v.toFixed(2) : '0.00';
 
   // ActionBar en solo lectura cuando es “solo asignados”
-  const actionVariant = assignedOnly ? 'finalizada' : (isAdmin ? variantForCard : 'finalizada');
+  const actionVariant = isAdmin ? variantForCard : 'finalizada';
 
   // Navegación a Ishikawa: ruta normal o ruta de auditado
   const goIshikawa = (idRep, idReq, proName) => {
@@ -408,6 +414,11 @@ export default function AuditReportPage({ variant = 'revision' }) {
         )}
 
         {visibleDatos.map((dato, periodIdx) => {
+
+          const inTeam = isInTeam(dato);
+          const hasMine = reportHasAssignmentsForAuditor(dato);
+          // Solo asignados SI: auditado, o auditor que NO está en equipo pero sí tiene asignaciones en ese reporte
+          const showOnlyAssignedThis = isAuditado || (isAuditor && !inTeam && hasMine);
           // Métricas base (puntos)
           const { conteo, total, puntos } = contarYCalcularPuntos(dato);
 
@@ -425,7 +436,10 @@ export default function AuditReportPage({ variant = 'revision' }) {
           const porcentajeTotal = fmt2( toNum(dato.PorcentajeTotal ?? resultado) );
 
           // % de cumplimiento ponderado (usa mapa filtrado cuando “solo asignados”)
-          const { porcentaje: porcentajePonderadoRaw } = calcularCumplimientoPonderado(dato, assignedMap);
+            const { porcentaje: porcentajePonderadoRaw } = calcularCumplimientoPonderado(
+              dato,
+              showOnlyAssignedThis ? assignedMap : combinedIshMap
+            );
           const porcentajePonderado = n0(porcentajePonderadoRaw);
 
           const estatus = resultado >= 90 ? 'Bueno'
@@ -495,27 +509,33 @@ export default function AuditReportPage({ variant = 'revision' }) {
               </div>
 
               <div id="pdf-content-part2" className="card-body">
-                {(variantForCard === 'terminada' || variantForCard === 'finalizada' || assignedOnly) && (
+                {(variantForCard === 'terminada' || variantForCard === 'finalizada' || showOnlyAssignedThis) && (
                   <div className="compliance-banner">
                     Porcentaje de Cumplimiento (ponderado): <b>{porcentajePonderado.toFixed(2)}%</b>
                   </div>
                 )}
                 <AuditResultsTable
                   dato={dato}
-                  ishikawasMap={assignedOnly ? assignedMap : combinedIshMap}
+                  ishikawasMap={combinedIshMap}
                   variant={variantForCard}
                   hiddenRows={hiddenRows[periodIdx]}
-                  onHideRow={(rowId) => (!assignedOnly && isAdmin) && onHideRow(periodIdx, rowId)}
+                  onHideRow={(rowId) => isAdmin && onHideRow(periodIdx, rowId)}
                   onAssignIshikawa={(idRep, idReq, proName, descripcion) =>
-                    (!assignedOnly && isAdmin) && openAssignModal(idRep, idReq, proName, descripcion)
+                    isAdmin && openAssignModal(idRep, idReq, proName, descripcion)
                   }
                   onGoIshikawa={(idRep, idReq, proName) => goIshikawa(idRep, idReq, proName)}
-                  isAdmin={isAdmin && !assignedOnly}
+                  isAdmin={isAdmin}
+                  showConformes={isAdmin || inTeam}
                   //Solo el AUDITADO ve únicamente sus filas
-                  showOnlyAssigned={assignedOnly}
+                  showOnlyAssigned={showOnlyAssignedThis}
                   filterToAssignedOf={isAuditado ? userData?.Nombre : undefined}
-                  filterToAssignedAuditorEmail={isAuditor && hasAssignedAsAuditor ? userData?.Correo : undefined}
-                  filterToAssignedAuditorName={isAuditor && hasAssignedAsAuditor ? userData?.Nombre : undefined}
+                  filterToAssignedAuditorEmail={isAuditor && !inTeam && hasMine ? userData?.Correo : undefined}
+                  filterToAssignedAuditorName={isAuditor && !inTeam && hasMine ? userData?.Nombre : undefined}
+
+                  // 👇 restringe apertura a asignados (aunque el auditor vea todas las filas)
+                  restrictOpenToAssigned={isAuditado || isAuditor}
+                  currentAuditorEmail={isAuditor ? userData?.Correo : undefined}
+                  currentAuditorName={isAuditor ? userData?.Nombre : undefined}
                 />
 
               </div>

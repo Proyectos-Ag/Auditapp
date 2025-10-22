@@ -9,10 +9,18 @@ export default function AuditResultsTable({
   onAssignIshikawa,
   onGoIshikawa,
   isAdmin = false,
+  showConformes = false,
+
+  // filtros
   showOnlyAssigned = false,
   filterToAssignedOf,
   filterToAssignedAuditorEmail,
   filterToAssignedAuditorName,
+
+  // ⬅️ NUEVO: restringir apertura a asignados (auditor/auditado)
+  restrictOpenToAssigned = false,
+  currentAuditorEmail,
+  currentAuditorName,
 }) {
   const firePrefix = 'https://firebasestorage';
   const evidenceHeader = dato?.PuntuacionMaxima ? 'Hallazgo' : 'Evidencia';
@@ -29,15 +37,14 @@ export default function AuditResultsTable({
     return Number.isNaN(dt.getTime()) ? '' : dt.toLocaleDateString('es-ES');
   };
 
-  // ⬅️ NUEVO: helper robusto para detectar asignación al AUDITOR
+  // ⬅️ actualizado: usa filtros o fallback a currentAuditor*
   const isAssignedToAuditor = (ish) => {
     if (!ish) return false;
     const eq = (a, b) => a && b && String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
 
-    const email = (filterToAssignedAuditorEmail || '').toLowerCase();
-    const name  = (filterToAssignedAuditorName  || '').toLowerCase();
+    const email = (filterToAssignedAuditorEmail || currentAuditorEmail || '').toLowerCase();
+    const name  = (filterToAssignedAuditorName  || currentAuditorName  || '').toLowerCase();
 
-    // Campos comunes posibles (cubrimos varios nombres probables sin romper nada)
     if (email && (eq(ish.auditorEmail, email) || eq(ish.auditorAsignadoCorreo, email) || eq(ish.asignadoAuditorCorreo, email))) return true;
     if (name  && (eq(ish.auditor, name) || eq(ish.auditorAsignado, name) || eq(ish.asignadoAuditorNombre, name))) return true;
 
@@ -47,7 +54,6 @@ export default function AuditResultsTable({
       if (name  && eq(asignado.nombre, name)) return true;
     }
 
-    // Como último recurso, revisar responsables de actividades
     const responsables = Array.isArray(ish.actividades)
       ? ish.actividades.flatMap(a => Array.isArray(a?.responsable) ? a.responsable : [])
       : [];
@@ -83,7 +89,8 @@ export default function AuditResultsTable({
             {dato?.Programa?.map((programa, programIdx) =>
               programa?.Descripcion?.map((desc, descIdx) => {
                 const crit = (desc?.Criterio || '').toString();
-                if (!crit || crit === 'NA' || crit === 'Conforme') return null;
+                const isConforme = crit === 'Conforme';
+                if (!crit || crit === 'NA' || (isConforme && !showConformes)) return null;
 
                 const rowId = `${programIdx}-${descIdx}`;
                 if (hiddenRows[rowId]) return null;
@@ -91,14 +98,12 @@ export default function AuditResultsTable({
                 const key = `${desc.ID}-${dato._id}-${programa.Nombre}`;
                 const ish = ishikawasMap?.[key];
 
-                // ⬇️ FILTRO "solo asignados"
+                // Filtro "solo asignados" por-reporte
                 if (showOnlyAssigned) {
-                  // Si estamos filtrando por auditor (nuevo), respetar eso primero
                   if (filterToAssignedAuditorEmail || filterToAssignedAuditorName) {
                     if (!ish) return null;
                     if (!isAssignedToAuditor(ish)) return null;
                   } else {
-                    // Comportamiento existente para AUDITADO
                     if (!ish) return null;
                     if (filterToAssignedOf && ish.auditado !== filterToAssignedOf) return null;
                   }
@@ -126,6 +131,16 @@ export default function AuditResultsTable({
 
                 const estadoTxt = ish ? ish.estado : 'Pendiente';
                 const estadoColor = ish ? estadoToColor(ish.estado) : '#6e6e6e';
+
+                // ⬅️ NUEVO: abrir sólo si corresponde
+                let canOpen = !!ish;
+                if (canOpen && restrictOpenToAssigned && !isAdmin) {
+                  if (filterToAssignedOf) {
+                    canOpen = ish.auditado === filterToAssignedOf;
+                  } else {
+                    canOpen = isAssignedToAuditor(ish);
+                  }
+                }
 
                 return (
                   <tr key={rowId}>
@@ -165,11 +180,11 @@ export default function AuditResultsTable({
                       <div className="ish-actions">
                         <button
                           className="ish-state-chip"
-                          style={{ backgroundColor: estadoColor }}
-                          title={ish ? 'Abrir Ishikawa' : 'Sin Ishikawa (pendiente)'}
-                          onClick={() => ish && onGoIshikawa?.(dato._id, desc.ID, programa.Nombre)}
-                          disabled={!ish}
-                          aria-disabled={!ish}
+                          style={{ backgroundColor: estadoColor, cursor: canOpen ? 'pointer' : 'not-allowed' }}
+                          title={ish ? (canOpen ? 'Abrir Ishikawa' : 'No asignado a ti') : 'Sin Ishikawa (pendiente)'}
+                          onClick={() => canOpen && onGoIshikawa?.(dato._id, desc.ID, programa.Nombre)}
+                          disabled={!canOpen}
+                          aria-disabled={!canOpen}
                         >
                           {estadoTxt}
                         </button>

@@ -22,6 +22,11 @@ const VistaReporte = () => {
           console.warn("No se encontraron datos de Ishikawa.");
           return;
         }
+
+        const auditorCorreo = userData?.Correo || userData?.correo;
+        if (!auditorCorreo) {
+            console.warn("No se encontró el correo del auditor en userData.");
+        }
   
         // Crear un conjunto para almacenar los idRep consultados
         const idRepConsultados = new Set();
@@ -42,8 +47,8 @@ const VistaReporte = () => {
   
           // Hacer la solicitud de datos basados en idRep
           try {
-            const response = await api.get(`/datos/esp/aud`, {
-              params: { idRep },
+            const response = await api.get(`/datos/aud-all`, {
+              params: { idRep, correo: auditorCorreo },
             });
             console.log(response.data);
             return response.data; // Devolver los datos obtenidos
@@ -116,7 +121,7 @@ const navReporte = (_id) => {
   return (
     <div>
       <div className='cont-card-repo'>
-      <h1>Reportes en proceso</h1>
+      <h1>Reportes generados</h1>
       </div>
       {datos.length > 0 ? (
       <div className='cont-card-repo'>

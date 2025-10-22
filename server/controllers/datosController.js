@@ -407,6 +407,23 @@ const obtenerDatosEspAud = async (req, res) => {
   }
 };
 
+const obtenerDatosEspAll = async (req, res) => {
+  try {
+    const { idRep, correo } = req.query;
+    console.log("id de reporte",idRep);
+    
+    // Filtrar por Estado 'Terminada' y nombre dentro del array 'Auditados'
+    const datos = await Datos.find({
+      _id: idRep,
+AuditorLiderEmail: correo,
+    }, '_id FechaElaboracion TipoAuditoria Duracion Estado'); 
+
+    res.status(200).json(datos);
+  } catch (error) {
+    console.error('Error al obtener los datos:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+};
 
 const obtenerDatoPorId = async (req, res) => {
   const { _id } = req.params; // Obtener la ID de los parámetros de la URL
@@ -637,5 +654,6 @@ module.exports = {
   obtenerDatosEspRealiz,
   obtenerDatosHistorial,
   obtenerDatosAudLid,
-  deleteImageUrl
+  deleteImageUrl,
+  obtenerDatosEspAll
 };
