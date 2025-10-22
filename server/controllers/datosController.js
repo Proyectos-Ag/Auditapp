@@ -409,12 +409,10 @@ const obtenerDatosEspAud = async (req, res) => {
 
 const obtenerDatosEspAll = async (req, res) => {
   try {
-    const { idRep, correo } = req.query;
-    console.log("id de reporte",idRep);
+    const { correo } = req.query;
     
     // Filtrar por Estado 'Terminada' y nombre dentro del array 'Auditados'
     const datos = await Datos.find({
-      _id: idRep,
       AuditorLiderEmail: correo,
     }, '_id FechaElaboracion TipoAuditoria Duracion Estado'); 
 
