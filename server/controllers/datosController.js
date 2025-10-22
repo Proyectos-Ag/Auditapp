@@ -415,7 +415,7 @@ const obtenerDatosEspAll = async (req, res) => {
     // Filtrar por Estado 'Terminada' y nombre dentro del array 'Auditados'
     const datos = await Datos.find({
       _id: idRep,
-AuditorLiderEmail: correo,
+      AuditorLiderEmail: correo,
     }, '_id FechaElaboracion TipoAuditoria Duracion Estado'); 
 
     res.status(200).json(datos);
