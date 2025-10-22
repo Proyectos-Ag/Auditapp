@@ -12,7 +12,7 @@
 
 .audit-page { margin-top: 6rem; }
 .container {
-  width: min(1200px, 95%);
+  width: min(1400px, 95%);
   margin: 0 auto;
 }
 .page-title {
@@ -29,7 +29,7 @@
 }
 .overlay.error { color: #b91c1c; }
 
-.card {
+.reporte-cont {
   background: var(--card-bg);
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0,0,0,.08);
@@ -103,4 +103,177 @@
 
 .compliance-banner {
   background: #ecfeff; border: 1px solid #a5f3fc; padding: .6rem .8rem; border-radius: 8px; margin-bottom: .6rem;
+}
+
+/*Modal nota de rechazo*/
+/* === Modal Draggable Nota === */
+.note-modal {
+  position: fixed;
+  z-index: 9999;
+  width: 480px;
+  max-width: calc(100vw - 24px);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.16);
+}
+
+.note-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: move;
+  user-select: none;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eef2f7;
+  background: #f7f9fb;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+.note-modal__title {
+  font-weight: 600;
+}
+.note-modal__close {
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+}
+.note-modal__close:hover {
+  background: #eef2f7;
+}
+
+.note-modal__body {
+  width: 90%;
+  padding: 10px 12px 0 12px;
+}
+.note-modal__textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  outline: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.note-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 12px 12px;
+}
+.note-modal__hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+.note-modal__btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  cursor: pointer;
+}
+.note-modal__btn:hover {
+  background: #f3f4f6;
+}
+
+/*Buttons*/
+/* Contenedor de botones en la última celda */
+.ish-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  margin-top: 4px;
+}
+
+/* Chip de estado (indicador + navegación) */
+.ish-state-chip {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 12px;
+  color: #fff;
+  cursor: pointer;
+  transition: transform .08s ease, filter .12s ease, opacity .12s ease;
+  text-transform: none;
+  line-height: 1;
+}
+.ish-state-chip:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.ish-state-chip:active { transform: translateY(0); filter: brightness(0.98); }
+.ish-state-chip[disabled],
+.ish-state-chip[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: .65;
+  filter: none;
+}
+
+/* Botón de tu modal (Asignar/Reasignar) */
+.assign-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition: box-shadow .15s ease, transform .08s ease, background-color .15s ease, color .15s ease;
+}
+
+/* Diseño principal (cuando no hay Ishikawa) */
+.assign-btn--primary {
+  background: linear-gradient(180deg, #2f7bff, #1f5ed0);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(47, 123, 255, .25);
+}
+.assign-btn--primary:hover { transform: translateY(-1px); }
+.assign-btn--primary:active { transform: translateY(0); }
+
+/* Diseño secundario (cuando ya existe Ishikawa -> reasignar) */
+.assign-btn--secondary {
+  background: #ffffff;
+  color: #1f2937;
+  border-color: #d1d5db;
+}
+.assign-btn--secondary:hover {
+  background: #f9fafb;
+  border-color: #c7cdd7;
+  transform: translateY(-1px);
+}
+.assign-btn--secondary:active { transform: translateY(0); }
+
+/* Contenedor con scroll horizontal para tablas anchas */
+.table-x-scroll {
+  width: 100%;
+  overflow-x: auto;           /* ← aquí ocurre la magia */
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch; /* suave en móviles */
+  position: relative;
+  padding-bottom: .25rem;     /* espacio para la barra */
+}
+
+/* Asegura que la tabla pueda “desbordarse” en ancho */
+.results-table {
+  min-width: 1200px; /* súbelo si te queda corta (1300-1500…) */
+}
+
+/* (Opcional) estiliza un poco la barra de scroll */
+.table-x-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+.table-x-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
+}
+.table-x-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
 }

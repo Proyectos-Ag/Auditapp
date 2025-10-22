@@ -51,14 +51,20 @@ const allowlist = new Set([
 const corsOptionsDelegate = (req, cb) => {
   const origin = req.header('Origin');
   const isAllowed = origin && allowlist.has(origin);
+
+  // Refleja exactamente los headers que pide el navegador en el preflight
+  const reqHeaders = req.header('Access-Control-Request-Headers'); 
+  const allowedHeaders = reqHeaders || 'Content-Type, Authorization, X-Requested-With, X-Client-Base';
+
   cb(null, {
     origin: isAllowed ? origin : false,
-    credentials: false,
+    credentials: false, // si usas cookies, cambia a true y en el front usa withCredentials: true
     methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-    allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
-    optionsSuccessStatus: 200,
+    allowedHeaders,
+    optionsSuccessStatus: 204,
   });
 };
+
 
 app.use(cors(corsOptionsDelegate));
 app.options('*', cors(corsOptionsDelegate));

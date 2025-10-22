@@ -1,0 +1,95 @@
+/* Contenedor general del bloque de stats */
+.audit-summary .audit-stats {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* Cada fila (métricas, extras, conteos) */
+.audit-summary .stats-row {
+  display: grid;
+  gap: 10px;
+}
+
+/* Fila de métricas: 4 columnas fijas en desktop, 2 en tablet, 1 en móvil */
+.audit-summary .stats-row.metrics {
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+}
+@media (max-width: 1024px) {
+  .audit-summary .stats-row.metrics {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .audit-summary .stats-row.metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Fila de extras (conformidades externas): a toda la fila */
+.audit-summary .stats-row.extras {
+  grid-template-columns: 1fr;
+}
+
+/* Fila de conteos: 4 columnas como chips */
+.audit-summary .stats-row.counts {
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+}
+@media (max-width: 1024px) {
+  .audit-summary .stats-row.counts {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .audit-summary .stats-row.counts {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Estilos de “píldoras” y “chips” */
+.audit-summary .metric-pill,
+.audit-summary .metric-chip {
+  background: #f3f5f7;         /* usa tu token si tienes */
+  border: 1px solid #e5e7eb;   /* gris tenue */
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: center;
+  line-height: 1.25;
+}
+
+/* Cabecera meta: dos columnas, alineadas arriba */
+.audit-summary .audit-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 32px;
+  align-items: start;
+  margin-bottom: 8px;
+}
+
+/* Columnas izquierda/derecha como pilas verticales ordenadas */
+.audit-summary .audit-meta .left,
+.audit-summary .audit-meta .right {
+  display: grid;
+  gap: 6px;
+}
+
+/* Items consistentes */
+.audit-summary .audit-meta .item {
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+/* Responsive: una sola columna en pantallas pequeñas */
+@media (max-width: 768px) {
+  .audit-summary .audit-meta {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+
+/* Diferencia visual para chips de NC (opcional, ajusta a tu paleta) */
+.audit-summary .metric-chip.ok { background: #eefbf1; border-color: #cdeece; }
+.audit-summary .metric-chip.minor { background: #fff8e6; border-color: #ffe3a6; }
+.audit-summary .metric-chip.major { background: #fff1f0; border-color: #ffd1cf; }
+.audit-summary .metric-chip.critical { background: #ffecec; border-color: #ffc9c9; }

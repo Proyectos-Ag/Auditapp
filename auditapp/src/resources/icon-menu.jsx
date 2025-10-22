@@ -146,7 +146,7 @@ const IconMenu = () => {
     if (result.isConfirmed) {
     localStorage.removeItem('authToken');
     setUserData(null);
-    navigate('/login');
+    navigate('/');
   }
   };
 

@@ -86,6 +86,9 @@ import NotFoundPage from './components/Pag-error/NotFoundPage.jsx';
 import GenerarInvitacion from './components/invitacion/GenerarInvitacion';
 import InviteConsume from './components/invitacion/InviteConsume';
 
+//Pages de prueba
+import AuditReportPage from './pages/admin/AuditReportPage.jsx';
+
 // Cargar componentes según el rol correspondiente
 const Administrador = lazy(() => import('./administrador/Components/Home/inicio.jsx'));
 const Auditor = lazy(() => import('./auditor/components/Home/inicio.jsx'));
@@ -159,6 +162,7 @@ export const UserContext = createContext(null);
               <Route path="/pendiente" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><PendienteAuditor/></ProtectedRoute>}/> 
               <Route path="/reporte" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><ReporteAuditor/></ProtectedRoute>}/> 
               <Route path="/informacion" element={<ProtectedRoute><InformacionAuditor/></ProtectedRoute>}/>
+              <Route path="/reporte/:_id" element={<ProtectedRoute><AuditReportPage/></ProtectedRoute>}/>
 
               {/*Auditado*/}
 

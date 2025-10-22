@@ -1,18 +1,40 @@
-// src/features/auditoria/components/AuditResultsTable.jsx
 import { estadoToColor } from '../../../utils/ishikawa';
 
 export default function AuditResultsTable({
   dato,
   ishikawasMap,
   variant,
-  onHideRow,           // (rowId) => void
-  hiddenRows = {},     // { [rowId]: true }
-  onGoIshikawa,        // (idRep, idReq, programaNombre) => void
+  onHideRow,
+  hiddenRows = {},
+  onAssignIshikawa,
+  onGoIshikawa,
+  isAdmin = false,
+  showOnlyAssigned = false,
+  filterToAssignedOf,
 }) {
   const firePrefix = 'https://firebasestorage';
+  const evidenceHeader = dato?.PuntuacionMaxima ? 'Hallazgo' : 'Evidencia';
+
+const formatDateLocal = (input) => {
+  if (!input) return '';
+  const v = Array.isArray(input) ? input.at(-1) : input;
+
+  // Caso "YYYY-MM-DD" -> construir Date local (sin shift de zona)
+  if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
+    const [y, m, d] = v.split('-').map(Number);
+    const local = new Date(y, m - 1, d);   // <-- local
+    return local.toLocaleDateString('es-ES');
+  }
+
+  // Para ISO con hora, timestamps, etc.
+  const dt = new Date(v);
+  return Number.isNaN(dt.getTime()) ? '' : dt.toLocaleDateString('es-ES');
+};
+
 
   return (
     <div className="audit-results">
+      <div className="table-x-scroll">
       <table className="results-table">
         <thead>
           <tr>
@@ -24,11 +46,11 @@ export default function AuditResultsTable({
             <th>Lineamiento/Requerimiento</th>
             <th>Criterio</th>
             <th>Problema / Observación</th>
-            <th>Evidencia</th>
+            <th>{evidenceHeader}</th>
             <th>Acciones</th>
             <th>Fecha</th>
             <th>Responsable</th>
-            <th>Estatus</th>
+            <th>Efectividad</th>
           </tr>
         </thead>
         <tbody>
@@ -43,7 +65,13 @@ export default function AuditResultsTable({
               const key = `${desc.ID}-${dato._id}-${programa.Nombre}`;
               const ish = ishikawasMap?.[key];
 
-              // contenido observación/problema
+              // 🚦 Si es vista de auditado, solo debe ver SUS filas asignadas
+              if (showOnlyAssigned) {
+                // si no hay ish o no coincide el auditado, no se muestra la fila
+                if (!ish) return null;
+                if (filterToAssignedOf && ish.auditado !== filterToAssignedOf) return null;
+              }
+
               const textCell = (
                 <>
                   {desc.Problema && <>Problema: {desc.Problema}<br/><br/></>}
@@ -64,6 +92,9 @@ export default function AuditResultsTable({
                     : <span className="muted">Sin evidencia</span>
                   );
 
+              const estadoTxt = ish ? ish.estado : 'Pendiente';
+              const estadoColor = ish ? estadoToColor(ish.estado) : '#6e6e6e';
+
               return (
                 <tr key={rowId}>
                   <td>{desc.ID}</td>
@@ -72,38 +103,57 @@ export default function AuditResultsTable({
                   <td>{crit}</td>
                   <td className="justify">{textCell}</td>
                   <td className="ev-cell">{evidenciaCell}</td>
+
                   <td>
-                    {variant === 'revision' && (
+                    {variant === 'revision' && isAdmin && (
                       <button className="link-btn" onClick={() => onHideRow?.(rowId)}>Ocultar</button>
                     )}
                     {(variant === 'terminada' || variant === 'finalizada') && (
-                      <button
-                        className="chip-btn"
-                        style={{ backgroundColor: ish ? estadoToColor(ish.estado) : '#6e6e6e' }}
-                        onClick={() => onGoIshikawa?.(dato._id, desc.ID, programa.Nombre)}
-                      >
-                        {ish ? ish.estado : 'Pendiente'}
-                      </button>
+                      ish?.actividades?.length > 0 ? ish.actividades[0].actividad : ''
                     )}
                   </td>
+
                   <td>
-                    {ish?.actividades?.length > 0 && ish.actividades[0].fechaCompromiso
-                      ? new Date(
-                          Array.isArray(ish.actividades[0].fechaCompromiso)
-                            ? ish.actividades[0].fechaCompromiso.slice(-1)[0]
-                            : ish.actividades[0].fechaCompromiso
-                        ).toLocaleDateString('es-ES')
+                    {ish?.actividades?.length > 0
+                      ? formatDateLocal(ish.actividades[0].fechaCompromiso)
                       : ''
                     }
                   </td>
+
                   <td>
                     {ish?.actividades?.length > 0 && ish.actividades[0].responsable?.length > 0
                       ? ish.actividades[0].responsable[0].nombre
                       : ''
                     }
                   </td>
+
                   <td>
                     <div className="muted small">{ish?.auditado ?? ''}</div>
+
+                    <div className="ish-actions">
+                      {/* Indicador + navegación */}
+                      <button
+                        className="ish-state-chip"
+                        style={{ backgroundColor: estadoColor }}
+                        title={ish ? 'Abrir Ishikawa' : 'Sin Ishikawa (pendiente)'}
+                        onClick={() => ish && onGoIshikawa?.(dato._id, desc.ID, programa.Nombre)}
+                        disabled={!ish}
+                        aria-disabled={!ish}
+                      >
+                        {estadoTxt}
+                      </button>
+
+                      {/* Asignar/Reasignar solo para admin */}
+                      {isAdmin && (
+                        <button
+                          className={`assign-btn ${ish ? 'assign-btn--secondary' : 'assign-btn--primary'}`}
+                          onClick={() => onAssignIshikawa?.(dato._id, desc.ID, programa.Nombre, desc)}
+                          title={ish ? 'Reasignar Ishikawa' : 'Asignar Ishikawa'}
+                        >
+                          {ish ? 'Reasignar' : 'Asignar'}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );
@@ -111,6 +161,7 @@ export default function AuditResultsTable({
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
