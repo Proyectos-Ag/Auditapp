@@ -141,27 +141,57 @@ export default function AuditReportPage({ variant = 'revision' }) {
   const [ishMapOverride, setIshMapOverride] = useState(null);
   const combinedIshMap = ishMapOverride || ishikawasMap || {};
 
-  // ¿El usuario (de cualquier rol) tiene puntos asignados?
-  const hasAssigned = React.useMemo(() => {
-    const values = Object.values(combinedIshMap || {});
-    return values.some((ish) => ish?.auditado === userData?.Nombre);
-  }, [combinedIshMap, userData?.Nombre]);
+  const isAssignedToCurrentAuditor = React.useCallback((ish) => {
+    if (!ish) return false;
+    const eq = (a, b) => a && b && String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+    const email = (userData?.Correo || '').toLowerCase();
+    const name  = (userData?.Nombre || '').toLowerCase();
 
-  // Vista "solo asignados" si:
-  // - es auditado, o
-  // - es auditor/admin y también tiene algo asignado
-  const assignedOnly = isAuditado || ((isAdmin || isAuditor) && hasAssigned);
+    if (email && (eq(ish.auditorEmail, email) || eq(ish.auditorAsignadoCorreo, email) || eq(ish.asignadoAuditorCorreo, email))) return true;
+    if (name  && (eq(ish.auditor, name) || eq(ish.auditorAsignado, name) || eq(ish.asignadoAuditorNombre, name))) return true;
 
-  // Filtrado de datos visibles para AUDITOR (como antes) — admin ve todo
+    const asignado = ish.asignadoAuditor || ish.asignadoA || ish.asignado;
+    if (asignado) {
+      if (email && (eq(asignado.correo, email) || eq(asignado.email, email))) return true;
+      if (name  && eq(asignado.nombre, name)) return true;
+    }
+
+    const responsables = Array.isArray(ish.actividades)
+      ? ish.actividades.flatMap(a => Array.isArray(a?.responsable) ? a.responsable : [])
+      : [];
+    for (const r of responsables) {
+      if (email && (eq(r?.correo, email) || eq(r?.email, email))) return true;
+      if (name  && eq(r?.nombre, name)) return true;
+    }
+    return false;
+  }, [userData?.Correo, userData?.Nombre]);
+
+  // ¿Tiene asignaciones como AUDITADO o como AUDITOR?
+  const values = Object.values(combinedIshMap || {});
+  const hasAssignedAsAuditado = values.some((ish) => ish?.auditado === userData?.Nombre);
+  const hasAssignedAsAuditor  = values.some((ish) => isAssignedToCurrentAuditor(ish));
+
+  // ⬅️ SOLO auditado o auditor entran a "solo asignados" (admin no)
+  const assignedOnly = isAuditado || (isAuditor && hasAssignedAsAuditor);
+
+  // ⬅️ Incluir reportes donde el auditor TIENE asignaciones aunque no esté en EquipoAuditor
+  const reportHasAssignmentsForAuditor = React.useCallback((d) => {
+    const list = Object.values(combinedIshMap || {});
+    return list.some((ish) => ish?.idRep === d._id && isAssignedToCurrentAuditor(ish));
+  }, [combinedIshMap, isAssignedToCurrentAuditor]);
+
+  // ⬅️ visibleDatos
   const visibleDatos = isAdmin
-   ? (datos || [])
-   : isAuditado
-   ? (datos || [])
-   : (datos || []).filter(d =>
-       (d.AuditorLiderEmail === userData?.Correo ||
-        (Array.isArray(d.EquipoAuditor) && d.EquipoAuditor.some(a => a?.Correo === userData?.Correo))) &&
-       !['pendiente','devuelto'].includes(String(d.Estado || '').toLowerCase())
-     );
+    ? (datos || [])
+    : isAuditado
+    ? (datos || [])
+    : (datos || []).filter(d => {
+        const inTeam = (d.AuditorLiderEmail === userData?.Correo) ||
+          (Array.isArray(d.EquipoAuditor) && d.EquipoAuditor.some(a => a?.Correo === userData?.Correo));
+        const hasMine = reportHasAssignmentsForAuditor(d);     // ⬅️ nuevo criterio
+        const notHiddenState = !['pendiente','devuelto'].includes(String(d.Estado || '').toLowerCase());
+        return (inTeam || hasMine) && notHiddenState;
+      });
 
   const variantForCard = estadoToVariant(visibleDatos[0]?.Estado);
 
@@ -197,11 +227,15 @@ export default function AuditReportPage({ variant = 'revision' }) {
   };
 
   // Map filtrado para cálculo/tabla cuando es “solo asignados”
-  const assignedMap = React.useMemo(() => {
+   const assignedMap = React.useMemo(() => {
     if (!assignedOnly) return combinedIshMap;
-    const entries = Object.entries(combinedIshMap || {}).filter(([, ish]) => ish?.auditado === userData?.Nombre);
+    const entries = Object.entries(combinedIshMap || {}).filter(([, ish]) => {
+      if (isAuditado) return ish?.auditado === userData?.Nombre;
+      if (isAuditor)  return isAssignedToCurrentAuditor(ish);
+      return true;
+    });
     return Object.fromEntries(entries);
-  }, [assignedOnly, combinedIshMap, userData?.Nombre]);
+  }, [assignedOnly, combinedIshMap, isAuditado, isAuditor, userData?.Nombre, isAssignedToCurrentAuditor]);
 
   const getPosFor = (id) => (notaModalPos[id] || { x: 24, y: 120 });
   const setPosFor = (id, next) => setNotaModalPos((prev) => ({ ...prev, [id]: next }));
@@ -345,10 +379,9 @@ export default function AuditReportPage({ variant = 'revision' }) {
 
   // Navegación a Ishikawa: ruta normal o ruta de auditado
   const goIshikawa = (idRep, idReq, proName) => {
-    const path = assignedOnly
-      ? `/auditado/ishikawa/${idRep}/${idReq}/${encodeURIComponent(proName)}`
-      : `/ishikawa/${idRep}/${idReq}/${encodeURIComponent(proName)}`;
-    navigate(path);
+    const useAuditadoRoute = !isAdmin && (assignedOnly || isAuditado);
+    const base = useAuditadoRoute ? '/auditado/ishikawa' : '/ishikawa';
+    navigate(`${base}/${idRep}/${idReq}/${encodeURIComponent(proName)}`);
   };
 
   return (
@@ -479,8 +512,10 @@ export default function AuditReportPage({ variant = 'revision' }) {
                   onGoIshikawa={(idRep, idReq, proName) => goIshikawa(idRep, idReq, proName)}
                   isAdmin={isAdmin && !assignedOnly}
                   //Solo el AUDITADO ve únicamente sus filas
-                  showOnlyAssigned={isAuditado}
+                  showOnlyAssigned={assignedOnly}
                   filterToAssignedOf={isAuditado ? userData?.Nombre : undefined}
+                  filterToAssignedAuditorEmail={isAuditor && hasAssignedAsAuditor ? userData?.Correo : undefined}
+                  filterToAssignedAuditorName={isAuditor && hasAssignedAsAuditor ? userData?.Nombre : undefined}
                 />
 
               </div>

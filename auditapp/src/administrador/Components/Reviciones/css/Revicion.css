@@ -253,3 +253,87 @@ table, th, td {
 .aviso{
     font-size: 30px;
 }
+
+/* ======= Barra de filtros / búsqueda ======= */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.toolbar__left, .toolbar__right {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  border: 1px solid #b8b8b8;
+  background: #fff;
+  border-radius: 999px;
+  padding: .4rem .8rem;
+  font-size: .9rem;
+  cursor: pointer;
+}
+
+.filter-btn:hover { background: #f5f5f5; }
+.filter-btn--active {
+  background: #3F3D73;
+  color: #fff;
+  border-color: #3F3D73;
+}
+
+.search-input {
+  border: 1px solid #b8b8b8;
+  border-radius: 8px;
+  padding: .5rem .65rem;
+  min-width: 220px;
+}
+
+/* ======= Badges / Pills ======= */
+.badge {
+  display: inline-block;
+  margin-left: .5rem;
+  font-size: .75rem;
+  padding: .1rem .45rem;
+  border-radius: 999px;
+  background: #e8e8e8;
+}
+
+.badge--ishikawa { background: #3F3D73; color: #fff; }
+.badge--auditoria { background: #7bc2fc; color: #003; }
+
+.card-meta {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: .35rem;
+}
+
+.pill {
+  display: inline-block;
+  font-size: .72rem;
+  padding: .15rem .5rem;
+  border-radius: 999px;
+  border: 1px solid #b8b8b8;
+  background: #fff;
+}
+.pill--ishikawa { border-color: #3F3D73; color: #3F3D73; }
+.pill--auditoria { border-color: #7bc2fc; color: #0c3a52; }
+
+/* (opcional) mejora pequeñas cosas de tarjeta en tu estilo actual */
+.card-repo p { margin: .25rem 0; }
+/* Badges por estado */
+.badge--revision { background: #ffc107; color: #333; }       /* ámbar */
+.badge--revisadas { background: #3F3D73; color: #fff; }      /* primario */
+
+/* Pills (etiqueta en cada tarjeta) */
+.pill--revision { border-color: #ffc107; color: #7a5a00; background: #fff8e1; }
+.pill--revisadas { border-color: #3F3D73; color: #3F3D73; background: #ffffff; }
+
+/* Detalles menores */
+.card-meta { display: flex; justify-content: flex-end; margin-bottom: .35rem; }
+.card-repo p { margin: .25rem 0; }

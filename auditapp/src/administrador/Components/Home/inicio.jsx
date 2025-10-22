@@ -83,13 +83,14 @@ const Inicio = () => {
         <img src={proceso} alt="proceso" className='imagen-mini' />
       </div>
       <div className="card-home" onClick={() => navigate("/ver-reali")}>
-        Revisión de Auditoría
+        Gestión de Auditoría
         <img src={revision} alt="revision" className='imagen-mini' />
       </div>
-      <div className="card-home" onClick={() => navigate("/revish")}>
+      {/*<div className="card-home" onClick={() => navigate("/revish")}>
       Revisión de Ishikawa
       <img src={pez} alt="pez" className='imagen-mini' />
       </div>
+      */}
       <div className="card-home" onClick={() => navigate("/vistafin")}>
         Auditorías Finalizadas
         <br />

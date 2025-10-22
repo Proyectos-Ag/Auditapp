@@ -43,6 +43,7 @@ import EstaUsi from './administrador/Components/Estausuario.jsx';
 //Auditor
 import PendienteAuditor from './auditor/components/Pendientes/Pendiente';
 import ReporteAuditor from './auditor/components/Reportes/Reporte';
+import VistaReporte from './auditor/components/Reportes/VistaReporte.jsx';
 
 //Auditado
 import ReporteAuditado from './auditado/Components/ReporteF/ReporteF';
@@ -161,6 +162,7 @@ export const UserContext = createContext(null);
 
               <Route path="/pendiente" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><PendienteAuditor/></ProtectedRoute>}/> 
               <Route path="/reporte" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><ReporteAuditor/></ProtectedRoute>}/> 
+              <Route path="/reporte-vista" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><VistaReporte/></ProtectedRoute>}/> 
               <Route path="/informacion" element={<ProtectedRoute><InformacionAuditor/></ProtectedRoute>}/>
               <Route path="/reporte/:_id" element={<ProtectedRoute><AuditReportPage/></ProtectedRoute>}/>
 

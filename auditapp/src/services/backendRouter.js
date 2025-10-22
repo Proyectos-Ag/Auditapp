@@ -15,6 +15,16 @@ const ERROR_DEBOUNCE_MS = 30000;
 const IDLE_RETRY_MS     = 4000;  // pings cortos en monitor
 const LOCAL_STICKY_MS   = 2 * 60 * 1000; // si estamos en local, no soltar por fluctuaciones breves
 
+function isHttpsPage() { return window.location.protocol === 'https:'; }
+function isHttpUrl(u)  { return /^http:\/\//i.test(u || ''); }
+
+// Opcional: bloquear LOCAL http si la página es https (evita mixed-content)
+function isLocalAllowedInThisContext() {
+  if (!LOCAL_URL) return false;
+  if (isHttpsPage() && isHttpUrl(LOCAL_URL)) return false; // no se puede llamar a http desde https
+  return true;
+}
+
 // Estado
 let currentBase = REMOTE_URL || '/api';
 let inited = false;
@@ -132,14 +142,15 @@ async function raceProbe() {
 
   const t0 = Date.now();
 
-  const localPromise = (async () => {
-    if (!LOCAL_URL) return;
-    const r = await ping(LOCAL_URL, PING_TIMEOUT_MS);
-    if (r.ok) {
-      lastLocalOkAt = Date.now();
-      decide(LOCAL_URL, 'local-ok');
-    }
-  })();
+const localPromise = (async () => {
+  if (!LOCAL_URL || !isLocalAllowedInThisContext()) return;
+  const r = await ping(LOCAL_URL, PING_TIMEOUT_MS);
+  if (r.ok) {
+    lastLocalOkAt = Date.now();
+    decide(LOCAL_URL, 'local-ok');
+  }
+})();
+
 
   const remotePromise = (async () => {
     if (!REMOTE_URL) return;
@@ -198,13 +209,22 @@ export async function initBackendRouter() {
 }
 
 // ===== Integración con Axios: “toque” ante error de red =====
-export function maybeProbeLocalOnNetworkError() {
+export async function maybeRecoverOnNetworkError() {
   const now = Date.now();
-  if (now - debounceErrorProbe < ERROR_DEBOUNCE_MS) return; // máx 1 cada 30s
+  if (now - debounceErrorProbe < ERROR_DEBOUNCE_MS) return; // throttling 30s
   debounceErrorProbe = now;
 
-  // Si estamos en remoto, probamos si apareció local
-  if (currentBase !== LOCAL_URL && LOCAL_URL) {
+  // Si estamos en LOCAL y falló la red, intentamos REMOTO (failover)
+  if (currentBase === LOCAL_URL && REMOTE_URL) {
+    const { ok } = await ping(REMOTE_URL, Math.min(PING_TIMEOUT_MS, IDLE_RETRY_MS));
+    if (ok) {
+      promoteBase(REMOTE_URL); // cambia base y arma monitor para volver a local
+      return;
+    }
+  }
+
+  // Si estamos en REMOTO, prueba si ya apareció el LOCAL (como ya hacías)
+  if (currentBase !== LOCAL_URL && LOCAL_URL && isLocalAllowedInThisContext()) {
     trySwitchToLocal();
   }
 }
@@ -223,4 +243,11 @@ export function getAlternateBase() {
   if (currentBase === LOCAL_URL && REMOTE_URL) return REMOTE_URL;
   if (currentBase !== LOCAL_URL && LOCAL_URL) return LOCAL_URL;
   return null;
+}
+
+export function promoteBase(base) {
+  if (!base) return;
+  setBase(base);
+  // Si promocionamos a remoto, dejamos monitor para volver a local cuando aparezca
+  if (currentBase !== LOCAL_URL) setupMonitor(); else clearMonitor();
 }

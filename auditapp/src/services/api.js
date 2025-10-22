@@ -3,8 +3,9 @@ import {
   initBackendRouter,
   getCurrentBase,
   subscribeBaseChange,
-  maybeProbeLocalOnNetworkError,
+  maybeRecoverOnNetworkError, 
   getAlternateBase,
+  promoteBase, 
 } from './backendRouter';
 
 // Axios principal
@@ -36,35 +37,32 @@ api.interceptors.response.use(
     const isNetworkErr = err?.code === 'ECONNABORTED' || err?.message === 'Network Error' || err?.response == null;
 
     if (isNetworkErr) {
-      maybeProbeLocalOnNetworkError();
+      // Recuperación bidireccional: LOCAL→REMOTO o REMOTO→LOCAL
+      maybeRecoverOnNetworkError();
 
-      // Evitar bucles
       if (!cfg._altTried) {
         const method = String(cfg.method || 'get').toLowerCase();
-        const canRetry = IDEMPOTENT.has(method) || cfg.retryOnAlt === true; // opcional: permitir en endpoints que tú marques seguros
+        const canRetry = IDEMPOTENT.has(method) || cfg.retryOnAlt === true;
         const alt = getAlternateBase();
 
         if (canRetry && alt) {
-          // Ping corto al alterno para no desperdiciar tiempo
           try {
             cfg._altTried = true;
-            const test = await fetch(alt.replace(/\/+$/, '') + (process.env.REACT_APP_BACKEND_HEALTH_PATH || '/health'), {
-              method: 'GET',
-              cache: 'no-store',
-              credentials: 'omit',
-            });
+            const healthUrl = alt.replace(/\/+$/, '') + (process.env.REACT_APP_BACKEND_HEALTH_PATH || '/health');
+            const test = await fetch(healthUrl, { method: 'GET', cache: 'no-store', credentials: 'omit' });
             if (test.ok) {
-              // Reintenta al vuelo en el alterno
               const newCfg = { ...cfg, baseURL: alt };
-              return api.request(newCfg);
+              const resp = await api.request(newCfg);
+              // ¡Listo! el alterno funciona → lo promocionamos para siguientes requests
+              promoteBase(alt);
+              return resp;
             }
           } catch {
-            // Ignorar, caerá al reject original
+            // caer al reject original
           }
         }
       }
     }
-
     return Promise.reject(err);
   }
 );

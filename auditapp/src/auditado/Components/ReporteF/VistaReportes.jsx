@@ -111,7 +111,7 @@ const getDateLabel = (fecha) => {
 const datosOrdenados = datos.slice().reverse();
 
 const navReporte = (_id) => {
-    navigate(`/auditado/reporte/${_id}`);
+    navigate(`/reporte/${_id}`);
 };
 
   return (

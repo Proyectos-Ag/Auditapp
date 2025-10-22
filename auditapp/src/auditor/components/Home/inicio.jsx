@@ -46,7 +46,7 @@ const Inicio = () => {
         <br/><br/>
         <img src={revision} alt="revision" className='imagen-mini' />
       </div>
-      <div className="card-home" onClick={() => navigate("/reporte")}>
+      <div className="card-home" onClick={() => navigate("/reporte-vista")}>
        Reportes Generados
        <br/>
        <br/>
