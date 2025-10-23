@@ -1,0 +1,184 @@
+.evaluaciones {
+    background-color: #eeeeee;
+    padding: 20px;
+    max-width: 1000px;
+    margin: 20px auto;
+    border: 1px solid #000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.evaluaciones h1 {
+    font-size: 32px;
+    margin-bottom: 20px;
+    color: #003366;
+    text-align: center;
+    padding: 10px;
+}
+
+.contenido-evaluacion {
+    margin-top: 20px;
+}
+
+.evaluaciones table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    border: 1px solid #000;
+}
+
+.evaluaciones th, 
+.evaluaciones td {
+    border: 1px solid #000;
+    padding: 10px;
+    text-align: left;
+    font-size: 14px;
+}
+
+.evaluaciones th {
+    background-color: #d9e8d0;
+    color: #000;
+    font-weight: bold;
+}
+
+.evaluaciones td {
+    background-color: #fff;
+}
+
+.evaluaciones td input[type="number"] {
+    width: 60px;
+    padding: 5px;
+    font-size: 14px;
+}
+
+.input-fecha, .input-calificacion {
+    padding: 5px;
+    background-color: #e6e6e6;
+    border: none;
+    border-bottom: 1px solid #000;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.resultado {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.evaluaciones button {
+    padding: 10px 20px;
+    background-color: #003366;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.evaluaciones button:hover {
+    background-color: #0055a5;
+}
+
+.evaluaciones select, input[type="number"], .input-texto {
+    padding: 10px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+.titulo-evaluaciones {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #444;
+    border-bottom: 2px solid #003366;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+/* Media Queries para Responsividad */
+
+/* Pantallas pequeñas (móviles en modo vertical) */
+@media only screen and (max-width: 600px) {
+    .evaluaciones h1 {
+        font-size: 24px;
+    }
+
+    .evaluaciones {
+        padding: 10px;
+        margin: 10px;
+        max-width: 100%;
+    }
+
+    .evaluaciones table, th, td {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    .evaluaciones button {
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+
+    .titulo-evaluaciones {
+        font-size: 22px;
+    }
+}
+
+/* Pantallas medianas (tablets, móviles en modo horizontal) */
+@media only screen and (min-width: 601px) and (max-width: 1024px) {
+    .evaluaciones h1 {
+        font-size: 28px;
+    }
+
+    .evaluaciones {
+        padding: 15px;
+        margin: 15px auto;
+        max-width: 90%;
+    }
+
+    .evaluaciones table, 
+    .evaluaciones th, 
+    .evaluaciones td {
+        font-size: 13px;
+        padding: 10px;
+    }
+
+    .evaluaciones button {
+        padding: 10px 18px;
+        font-size: 15px;
+    }
+
+    .titulo-evaluaciones {
+        font-size: 24px;
+    }
+}
+
+/* Pantallas grandes (escritorios y laptops) */
+@media only screen and (min-width: 1025px) {
+    .evaluaciones h1 {
+        font-size: 32px;
+    }
+
+    .evaluaciones {
+        max-width: 1000px;
+    }
+
+    .evaluaciones table, 
+    .evaluaciones th, 
+    .evaluaciones td {
+        font-size: 14px;
+    }
+
+    .evaluaciones button {
+        padding: 10px 20px;
+        font-size: 16px;
+    }
+
+    .titulo-evaluaciones {
+        font-size: 28px;
+    }
+}

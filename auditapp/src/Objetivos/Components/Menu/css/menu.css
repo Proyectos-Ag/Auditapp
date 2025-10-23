@@ -1,0 +1,204 @@
+
+  
+  .menu-container {
+    /* Hacemos que ocupe toda la pantalla */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-items: flex-start; 
+    padding: 10px;
+    
+    /* Añadimos un margin-top para bajar las tarjetas aún más */
+    padding-top: 15vh; /* Ajusta este valor para bajar más o menos */
+    padding-bottom: 10vh;
+  }
+
+  .floating-message {
+    position: fixed;
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    text-align: justify;
+    min-width: 300px;
+    max-width: 90%;
+    width: auto;
+  }
+  
+  .floating-message ul {
+    padding-left: 20px;
+  }
+  
+  .floating-message button {
+    display: block;
+    margin: 20px auto 0;
+    padding: 10px 15px;
+    border: none;
+    background: red;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    width: 100%;
+    max-width: 200px;
+    text-align: center;
+  }
+  
+  .floating-message button:hover {
+    background: darkred;
+  }
+  
+  @media (max-width: 768px) {
+    .floating-message {
+      bottom: 5%;
+      min-width: 250px;
+      max-width: 95%;
+    }
+  
+    .floating-message button {
+      font-size: 14px;
+      padding: 8px 12px;
+    }
+  }
+  
+  .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  
+  .btn-calidad {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .btn-calidad:hover {
+    background: #0056b3;
+  }
+  
+  @media (max-width: 768px) {
+    .header-container {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+  
+    .btn-calidad {
+      width: 100%;
+      max-width: 250px;
+    }
+  }
+  
+  
+  .titulo-objetivos {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 15vh; /* Ajusta este valor para bajar más o menos */
+    margin-bottom: 2rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .menu-item {
+    position: relative;
+    background: #2e7d32;
+    color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    min-width: 200px;
+    text-align: center;
+    font-weight: bold;
+    overflow: hidden;
+    transform: skew(-5deg);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+  
+  .menu-item > span {
+    display: inline-block;
+    transform: skew(5deg);
+  }
+  
+  /* Pseudo-elementos para capas detrás */
+  .menu-item::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: -10px;
+    bottom: -10px;
+    background: #2c6f2f;
+    border-radius: 5px;
+    z-index: -1;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    transform: skew(-5deg);
+  }
+  
+  .menu-item::after {
+    content: "";
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: -20px;
+    bottom: -20px;
+    background: #2a6b2c;
+    border-radius: 5px;
+    z-index: -2;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    transform: skew(-5deg);
+  }
+  
+  /* Responsivo */
+  /* Cuando la pantalla sea más pequeña, reducir el skew y el padding */
+  @media (max-width: 768px) {
+    .menu-container {
+      padding-top: 5vh;
+      padding-bottom: 5vh;
+      gap: 10px;
+    }
+    
+    .menu-item {
+      transform: skew(-3deg);
+      padding: 15px;
+      min-width: 150px;
+    }
+  
+    .menu-item > span {
+      transform: skew(3deg);
+      font-size: 0.9em;
+    }
+  }
+  
+  /* Para pantallas muy pequeñas */
+  @media (max-width: 480px) {
+    .menu-item {
+      transform: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    
+    .menu-item::before,
+    .menu-item::after {
+      display: none;
+    }
+    
+    .menu-item {
+      min-width: 120px;
+      padding: 10px;
+    }
+    
+    .menu-container {
+      padding-top: 2vh;
+      padding-bottom: 2vh;
+    }
+  }
+  

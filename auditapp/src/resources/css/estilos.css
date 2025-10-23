@@ -1,0 +1,71 @@
+.unique-header {
+  position: relative;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--bg-header);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 3px solid var(--bd-header);
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+
+/* nuevo estilo para el contenedor del logo */
+.logo-container {
+  flex-shrink: 0; /* evita que el logo se achique */
+}
+
+/* estilo de la imagen del logo */
+.logo {
+  height: 50px;     /* ajusta al tamaño que necesites */
+  width: auto;
+  cursor: pointer;
+}
+
+.superposicion{
+  z-index: 3;
+}
+  
+.user-icon {
+  display: inline-flex;
+  align-items: center; 
+  gap: 8px;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
+  
+.migas-pan {
+  position: absolute;
+  top: 75px;
+  padding: 8px; 
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  z-index: 2;
+}
+  
+  .migas-pan .MuiBreadcrumbs-root {
+    overflow: hidden; /* Ocultar contenido que se desborde */
+    text-overflow: ellipsis; /* Puntos suspensivos para texto largo */
+  }
+  
+  .migas-pan .MuiChip-root {
+    max-width: 150px; /* Ancho máximo para cada chip */
+    overflow: hidden; /* Ocultar contenido que se desborde */
+    text-overflow: ellipsis; /* Puntos suspensivos */
+    white-space: nowrap; /* Prevenir el salto de línea */
+  }
+  
+  @media (max-width: 600px) {
+    .migas-pan .MuiChip-root {
+      font-size: 0.75rem; /* Reducir el tamaño del texto en pantallas pequeñas */
+      max-width: 100px; /* Limitar el ancho en dispositivos pequeños */
+    }
+  }
+  
+  

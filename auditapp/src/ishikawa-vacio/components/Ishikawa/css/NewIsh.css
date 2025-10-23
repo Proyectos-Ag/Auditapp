@@ -1,0 +1,210 @@
+:root {
+    --central-line-height: 4px;
+    --spine-length: 15rem;
+    --sub-spine-length: 20%;
+    --label-offset: 50px;
+    --central-line-color: #179e6a;
+    --sub-line-color: #6d7a7a;
+    --spine-angle: 45deg;
+  }
+
+  /* Añadir en NewIsh.css */
+.editable-textarea {
+  white-space: pre-wrap; /* Mantener saltos de línea */
+  overflow: hidden;
+  background-color: white;
+  padding: 5px;
+  border-radius: 4px;
+}
+  
+  .central-line {
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    top: 50%;
+    height: var(--central-line-height);
+    background: var(--central-line-color);
+    transform: translateY(-50%);
+  }
+  
+  .spine-group {
+    position: absolute;
+    top: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .main-spine {
+    position: relative;
+    width: var(--spine-length);
+    transform-origin: right center;
+  }
+  
+  .diagonal-line {
+    position: relative;              /* make wrapper relative */
+    width: 21vw;
+    height: var(--central-line-height);
+    background: var(--central-line-color);
+    transform-origin: right center;
+    overflow: visible;
+  }
+  
+  /* distribute causes evenly along the diagonal */
+  .causes-wrapper {
+    position: relative;       /* antes era absolute con flex */
+    height: auto;                /* no necesitamos altura fija */
+    top: 50%;
+    pointer-events: none;
+    overflow: visible;
+  }
+  
+  .cause-line {
+    position: absolute;
+    top: -0.3rem;             /* para centrar verticalmente sobre la diagonal */
+    display: flex;
+    left: auto;
+    align-items: center;
+    transform-origin: right center;
+    pointer-events: auto;     /* para poder tipear en el textarea */
+  }
+  
+  .sub-line {
+    width: var(--sub-spine-length);
+    height: 0;
+    border-bottom: 1px dashed var(--sub-line-color);
+    margin-right: 0.5rem;
+  }
+  
+  .cause-input {
+  min-height: 51px;
+  width: 21vw !important;
+  line-height: 1.2;
+  box-sizing: border-box;
+  overflow: hidden !important;
+  border: none;
+  border-bottom: 1px solid #000000;
+  border-radius: 0;
+  font-size: 16px;
+}
+
+
+  .spine-label {
+    position: absolute;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #34495e;
+    white-space: nowrap;
+  }
+  
+  .spine-group.bottom .causes-wrapper {
+    top: calc(50% + 0.5rem);
+  }
+
+  /* Etiqueta al extremo de la diagonal */
+  .spine-end-label {
+    display: inline-block;             /* para que padding funcione bien */
+    white-space: nowrap;
+    font-size: 1rem;
+    font-weight: 600;
+    
+    /* estilo de “botón” */
+    background: var(--central-line-color);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    
+    pointer-events: none;
+  }
+
+  /* Botón fijo para añadir causa al lado izquierdo del label */
+.add-cause-fixed {
+  padding: 0 !important;
+  overflow: visible;
+  background: #3498db !important;
+  color: white !important;
+  width: 2rem;
+  height: 2rem;
+  margin-top: 50rem;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+/* COLA: triángulo que forma la flecha de la cola */
+.fish-tail {
+  position: absolute;
+  left: 14%;           /* mismo inicio que central-line */
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-top: 4rem solid transparent;
+  border-bottom: 4rem solid transparent;
+  border-left: 6rem solid var(--central-line-color);
+  transform: translate(-100%, -50%);
+  pointer-events: none;
+  z-index: 1;
+  border-radius: 10px;
+}
+
+/* ================================= */
+/*  CABEZA: cuadrado grande con borde */
+/* ================================= */
+.fish-head {
+  position: absolute;
+  right: 11%;
+  top: 50%;
+
+  width: 9rem;
+  height: 9rem;
+  background: var(--central-line-color);
+  border-top-right-radius: 5rem;
+  border-bottom-right-radius: 5rem;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+
+  /* RESTAURA ESTA LÍNEA para mantener la posición original */
+  transform: translate(100%, -50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.5rem;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+
+/* 2) El contenedor del texto usa el fontSize calculado y no hace scroll */
+.fish-head .problema-display {
+  pointer-events: auto;     /* para que siga recibiendo clicks si lo necesitas */
+  text-align: center;
+  white-space: pre-wrap;    /* respeta saltos de línea */
+  word-wrap: break-word;    /* quiebra palabras largas */
+  max-width: 100%;
+  max-height: 100%;
+  overflow: visible;
+  line-height: 1.2;         /* buena legibilidad */
+}
+
+/* Nuevos estilos para el wrapper */
+.ishikawa-wrapper {
+  position: relative;
+  width: 80em;
+  height: 123vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;  
+  overflow: auto;
+  background: #ffffff;
+  padding: 30px;
+  margin-bottom: -3rem;
+  box-sizing: border-box;
+}
+
+.fishbone-container {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  margin: 0 auto;
+  margin-left: -2rem;
+  transform-origin: center;
+}

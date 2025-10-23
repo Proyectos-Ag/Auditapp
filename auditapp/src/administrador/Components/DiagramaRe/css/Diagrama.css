@@ -1,0 +1,201 @@
+.content-diagrama{
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin: 8rem auto 0;
+    margin-top: 8rem;
+    width: 80rem;
+    max-width: 100rem;
+    padding: 20px;
+    background-color: #d9d9d9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.card-repo-ish {
+    background-color: #c2fabe;
+    border: 2px solid #7bfca2; 
+    padding: 20px;
+    transition: transform 0.3s ease;
+    max-width: 10em;
+    margin: 10px;
+    position: relative; /* Necesario para posicionar el pseudo-elemento */
+}
+
+/* Pseudo-elemento para crear la esquina doblada */
+.card-repo-ish::before {
+    content: '';
+    position: absolute;
+    top: -2.3em;
+    width: 30px;
+    height: 30px;
+    bottom: 0;
+    right: 0;
+    background-color: #ffffff; /* Color de la parte interna de la hoja */
+    border: 2px solid #7bfca2;
+    transform: translate(5%, 5%) rotate(-90deg);
+    transform-origin: bottom right;
+    box-shadow: -2px -2px 5px rgba(0, 0, 0, 0.1); /* Sombra de la esquina doblada */
+    z-index: 1; /* Asegurarse de que el pseudo-elemento esté encima del fondo */
+    clip-path: polygon(0 0, 100% 0, 0% 100%);
+}
+
+/* Pseudo-elemento para dar la ilusión de la parte doblada */
+.card-repo-ish::after {
+    content: '';
+    position: absolute;
+    top: -2.7em;
+    width: 36px;
+    height: 36px;
+    bottom: 0;
+    right: 0;
+    background-color: #ffffff; /* Color de la parte trasera de la hoja */
+    transform: translate(7%, 5%) rotate(-90deg);
+    transform-origin: bottom right;
+    z-index: 0; /* Coloca esta parte debajo del contenedor principal */
+    clip-path: polygon(100% 0, 100% 100%, 0% 100%);
+}
+
+.card-repo-ish:hover {
+    transform: translateY(-15px);
+}
+
+.image-container-dia {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1rem auto 0 -0.8rem;
+    width: 79em;
+    height: 100%;
+    max-width: 80rem;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px 8px 0px 0px;
+    position: relative; 
+    z-index: 1;
+}
+
+.image-container2-dia {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: -4rem auto 1rem -0.8rem;
+    width: 79em;
+    height: 100%;
+    max-width: 80rem;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 0px 0px 0px 0px;
+    position: relative; 
+    z-index: 1;
+}
+
+.image-container3-dia {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: -1rem auto 1rem -0.8rem;
+    width: 79em;
+    height: 100%;
+    max-width: 80rem;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 0px 0px 8px 8px;
+    position: relative; 
+    z-index: 2;
+}
+
+.duracion-bloque-repo-dia h2 {
+    margin: 0;
+    padding: 10px 0;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.duracion-bloque-repo-dia {
+    margin-left: -0.5rem;
+    margin-bottom: 0.5em;
+    width: 81rem;
+    background-color: #00B096;
+    cursor: pointer;
+}
+
+.top-diagrama{
+    margin-top: 8rem;
+}
+
+.dia-buttons-g{
+    position: absolute;
+    display: flex;
+    margin-left: 47rem;
+    gap: 10px;
+}
+
+.dia-buttons-g button{
+    margin-top: 10px;
+    width: 10rem;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    color: #ffffff;
+    font-weight: bold;
+    background-color: #00cc7e;
+    z-index: 2;
+}
+
+.dia-buttons-g button:hover{
+    background-color: #00804f;
+}
+
+.nota-rechazo-container-dia{
+    margin-left: 30rem;
+    top: 4.5rem;
+    position: absolute;
+    z-index: 3;
+}
+
+.button-pasti-dia{
+    margin-right: 68rem;
+}
+
+.boton-eliminar{
+    background-color: red;
+    border-radius: 8px 8px 8px 0;
+    color: white;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.cont-card-repo-modal {
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: space-around;
+    width: 90%; 
+    max-width: 90vw; 
+    margin: 0 auto; 
+    margin-top: 7em;
+    padding: 2vh; 
+    border-radius: 1vw; 
+    border: 3px solid #b8b8b8;
+    background-color: #ffffff;
+    margin-top: 50px;
+}
+
+.button-proc{
+    position: absolute;
+    border: none;
+    background-color: #114f72;
+    color: #ffffff;
+    border-radius: 10px;
+    margin-left: 68%;
+    padding: 10px;
+    cursor: pointer;
+  }
+
+  .button-proc:hover{
+    background-color: #092e44;
+  }

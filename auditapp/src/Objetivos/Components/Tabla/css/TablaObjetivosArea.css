@@ -1,0 +1,380 @@
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Contenedor principal */
+.tabla-container {
+  max-width: 95%;
+  margin: 0 auto;
+  padding: 20px;
+  margin-top: 96px; /* Bajado una pulgada (96px) */
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Encabezado */
+.header-container {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tabla-titulo {
+  font-size: 2rem;
+  margin: 0;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.tabla-subtitulo {
+  font-size: 1.3rem;
+  margin: 10px 0 0;
+  color: #4a6fa5;
+  font-weight: 500;
+}
+
+/* Contenedor de botones */
+.botones-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+/* Estilos para botones */
+.button-acciones, .btn-guardar, .btn-ver-objetivos {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 180px;
+}
+
+.button-acciones {
+  background-color: #6eb6ff;
+  color: #000000;
+  border: 1px solid #000000;
+}
+
+.button-acciones:hover {
+  background-color: #dee2e6;
+}
+
+.btn-guardar {
+  background-color: #4a6fa5;
+  color: white;
+}
+
+.btn-guardar:hover {
+  background-color: #3a5a80;
+}
+
+.btn-guardar:disabled {
+  background-color: #adb5bd;
+  cursor: not-allowed;
+}
+
+.btn-ver-objetivos {
+  background-color: #2420ac;
+  color: white;
+}
+
+.btn-ver-objetivos:hover {
+  background-color: #5a6268;
+}
+
+/* Contenedores de frecuencia */
+.frecuencias-container {
+  margin-top: 20px;
+}
+
+.frecuencia-container {
+  margin-bottom: 20px;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.frecuencia-header {
+  background: #f8f9fa;
+  padding: 12px 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.frecuencia-header h4 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.toggle-icon {
+  font-size: 1rem;
+  color: #6c757d;
+  transition: transform 0.2s ease;
+}
+
+.frecuencia-content {
+  background: #ffffff;
+  overflow-x: auto;
+  max-height: 0;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.frecuencia-container.active .frecuencia-content {
+  max-height: 1000px;
+  opacity: 1;
+  padding: 15px;
+}
+
+.frecuencia-container.active .toggle-icon {
+  transform: rotate(90deg);
+}
+
+/* Tabla de objetivos */
+.objetivos-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background: #ffffff;
+  font-size: 0.9rem;
+}
+
+.objetivos-tabla th, .objetivos-tabla td {
+  padding: 10px 12px;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+}
+
+.objetivos-tabla th {
+  position: relative;
+  color: #2c3e50;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.header-bg {
+  background: #f1f3f5;
+}
+
+.semana-header {
+  background: #f8f9fa;
+  font-weight: 500;
+  font-size: 0.85rem;
+  min-width: 50px;
+}
+
+.objetivos-tabla tr:hover {
+  background-color: #f8f9fa;
+}
+
+.objetivo-numero {
+  font-weight: bold;
+  color: #4a6fa5;
+  white-space: nowrap;
+}
+
+.objetivo-meta {
+  font-weight: bold;
+  color: #2c7e50;
+  white-space: nowrap;
+}
+
+.semana-cell {
+  padding: 5px !important;
+  min-width: 60px;
+}
+
+/* Inputs */
+.input-frecuencia {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #333333;
+  text-align: center;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  height: 30px;
+  box-sizing: border-box;
+}
+
+.input-frecuencia:focus {
+  outline: none;
+  border-color: #4a6fa5;
+  box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.2);
+}
+
+/* Filas alternas */
+.even-row {
+  background: #ffffff;
+}
+
+.odd-row {
+  background: #f8f9fa;
+}
+
+/* Panel flotante */
+.panel-flotante {
+  z-index: 1000;
+  border-radius: 6px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+}
+
+.panel-header {
+  padding: 12px 15px;
+  background: #f8f9fa;
+  color: #2c3e50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.panel-header h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.panel-close {
+  background: transparent;
+  border: none;
+  color: #6c757d;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  padding: 0 5px;
+  line-height: 1;
+}
+
+.panel-close:hover {
+  color: #495057;
+  transform: rotate(90deg);
+}
+
+.panel-content {
+  padding: 12px;
+  max-height: calc(100% - 50px);
+  overflow-y: auto;
+}
+
+.panel-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.panel-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f3f5;
+  display: flex;
+  align-items: flex-start;
+}
+
+.panel-content li:last-child {
+  border-bottom: none;
+}
+
+.objetivo-texto {
+  flex: 1;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  background: #6c757d;
+  cursor: nwse-resize;
+  border-top-left-radius: 3px;
+}
+
+/* Footer */
+.footer-note {
+  text-align: center;
+  margin-top: 25px;
+  padding: 15px;
+  color: #6c757d;
+  font-size: 0.85rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .tabla-titulo {
+    font-size: 1.6rem;
+  }
+  
+  .tabla-subtitulo {
+    font-size: 1.1rem;
+  }
+  
+  .botones-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .button-acciones, .btn-guardar, .btn-ver-objetivos {
+    width: 100%;
+    max-width: 250px;
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tabla-container {
+    padding: 15px;
+  }
+  
+  .header-container {
+    padding: 15px;
+  }
+  
+  .tabla-titulo {
+    font-size: 1.4rem;
+  }
+  
+  .frecuencia-header h4 {
+    font-size: 1rem;
+  }
+  
+  .objetivos-tabla th, .objetivos-tabla td {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+  
+  .input-frecuencia {
+    padding: 5px;
+    font-size: 0.8rem;
+  }
+  
+  .panel-flotante {
+    width: 90% !important;
+    height: 60vh !important;
+    left: 5% !important;
+    top: 20% !important;
+  }
+}

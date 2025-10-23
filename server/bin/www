@@ -1,0 +1,177 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var app = require('../app');
+var debug = require('debug')('server:server');
+var http = require('http');
+var https = require('https');
+var fs = require('fs');
+var path = require('path');
+var os = require('os');
+
+/**
+ * Puertos
+ * - PORT: puerto HTTP (Render lo inyecta)
+ * - HTTPS_PORT: puerto HTTPS local (por defecto 3443)
+ */
+
+var httpPort = normalizePort(process.env.PORT || '3002');
+var httpsPort = normalizePort(process.env.HTTPS_PORT || '3443');
+
+app.set('port', httpPort);
+
+/**
+ * Helpers: IPs LAN y logging de URLs
+ */
+function getLanIPv4s() {
+  const nets = os.networkInterfaces();
+  const addrs = [];
+  for (const name of Object.keys(nets)) {
+    for (const ni of nets[name] || []) {
+      const family = typeof ni.family === 'string' ? ni.family : (ni.family === 4 ? 'IPv4' : 'IPv6');
+      if (!ni.internal && family === 'IPv4') {
+        addrs.push({ name, address: ni.address });
+      }
+    }
+  }
+  // Prioriza DEV_LAN_HOST si está definida
+  const pref = process.env.DEV_LAN_HOST;
+  if (pref) {
+    const idx = addrs.findIndex(a => a.address === pref);
+    if (idx > 0) addrs.unshift(addrs.splice(idx, 1)[0]);
+    else addrs.unshift({ name: 'DEV_LAN_HOST', address: pref });
+  }
+  return addrs;
+}
+
+function logBindUrls(proto, port) {
+  console.log(`📡 Puerto ${proto.toUpperCase()}:`, port);
+  console.log(`🌐 Local: ${proto}://localhost:${port}`);
+  const lans = getLanIPv4s();
+  if (lans.length === 0) {
+    console.log('🌐 Red: (sin IPv4 LAN detectado)');
+  } else {
+    lans.forEach(({ name, address }) => {
+      console.log(`🌐 Red: ${proto}://${address}:${port}  (${name})`);
+    });
+  }
+  if (process.env.PUBLIC_HOST) {
+    console.log(`🌍 Público: ${proto}://${process.env.PUBLIC_HOST}:${port}`);
+  }
+}
+
+/**
+ * Create HTTP server.
+ */
+var httpServer = http.createServer(app);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+httpServer.listen(httpPort, '0.0.0.0', () => {
+  console.log('=================================');
+  console.log('🚀 Servidor HTTP iniciado');
+  console.log('=================================');
+  logBindUrls('http', httpPort);
+  console.log('🔧 Entorno:', process.env.NODE_ENV || 'development');
+  console.log('=================================');
+});
+
+httpServer.on('error', onError);
+httpServer.on('listening', () => onListening(httpServer, 'http'));
+
+/**
+ * Create HTTPS server
+ */
+try {
+  // Rutas a los certificados SSL
+  const keyPath = path.join(__dirname, '../ssl/key.pem');
+  const certPath = path.join(__dirname, '../ssl/cert.pem');
+
+  console.log('📂 Buscando certificados SSL...');
+  console.log('   Key:', keyPath);
+  console.log('   Cert:', certPath);
+
+  const privateKey = fs.readFileSync(keyPath, 'utf8');
+  const certificate = fs.readFileSync(certPath, 'utf8');
+
+  const credentials = { key: privateKey, cert: certificate };
+  var httpsServer = https.createServer(credentials, app);
+
+  httpsServer.listen(httpsPort, '0.0.0.0', () => {
+    console.log('=================================');
+    console.log('🔒 Servidor HTTPS iniciado');
+    console.log('=================================');
+    logBindUrls('https', httpsPort);
+    console.log('⚠️  Certificado autofirmado - El navegador mostrará advertencia');
+    console.log('=================================');
+  });
+
+  httpsServer.on('error', onError);
+  httpsServer.on('listening', () => onListening(httpsServer, 'https'));
+} catch (err) {
+  console.error('❌ Error al cargar certificados SSL:', err.message);
+  console.log('⚠️  Solo servidor HTTP disponible');
+  console.log('💡 Para habilitar HTTPS:');
+  console.log('   1. cd ssl');
+  console.log('   2. openssl req -nodes -new -x509 -keyout key.pem -out cert.pem -days 365');
+  console.log('=================================');
+}
+
+/**
+ * Normaliza un puerto a número, string (pipe) o false.
+ */
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    return val;
+  }
+  if (port >= 0) {
+    return port;
+  }
+  return false;
+}
+
+/**
+ * Manejador de errores de "listen".
+ */
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof this.address === 'function'
+    ? 'Port ' + this.address().port
+    : 'Port';
+
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    case 'EADDRNOTAVAIL':
+      console.error(bind + ' address not available (la IP de DEV_LAN_HOST debe estar asignada en tu equipo)');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Log de "listening".
+ */
+function onListening(srv, proto) {
+  const addr = srv.address();
+  const bind = typeof addr === 'string' ? 'pipe ' + addr : `${proto}://${addr.address}:${addr.port}`;
+  debug('Listening on ' + bind);
+  console.log('Listening on ' + bind);
+}

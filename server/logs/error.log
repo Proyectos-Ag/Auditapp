@@ -1,0 +1,28 @@
+2025-10-18T09:54:57: Error capturado:
+2025-10-18T09:54:57: - Status: 404
+2025-10-18T09:54:57: - Message: Not Found
+2025-10-18T09:54:57: - Path: /login
+2025-10-18T09:54:57: - Method: POST
+2025-10-18T09:54:57: - Stack: NotFoundError: Not Found
+    at C:\Users\fredw\Desktop\otravez\server\app.js:246:8
+    at Layer.handle [as handle_request] (C:\Users\fredw\Desktop\otravez\server\node_modules\express\lib\router\layer.js:95:5)
+    at trim_prefix (C:\Users\fredw\Desktop\otravez\server\node_modules\express\lib\router\index.js:328:13)
+    at C:\Users\fredw\Desktop\otravez\server\node_modules\express\lib\router\index.js:286:9
+    at Function.process_params (C:\Users\fredw\Desktop\otravez\server\node_modules\express\lib\router\index.js:346:12)
+    at Immediate.next (C:\Users\fredw\Desktop\otravez\server\node_modules\express\lib\router\index.js:280:10)
+    at Immediate._onImmediate (C:\Users\fredw\Desktop\otravez\server\node_modules\express\lib\router\index.js:646:15)
+    at process.processImmediate (node:internal/timers:480:21)
+2025-10-18T09:54:59: Error capturado:
+2025-10-18T09:54:59: - Status: 404
+2025-10-18T09:54:59: - Message: Not Found
+2025-10-18T09:54:59: - Path: /login
+2025-10-18T09:54:59: - Method: POST
+2025-10-18T09:54:59: - Stack: NotFoundError: Not Found
+    at C:\Users\fredw\Desktop\otravez\server\app.js:246:8
+    at Layer.handle [as handle_request] (C:\Users\fredw\Desktop\otravez\server\node_modules\express\lib\router\layer.js:95:5)
+    at trim_prefix (C:\Users\fredw\Desktop\otravez\server\node_modules\express\lib\router\index.js:328:13)
+    at C:\Users\fredw\Desktop\otravez\server\node_modules\express\lib\router\index.js:286:9
+    at Function.process_params (C:\Users\fredw\Desktop\otravez\server\node_modules\express\lib\router\index.js:346:12)
+    at Immediate.next (C:\Users\fredw\Desktop\otravez\server\node_modules\express\lib\router\index.js:280:10)
+    at Immediate._onImmediate (C:\Users\fredw\Desktop\otravez\server\node_modules\express\lib\router\index.js:646:15)
+    at process.processImmediate (node:internal/timers:480:21)

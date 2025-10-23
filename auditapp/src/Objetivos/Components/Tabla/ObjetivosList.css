@@ -1,0 +1,112 @@
+/* Estilos generales */
+.safety-container {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f7fc;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin: 20px;
+  }
+  
+  .safety-container h2 {
+    color: #333;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  .safety-container p {
+    color: #555;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  /* Estilos para la tabla */
+  .safety-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .safety-table th, .safety-table td {
+    padding: 12px 15px;
+    text-align: center;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  
+  .safety-table th {
+    background-color: #004b6d;
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  .safety-table td {
+    background-color: #fff;
+    color: #555;
+  }
+  
+  /* Efecto hover para las celdas */
+  .safety-table td:hover {
+    background-color: #f1f1f1;
+    cursor: pointer;
+  }
+  /* Estilos para el separador de áreas */
+.area-separator {
+    background-color: #004b6d;
+    color: white;
+    font-weight: bold;
+    padding: 10px;
+    margin-top: 30px;
+    text-align: center;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    border-radius: 5px;
+  }
+  
+  .area-separator-line {
+    border: 0;
+    height: 2px;
+    background-color: #004b6d;
+    margin-top: 20px;
+    margin-bottom: 30px;
+  }
+  
+  
+  /* Filtro de la tabla */
+  .safety-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .safety-table tr:hover {
+    background-color: #f2f8ff;
+  }
+  
+  /* Estilo para las celdas de los indicadores */
+  .safety-table td:nth-child(5), .safety-table td:nth-child(6), .safety-table td:nth-child(7) {
+    font-weight: bold;
+    color: #0077cc;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+  }
+  
+  /* Agregar sombra a la tabla */
+  .safety-table {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Estilo responsive para pantallas más pequeñas */
+  @media (max-width: 768px) {
+    .safety-table {
+      font-size: 0.9rem;
+    }
+    .safety-table th, .safety-table td {
+      padding: 8px 10px;
+    }
+  }
+  

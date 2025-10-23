@@ -1,0 +1,75 @@
+/* General */
+.dashboard-container {
+    padding: 20px;
+    background-color: #f4f7fc;
+    color: #333;
+    border-radius: 10px;
+    max-width: 1200px;
+    margin: 15vh auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Títulos */
+  .dashboard-title {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #4CAF50;
+  }
+  
+  .dashboard-section h3 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+  }
+  
+  .dashboard-table th, .dashboard-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .dashboard-table th {
+    background-color: #f2f2f2;
+    color: #333;
+    font-weight: bold;
+  }
+  
+  
+  /* Contenedor de las gráficas */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  /* Secciones de cada gráfica */
+  .dashboard-section {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Espaciado para las gráficas */
+  .chart-container {
+    padding: 10px;
+  }
+  
+  /* Estilos en dispositivos pequeños */
+  @media (max-width: 600px) {
+    .dashboard-title {
+      font-size: 20px;
+    }
+    .dashboard-section {
+      padding: 10px;
+    }
+  }
+  

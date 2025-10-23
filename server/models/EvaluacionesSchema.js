@@ -1,0 +1,48 @@
+const mongoose = require("mongoose");
+//hola buenas noches
+
+const EvaluacionesSchema = new mongoose.Schema({
+  folio: {type: String},
+  auditoriaId: {type: String},
+  auditorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Usuarios"
+  },
+  nombre: {type: String},
+  cursos: [
+    {
+      nombreCurso: { type: String},
+      calificacion: { type: Number},
+      aprobado: { type: Boolean}
+    }
+  ],
+  conocimientosHabilidades: [
+    {
+      conocimiento: { type: String},
+      puntuacion: { type: Number, min: 0, max: 5 }
+    }
+  ],
+  atributosCualidadesPersonales: [
+    {
+      atributo: { type: String},
+      puntuacion: { type: Number, min: 0, max: 5 }
+    }
+  ],
+  experiencia: {
+    tiempoLaborando: { type: String},
+    equipoInocuidad: { type: Boolean},
+    auditoriasInternas: { type: String}
+  },
+  formacionProfesional: {
+    nivelEstudios: { type: String},
+    especialidad: { type: String},
+    puntuacion: { type: Number},
+    comentarios: { type: String }
+  },
+  porcentajeTotal: { type: Number, default: 0 },
+  estado: {type: String}
+});
+
+module.exports = mongoose.model("Evaluaciones", EvaluacionesSchema);
+
+

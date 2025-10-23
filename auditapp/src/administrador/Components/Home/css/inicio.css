@@ -1,0 +1,140 @@
+  .inicio-container.fade-in {
+    opacity: 1;
+    transition: opacity 1s ease-in-out;
+  }
+
+  .inicio-container.fade-out {
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+  }
+
+  .inicio-container h1 {
+    color: white;
+    font-size: 6em;
+    position: absolute; 
+    font-family: 'Christmas Baliana', sans-serif;
+    top: 20vh;
+    left: 50%; 
+    transform: translate(-50%, -50%); 
+    text-align: center; 
+    text-shadow: 
+    -1px -1px 0 #000,  
+    1px -1px 0 #000,   
+    -1px 1px 0 #000,   
+    1px 1px 0 #000;  
+    word-spacing: 20px;
+    letter-spacing: 0.1em;
+  }
+
+  .video{
+    width: 100%;
+    height: 60vh;
+    object-fit: cover;
+    top: 0;
+    left: 0;
+    z-index: -1;
+  }
+
+  /*Nuevos estilos*/
+.contenedor-home {
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: space-around;
+    width: 85vw; 
+    max-width: 90vw; 
+    margin: 0 auto; 
+    padding: 2vh; 
+    border-radius: 1vw; 
+    margin-top: 5vh; 
+    border: 3px solid #b8b8b8;
+    background-color: var(--bg-secondary);
+    margin-top: 20em;
+    margin-bottom: 15vh;
+}
+
+.inicio-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.conten-funcion h2{
+  margin-left: 30vw;
+}
+
+.conten-funcion {
+  margin-top: -15em;
+  position: relative;
+}
+
+.conten-funcion h1 {
+  position: absolute;
+  top: -8vh;
+  left: 7vw;
+  margin: 0; 
+  padding: 10px; 
+  color: #ffffff;
+  text-shadow: 
+    -1px -1px 0 #000,  
+    1px -1px 0 #000,   
+    -1px 1px 0 #000,   
+    1px 1px 0 #000;    
+}
+
+.card-home {
+  background-color: var(--bg-cards);
+  border: 2px solid #e2e2e2;
+  border-radius: 1.5vw;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: transform 0.3s ease;
+  width: 10em;
+  height: 13em;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+}
+
+.card-home:hover {
+  transform: translateY(-15px);
+}
+
+.imagen-mini{
+  width: 100%;
+  height: auto;
+}
+
+.fondo-home{
+  margin: 0 auto 0;
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+}
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--transp); /* negro transparente */
+  pointer-events: none; /* evita que interfiera con clics */
+}
+
+
+@media (max-width: 1106px) {
+  .inicio-container h1 {
+    font-size: 5em;
+  }
+}
+
+@media (max-width: 768px) {
+  .inicio-container h1 {
+    font-size: 3em;
+  }
+}

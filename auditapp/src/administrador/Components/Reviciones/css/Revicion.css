@@ -1,0 +1,339 @@
+.hallazgo-imagen {
+    width: 100%;
+    height: 100%; 
+    object-fit: cover;
+}
+
+.datos-container-repo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 7rem auto 0;
+    width: 80rem;
+    max-width: 100rem;
+    padding: 20px;
+    background-color: var(--bg-reporte-cn);
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.datos-container-repo th {
+    background-color: var(--bg-tabla-th);
+}
+
+th.conformity-header-repo {
+    text-align: center;
+    vertical-align: middle;
+    background-color: #189c44;
+    color: #ffffff;
+}
+
+.header-container-datos-repo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.header-container-datos-repo h1{
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.contenedor-repo{
+    display: flex;
+    flex-direction: column;
+    margin: 2rem auto 0;
+    width: 78rem;
+    max-width: 100rem;
+    padding: 20px;
+    background-color: var(--bg-reporte);
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-top: -10px;
+    margin-bottom: 10px;
+}
+
+.duracion-bloque-repo {
+    width: 81rem;
+    margin-bottom: 20px;
+    background-color: #00B096;
+    cursor: pointer;
+}
+
+.duracion-bloque-repo h2 {
+    margin: 0;
+    padding: 10px 0;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.espacio-repo {
+    margin-top: 7em;
+}
+
+.logo-empresa-repo {
+    position: absolute;
+    height: auto;
+    width: 12em;
+    max-width: 12em;
+    border-radius: 10px;
+    margin: 0 0 2px 0;
+}
+
+.dato {
+    text-align: left;
+    font-size: 14px;
+    margin-bottom: 1%;
+}
+
+.bold-text {
+    font-weight: bold;
+}
+
+.mover {
+    display: flex;
+    justify-content: space-between;
+    margin-top: -1%;
+    margin-bottom: 1%;
+}
+
+.grupo-izquierda,
+.grupo-derecha {
+  width: 48%;
+}
+
+.horizontal-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.horizontal-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-right: 13em;
+}
+
+.horizontal-group:last-child {
+    margin-right: 0; 
+}
+
+.horizontal-item {
+    box-sizing: border-box;
+}
+
+.horizontal-inline {
+    display: flex;
+    align-items: center; /* Alinea verticalmente los elementos al centro */
+}
+
+.horizontal-inline-item {
+    margin-left: 5px; /* Ajusta el margen según sea necesario */
+}
+
+.update-button-container.hidden {
+    display: none;
+}
+
+.table-header {
+    width: 150px; 
+    text-align: center;
+}
+
+table {
+    width: 100%;
+    max-width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+.alingR2{
+    text-align: left;
+}
+
+.hidden {
+    display: none;
+}
+
+.tabla-reporte table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.tabla-reporte th, .tabla-reporte td {
+    padding: 8px;
+    text-align: center;
+}
+
+.alingR{
+    text-align: justify;
+}
+
+.encabezado{
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    border-radius: 5px;
+    width: 150rem;
+    background-color: #98ff9d;
+}
+
+.buttons-estado{
+    display: flex;
+    justify-content: end;
+    gap: 10px;
+    margin-bottom: 1em;
+}
+
+.buttons-estado button{
+    width: 10%;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    color: #ffffff;
+    font-weight: bold;
+    background-color: #00cc7e;
+}
+
+.boton-rechazar{
+    background-color: #cc0000 !important;
+}
+
+.boton-rechazar:hover{
+    background-color: #9c0000 !important;
+}
+
+.boton-nota{
+    background-color: #007acc !important;
+}
+
+.boton-nota:hover{
+    background-color: #005e9c  !important;
+}
+
+.buttons-estado button:hover{
+    color: #ffffff;
+    background-color: #009657;
+}
+
+.textarea-mod{
+    position: absolute;
+    margin-top: 4rem;
+    width: 25.5rem;
+    height: 30%;
+    margin-left: 20rem;
+}
+
+.button-oculto{
+    border: none;
+    background-color: transparent;
+    color: transparent;
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.button-oculto:hover{
+    background-color: #007acc;
+    color: #ffffff;
+}
+
+.aviso{
+    font-size: 30px;
+}
+
+/* ======= Barra de filtros / búsqueda ======= */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.toolbar__left, .toolbar__right {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  border: 1px solid #b8b8b8;
+  background: #fff;
+  border-radius: 999px;
+  padding: .4rem .8rem;
+  font-size: .9rem;
+  cursor: pointer;
+}
+
+.filter-btn:hover { background: #f5f5f5; }
+.filter-btn--active {
+  background: #3F3D73;
+  color: #fff;
+  border-color: #3F3D73;
+}
+
+.search-input {
+  border: 1px solid #b8b8b8;
+  border-radius: 8px;
+  padding: .5rem .65rem;
+  min-width: 220px;
+}
+
+/* ======= Badges / Pills ======= */
+.badge {
+  display: inline-block;
+  margin-left: .5rem;
+  font-size: .75rem;
+  padding: .1rem .45rem;
+  border-radius: 999px;
+  background: #e8e8e8;
+}
+
+.badge--ishikawa { background: #3F3D73; color: #fff; }
+.badge--auditoria { background: #7bc2fc; color: #003; }
+
+.card-meta {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: .35rem;
+}
+
+.pill {
+  display: inline-block;
+  font-size: .72rem;
+  padding: .15rem .5rem;
+  border-radius: 999px;
+  border: 1px solid #b8b8b8;
+  background: #fff;
+}
+.pill--ishikawa { border-color: #3F3D73; color: #3F3D73; }
+.pill--auditoria { border-color: #7bc2fc; color: #0c3a52; }
+
+/* (opcional) mejora pequeñas cosas de tarjeta en tu estilo actual */
+.card-repo p { margin: .25rem 0; }
+/* Badges por estado */
+.badge--revision { background: #ffc107; color: #333; }       /* ámbar */
+.badge--revisadas { background: #3F3D73; color: #fff; }      /* primario */
+
+/* Pills (etiqueta en cada tarjeta) */
+.pill--revision { border-color: #ffc107; color: #7a5a00; background: #fff8e1; }
+.pill--revisadas { border-color: #3F3D73; color: #3F3D73; background: #ffffff; }
+
+/* Detalles menores */
+.card-meta { display: flex; justify-content: flex-end; margin-bottom: .35rem; }
+.card-repo p { margin: .25rem 0; }

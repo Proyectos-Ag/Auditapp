@@ -1,0 +1,274 @@
+/* Modern Modal Styling */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-main {
+  position: relative;
+  width: 60%;
+  max-width: 700px;
+  background: linear-gradient(145deg, #ffffff, #f5f7fa);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 30px;
+  animation: modalFadeIn 0.4s ease-out;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 59, 48, 0.9);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2em;
+  font-weight: bold;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #ffffff;
+  padding: 0;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.modal-close:hover {
+  background: #ff0000;
+  transform: scale(1.1);
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+}
+
+.display-block {
+  display: flex;
+}
+
+.display-none {
+  display: none;
+}
+
+/* Form Styling */
+.registro-form {
+  overflow-y: auto;
+  padding-right: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #00B096 #f0f0f0;
+}
+
+.registro-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.registro-form::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+
+.registro-form::-webkit-scrollbar-thumb {
+  background-color: #00B096;
+  border-radius: 10px;
+}
+
+.registro-form h2 {
+  color: #2c3e50;
+  font-size: 28px;
+  margin-bottom: 25px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #00B096;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="date"],
+.form-group input[type="number"],
+.form-group select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #dce4ec;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s;
+  background-color: #f8f9fa;
+  color: #2c3e50;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #00B096;
+  box-shadow: 0 0 0 3px rgba(0, 176, 150, 0.2);
+  background-color: #ffffff;
+}
+
+.form-group button {
+  background: none;
+  border: none;
+  color: #00B096;
+  cursor: pointer;
+  position: absolute;
+  right: 12px;
+  top: 42px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-group button:hover {
+  color: #007c69;
+}
+
+.form-group select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2300B096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+.error-message {
+  color: #e74c3c;
+  background-color: rgba(231, 76, 60, 0.1);
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  border-left: 4px solid #e74c3c;
+}
+
+.additional-fields {
+  padding: 15px;
+  background-color: rgba(0, 176, 150, 0.05);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px dashed rgba(0, 176, 150, 0.3);
+}
+
+/* Button Styling */
+.modal-buttons {
+  margin-top: 25px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-buttons button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-registrar {
+  background-color: #00B096;
+  color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 176, 150, 0.2);
+}
+
+.btn-cancelar {
+  background-color: #f1f2f6;
+  color: #5d6778;
+}
+
+.btn-registrar:hover {
+  background-color: #00967d;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 176, 150, 0.3);
+}
+
+.btn-cancelar:hover {
+  background-color: #e74c3c;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.btn-registrar:active, .btn-cancelar:active {
+  transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .modal-main {
+    width: 85%;
+    padding: 20px;
+  }
+  
+  .form-group label {
+    font-size: 13px;
+  }
+  
+  .modal-buttons button {
+    padding: 10px 20px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-main {
+    width: 95%;
+    padding: 15px;
+  }
+  
+  .registro-form h2 {
+    font-size: 24px;
+  }
+  
+  .form-group input, 
+  .form-group select {
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+  
+  .modal-buttons {
+    flex-direction: column;
+  }
+  
+  .modal-buttons button {
+    width: 100%;
+  }
+}
