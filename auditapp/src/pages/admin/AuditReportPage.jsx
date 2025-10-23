@@ -1,4 +1,3 @@
-// src/features/auditoria/pages/AuditReportPage.jsx
 import React, { useContext, useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
