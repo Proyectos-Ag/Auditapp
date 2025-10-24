@@ -171,11 +171,21 @@ const IshPDF = forwardRef(({
 
   // --- drawIshikawaDiagram: (mantengo tu lógica tal cual, salvo NO JUSTIFICAR causas) ---
   const drawIshikawaDiagram = (doc, yOffset, diagrama, problema, pageWidth, pageHeight, margin, causaTexto = '', scale = 1, measureOnly = false) => {
-    const lineColor  = '#179e6a';
     const centerY    = yOffset + 20;
     const usableW    = pageWidth - 2 * margin;
     const startX     = margin + usableW * 0.10;
     const endX       = margin + usableW * 0.87;
+    // Paleta y acabado global
+    const green     = '#179e6a';
+    const greenDark = '#0e7f51';
+    const grayLight = '#e9eef0';
+    const lineColor = green;           // seguimos usando lineColor como antes
+
+    // Bordes/uniones redondeadas en todos los trazos
+    doc.setLineCap('round');
+    doc.setLineJoin('round');
+
+
 
     // Valores base
     const baseTailSide    = 100;
@@ -194,58 +204,15 @@ const IshPDF = forwardRef(({
     const causeLineHeight = Math.round(causeFontSize * 1.25);   // altura base de línea (ligeramente mayor)
     const causeLineSpacing = 1.25; // factor para separar renglones (1.0 = sin separación extra)
 
-    function drawJustifiedText(docLocal, text, x, y, maxWidth) {
-      const words = text.split(/\s+/).filter(Boolean);
-      if (words.length === 0) return;
-      let wordsWidth = 0;
-      for (const w of words) {
-        wordsWidth += (typeof docLocal.getTextWidth === 'function')
-          ? docLocal.getTextWidth(w)
-          : docLocal.getStringUnitWidth(w) * docLocal.internal.getFontSize();
-      }
-      if (words.length === 1) {
-        if (wordsWidth < maxWidth) {
-          const offset = (maxWidth - wordsWidth) / 2;
-          docLocal.text(words[0], x + offset, y, { align: 'left' });
-        } else {
-          docLocal.text(words[0], x, y, { align: 'left' });
-        }
-        return;
-      }
-      if (words.length <= 2) {
-        let cursorX = x;
-        for (let i = 0; i < words.length; i++) {
-          const w = words[i];
-          docLocal.text(w, cursorX, y, { align: 'left' });
-          const wWidth = (typeof docLocal.getTextWidth === 'function')
-            ? docLocal.getTextWidth(w)
-            : docLocal.getStringUnitWidth(w) * docLocal.internal.getFontSize();
-          cursorX += wWidth + (typeof docLocal.getTextWidth === 'function' ? docLocal.getTextWidth(' ') : docLocal.getStringUnitWidth(' ') * docLocal.internal.getFontSize());
-        }
-        return;
-      }
-      const spaceCount = words.length - 1;
-      const extraSpace = Math.max(0, (maxWidth - wordsWidth) / spaceCount);
-      let cursorX = x;
-      for (let i = 0; i < words.length; i++) {
-        const w = words[i];
-        docLocal.text(w, cursorX, y, { align: 'left' });
-        const wWidth = (typeof docLocal.getTextWidth === 'function')
-          ? docLocal.getTextWidth(w)
-          : docLocal.getStringUnitWidth(w) * docLocal.internal.getFontSize();
-        cursorX += wWidth + extraSpace;
-      }
-    }
-
     const causaRaices = (causaTexto && causaTexto.toString().trim())
       ? causaTexto.toString().split(';').map(s => s.trim()).filter(Boolean).map(s => s.toLowerCase())
       : [];
 
-    // Línea central
-    doc.setLineWidth(Math.max(2, 7 * scale)).setDrawColor(lineColor)
-       .line(startX, centerY, endX, centerY);
+    // —— Espina central (misma geometría) ——
+    doc.setDrawColor(lineColor).setLineWidth(Math.max(2, 7 * scale));
+    doc.line(startX, centerY, endX, centerY);
 
-    // --- COLA (triángulo) ---
+    // —— Cola (misma geometría) con ligero borde ——
     const tipX = startX + triangleShift;
     const tip = [tipX, centerY];
     const baseLeftX = tipX - triangleDepth;
@@ -256,30 +223,18 @@ const IshPDF = forwardRef(({
     doc.setFillColor(lineColor);
     try {
       if (typeof doc.triangle === 'function') {
-        doc.triangle(
-          tip[0], tip[1],
-          baseTop[0], baseTop[1],
-          baseBottom[0], baseBottom[1],
-          'F'
-        );
+        doc.triangle(tip[0], tip[1], baseTop[0], baseTop[1], baseBottom[0], baseBottom[1], 'F');
       } else {
-        doc.setDrawColor(lineColor).setLineWidth(Math.max(0.5, 1 * scale));
-        doc.line(tip[0], tip[1], baseTop[0], baseTop[1]);
-        doc.line(baseTop[0], baseTop[1], baseBottom[0], baseBottom[1]);
-        doc.line(baseBottom[0], baseBottom[1], tip[0], tip[1]);
-        doc.setFillColor(lineColor);
         doc.rect(baseLeftX, centerY - halfBase, triangleDepth, tailSide, 'F');
       }
-    } catch (e) {
-      doc.setDrawColor(lineColor).setLineWidth(Math.max(0.5, 1 * scale));
-      doc.line(tip[0], tip[1], baseTop[0], baseTop[1]);
-      doc.line(baseTop[0], baseTop[1], baseBottom[0], baseBottom[1]);
-      doc.line(baseBottom[0], baseBottom[1], tip[0], tip[1]);
-      doc.setFillColor(lineColor);
-      doc.rect(baseLeftX, centerY - halfBase, triangleDepth, tailSide, 'F');
-    }
+    } catch {}
+    // Borde sutil de la cola
+    doc.setDrawColor(greenDark).setLineWidth(Math.max(0.6, 1.2 * scale));
+    doc.line(tip[0], tip[1], baseTop[0], baseTop[1]);
+    doc.line(baseTop[0], baseTop[1], baseBottom[0], baseBottom[1]);
+    doc.line(baseBottom[0], baseBottom[1], tip[0], tip[1]);
 
-    // --- CABEZA (con texto del problema centrado) ---
+    // —— Cabeza (misma posición/tamaño) con borde sutil ——
     doc.setFillColor(lineColor);
     const headRoundedRadius = Math.max(6, 55 * scale);
     if (typeof doc.roundedRect === 'function') {
@@ -287,13 +242,14 @@ const IshPDF = forwardRef(({
     } else {
       doc.rect(endX, centerY - headSize / 2, headSize, headSize, 'F');
     }
+    // “tapa” izquierda (igual que antes)
     const leftCoverWidth = headSize * 0.55;
     doc.rect(endX, centerY - headSize / 2, leftCoverWidth, headSize, 'F');
 
-    // Texto del problema: centrado vertical y horizontal dentro de la cabeza
+    // —— Texto del problema (mismo centrado) ——
     const problemFontSize = Math.max(10, Math.round(14 * scale));
-    doc.setFont('helvetica', 'bold').setFontSize(problemFontSize).setTextColor('#FFFFFF');
-    const problemText = (problema && problema.toString().trim()) ? problema.toString().trim() : 'Problema';
+    doc.setFont('helvetica','bold').setFontSize(problemFontSize).setTextColor('#FFFFFF');
+    const problemText = 'Problema';
     const problemLines = doc.splitTextToSize(problemText, headSize - 10);
     const lineSpacing = problemFontSize + 2;
     const textBlockHeight = problemLines.length * lineSpacing;
@@ -301,6 +257,7 @@ const IshPDF = forwardRef(({
     problemLines.forEach((ln, idx) => {
       doc.text(ln, endX + headSize / 2, startTextY + idx * lineSpacing, { align: 'center' });
     });
+
 
     // Espinas y causas (mantuve la lógica original para no alterar el diagrama)
     const labels = ['Medio ambiente','Métodos','Materiales','Mano de obra','Maquinaria'];
@@ -332,51 +289,68 @@ const IshPDF = forwardRef(({
       const x2  = baseX + Math.cos(rad) * spineLength;
       const y2  = baseY + Math.sin(rad) * spineLength * (top ? -1 : 1);
 
-      // Línea de espina
-      doc.setLineWidth(Math.max(1.2, 4 * scale)).setDrawColor(lineColor)
-         .line(baseX, baseY, x2, y2);
+      // —— Línea de espina (misma geometría) ——
+doc.setDrawColor(lineColor).setLineWidth(Math.max(1.2, 4 * scale));
+doc.line(baseX, baseY, x2, y2);
 
-      // --- Etiqueta con fondo redondeado ---
-      const label = labels[i];
-      const paddingX = Math.max(6, 8 * scale);
-      const paddingY = Math.max(4, 6 * scale);
+// Unión “cápsula” en la espina central (decorativo, no mueve nada)
+doc.setFillColor(lineColor);
+doc.circle(baseX, baseY, Math.max(2.2, 3 * scale), 'F');
 
-      let textWidth;
-      const labelFontSize = Math.max(10, Math.round(14 * scale));
-      doc.setFontSize(labelFontSize);
-      if (typeof doc.getTextWidth === 'function') {
-        textWidth = doc.getTextWidth(label);
-      } else {
-        textWidth = doc.getStringUnitWidth(label) * doc.internal.getFontSize();
-      }
-      const bgW = textWidth + paddingX * 2;
-      const bgH = Math.max(labelFontSize + paddingY * 2, (10 * scale) + paddingY * 2);
+// —— Chip de categoría (misma posición/tamaño) con borde y sombra ——
+const label = labels[i];
+const paddingX = Math.max(6, 8 * scale);
+const paddingY = Math.max(4, 6 * scale);
 
-      let bgX;
-      if (i === 0 || i === 1) {
-        const originalLeft = x2 - bgW - 8;
-        bgX = originalLeft + smallRightShiftFor012;
-      } else {
-        if (top) {
-          bgX = x2 - bgW - 2 + smallRightShiftFor234;
-        } else {
-          bgX = x2 + 2 + smallRightShiftFor234;
-        }
-      }
-      const bgY = y2 - bgH / 2;
+const labelFontSize = Math.max(10, Math.round(14 * scale));
+doc.setFontSize(labelFontSize);
+const textWidth = (typeof doc.getTextWidth === 'function')
+  ? doc.getTextWidth(label)
+  : doc.getStringUnitWidth(label) * doc.internal.getFontSize();
 
-      doc.setFillColor(lineColor);
-      const rr = Math.max(4, 6 * scale);
-      if (typeof doc.roundedRect === 'function') {
-        doc.roundedRect(bgX, bgY, bgW, bgH, rr, rr, 'F');
-      } else {
-        doc.rect(bgX, bgY, bgW, bgH, 'F');
-      }
+const bgW = textWidth + paddingX * 2;
+const bgH = Math.max(labelFontSize + paddingY * 2, (10 * scale) + paddingY * 2);
 
-      doc.setFont('helvetica','bold').setFontSize(labelFontSize).setTextColor('#FFFFFF');
-      const textXcenter = bgX + bgW / 2;
-      const textYcenter = bgY + bgH / 2 + (labelFontSize * 0.35);
-      doc.text(label, textXcenter, textYcenter, { align: 'center' });
+let bgX;
+if (i === 0 || i === 1) {
+  const originalLeft = x2 - bgW - 8;
+  bgX = originalLeft + smallRightShiftFor012; // misma lógica
+} else {
+  bgX = top ? (x2 - bgW - 2 + smallRightShiftFor234) : (x2 + 2 + smallRightShiftFor234);
+}
+const bgY = y2 - bgH / 2;
+
+// Sombra sutil (si GState existe)
+if (doc.GState) {
+  const gs = new doc.GState({ opacity: 0.15 });
+  doc.setGState(gs);
+  if (typeof doc.roundedRect === 'function') {
+    doc.setFillColor(0,0,0);
+    doc.roundedRect(bgX + 1, bgY + 1, bgW, bgH, Math.max(4, 6 * scale), Math.max(4, 6 * scale), 'F');
+  }
+  doc.setGState(new doc.GState({ opacity: 1 }));
+}
+
+// Relleno y borde del chip
+doc.setFillColor(lineColor);
+if (typeof doc.roundedRect === 'function') {
+  doc.roundedRect(bgX, bgY, bgW, bgH, Math.max(4, 6 * scale), Math.max(4, 6 * scale), 'F');
+} else {
+  doc.rect(bgX, bgY, bgW, bgH, 'F');
+}
+doc.setDrawColor(greenDark).setLineWidth(Math.max(0.6, 1 * scale));
+if (typeof doc.roundedRect === 'function') {
+  doc.roundedRect(bgX, bgY, bgW, bgH, Math.max(4, 6 * scale), Math.max(4, 6 * scale), 'S');
+} else {
+  doc.rect(bgX, bgY, bgW, bgH, 'S');
+}
+
+// Texto del chip
+doc.setFont('helvetica','bold').setTextColor('#FFFFFF');
+const textXcenter = bgX + bgW / 2;
+const textYcenter = bgY + bgH / 2 + (labelFontSize * 0.35);
+doc.text(label, textXcenter, textYcenter, { align: 'center' });
+
 
       // --- Causas ---
       const causes = (spineKeys[i] || []).map(k => record[k]).filter(Boolean);
@@ -390,15 +364,21 @@ const IshPDF = forwardRef(({
         const dashLen = Math.max(6, Math.round(spineLength * 0.08));
         const lineToX = causeX - dashLen;
 
-        doc.setLineDashPattern([2, 2], 0)
-           .setLineWidth(Math.max(0.4, 0.6 * scale))
-           .setDrawColor('#292929')
-           .line(causeX, causeY, lineToX, causeY);
+        // Punto de anclaje
+        doc.setFillColor(lineColor);
+        doc.circle(causeX, causeY, Math.max(1.6, 2 * scale), 'F');
 
-        doc.setLineDashPattern([], 0)
-           .setFont('helvetica','normal')
-           .setFontSize(causeFontSize)
-           .setTextColor(0, 0, 0); // asegurar negro para causas
+        // Conector punteado fino en verde
+        doc.setLineDashPattern([2 * scale, 2 * scale], 0);
+        doc.setLineWidth(Math.max(0.3, 0.5 * scale)).setDrawColor('#1aa774');
+        doc.line(causeX, causeY, lineToX, causeY);
+        doc.setLineDashPattern([], 0);
+
+        // Fuente de las causas
+        doc.setFont('helvetica','normal')
+          .setFontSize(causeFontSize)
+          .setTextColor(0, 0, 0);
+
 
         const desiredMax = Math.round(spineLength * 0.80); // más ancho por defecto
         const pad = Math.max(4, 6 * scale); // padding dentro del rectángulo
@@ -449,13 +429,21 @@ const IshPDF = forwardRef(({
           const rectY = causeY + (ii * (rectH * causeLineSpacing)) - ((lines.length - 1) * (rectH * causeLineSpacing) / 2);
 
           if (isRootCause) {
+            // fondo destacado + borde suave
             doc.setFillColor('#fff4a8');
             if (typeof doc.roundedRect === 'function') {
               doc.roundedRect(rectX, rectY - 2, rectW, rectH, Math.max(3, 4 * scale), Math.max(3, 4 * scale), 'F');
             } else {
               doc.rect(rectX, rectY - 2, rectW, rectH, 'F');
             }
+            doc.setDrawColor('#c7b24e').setLineWidth(Math.max(0.5, 0.8 * scale));
+            if (typeof doc.roundedRect === 'function') {
+              doc.roundedRect(rectX, rectY - 2, rectW, rectH, Math.max(3, 4 * scale), Math.max(3, 4 * scale), 'S');
+            } else {
+              doc.rect(rectX, rectY - 2, rectW, rectH, 'S');
+            }
           }
+
 
           const innerMaxWidth = rectW - pad * 2;
           const textY = rectY + rectH * 0.6;
@@ -466,6 +454,10 @@ const IshPDF = forwardRef(({
           doc.text(line, rightX, textY, { align: 'right' });
         });
       });
+      // Tapón en el extremo de la espina (detalle visual)
+      doc.setFillColor(lineColor);
+      doc.circle(x2, y2, Math.max(1.6, 2 * scale), 'F');
+
     });
 
     const estimatedHeight = (headSize / 2) + 50 * scale + (Math.max(0, spineLength * 0.15));
@@ -742,36 +734,55 @@ const IshPDF = forwardRef(({
       const textSize = 14;
 
       // --- SECCIÓN PROBLEMA ---
-doc.setFont(BASE_FONT, 'bold').setFontSize(LABEL_SIZE).setTextColor(0)
-  .text('Problema:', margin, yOffset);
+// --- SECCIÓN PROBLEMA + FECHA (dos columnas con gap) ---
+const PROBLEMA_LABEL_X = margin;
+const PROBLEMA_TEXT_X  = 140;     // igual que tenías
+const RIGHT_BOX_W      = 170;     // ancho fijo p/ Fecha/Folio (ajustable)
+const COL_GAP          = 12;      // separación entre columnas (ajustable)
 
-// Mantener exactamente el ancho/posición que tenías en la versión anterior
-const problemaStartX = 140; // igual que la versión que quieres conservar
-// AJUSTE: respetar margen para evitar choque con orilla
-const problemaMaxW = pageWidth - margin - problemaStartX - 10;
-
-// Pre-calculamos las líneas para conservar la misma altura vertical (no alterar yOffset)
-const problemaLines = doc.splitTextToSize((ishikawa.problema || '').toString(), problemaMaxW);
-const problemaHeight = problemaLines.length * (TEXT_SIZE + 2); // cálculo igual al tuyo anterior
-
-// Dibujamos el texto justificado con la función global (mantiene fontSize = TEXT_SIZE)
+// 1) Columna derecha: FECHA / FOLIO (ancho fijo y alineado a la derecha)
+const rightX = pageWidth - margin - RIGHT_BOX_W;
+let infoY = yOffset;
 doc.setFont(BASE_FONT, 'normal').setFontSize(TEXT_SIZE).setTextColor(0);
-drawParagraphGlobal(doc, (ishikawa.problema || '').toString(), problemaStartX, yOffset, problemaMaxW, TEXT_SIZE, PAGE_LINE_SPACING);
 
-// --- SECCIÓN FECHA Y FOLIO (derecha) ---
-const infoX = pageWidth - margin;
-let infoYOffset = yOffset;
-doc.setFont(BASE_FONT, 'normal').setFontSize(TEXT_SIZE).setTextColor(0)
-  .text(`Fecha: ${ishikawa.fecha || ''}`, infoX, infoYOffset, { align: 'right' });
+const fechaStr = `Fecha: ${ishikawa.fecha || ''}`;
+const folioStr = ishikawa.folio ? `Folio: ${ishikawa.folio}` : '';
+const infoLines = [fechaStr, folioStr].filter(Boolean);
 
-infoYOffset += TEXT_SIZE + 4;
-if (ishikawa.folio) {
-  doc.text(`Folio: ${ishikawa.folio}`, infoX, infoYOffset, { align: 'right' });
-  infoYOffset += TEXT_SIZE + 4;
-}
+// pintar con wrapping dentro de RIGHT_BOX_W y alineado a la derecha
+let infoPaintedLines = 0;
+infoLines.forEach((ln) => {
+  const wrapped = doc.splitTextToSize(ln, RIGHT_BOX_W);
+  wrapped.forEach((wln, j) => {
+    doc.text(wln, rightX + RIGHT_BOX_W, infoY + (infoPaintedLines + j) * (TEXT_SIZE + 4), { align: 'right' });
+  });
+  infoPaintedLines += wrapped.length;
+});
+const infoHeight = infoPaintedLines * (TEXT_SIZE + 4);
 
-// Ajustar posición vertical después del problema (misma suma que antes)
-yOffset += problemaHeight + 15;
+// 2) Columna izquierda: PROBLEMA (el ancho descuenta la caja derecha + gap)
+doc.setFont(BASE_FONT, 'bold').setFontSize(LABEL_SIZE).setTextColor(0)
+   .text('Problema:', PROBLEMA_LABEL_X, yOffset);
+
+doc.setFont(BASE_FONT, 'normal').setFontSize(TEXT_SIZE).setTextColor(0);
+// ancho máx = (ancho total útil) - caja derecha - gap - ( offset ya usado por PROBLEMA_TEXT_X )
+const problemaMaxW = (pageWidth - 2 * margin) - RIGHT_BOX_W - COL_GAP - (PROBLEMA_TEXT_X - margin);
+
+// drawParagraphGlobal regresa el y final → restamos yOffset para obtener la altura
+const problemaEndY = drawParagraphGlobal(
+  doc,
+  (ishikawa.problema || '').toString(),
+  PROBLEMA_TEXT_X,
+  yOffset,
+  Math.max(40, problemaMaxW),      // evita valores negativos en bordes
+  TEXT_SIZE,
+  PAGE_LINE_SPACING
+);
+const problemaHeight = problemaEndY - yOffset;
+
+// 3) Avanzar yOffset por la altura mayor de ambas columnas
+yOffset += Math.max(problemaHeight, infoHeight) + 12;
+
 
       // --- SECCIÓN AFECTACIÓN ---
 doc.setFont(BASE_FONT, 'bold').setFontSize(LABEL_SIZE).setTextColor(0);
