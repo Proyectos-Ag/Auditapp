@@ -8,18 +8,24 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// Conectar a MongoDB
-require('./config/dbconfig');
+// === Mongo (patrón serverless con caché global) ===
+const { dbConnect, ensureRootUser, mongoose } = require('./config/dbconfig');
+const Usuarios = require('./models/usuarioSchema');
 
-// Cron
+// Conecta al arrancar y (opcional) siembra una sola vez con bandera
+dbConnect()
+  .then(() => ensureRootUser(Usuarios).catch(console.error))
+  .catch(err => console.error('Error al conectar a MongoDB:', err));
+
+// === Cron (cárgalo tras iniciar conexión para evitar consultas en cold start) ===
 require('./tarea_config/notificacionIsh');
 
-// Auto-Update
+// === Auto-Update ===
 const GitAutoUpdate = require('./util/gitAutoUpdate');
 
-// Rutas
-const loginRoutes       = require('./routes/loginRoutes');   
-const authRoutes        = require('./routes/authRoutes'); 
+// === Rutas ===
+const loginRoutes       = require('./routes/loginRoutes');
+const authRoutes        = require('./routes/authRoutes');
 const invitacionRoutes  = require('./routes/invitacionRoutes');
 const usuariosRouter    = require('./routes/usuarioRoutes');
 const datosRoutes       = require('./routes/datosRoutes');
@@ -45,7 +51,7 @@ app.use(cookieParser());
 
 const allowlist = new Set([
   'https://auditapp-dqej.onrender.com',
-  process.env.FRONTEND_ORIGIN_DEV, 
+  process.env.FRONTEND_ORIGIN_DEV,
 ].filter(Boolean));
 
 const corsOptionsDelegate = (req, cb) => {
@@ -53,7 +59,7 @@ const corsOptionsDelegate = (req, cb) => {
   const isAllowed = origin && allowlist.has(origin);
 
   // Refleja exactamente los headers que pide el navegador en el preflight
-  const reqHeaders = req.header('Access-Control-Request-Headers'); 
+  const reqHeaders = req.header('Access-Control-Request-Headers');
   const allowedHeaders = reqHeaders || 'Content-Type, Authorization, X-Requested-With, X-Client-Base';
 
   cb(null, {
@@ -65,12 +71,27 @@ const corsOptionsDelegate = (req, cb) => {
   });
 };
 
-
 app.use(cors(corsOptionsDelegate));
 app.options('*', cors(corsOptionsDelegate));
 
+// ======================= Middlewares generales =======================
+app.use(logger('dev'));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ======================= Garantizar conexión DB por request =======================
+// (Si ya está conectada, retorna inmediato gracias a la caché global)
+app.use(async (req, res, next) => {
+  try {
+    await dbConnect();
+    next();
+  } catch (e) {
+    next(createError(503, 'Base de datos no disponible'));
+  }
+});
+
 // ================================ HEALTH CHECK =================================
-const mongoose = require('mongoose');
 const HEALTH_PATHS = ['/health', '/api/health'];
 
 app.get(HEALTH_PATHS, (req, res) => {
@@ -94,15 +115,9 @@ app.head(HEALTH_PATHS, (req, res) => {
   res.status(200).end();
 });
 
-// ======================= Middlewares generales =======================
-app.use(logger('dev'));
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
-
 // ======================= Rutas PÚBLICAS (antes de jwtAuth) =======================
 app.use('/',        loginRoutes);
-app.use('/auth',    authRoutes); 
+app.use('/auth',    authRoutes);
 app.use('/invitacion', invitacionRoutes);
 
 // Endpoint raíz

@@ -1,40 +1,72 @@
-const mongoose = require("mongoose");
-const Usuarios = require('../models/usuarioSchema');
+// config/dbconfig.js  (CommonJS)
+const mongoose = require('mongoose');
 
-const MONGODB_URL = process.env.MONGODB_URL;
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGODB_URL;
+if (!MONGODB_URI) throw new Error('Falta MONGODB_URI (o MONGODB_URL)');
 
-mongoose.connection.on('error', console.error.bind(console, 'Error de conexión a MongoDB:'));
-mongoose.connection.on('connected', async () => {
-  console.log('Conexión exitosa a MongoDB');
+mongoose.set('bufferCommands', false);
+mongoose.set('strictQuery', false);
 
-  try {
-    // Busca un usuario root
-    const user = await Usuarios.findOne({ Correo: 'rubentest@gmail.com' });
-    if (!user) {
-      // Si no existe un usuario root, crea uno
-      const rootUser = new Usuarios({
-        Nombre: 'Rubén Cruces Paz',
-        FechaIngreso: new Date(),
-        Correo: 'rubentest@gmail.com',
-        Contraseña: 'root321',
-        Puesto: 'Global',
-        Departamento: 'Calidad',
-        Escolaridad: 'Ingenieria en Alimentos',
-        TipoUsuario: 'administrador',
-        area: 'Global'
-      });
+let cached = global.mongooseConn || { conn: null, promise: null, seeded: false };
+global.mongooseConn = cached;
 
-      await rootUser.save();
-      console.log("Usuario root creado");
-    } else {
-      console.log("Usuario root ya existe");
-    }
-  } catch (err) {
-    console.error("Error al crear el usuario root:", err);
+async function dbConnect() {
+  // Conexión viva
+  if (cached.conn && mongoose.connection.readyState === 1) return cached.conn;
+  // Conectando
+  if (cached.promise) return cached.promise;
+
+  // Nueva conexión (pool pequeño para serverless)
+  cached.promise = mongoose.connect(MONGODB_URI, {
+    maxPoolSize: 3,
+    minPoolSize: 1,
+    serverSelectionTimeoutMS: 20000,
+    connectTimeoutMS: 20000,
+    socketTimeoutMS: 45000,
+    autoIndex: false,
+    family: 4,
+    retryWrites: true,
+    w: 'majority',
+  })
+  .then((m) => {
+    cached.conn = m;
+    return m;
+  })
+  .catch((err) => {
+    cached.promise = null; // ¡clave! no dejar promesa rota cacheada
+    throw err;
+  });
+
+  return cached.promise;
+}
+
+// Semilla opcional, controlada por env y ejecutada una sola vez por proceso
+async function ensureRootUser(Usuarios) {
+  if (cached.seeded) return;
+  if (!process.env.SEED_ROOT_ON_START) return;
+
+  await dbConnect();
+
+  const correo = process.env.ROOT_EMAIL || 'rubentest@gmail.com';
+  const existe = await Usuarios.findOne({ Correo: correo }).lean();
+  if (!existe) {
+    const pwd = process.env.ROOT_PASSWORD || 'root321';
+    await Usuarios.create({
+      Nombre: process.env.ROOT_NAME || 'Rubén Cruces Paz',
+      FechaIngreso: new Date(),
+      Correo: correo,
+      Contraseña: pwd, // ⚠️ en producción, hashea (bcrypt)
+      Puesto: 'Global',
+      Departamento: 'Calidad',
+      Escolaridad: 'Ingenieria en Alimentos',
+      TipoUsuario: 'administrador',
+      area: 'Global'
+    });
+    console.log('[seed] Usuario root creado');
+  } else {
+    console.log('[seed] Usuario root ya existe');
   }
-});
+  cached.seeded = true;
+}
 
-mongoose.connect(MONGODB_URL)
-  .catch(err => console.error('Error al conectar a MongoDB:', err));
-
-module.exports = mongoose;
+module.exports = { dbConnect, ensureRootUser, mongoose };
