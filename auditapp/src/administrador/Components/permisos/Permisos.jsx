@@ -23,12 +23,10 @@ import {
   Grid,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import axios from "axios";
+import api from "../../../services/api";
 import { toast } from "react-toastify";
 // Ajusta la ruta si tu App exporta UserContext desde otro fichero
 import { UserContext } from "../../../App";
-
-const API_BASE = "/api"; // <- ajusta según tu backend
 
 // Lista de rutas de administrador (simplificadas; quita/añade según necesites)
 const ADMIN_ROUTES = [
@@ -74,7 +72,7 @@ function Permisos() {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get(`${API_BASE}/usuarios`);
+        const { data } = await api.get(`/usuarios`);
         // supongo que data es array de usuarios: [{ _id, nombre, email, permisos: [] }]
         setUsers(data || []);
       } catch (err) {
@@ -117,7 +115,7 @@ function Permisos() {
 
     try {
       setSaving(true);
-      await axios.put(`${API_BASE}/usuarios/${selectedUser._id}/permissions`, {
+      await api.put(`/usuarios/${selectedUser._id}/permissions`, {
         permissions,
       });
       // actualizar lista locals
