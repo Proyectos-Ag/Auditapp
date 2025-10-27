@@ -29,7 +29,7 @@ const EstadisticasPersonas = () => {
         );
         setAuditorias(filteredAudits);
 
-        // Obtener ishikawas
+        // Obtener ishikawa
         const ishikawaResponse = await api.get(`/ishikawa`);
         setIshikawas(ishikawaResponse.data);
 
