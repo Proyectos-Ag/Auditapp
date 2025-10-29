@@ -114,6 +114,17 @@ const estadoToVariant = (estado) => {
   return 'revision';
 };
 
+const stripConformesForCalc = (d) => ({
+  ...d,
+  Programa: (d?.Programa || []).map(p => ({
+    ...p,
+    Descripcion: (p?.Descripcion || []).filter(
+      x => String(x?.Criterio || '').trim().toLowerCase() !== 'conforme'
+    )
+  }))
+});
+
+
 export default function AuditReportPage({ variant = 'revision' }) {
   const { _id } = useParams();
   const { userData } = useContext(UserContext);
@@ -149,30 +160,48 @@ export default function AuditReportPage({ variant = 'revision' }) {
   }, [userData?.Correo]);
 
   // ¿Tiene asignaciones como AUDITOR en un reporte específico?
-  const isAssignedToCurrentAuditor = React.useCallback((ish) => {
-    if (!ish) return false;
-    const eq = (a, b) => a && b && String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
-    const email = (userData?.Correo || '').toLowerCase();
-    const name  = (userData?.Nombre || '').toLowerCase();
+const isAssignedToCurrentAuditor = React.useCallback((ish) => {
+  if (!ish) return false;
+  const eq = (a, b) => a && b && String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+  const email = (userData?.Correo || '').toLowerCase();
+  const name  = (userData?.Nombre || '').toLowerCase();
 
-    if (email && (eq(ish.auditorEmail, email) || eq(ish.auditorAsignadoCorreo, email) || eq(ish.asignadoAuditorCorreo, email))) return true;
-    if (name  && (eq(ish.auditor, name) || eq(ish.auditorAsignado, name) || eq(ish.asignadoAuditorNombre, name))) return true;
+  // campos directos típicos
+  if (email && (eq(ish.auditorEmail, email) || eq(ish.auditorAsignadoCorreo, email) || eq(ish.asignadoAuditorCorreo, email))) return true;
+  if (name  && (eq(ish.auditor, name) || eq(ish.auditorAsignado, name) || eq(ish.asignadoAuditorNombre, name))) return true;
 
-    const asignado = ish.asignadoAuditor || ish.asignadoA || ish.asignado;
-    if (asignado) {
-      if (email && (eq(asignado.correo, email) || eq(asignado.email, email))) return true;
-      if (name  && eq(asignado.nombre, name)) return true;
+  // asignado {correo|email|nombre}
+  const asignado = ish.asignadoAuditor || ish.asignadoA || ish.asignado;
+  if (asignado) {
+    if (email && (eq(asignado.correo, email) || eq(asignado.email, email))) return true;
+    if (name  && eq(asignado.nombre, name)) return true;
+  }
+
+  // ✅ responsables indican que el AUDITOR tiene algo asignado en ese reporte
+  const responsables = Array.isArray(ish.actividades)
+    ? ish.actividades.flatMap(a => Array.isArray(a?.responsable) ? a.responsable : [])
+    : [];
+  for (const r of responsables) {
+    if (email && (eq(r?.correo, email) || eq(r?.email, email))) return true;
+    if (name  && eq(r?.nombre, name)) return true;
+  }
+
+  // permitir por correo del ishikawa (cuando “te asignaron por correo”)
+  if (email && eq(ish.correo, email)) return true;
+
+  // acceso explícito
+  if (Array.isArray(ish.acceso)) {
+    for (const a of ish.acceso) {
+      const acEmail = typeof a === 'string' ? a : (a?.correo || a?.email);
+      const acName  = typeof a === 'string' ? '' : (a?.nombre);
+      if (email && eq(acEmail, email)) return true;
+      if (name  && eq(acName, name)) return true;
     }
+  }
 
-    const responsables = Array.isArray(ish.actividades)
-      ? ish.actividades.flatMap(a => Array.isArray(a?.responsable) ? a.responsable : [])
-      : [];
-    for (const r of responsables) {
-      if (email && (eq(r?.correo, email) || eq(r?.email, email))) return true;
-      if (name  && eq(r?.nombre, name)) return true;
-    }
-    return false;
-  }, [userData?.Correo, userData?.Nombre]);
+  return false;
+}, [userData?.Correo, userData?.Nombre]);
+
 
   // ⬅️ lista de ishikawas para búsquedas por reporte
   const values = Object.values(combinedIshMap || {});
@@ -196,9 +225,6 @@ export default function AuditReportPage({ variant = 'revision' }) {
 
   // ⬅️ SOLO auditado o auditor entran a "solo asignados" (admin no)
   const assignedOnly = isAuditado || (isAuditor && hasAssignedAsAuditor);
-
-
-  const variantForCard = estadoToVariant(visibleDatos[0]?.Estado);
 
   // Modal Asignar Ishikawa (solo admin y fuera de “solo asignados”)
   const [assignCtx, setAssignCtx] = useState({
@@ -379,9 +405,6 @@ export default function AuditReportPage({ variant = 'revision' }) {
   };
   const fmt2 = (v) => Number.isFinite(v) ? v.toFixed(2) : '0.00';
 
-  // ActionBar en solo lectura cuando es “solo asignados”
-  const actionVariant = isAdmin ? variantForCard : 'finalizada';
-
   // Navegación a Ishikawa: ruta normal o ruta de auditado
   const goIshikawa = (idRep, idReq, proName) => {
     const useAuditadoRoute = !isAdmin && (assignedOnly || isAuditado);
@@ -413,13 +436,16 @@ export default function AuditReportPage({ variant = 'revision' }) {
         )}
 
         {visibleDatos.map((dato, periodIdx) => {
+          const cardVariant = estadoToVariant(dato?.Estado);
+          const datoCalc = stripConformesForCalc(dato);
+          const actionVariant = isAdmin ? cardVariant : 'finalizada';
 
           const inTeam = isInTeam(dato);
           const hasMine = reportHasAssignmentsForAuditor(dato);
           // Solo asignados SI: auditado, o auditor que NO está en equipo pero sí tiene asignaciones en ese reporte
           const showOnlyAssignedThis = isAuditado || (isAuditor && !inTeam && hasMine);
           // Métricas base (puntos)
-          const { conteo, total, puntos } = contarYCalcularPuntos(dato);
+          const { conteo, total, puntos } = contarYCalcularPuntos(datoCalc);
 
           // “Conformidades externas”
           const confExternas = dato.PuntuacionMaxima ? (dato.PuntuacionMaxima - total) : undefined;
@@ -436,9 +462,10 @@ export default function AuditReportPage({ variant = 'revision' }) {
 
           // % de cumplimiento ponderado (usa mapa filtrado cuando “solo asignados”)
             const { porcentaje: porcentajePonderadoRaw } = calcularCumplimientoPonderado(
-              dato,
+              datoCalc,
               showOnlyAssignedThis ? assignedMap : combinedIshMap
             );
+
           const porcentajePonderado = n0(porcentajePonderadoRaw);
 
           const estatus = resultado >= 90 ? 'Bueno'
@@ -508,7 +535,7 @@ export default function AuditReportPage({ variant = 'revision' }) {
               </div>
 
               <div id="pdf-content-part2" className="card-body">
-                {(variantForCard === 'terminada' || variantForCard === 'finalizada' || showOnlyAssignedThis) && (
+                {(cardVariant === 'terminada' || cardVariant === 'finalizada' || showOnlyAssignedThis) && (
                   <div className="compliance-banner">
                     Porcentaje de Cumplimiento (ponderado): <b>{porcentajePonderado.toFixed(2)}%</b>
                   </div>
@@ -516,7 +543,7 @@ export default function AuditReportPage({ variant = 'revision' }) {
                 <AuditResultsTable
                   dato={dato}
                   ishikawasMap={combinedIshMap}
-                  variant={variantForCard}
+                  variant={cardVariant}
                   hiddenRows={hiddenRows[periodIdx]}
                   onHideRow={(rowId) => isAdmin && onHideRow(periodIdx, rowId)}
                   onAssignIshikawa={(idRep, idReq, proName, descripcion) =>
@@ -533,8 +560,8 @@ export default function AuditReportPage({ variant = 'revision' }) {
 
                   // 👇 restringe apertura a asignados (aunque el auditor vea todas las filas)
                   restrictOpenToAssigned={isAuditado || isAuditor}
-                  currentAuditorEmail={isAuditor ? userData?.Correo : undefined}
-                  currentAuditorName={isAuditor ? userData?.Nombre : undefined}
+                  currentAuditorEmail={userData?.Correo}
+                  currentAuditorName={userData?.Nombre}
                 />
 
               </div>
