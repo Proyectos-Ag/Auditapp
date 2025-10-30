@@ -153,6 +153,8 @@ export default function AuditReportPage({ variant = 'revision' }) {
 
    const isInTeam = React.useCallback((d) => {
     const email = userData?.Correo;
+    console.log('Verificando equipo para', email, d);
+    console.log('EquipoAuditor:', userData.TipoUsuario);
     if (!email) return false;
     const inLeader = d?.AuditorLiderEmail === email;
     const inTeamArr = Array.isArray(d?.EquipoAuditor) && d.EquipoAuditor.some(a => a?.Correo === email);
@@ -211,15 +213,11 @@ const isAssignedToCurrentAuditor = React.useCallback((ish) => {
 
   // visibleDatos (quién puede ver el reporte completo)
   const visibleDatos = isAdmin
-    ? (datos || [])
-    : isAuditado
-    ? (datos || [])
-    : (datos || []).filter(d => {
-        const inTeam = isInTeam(d);
-        const hasMine = reportHasAssignmentsForAuditor(d);
-        const notHiddenState = !['pendiente','devuelto'].includes(String(d.Estado || '').toLowerCase());
-        return (inTeam || hasMine) && notHiddenState;
-      });
+  ? (datos || [])
+  : isAuditado
+  ? (datos || [])
+  : /* Auditor: ahora ve lo mismo que auditado (TODOS los reportes) */
+    (datos || []);
 
   const hasAssignedAsAuditor  = values.some((ish) => isAssignedToCurrentAuditor(ish));
 
@@ -258,15 +256,15 @@ const isAssignedToCurrentAuditor = React.useCallback((ish) => {
   };
 
   // Map filtrado para cálculo/tabla cuando es “solo asignados”
-   const assignedMap = React.useMemo(() => {
-    if (!assignedOnly) return combinedIshMap;
+  const assignedMap = React.useMemo(() => {
     const entries = Object.entries(combinedIshMap || {}).filter(([, ish]) => {
       if (isAuditado) return ish?.auditado === userData?.Nombre;
       if (isAuditor)  return isAssignedToCurrentAuditor(ish);
-      return true;
+      return false;
     });
     return Object.fromEntries(entries);
-  }, [assignedOnly, combinedIshMap, isAuditado, isAuditor, userData?.Nombre, isAssignedToCurrentAuditor]);
+  }, [combinedIshMap, isAuditado, isAuditor, userData?.Nombre, isAssignedToCurrentAuditor]);
+
 
   const getPosFor = (id) => (notaModalPos[id] || { x: 24, y: 120 });
   const setPosFor = (id, next) => setNotaModalPos((prev) => ({ ...prev, [id]: next }));
@@ -443,7 +441,7 @@ const isAssignedToCurrentAuditor = React.useCallback((ish) => {
           const inTeam = isInTeam(dato);
           const hasMine = reportHasAssignmentsForAuditor(dato);
           // Solo asignados SI: auditado, o auditor que NO está en equipo pero sí tiene asignaciones en ese reporte
-          const showOnlyAssignedThis = isAuditado || (isAuditor && !inTeam && hasMine);
+          const showOnlyAssignedThis = isAuditado || (isAuditor && !inTeam);
           // Métricas base (puntos)
           const { conteo, total, puntos } = contarYCalcularPuntos(datoCalc);
 
@@ -540,6 +538,7 @@ const isAssignedToCurrentAuditor = React.useCallback((ish) => {
                     Porcentaje de Cumplimiento (ponderado): <b>{porcentajePonderado.toFixed(2)}%</b>
                   </div>
                 )}
+                {console.log('Renderizando tabla para reporte', dato._id, { showOnlyAssignedThis, isAuditado, isAuditor, inTeam })}
                 <AuditResultsTable
                   dato={dato}
                   ishikawasMap={combinedIshMap}
@@ -555,8 +554,8 @@ const isAssignedToCurrentAuditor = React.useCallback((ish) => {
                   //Solo el AUDITADO ve únicamente sus filas
                   showOnlyAssigned={showOnlyAssignedThis}
                   filterToAssignedOf={isAuditado ? userData?.Nombre : undefined}
-                  filterToAssignedAuditorEmail={isAuditor && !inTeam && hasMine ? userData?.Correo : undefined}
-                  filterToAssignedAuditorName={isAuditor && !inTeam && hasMine ? userData?.Nombre : undefined}
+                  filterToAssignedAuditorEmail={isAuditor && !inTeam ? userData?.Correo : undefined}
+                  filterToAssignedAuditorName={isAuditor && !inTeam ? userData?.Nombre : undefined}
 
                   // 👇 restringe apertura a asignados (aunque el auditor vea todas las filas)
                   restrictOpenToAssigned={isAuditado || isAuditor}

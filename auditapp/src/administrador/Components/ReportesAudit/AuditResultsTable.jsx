@@ -46,9 +46,7 @@ const isAssignedToAuditor = (ish) => {
   const email = (filterToAssignedAuditorEmail || currentAuditorEmail || '').toLowerCase();
   const name  = (filterToAssignedAuditorName  || currentAuditorName  || '').toLowerCase();
 
-  // campos directos típicos
-  if (email && (eq(ish.auditorEmail, email) || eq(ish.auditorAsignadoCorreo, email) || eq(ish.asignadoAuditorCorreo, email))) return true;
-  if (name  && (eq(ish.auditor, name) || eq(ish.auditorAsignado, name) || eq(ish.asignadoAuditorNombre, name))) return true;
+  if (email && (eq(ish.correo, email))) return true;
 
   // asignado {correo|email|nombre}
   const asignado = ish.asignadoAuditor || ish.asignadoA || ish.asignado;
@@ -57,17 +55,10 @@ const isAssignedToAuditor = (ish) => {
     if (name  && eq(asignado.nombre, name)) return true;
   }
 
-  // ✅ considerar responsables de actividades como asignación válida del AUDITOR
-  const responsables = Array.isArray(ish.actividades)
-    ? ish.actividades.flatMap(a => Array.isArray(a?.responsable) ? a.responsable : [])
-    : [];
-  for (const r of responsables) {
-    if (email && (eq(r?.correo, email) || eq(r?.email, email))) return true;
-    if (name  && eq(r?.nombre, name)) return true;
-  }
-
   // también permitir por correo del propio ishikawa (cuando se asigna por correo)
   if (email && eq(ish.correo, email)) return true;
+
+  console.log('Verificando acceso explícito en ish.acceso:', ish.acceso);
 
   // acceso explícito
   if (Array.isArray(ish.acceso)) {
@@ -81,6 +72,53 @@ const isAssignedToAuditor = (ish) => {
   return false;
 };
 
+// Normalizar acentos y espacios
+const stripAccents = (s) =>
+  String(s || '')
+    .normalize?.('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // quita diacríticos
+    .trim();
+
+const norm = (s) =>
+  stripAccents(s)
+    .replace(/\r\n|\r/g, '\n')
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+
+// Comparar idRep tolerando ObjectId / {$oid}
+const sameRep = (a, b) => {
+  const ax = String(a && (a.$oid || a));
+  const bx = String(b && (b.$oid || b));
+  return ax === bx;
+};
+
+// Búsqueda robusta en el mapa: clave directa, clave normalizada y barrido por campos
+const findIsh = (ishMap, { idRep, idReq, proName }) => {
+  if (!ishMap) return undefined;
+
+  // 1) clave directa usada por tu backend
+  const rawKey = `${idReq}-${idRep}-${proName}`;
+  if (ishMap[rawKey]) return ishMap[rawKey];
+
+  // 2) clave normalizada
+  const normKey = `${norm(idReq)}-${String(idRep)}-${norm(proName)}`;
+  if (ishMap[normKey]) return ishMap[normKey];
+
+  // 3) barrido por coincidencia de campos
+  const vals = Object.values(ishMap);
+  return (
+    vals.find(
+      (it) =>
+        sameRep(it?.idRep, idRep) &&
+        norm(it?.idReq) === norm(idReq) &&
+        norm(it?.proName) === norm(proName)
+    ) ||
+    // último fallback: ignora proName
+    vals.find(
+      (it) => sameRep(it?.idRep, idRep) && norm(it?.idReq) === norm(idReq)
+    )
+  );
+};
 
   return (
     <div className="audit-results">
@@ -116,43 +154,37 @@ const isAssignedToAuditor = (ish) => {
                 const rowId = `${programIdx}-${descIdx}`;
                 if (hiddenRows[rowId]) return null;
 
-                // 🔎 Lookup robusto que tolera saltos de línea, mayúsculas, espacios, etc.
-                const norm = (s) => String(s || '')
-                  .replace(/\r\n|\r/g, '\n')
-                  .replace(/\s+/g, ' ')
-                  .trim()
-                  .toLowerCase();
+                const ish = findIsh(ishikawasMap, {
+                  idRep: dato?._id,
+                  idReq: desc?.ID,
+                  proName: programa?.Nombre,
+                });
 
-                const rawKey = `${desc.ID}-${dato._id}-${programa.Nombre}`;
-                let ish = ishikawasMap?.[rawKey];
-
-                // Fallbacks: misma clave normalizada o búsqueda por campos (idRep + idReq [+ proName cerca])
-                if (!ish && ishikawasMap) {
-                  const normKey = `${norm(desc.ID)}-${dato._id}-${norm(programa.Nombre)}`;
-                  ish = ishikawasMap?.[normKey];
-
-                  if (!ish) {
-                    const vals = Object.values(ishikawasMap);
-                    ish =
-                      vals.find(it => it?.idRep === dato._id && norm(it?.idReq) === norm(desc.ID) && norm(it?.proName) === norm(programa.Nombre)) ||
-                      vals.find(it => it?.idRep === dato._id && norm(it?.idReq) === norm(desc.ID)); // último fallback
-                  }
-                }
-
+                {console.log('Revisando fila:', { ish });}
 
                 // Filtro "solo asignados" por-reporte
                 if (showOnlyAssigned) {
-                  if (filterToAssignedAuditorEmail || filterToAssignedAuditorName) {
-                    if (!ish) return null;
-                    if (!isAssignedToAuditor(ish)) return null;
+                  const vals = Object.values(ishikawasMap || {});
+                  if (filterToAssignedOf) {
+                    const userEmail = (currentAuditorEmail || '').toLowerCase();
+                    const passesAuditado = ish && (
+                      String(ish?.auditado || '').trim().toLowerCase() === String(filterToAssignedOf).trim().toLowerCase() ||
+                      String(ish?.correo || '').toLowerCase() === userEmail
+                    );
+                    if (!passesAuditado) return null;
                   } else {
-                    if (!ish) return null;
-                    if (filterToAssignedOf) {
-                      const sameName  = String(ish?.auditado || '').trim().toLowerCase() === String(filterToAssignedOf).trim().toLowerCase();
-                      const userEmail = (filterToAssignedAuditorEmail || currentAuditorEmail || '').toLowerCase();
-                      const sameEmail = String(ish?.correo || '').toLowerCase() === userEmail;
-                      if (!sameName && !sameEmail) return null;
+                    let assignedMatch = false;
+                    if (ish) {
+                      assignedMatch = isAssignedToAuditor(ish);
+                    } else {
+                      assignedMatch = vals.some(
+                        (it) =>
+                          sameRep(it?.idRep, dato?._id) &&
+                          norm(it?.idReq) === norm(desc?.ID) &&
+                          isAssignedToAuditor(it)
+                      );
                     }
+                    if (!assignedMatch) return null;
                   }
                 }
 
@@ -227,7 +259,7 @@ const isAssignedToAuditor = (ish) => {
                       <div className="muted small">{ish?.auditado ?? ''}</div>
 
                       {/* ⬇️ Mostrar chip de estado y botón Asignar SOLO si está aprobado y NO es Conforme */}
-                      {isApproved && !isConforme && (
+                      {!isConforme && (
                         <div className="ish-actions">
                           <button
                             className="ish-state-chip"

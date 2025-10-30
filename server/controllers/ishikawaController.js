@@ -136,7 +136,7 @@ const obtenerIshikawasId = async (req, res) => {
 
       // Filtrar los Ishikawas donde idRep sea igual al id de la URL
       const ishikawas = await Ishikawa.find({ idRep: _id }, 
-      'idRep idReq proName estado actividades auditado');
+      'idRep idReq proName estado actividades auditado correo');
 
       // Si no hay registros, devuelve un array vacío.
       if (ishikawas.length === 0) {

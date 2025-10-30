@@ -132,11 +132,7 @@ export default function VistaRevision() {
 
   // Navegación por estado
   const onOpen = (item) => {
-    if (item._status === STATUS.REVISADAS) {
-      navigate(`/terminada/${item._id}`);
-    } else {
       navigate(`/reporte/${item._id}`);
-    }
   };
 
   return (

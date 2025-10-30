@@ -19,7 +19,7 @@ const iniciarSesion = async (req, res) => {
     const token = jwt.sign(
       { userId: String(usuario._id), correo: usuario.Correo, tipoUsuario: usuario.TipoUsuario },
       process.env.JWT_SECRET,
-      { expiresIn: '8h' }
+      { expiresIn: '4h' }
     );
 
     const user = {

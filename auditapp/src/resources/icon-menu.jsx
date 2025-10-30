@@ -145,6 +145,7 @@ const IconMenu = () => {
 
     if (result.isConfirmed) {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('breadcrumbHistory');
     setUserData(null);
     navigate('/');
   }
