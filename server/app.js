@@ -51,6 +51,11 @@ app.use(cookieParser());
 
 const allowlist = new Set([
   'https://auditapp-dqej.onrender.com',
+  'https://192.168.0.79:3000',
+  'http://localhost:3000',
+  'http://192.168.0.79:3443',
+
+  process.env.FRONTEND_ORIGIN_PROD,
   process.env.FRONTEND_ORIGIN_DEV,
 ].filter(Boolean));
 
@@ -64,7 +69,7 @@ const corsOptionsDelegate = (req, cb) => {
 
   cb(null, {
     origin: isAllowed ? origin : false,
-    credentials: false, // si usas cookies, cambia a true y en el front usa withCredentials: true
+    credentials: true, // si usas cookies, cambia a true y en el front usa withCredentials: true
     methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
     allowedHeaders,
     optionsSuccessStatus: 204,

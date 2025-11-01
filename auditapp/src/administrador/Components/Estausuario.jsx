@@ -911,8 +911,8 @@ const EstadisticasPersonasMejoradas = () => {
     
     // Productividad (combinación de volumen y eficiencia)
     const volumenTotal = auditoriasLider.length + userIshikawas.length;
-    const baseProductividad = Math.min(80, volumenTotal * 3); // Ajustado
-    const bonusEficiencia = (eficienciaAud + eficienciaIsh) / 8; // Ajustado
+    const baseProductividad = Math.min(80, volumenTotal * 3); 
+    const bonusEficiencia = (eficienciaAud + eficienciaIsh) / 8; 
     metrics.productividad = Math.min(100, baseProductividad + bonusEficiencia);
     
     // Calidad general
@@ -1397,7 +1397,7 @@ const EstadisticasPersonasMejoradas = () => {
         {dataDebug && (
           <Box sx={{ mt: 2, p: 1, background: 'rgba(255,255,255,0.1)', borderRadius: 1 }}>
             <Typography variant="caption" sx={{ color: 'white', opacity: 0.8 }}>
-              Debug: Año {selectedYear} | Auditorías: {dataDebug.auditoriasComoLider} líder, {dataDebug.auditoriasComoMiembro} miembro | Ishikawas: {dataDebug.userIshikawas}
+              Record: Año {selectedYear} | Auditorías: {dataDebug.auditoriasComoLider} líder, {dataDebug.auditoriasComoMiembro} miembro | Ishikawas: {dataDebug.userIshikawas}
             </Typography>
           </Box>
         )}
