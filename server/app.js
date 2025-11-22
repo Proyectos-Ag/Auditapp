@@ -38,6 +38,7 @@ const objetivosRoutes   = require('./routes/ObjetivosRoutes');
 const gestionCambio     = require('./routes/gestionCambioRoutes');
 const signatureRoutes   = require('./routes/signatureRoutes');
 const validacionRoutes  = require('./routes/validacionRoutes');
+const capacitacionRoutes = require('./routes/capacitacion'); // ✅ SOLO UNA VEZ
 
 const app = express();
 
@@ -171,6 +172,7 @@ app.use('/api/objetivos',     objetivosRoutes);
 app.use('/api/gestion-cambio',gestionCambio);
 app.use('/api/signatures',    signatureRoutes);
 app.use('/api/validaciones',  validacionRoutes);
+app.use('/capacitacion',  capacitacionRoutes);
 
 // ======================= Auto-Update =======================
 const autoUpdate = new GitAutoUpdate({

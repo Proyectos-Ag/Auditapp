@@ -465,6 +465,62 @@ const obtenerDatosFiltradosAud = async (req, res) => {
   }
 };
 
+// 🔥 NUEVA FUNCIÓN: Obtener auditorías por auditor
+const obtenerAuditoriasPorAuditor = async (req, res) => {
+  try {
+    const { nombre, correo } = req.query;
+    
+    console.log('🔍 Buscando auditorías para:', nombre, correo);
+
+    if (!nombre && !correo) {
+      return res.status(400).json({ error: 'Se requiere nombre o correo del auditor' });
+    }
+
+    // Buscar auditorías donde el usuario sea:
+    // 1. Auditor Líder
+    // 2. Miembro del Equipo Auditor
+    // 3. Auditado (opcional, si quieres contar también estas)
+    const auditorias = await Datos.find({
+      $or: [
+        { AuditorLider: nombre },
+        { AuditorLiderEmail: correo },
+        { 'EquipoAuditor.Nombre': nombre },
+        { 'EquipoAuditor.Correo': correo },
+        // Descomentar si quieres contar auditorías como auditado
+        // { 'Auditados.Nombre': nombre },
+        // { 'Auditados.Correo': correo }
+      ],
+      Estado: { $in: ['Terminada', 'Finalizado'] } // Solo auditorías completadas
+    }).select('_id TipoAuditoria FechaInicio FechaFin AuditorLider EquipoAuditor Auditados Estado');
+
+    console.log(`✅ Se encontraron ${auditorias.length} auditorías completadas`);
+
+    // Clasificar las auditorías
+    const clasificacion = {
+      comoLider: auditorias.filter(a => a.AuditorLider === nombre).length,
+      comoMiembro: auditorias.filter(a => 
+        a.EquipoAuditor && a.EquipoAuditor.some(m => m.Nombre === nombre || m.Correo === correo)
+      ).length,
+      comoAuditado: auditorias.filter(a => 
+        a.Auditados && a.Auditados.some(m => m.Nombre === nombre || m.Correo === correo)
+      ).length,
+      total: auditorias.length,
+      detalles: auditorias.map(a => ({
+        _id: a._id,
+        TipoAuditoria: a.TipoAuditoria,
+        FechaInicio: a.FechaInicio,
+        FechaFin: a.FechaFin,
+        AuditorLider: a.AuditorLider,
+        Estado: a.Estado
+      }))
+    };
+
+    res.json(clasificacion);
+  } catch (error) {
+    console.error('❌ Error obteniendo auditorías del auditor:', error);
+    res.status(500).json({ error: 'Error al obtener auditorías', detalle: error.message });
+  }
+};
 
 // Carga masiva de auditorías desde un archivo Excel
 const cargaMasiva = async (req, res) => {
@@ -635,7 +691,6 @@ const deleteImageUrl = async (req, res) => {
   }
 };
 
-
 module.exports = {
   nuevoAuditoria,
   obtenerTodosDatos,
@@ -653,5 +708,6 @@ module.exports = {
   obtenerDatosHistorial,
   obtenerDatosAudLid,
   deleteImageUrl,
+  obtenerAuditoriasPorAuditor,
   obtenerDatosEspAll
 };
