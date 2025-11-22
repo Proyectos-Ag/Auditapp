@@ -12,6 +12,7 @@ router.get('/espfin', datosController.obtenerDatosEspFinal);
 router.get('/espreal', datosController.obtenerDatosEspRealiz);
 router.get('/aud-lid', datosController.obtenerDatosAudLid);
 router.get('/aud-all', datosController.obtenerDatosEspAll);
+router.get('/auditorias-por-auditor', datosController.obtenerAuditoriasPorAuditor);
 router.get('/esp/aud', datosController.obtenerDatosEspAud);
 router.get('/por/:_id', datosController.obtenerDatoPorId);
 router.get('/datos-filtrados', datosController.obtenerDatosFiltrados);
