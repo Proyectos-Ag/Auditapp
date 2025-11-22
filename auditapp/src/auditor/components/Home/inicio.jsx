@@ -6,6 +6,7 @@ import revision from "../assets/img/revision.png";
 import finalizado from "../assets/img/finalizado.png";
 import usuario from "../assets/img/usuario.png";
 import { useNavigate } from "react-router-dom";
+
 import Event from "../../../resources/event";
 
 const Inicio = () => {
@@ -53,12 +54,9 @@ const Inicio = () => {
        <br/>
        <img src={finalizado} alt="finalizado" className='imagen-mini' style={{width:'70%'}} />
       </div>
-      <div className="card-home" onClick={() => navigate("/informacion")}>
-        Usuario
-        <br />
-        <br />
-        <img src={usuario} alt="usuario" className='imagen-mini' />
-      </div>
+     <div className="card-home" onClick={() => navigate("/estado-usuario")}>
+             Estadisticas Personales
+           </div>
     </div>
     </div>
 

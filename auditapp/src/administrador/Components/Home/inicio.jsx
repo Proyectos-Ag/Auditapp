@@ -178,12 +178,16 @@ const Inicio = () => {
     </div>
 
     <div className="conten-funcion" style={{marginTop:'-18%'}}>
-    <h1>Carga y Gráficas</h1>
+    <h1>Carga y Estadísticas</h1>
     <div className="contenedor-home">
       <div className="card-home" onClick={() => navigate("/carga")}>
         Carga de Auditorías
         <br/><br/>
         <img src={subirxls} alt="subir xls" className='imagen-mini' style={{width:'75%'}} />
+      </div>
+        <div className="card-home" onClick={() => navigate("/estado-usuario")}>
+        Estadisticas Personales
+        <img src={estadisticas} alt="estadisticas" className='imagen-mini' style={{width:'75%'}} />
       </div>
       <div className="card-home" onClick={() => navigate("/estadisticas")}>
         Estadísticas

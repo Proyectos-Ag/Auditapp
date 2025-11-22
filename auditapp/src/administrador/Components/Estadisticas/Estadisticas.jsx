@@ -56,7 +56,7 @@ const Estadisticas = () => {
              ishikawa.estado === 'Aprobado' || 
              ishikawa.estado === 'Rechazados' || 
              ishikawa.estado === 'Pendiente') &&
-            filteredAudits.map(audit => audit._id).includes(ishikawa.idRep) // <- CAMBIO AQUÍ
+            filteredAudits.map(audit => audit._id).includes(ishikawa.idRep)
         );
         setReviewedObservations(reviewedObservationsData);
         
@@ -134,10 +134,7 @@ const Estadisticas = () => {
   // Función corregida para contar observaciones por año
   const countObservationsByYear = (year) => {
     const yearAudits = filteredAuditsByYear[year] || [];
-    
-    // Debug: contar hallazgos detallados
     const hallazgosDetallados = debugHallazgosByYear(year);
-    
     return hallazgosDetallados.length;
   };
 
@@ -301,15 +298,18 @@ const Estadisticas = () => {
 
   // Convert monthly data to line chart format
   const prepareMonthlyLineData = (year) => {
+    const monthsInYear = Object.keys(auditsByMonthAndYear[year] || {});
+    if (monthsInYear.length === 0) return [];
+    
     return [
       {
         id: "Porcentaje Mensual",
-        color: "hsl(211, 70%, 50%)",
-        data: Object.keys(auditsByMonthAndYear[year])
+        color: "#FF5252",
+        data: monthsInYear
           .filter(month => month !== 'Promedio')
           .map(month => ({
             x: month,
-            y: parseFloat(calculateAverage(auditsByMonthAndYear[year][month]))
+            y: parseFloat(calculateAverage(auditsByMonthAndYear[year][month])) || 0
           }))
       }
     ];
@@ -345,6 +345,9 @@ const Estadisticas = () => {
         pdf.save('audits.pdf');
     });
   };
+
+  // ORDENAR AÑOS DE FORMA DESCENDENTE (2025 primero, luego 2024, etc.)
+  const sortedYears = Object.keys(filteredAuditsByYear).sort((a, b) => b - a);
 
   return (
     <div className="audits-container">
@@ -392,7 +395,7 @@ const Estadisticas = () => {
           </button>
         </div>
 
-        {Object.keys(filteredAuditsByYear).map(year => (
+        {sortedYears.map(year => (
           <div key={year} className="year-container">
             <h3 className="year-title">Año: {year}</h3>
             <div className="table-chart-container-audits">
@@ -436,71 +439,118 @@ const Estadisticas = () => {
                 
                 <div className="combined-charts-container">
                   {activeVisualization === 'both' && (
-                    <div className="chart-container-audits" style={{ height: 400, width: '100%' }}>
+                    <div className="chart-container-audits" style={{ height: 450, width: '100%' }}>
                       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
                         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
                           <ResponsiveBar
                             data={prepareAuditsBarData(year)}
                             keys={["Porcentaje Total"]}
                             indexBy="month"
-                            margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
-                            padding={0.3}
-                            valueScale={{ type: 'linear' }}
+                            margin={{ top: 60, right: 140, bottom: 80, left: 80 }}
+                            padding={0.35}
+                            valueScale={{ type: 'linear', min: 0, max: 100 }}
                             indexScale={{ type: 'band', round: true }}
-                            colors={{ scheme: 'nivo' }}
+                            colors={['#4FC3F7']}
                             defs={[
                               {
                                 id: 'gradient',
                                 type: 'linearGradient',
                                 colors: [
-                                  { offset: 0, color: '#36A2EB' },
-                                  { offset: 100, color: '#4BC0C0' }
+                                  { offset: 0, color: '#2196F3' },
+                                  { offset: 100, color: '#4FC3F7' }
                                 ]
                               }
                             ]}
                             fill={[{ match: { id: 'Porcentaje Total' }, id: 'gradient' }]}
-                            borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+                            borderRadius={6}
+                            borderColor={{ from: 'color', modifiers: [['darker', 0.3]] }}
                             axisTop={null}
                             axisRight={null}
                             axisBottom={{
-                              tickSize: 5,
-                              tickPadding: 5,
+                              tickSize: 8,
+                              tickPadding: 8,
                               tickRotation: -45,
                               legend: 'Mes',
                               legendPosition: 'middle',
-                              legendOffset: 40
+                              legendOffset: 65,
+                              renderTick: (tick) => (
+                                <g transform={`translate(${tick.x},${tick.y})`}>
+                                  <text
+                                    textAnchor="end"
+                                    dominantBaseline="middle"
+                                    transform="rotate(-45)"
+                                    style={{
+                                      fontSize: 12,
+                                      fontWeight: 500,
+                                      fill: '#334155'
+                                    }}
+                                  >
+                                    {tick.value}
+                                  </text>
+                                </g>
+                              )
                             }}
                             axisLeft={{
-                              tickSize: 5,
-                              tickPadding: 5,
+                              tickSize: 8,
+                              tickPadding: 10,
                               tickRotation: 0,
                               legend: 'Porcentaje',
                               legendPosition: 'middle',
-                              legendOffset: -40
+                              legendOffset: -60,
+                              format: value => `${value}%`
                             }}
+                            enableLabel={true}
+                            label={d => `${d.value.toFixed(1)}%`}
                             labelSkipWidth={12}
                             labelSkipHeight={12}
-                            labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+                            labelTextColor="#ffffff"
+                            animate={true}
+                            motionConfig="gentle"
+                            theme={{
+                              axis: {
+                                ticks: {
+                                  text: {
+                                    fontSize: 13,
+                                    fill: '#475569',
+                                    fontWeight: 500
+                                  }
+                                },
+                                legend: {
+                                  text: {
+                                    fontSize: 14,
+                                    fill: '#1e293b',
+                                    fontWeight: 600
+                                  }
+                                }
+                              },
+                              grid: {
+                                line: {
+                                  stroke: '#e2e8f0',
+                                  strokeWidth: 1
+                                }
+                              }
+                            }}
                             legends={[
                               {
                                 dataFrom: 'keys',
-                                anchor: 'bottom-right',
+                                anchor: 'top-right',
                                 direction: 'column',
                                 justify: false,
                                 translateX: 120,
-                                translateY: 0,
-                                itemsSpacing: 2,
+                                translateY: -40,
+                                itemsSpacing: 4,
                                 itemWidth: 100,
-                                itemHeight: 20,
+                                itemHeight: 24,
                                 itemDirection: 'left-to-right',
-                                itemOpacity: 0.85,
-                                symbolSize: 20,
-                                symbolShape: 'square',
+                                itemOpacity: 0.9,
+                                symbolSize: 16,
+                                symbolShape: 'circle',
                                 effects: [
                                   {
                                     on: 'hover',
                                     style: {
-                                      itemOpacity: 1
+                                      itemOpacity: 1,
+                                      itemTextColor: '#000'
                                     }
                                   }
                                 ]
@@ -508,14 +558,13 @@ const Estadisticas = () => {
                             ]}
                             role="application"
                             ariaLabel="Auditorías por mes"
-                            barAriaLabel={e => e.id + ": " + e.formattedValue + " en mes: " + e.indexValue}
                           />
                         </div>
                         
-                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2 }}>
+                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2, pointerEvents: 'none' }}>
                           <ResponsiveLine
                             data={prepareMonthlyLineData(year)}
-                            margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
+                            margin={{ top: 60, right: 140, bottom: 80, left: 80 }}
                             xScale={{ type: 'point' }}
                             yScale={{
                               type: 'linear',
@@ -525,34 +574,39 @@ const Estadisticas = () => {
                               reverse: false
                             }}
                             yFormat=" >-.2f"
-                            curve="cardinal"
+                            curve="catmullRom"
                             axisTop={null}
                             axisRight={null}
                             axisBottom={null}
                             axisLeft={null}
                             enableGridX={false}
                             enableGridY={false}
-                            pointSize={10}
-                            pointColor="#FF6384"
-                            pointBorderWidth={2}
-                            pointBorderColor="#FF6384"
-                            lineWidth={3}
-                            colors={["#FF6384"]}
-                            enableSlices="x"
-                            useMesh={true}
+                            pointSize={12}
+                            pointColor="#FF5252"
+                            pointBorderWidth={3}
+                            pointBorderColor="#ffffff"
+                            lineWidth={4}
+                            colors={["#FF5252"]}
+                            enableArea={false}
+                            areaOpacity={0.1}
+                            enableSlices={false}
+                            useMesh={false}
+                            isInteractive={false}
+                            animate={true}
+                            motionConfig="gentle"
                             legends={[
                               {
-                                anchor: 'bottom-right',
+                                anchor: 'top-right',
                                 direction: 'column',
                                 justify: false,
                                 translateX: 120,
-                                translateY: 40,
-                                itemsSpacing: 2,
+                                translateY: 0,
+                                itemsSpacing: 4,
                                 itemWidth: 100,
-                                itemHeight: 20,
+                                itemHeight: 24,
                                 itemDirection: 'left-to-right',
-                                itemOpacity: 0.85,
-                                symbolSize: 20,
+                                itemOpacity: 0.9,
+                                symbolSize: 16,
                                 symbolShape: 'circle',
                                 effects: [
                                   {
@@ -571,149 +625,104 @@ const Estadisticas = () => {
                   )}
                   
                   {activeVisualization === 'bar' && (
-                    <div className="chart-container-audits" style={{ height: 400, width: '100%' }}>
+                    <div className="chart-container-audits" style={{ height: 450, width: '100%' }}>
                       <ResponsiveBar
                         data={prepareAuditsBarData(year)}
                         keys={["Porcentaje Total"]}
                         indexBy="month"
-                        margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
-                        padding={0.3}
-                        valueScale={{ type: 'linear' }}
+                        margin={{ top: 60, right: 140, bottom: 80, left: 80 }}
+                        padding={0.35}
+                        valueScale={{ type: 'linear', min: 0, max: 100 }}
                         indexScale={{ type: 'band', round: true }}
-                        colors={{ scheme: 'nivo' }}
+                        colors={['#4FC3F7']}
                         defs={[
-                          {
-                            id: 'dots',
-                            type: 'patternDots',
-                            background: 'inherit',
-                            color: '#38bcb2',
-                            size: 4,
-                            padding: 1,
-                            stagger: true
-                          },
                           {
                             id: 'gradient',
                             type: 'linearGradient',
                             colors: [
-                              { offset: 0, color: '#36A2EB' },
-                              { offset: 100, color: '#4BC0C0' }
+                              { offset: 0, color: '#2196F3' },
+                              { offset: 100, color: '#4FC3F7' }
                             ]
                           }
                         ]}
                         fill={[{ match: { id: 'Porcentaje Total' }, id: 'gradient' }]}
-                        borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+                        borderRadius={6}
+                        borderColor={{ from: 'color', modifiers: [['darker', 0.3]] }}
                         axisTop={null}
                         axisRight={null}
                         axisBottom={{
-                          tickSize: 5,
-                          tickPadding: 5,
+                          tickSize: 8,
+                          tickPadding: 8,
                           tickRotation: -45,
                           legend: 'Mes',
                           legendPosition: 'middle',
-                          legendOffset: 40
+                          legendOffset: 65
                         }}
                         axisLeft={{
-                          tickSize: 5,
-                          tickPadding: 5,
+                          tickSize: 8,
+                          tickPadding: 10,
                           tickRotation: 0,
                           legend: 'Porcentaje',
                           legendPosition: 'middle',
-                          legendOffset: -40
+                          legendOffset: -60,
+                          format: value => `${value}%`
                         }}
+                        enableLabel={true}
+                        label={d => `${d.value.toFixed(1)}%`}
                         labelSkipWidth={12}
                         labelSkipHeight={12}
-                        labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+                        labelTextColor="#ffffff"
+                        animate={true}
+                        motionConfig="gentle"
+                        theme={{
+                          axis: {
+                            ticks: {
+                              text: {
+                                fontSize: 13,
+                                fill: '#475569',
+                                fontWeight: 500
+                              }
+                            },
+                            legend: {
+                              text: {
+                                fontSize: 14,
+                                fill: '#1e293b',
+                                fontWeight: 600
+                              }
+                            }
+                          },
+                          grid: {
+                            line: {
+                              stroke: '#e2e8f0',
+                              strokeWidth: 1
+                            }
+                          },
+                          crosshair: {
+                            line: {
+                              stroke: '#FF5252',
+                              strokeWidth: 2,
+                              strokeOpacity: 0.5
+                            }
+                          }
+                        }}
                         legends={[
                           {
-                            dataFrom: 'keys',
-                            anchor: 'bottom-right',
+                            anchor: 'top-right',
                             direction: 'column',
                             justify: false,
                             translateX: 120,
-                            translateY: 0,
-                            itemsSpacing: 2,
+                            translateY: -40,
+                            itemsSpacing: 4,
                             itemWidth: 100,
-                            itemHeight: 20,
+                            itemHeight: 24,
                             itemDirection: 'left-to-right',
-                            itemOpacity: 0.85,
-                            symbolSize: 20,
-                            effects: [
-                              {
-                                on: 'hover',
-                                style: {
-                                  itemOpacity: 1
-                                }
-                              }
-                            ]
-                          }
-                        ]}
-                        role="application"
-                        ariaLabel="Auditorías por mes"
-                        barAriaLabel={e => e.id + ": " + e.formattedValue + " en mes: " + e.indexValue}
-                      />
-                    </div>
-                  )}
-                  
-                  {activeVisualization === 'line' && (
-                    <div className="chart-container-audits" style={{ height: 400, width: '100%' }}>
-                      <ResponsiveLine
-                        data={prepareMonthlyLineData(year)}
-                        margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
-                        xScale={{ type: 'point' }}
-                        yScale={{
-                          type: 'linear',
-                          min: 0,
-                          max: 100,
-                          stacked: false,
-                          reverse: false
-                        }}
-                        yFormat=" >-.2f"
-                        curve="cardinal"
-                        axisTop={null}
-                        axisRight={null}
-                        axisBottom={{
-                          tickSize: 5,
-                          tickPadding: 5,
-                          tickRotation: -45,
-                          legend: 'Mes',
-                          legendOffset: 40,
-                          legendPosition: 'middle'
-                        }}
-                        axisLeft={{
-                          tickSize: 5,
-                          tickPadding: 5,
-                          tickRotation: 0,
-                          legend: 'Porcentaje',
-                          legendOffset: -40,
-                          legendPosition: 'middle'
-                        }}
-                        colors={{ scheme: 'category10' }}
-                        pointSize={10}
-                        pointColor={{ theme: 'background' }}
-                        pointBorderWidth={2}
-                        pointBorderColor={{ from: 'serieColor' }}
-                        pointLabelYOffset={-12}
-                        useMesh={true}
-                        legends={[
-                          {
-                            anchor: 'bottom-right',
-                            direction: 'column',
-                            justify: false,
-                            translateX: 100,
-                            translateY: 0,
-                            itemsSpacing: 0,
-                            itemDirection: 'left-to-right',
-                            itemWidth: 80,
-                            itemHeight: 20,
-                            itemOpacity: 0.75,
-                            symbolSize: 12,
+                            itemOpacity: 0.9,
+                            symbolSize: 16,
                             symbolShape: 'circle',
-                            symbolBorderColor: 'rgba(0, 0, 0, .5)',
                             effects: [
                               {
                                 on: 'hover',
                                 style: {
-                                  itemBackground: 'rgba(0, 0, 0, .03)',
                                   itemOpacity: 1
                                 }
                               }
@@ -748,7 +757,7 @@ const Estadisticas = () => {
                     </tbody>
                   </table>
                 </div>
-                <div className="chart-container-audits" style={{ height: 400 }}>
+                <div className="chart-container-audits" style={{ height: 450 }}>
                   <ResponsiveBar
                     data={Object.entries(auditTypeClientCountByYear[year]).map(([key, data]) => ({
                       tipo_cliente: key,
@@ -756,155 +765,273 @@ const Estadisticas = () => {
                     }))}
                     keys={['cantidad']}
                     indexBy="tipo_cliente"
-                    margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
-                    padding={0.3}
+                    margin={{ top: 60, right: 140, bottom: 120, left: 80 }}
+                    padding={0.4}
                     layout="vertical"
                     valueScale={{ type: 'linear' }}
                     indexScale={{ type: 'band', round: true }}
-                    colors={{ scheme: 'category10' }}
+                    colors={['#26C6DA']}
                     defs={[
                       {
                         id: 'gradientA',
                         type: 'linearGradient',
                         colors: [
-                          { offset: 0, color: '#FF6384' },
-                          { offset: 100, color: '#FF9F40' }
+                          { offset: 0, color: '#00ACC1' },
+                          { offset: 100, color: '#26C6DA' }
                         ]
                       }
                     ]}
                     fill={[{ match: '*', id: 'gradientA' }]}
-                    borderRadius={4}
+                    borderRadius={6}
                     borderWidth={1}
-                    borderColor={{ from: 'color', modifiers: [['darker', 0.8]] }}
+                    borderColor={{ from: 'color', modifiers: [['darker', 0.3]] }}
                     axisTop={null}
                     axisRight={null}
                     axisBottom={{
-                      tickSize: 5,
-                      tickPadding: 5,
-                      tickRotation: -45,
-                      legend: 'Tipo / Cliente',
+                      tickSize: 0,
+                      tickPadding: 15,
+                      tickRotation: -35,
+                      legend: '',
                       legendPosition: 'middle',
-                      legendOffset: 40
+                      legendOffset: 100,
+                      renderTick: (tick) => {
+                        const maxLength = 20;
+                        const text = tick.value.length > maxLength 
+                          ? tick.value.substring(0, maxLength) + '...' 
+                          : tick.value;
+                        
+                        return (
+                          <g transform={`translate(${tick.x},${tick.y + 10})`}>
+                            <text
+                              textAnchor="end"
+                              dominantBaseline="middle"
+                              transform="rotate(-35)"
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 500,
+                                fill: '#475569'
+                              }}
+                            >
+                              {text}
+                            </text>
+                          </g>
+                        );
+                      }
                     }}
                     axisLeft={{
-                      tickSize: 5,
-                      tickPadding: 5,
+                      tickSize: 8,
+                      tickPadding: 10,
                       tickRotation: 0,
                       legend: 'Cantidad',
                       legendPosition: 'middle',
-                      legendOffset: -40
+                      legendOffset: -60
                     }}
+                    enableLabel={true}
+                    label={d => d.value}
                     labelSkipWidth={12}
                     labelSkipHeight={12}
-                    labelTextColor={{ from: 'color', modifiers: [['darker', 3]] }}
+                    labelTextColor="#ffffff"
                     animate={true}
-                    motionStiffness={90}
-                    motionDamping={15}
+                    motionConfig="gentle"
+                    tooltip={({ id, value, color, indexValue }) => (
+                      <div
+                        style={{
+                          background: 'white',
+                          padding: '12px 16px',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                          maxWidth: '300px'
+                        }}
+                      >
+                        <div style={{ 
+                          color: '#1e293b', 
+                          fontWeight: 600, 
+                          marginBottom: '6px',
+                          wordWrap: 'break-word'
+                        }}>
+                          {indexValue}
+                        </div>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center',
+                          color: '#475569'
+                        }}>
+                          <div
+                            style={{
+                              width: '12px',
+                              height: '12px',
+                              borderRadius: '3px',
+                              backgroundColor: color,
+                              marginRight: '8px'
+                            }}
+                          />
+                          <span><strong>Cantidad:</strong> {value}</span>
+                        </div>
+                      </div>
+                    )}
+                    theme={{
+                      axis: {
+                        ticks: {
+                          text: {
+                            fontSize: 12,
+                            fill: '#475569',
+                            fontWeight: 500
+                          }
+                        },
+                        legend: {
+                          text: {
+                            fontSize: 14,
+                            fill: '#1e293b',
+                            fontWeight: 600
+                          }
+                        }
+                      },
+                      grid: {
+                        line: {
+                          stroke: '#e2e8f0',
+                          strokeWidth: 1
+                        }
+                      }
+                    }}
                   />
                 </div>
               </div>
-             <div className="section">
-  <h3>Total de hallazgos de las auditorías</h3>
-  <table className="professional-table">
-    <thead>
-      <tr>
-        <th>Hallazgos</th>
-        <th>Cantidad</th>
-        <th>Porcentaje</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Hallazgos Totales</td>
-        <td>{countObservationsByYear(year)}</td>
-        <td>100%</td>
-      </tr>
-      <tr>
-        <td>Hallazgos Abiertos</td>
-        <td>{aprobadosByYear[year] ?? 0}</td>
-        <td>{countObservationsByYear(year) > 0 ? (((aprobadosByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : '0%'}</td>
-      </tr>
-      <tr>
-        <td>Hallazgos Cerrados</td>
-        <td>{reviewedByYear[year] ?? 0}</td>
-        <td>{countObservationsByYear(year) > 0 ? (((reviewedByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : '0%'}</td>
-      </tr>
-      <tr>
-        <td>Hallazgos Faltantes</td>
-        <td>{Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) )}</td>
-        <td>{countObservationsByYear(year) > 0 ? ((Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) ) / countObservationsByYear(year) * 100).toFixed(2) + '%') : '0%'}</td>
-      </tr>
-    </tbody>
-  </table>
-  
-  {/* Gráfica de hallazgos - Asegúrate de que los datos se pasen correctamente */}
-  <div className="chart-container-audits" style={{ height: 300 }}>
-    <ResponsiveBar
-      data={[
-        { 
-          categoria: 'Hallazgos Totales', 
-          cantidad: countObservationsByYear(year), 
-          color: '#4BC0C0' 
-        },
-        { 
-          categoria: 'Hallazgos Aprobados', 
-          cantidad: aprobadosByYear[year] ?? 0, 
-          color: '#2ecc40' 
-        },
-        { 
-          categoria: 'Hallazgos Revisados', 
-          cantidad: reviewedByYear[year] ?? 0, 
-          color: '#9966FF' 
-        },
-        { 
-          categoria: 'Hallazgos Pendientes', 
-          cantidad: Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) ), 
-          color: '#FF9F40' 
-        }
-      ]}
-      keys={['cantidad']}
-      indexBy="categoria"
-      margin={{ top: 50, right: 50, bottom: 50, left: 170 }}
-      padding={0.3}
-      layout="horizontal"
-      valueScale={{ type: 'linear' }}
-      indexScale={{ type: 'band', round: true }}
-      colors={d => d.data.color}
-      borderRadius={4}
-      borderWidth={1}
-      borderColor={{ from: 'color', modifiers: [['darker', 0.8]] }}
-      axisTop={null}
-      axisRight={null}
-      axisBottom={{
-        tickSize: 5,
-        tickPadding: 5,
-        tickRotation: 0,
-        legend: 'Cantidad',
-        legendPosition: 'middle',
-        legendOffset: 40
-      }}
-      axisLeft={{
-        tickSize: 5,
-        tickPadding: 5,
-        tickRotation: 0,
-        legend: 'Categoría',
-        legendPosition: 'middle',
-        legendOffset: -140
-      }}
-      labelSkipWidth={12}
-      labelSkipHeight={12}
-      labelTextColor="#ffffff"
-      animate={true}
-      motionStiffness={90}
-      motionDamping={15}
-      tooltip={({ data }) => (
-        <div style={{ background: 'white', padding: '5px', border: '1px solid #ccc' }}>
-          <strong>{data.categoria}:</strong> {data.cantidad}
-        </div>
-      )}
-    />
-  </div>
-</div>
+              
+              <div className="section">
+                <h3>Total de hallazgos de las auditorías</h3>
+                <table className="professional-table">
+                  <thead>
+                    <tr>
+                      <th>Hallazgos</th>
+                      <th>Cantidad</th>
+                      <th>Porcentaje</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Hallazgos Totales</td>
+                      <td>{countObservationsByYear(year)}</td>
+                      <td>100%</td>
+                    </tr>
+                    <tr>
+                      <td>Hallazgos Abiertos</td>
+                      <td>{aprobadosByYear[year] ?? 0}</td>
+                      <td>{countObservationsByYear(year) > 0 ? (((aprobadosByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : '0%'}</td>
+                    </tr>
+                    <tr>
+                      <td>Hallazgos Cerrados</td>
+                      <td>{reviewedByYear[year] ?? 0}</td>
+                      <td>{countObservationsByYear(year) > 0 ? (((reviewedByYear[year] ?? 0) / countObservationsByYear(year)) * 100).toFixed(2) + '%' : '0%'}</td>
+                    </tr>
+                    <tr>
+                      <td>Hallazgos Faltantes</td>
+                      <td>{Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) )}</td>
+                      <td>{countObservationsByYear(year) > 0 ? ((Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) ) / countObservationsByYear(year) * 100).toFixed(2) + '%') : '0%'}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                
+                <div className="chart-container-audits" style={{ height: 400 }}>
+                  <ResponsiveBar
+                    data={[
+                      { 
+                        categoria: 'Hallazgos Totales', 
+                        cantidad: countObservationsByYear(year), 
+                        color: '#64B5F6' 
+                      },
+                      { 
+                        categoria: 'Hallazgos Abiertos', 
+                        cantidad: aprobadosByYear[year] ?? 0, 
+                        color: '#4CAF50' 
+                      },
+                      { 
+                        categoria: 'Hallazgos Cerrados', 
+                        cantidad: reviewedByYear[year] ?? 0, 
+                        color: '#AB47BC' 
+                      },
+                      { 
+                        categoria: 'Hallazgos Pendientes', 
+                        cantidad: Math.max(0, countObservationsByYear(year) - ((aprobadosByYear[year] ?? 0) + (reviewedByYear[year] ?? 0)) ), 
+                        color: '#FF7043' 
+                      }
+                    ]}
+                    keys={['cantidad']}
+                    indexBy="categoria"
+                    margin={{ top: 60, right: 60, bottom: 80, left: 200 }}
+                    padding={0.35}
+                    layout="horizontal"
+                    valueScale={{ type: 'linear' }}
+                    indexScale={{ type: 'band', round: true }}
+                    colors={d => d.data.color}
+                    borderRadius={6}
+                    borderWidth={1}
+                    borderColor={{ from: 'color', modifiers: [['darker', 0.3]] }}
+                    axisTop={null}
+                    axisRight={null}
+                    axisBottom={{
+                      tickSize: 8,
+                      tickPadding: 8,
+                      tickRotation: 0,
+                      legend: 'Cantidad',
+                      legendPosition: 'middle',
+                      legendOffset: 50
+                    }}
+                    axisLeft={{
+                      tickSize: 8,
+                      tickPadding: 10,
+                      tickRotation: 0,
+                      legend: 'Categoría',
+                      legendPosition: 'middle',
+                      legendOffset: -180
+                    }}
+                    enableLabel={true}
+                    label={d => d.value}
+                    labelSkipWidth={12}
+                    labelSkipHeight={12}
+                    labelTextColor="#ffffff"
+                    animate={true}
+                    motionConfig="gentle"
+                    theme={{
+                      axis: {
+                        ticks: {
+                          text: {
+                            fontSize: 13,
+                            fill: '#475569',
+                            fontWeight: 500
+                          }
+                        },
+                        legend: {
+                          text: {
+                            fontSize: 14,
+                            fill: '#1e293b',
+                            fontWeight: 600
+                          }
+                        }
+                      },
+                      grid: {
+                        line: {
+                          stroke: '#e2e8f0',
+                          strokeWidth: 1
+                        }
+                      }
+                    }}
+                    tooltip={({ data }) => (
+                      <div style={{ 
+                        background: 'white', 
+                        padding: '12px 16px', 
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}>
+                        <strong style={{ color: '#1e293b' }}>{data.categoria}:</strong> 
+                        <span style={{ marginLeft: '8px', color: data.color, fontWeight: 600 }}>{data.cantidad}</span>
+                      </div>
+                    )}
+                  />
+                </div>
+              </div>
+              
               <div className="section">
                 <h4>Cantidad de Criterios en las auditorías</h4>
                 <table>
@@ -923,73 +1050,77 @@ const Estadisticas = () => {
                     ))}
                   </tbody>
                 </table>
-                <div className="bar-chart-container-audits" style={{ height: 400 }}>
-                  <ResponsiveBar
+                <div className="bar-chart-container-audits" style={{ height: 450 }}>
+                  <ResponsivePie
                     data={prepareCriteriaData(year)}
-                    margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
-                    innerRadius={0.5}
-                    padAngle={0.7}
-                    cornerRadius={3}
-                    activeOuterRadiusOffset={8}
-                    borderWidth={1}
+                    margin={{ top: 60, right: 120, bottom: 80, left: 120 }}
+                    innerRadius={0.6}
+                    padAngle={1.5}
+                    cornerRadius={6}
+                    activeOuterRadiusOffset={12}
+                    borderWidth={2}
                     borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
                     arcLinkLabelsSkipAngle={10}
-                    arcLinkLabelsTextColor="#333333"
-                    arcLinkLabelsThickness={2}
+                    arcLinkLabelsTextColor="#334155"
+                    arcLinkLabelsThickness={3}
                     arcLinkLabelsColor={{ from: 'color' }}
                     arcLabelsSkipAngle={10}
                     arcLabelsTextColor="#ffffff"
-                    defs={[
-                      {
-                        id: 'dots',
-                        type: 'patternDots',
-                        background: 'inherit',
-                        color: 'rgba(255, 255, 255, 0.3)',
-                        size: 4,
-                        padding: 1,
-                        stagger: true
+                    colors={{ datum: 'data.color' }}
+                    animate={true}
+                    motionConfig="gentle"
+                    theme={{
+                      labels: {
+                        text: {
+                          fontSize: 14,
+                          fontWeight: 600
+                        }
                       },
-                      {
-                        id: 'lines',
-                        type: 'patternLines',
-                        background: 'inherit',
-                        color: 'rgba(255, 255, 255, 0.3)',
-                        rotation: -45,
-                        lineWidth: 6,
-                        spacing: 10
+                      legends: {
+                        text: {
+                          fontSize: 13,
+                          fill: '#475569'
+                        }
                       }
-                    ]}
-                    fill={[
-                      { match: { id: 'C' }, id: 'dots' },
-                      { match: { id: 'M' }, id: 'lines' },
-                      { match: { id: 'm' }, id: 'dots' },
-                      { match: { id: 'O' }, id: 'lines' }
-                    ]}
+                    }}
                     legends={[
                       {
                         anchor: 'bottom',
                         direction: 'row',
                         justify: false,
                         translateX: 0,
-                        translateY: 56,
-                        itemsSpacing: 0,
+                        translateY: 70,
+                        itemsSpacing: 20,
                         itemWidth: 100,
-                        itemHeight: 18,
-                        itemTextColor: '#999',
+                        itemHeight: 20,
+                        itemTextColor: '#334155',
                         itemDirection: 'left-to-right',
                         itemOpacity: 1,
-                        symbolSize: 18,
+                        symbolSize: 20,
                         symbolShape: 'circle',
                         effects: [
                           {
                             on: 'hover',
                             style: {
-                              itemTextColor: '#000'
+                              itemTextColor: '#000',
+                              itemOpacity: 1
                             }
                           }
                         ]
                       }
                     ]}
+                    tooltip={({ datum }) => (
+                      <div style={{ 
+                        background: 'white', 
+                        padding: '12px 16px', 
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}>
+                        <strong style={{ color: datum.color }}>{datum.id}:</strong> 
+                        <span style={{ marginLeft: '8px', color: '#1e293b', fontWeight: 600 }}>{datum.value}</span>
+                      </div>
+                    )}
                   />
                 </div>
               </div>
@@ -1007,4 +1138,4 @@ const Estadisticas = () => {
 };
 
 export default Estadisticas;
-
+                       
