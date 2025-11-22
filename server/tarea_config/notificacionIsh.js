@@ -1,174 +1,194 @@
 const cron = require('node-cron');
 const moment = require('moment');
-const Ishikawa = require('../models/ishikawaSchema');
-const transporter = require('../emailconfig');
 const fs = require('fs');
 const path = require('path');
+const Ishikawa = require('../models/ishikawaSchema');
+const transporter = require('../emailconfig');
+const { dbConnect, mongoose } = require('../config/dbconfig');
 
+// ========== Utils de conexión ==========
+function dbReady() {
+  return mongoose?.connection?.readyState === 1;
+}
+async function ensureDb() {
+  if (!dbReady()) {
+    try {
+      await dbConnect();
+    } catch (e) {
+
+    }
+  }
+  return dbReady();
+}
+
+// ========== Cache (plantilla email) ==========
+let emailTemplateCache = null;
+function getEmailTemplate() {
+  if (emailTemplateCache) return emailTemplateCache;
+  const templatePath = path.join(__dirname, 'templates', 'notificacion-compromiso.html');
+  emailTemplateCache = fs.readFileSync(templatePath, 'utf8');
+  return emailTemplateCache;
+}
+
+// ========== Agregación ==========
 /**
- * Función que obtiene las actividades para un día objetivo (targetDate)
- * considerando:
- * - La fecha del último compromiso (lastFechaCompromiso) debe estar definida y convertible.
- * - La actividad no debe estar concluida.
- * - La actividad aún no se procesó en el día de hoy (fechaCheck es inexistente o anterior al inicio de hoy).
+ * Obtiene actividades cuya última fechaCompromiso cae en targetDate,
+ * que NO estén concluidas y que NO se hayan chequeado hoy (fechaCheck < hoy o inexistente).
  */
 async function getTasksForDate(targetDate) {
   const hoy = moment().startOf('day').toDate();
   const startOfDay = moment(targetDate).startOf('day').toDate();
   const endOfDay   = moment(targetDate).endOf('day').toDate();
 
-  console.log('comprobacion de fecha actual: ', hoy)
+  // Asegura conexión antes de agregar (evita "aggregate() before initial connection")
+  if (!(await ensureDb())) {
+    console.warn('[cron-ish] DB no lista en getTasksForDate; retorno vacío');
+    return [];
+  }
 
-  return await Ishikawa.aggregate([
-    { $unwind: "$actividades" },
-    { $unwind: "$actividades.responsable" },
+  return Ishikawa.aggregate([
+    { $unwind: '$actividades' },
+    { $unwind: '$actividades.responsable' },
     {
       $project: {
-        padreId: "$_id", // Id del documento principal
-        actividadId: "$actividades._id", // Id de la actividad (se asume que existe)
-        actividad: "$actividades.actividad",
-        responsable: "$actividades.responsable", // objeto con { nombre, correo }
-        fechaCheck: "$actividades.fechaCheck", // nuevo campo de control
-        // Se obtiene el arreglo de fechas y el último elemento de ese arreglo
-        fechaCompromisoArray: "$actividades.fechaCompromiso",
-        lastFechaCompromiso: { $arrayElemAt: ["$actividades.fechaCompromiso", -1] },
-        concluido: "$actividades.concluido"
+        padreId: '$_id',
+        actividadId: '$actividades._id',
+        actividad: '$actividades.actividad',
+        responsable: '$actividades.responsable', // { nombre, correo }
+        fechaCheck: '$actividades.fechaCheck',
+        fechaCompromisoArray: '$actividades.fechaCompromiso',
+        lastFechaCompromiso: { $arrayElemAt: ['$actividades.fechaCompromiso', -1] },
+        concluido: '$actividades.concluido'
       }
     },
-    // Sólo incluir aquellas actividades que NO se hayan procesado hoy.
+    // No procesadas hoy
     {
       $match: {
-        $or: [
-          { fechaCheck: { $exists: false } },
-          { fechaCheck: { $lt: hoy } }
-        ]
+        $or: [{ fechaCheck: { $exists: false } }, { fechaCheck: { $lt: hoy } }]
       }
     },
-    // Descartar documentos cuyo lastFechaCompromiso esté vacío o sea nulo.
+    // Debe existir fecha compromiso
     {
-      $match: {
-        lastFechaCompromiso: { $nin: ["", null] }
-      }
+      $match: { lastFechaCompromiso: { $nin: ['', null] } }
     },
-    // Convertir lastFechaCompromiso (string) a Date
+    // Parsear string -> Date en MX
     {
       $addFields: {
         lastFechaCompromisoDate: {
           $dateFromString: {
-            dateString: "$lastFechaCompromiso",
-            format: "%Y-%m-%d",
-            timezone: "America/Mexico_City", // ajusta según necesidad
+            dateString: '$lastFechaCompromiso',
+            format: '%Y-%m-%d',
+            timezone: 'America/Mexico_City',
             onError: null,
             onNull: null
           }
         }
       }
     },
-    // Filtrar para aquellas actividades cuya última fechaCompromiso se encuentre en el rango del día objetivo
-    // y que no estén concluidas.
+    // En el rango del día objetivo y no concluido
     {
       $match: {
-        lastFechaCompromisoDate: {
-          $gte: startOfDay,
-          $lte: endOfDay
-        },
+        lastFechaCompromisoDate: { $gte: startOfDay, $lte: endOfDay },
         concluido: { $ne: true }
       }
     }
-  ]);
+  ])
+  // Evita problemas si la colección es grande
+  .allowDiskUse?.(true);
 }
 
-/**
- * Función que se encarga de leer la plantilla, obtener las tareas (para mañana y dentro de 3 días),
- * enviar correos a cada responsable y, en caso de enviar el correo, actualizar el campo fechaCheck
- * de la actividad con la fecha actual.
- */
-async function ejecutarTarea() {
-  console.log(`Ejecución de tarea a las: ${new Date().toLocaleString()}`);
+// ========== Envío / actualización ==========
+async function procesarEnvio(doc, subject) {
+  const { padreId, actividadId, actividad, responsable, lastFechaCompromiso } = doc;
+
+  if (!responsable?.correo) {
+    console.warn('[cron-ish] Actividad sin correo de responsable; salto:', actividad);
+    return;
+  }
+
+  const tpl = getEmailTemplate()
+    .replace('{{usuario}}', responsable.nombre || '')
+    .replace('{{actividad}}', actividad || '')
+    .replace('{{fechaCompromiso}}', lastFechaCompromiso || '');
+
+  const mailOptions = {
+    from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
+    to: responsable.correo,
+    subject,
+    html: tpl,
+    attachments: [
+      {
+        filename: 'logoAguida.png',
+        path: path.join(__dirname, '../assets/logoAguida-min.png'),
+        cid: 'logoAguida'
+      }
+    ]
+  };
 
   try {
-    // Consultar actividades para mañana y dentro de 3 días.
-    const tasksTomorrow = await getTasksForDate(moment().add(1, 'day'));
-    const tasksThreeDays = await getTasksForDate(moment().add(3, 'days'));
+    // Si nodemailer es v6+, sendMail sin callback retorna Promise
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[cron-ish] Correo enviado a ${responsable.nombre} (${responsable.correo}): ${info.response}`);
 
-    console.log(`Número de actividades para mañana: ${tasksTomorrow.length}`);
-    console.log(`Número de actividades para dentro de 3 días: ${tasksThreeDays.length}`);
-
-    // Leer la plantilla de correo.
-    const templatePath = path.join(__dirname, 'templates', 'notificacion-compromiso.html');
-    const emailTemplate = fs.readFileSync(templatePath, 'utf8');
-
-    // Función auxiliar para enviar correo y, en caso exitoso, actualizar fechaCheck.
-    async function procesarEnvio(doc, subject) {
-      const { padreId, actividadId, actividad, responsable, lastFechaCompromiso } = doc;
-      console.log(`Preparando correo para: ${responsable.nombre} - Actividad: ${actividad} (${subject})`);
-
-      // Personalizar la plantilla del correo.
-      const customizedTemplate = emailTemplate
-        .replace('{{usuario}}', responsable.nombre)
-        .replace('{{actividad}}', actividad)
-        .replace('{{fechaCompromiso}}', lastFechaCompromiso);
-
-      const mailOptions = {
-        from: `"Auditapp" <${process.env.EMAIL_USERNAME}>`,
-        to: responsable.correo,
-        subject: subject,
-        html: customizedTemplate,
-        attachments: [
-          {
-            filename: 'logoAguida.png',
-            path: path.join(__dirname, '../assets/logoAguida-min.png'),
-            cid: 'logoAguida'
-          }
-        ]
-      };
-
-      // Enviar el correo.
-      transporter.sendMail(mailOptions, async (error, info) => {
-        if (error) {
-          console.error(`Error al enviar correo a ${responsable.nombre}:`, error);
-        } else {
-          console.log(`Correo enviado a ${responsable.nombre}:`, info.response);
-          // Una vez enviado el correo, se actualiza la fechaCheck de la actividad a la fecha actual
-          try {
-            await Ishikawa.updateOne(
-              { _id: padreId, "actividades._id": actividadId },
-              { $set: { "actividades.$.fechaCheck": new Date() } }
-            );
-            console.log(`fechaCheck actualizada para la actividad: ${actividad}`);
-          } catch (updError) {
-            console.error("Error actualizando fechaCheck:", updError);
-          }
-        }
-      });
-    }
-
-    // Procesar tareas para mañana.
-    tasksTomorrow.forEach(doc => {
-      procesarEnvio(doc, 'Recordatorio: Tu fecha de compromiso es mañana');
-    });
-
-    // Procesar tareas para dentro de 3 días.
-    tasksThreeDays.forEach(doc => {
-      procesarEnvio(doc, 'Recordatorio: Faltan 3 días para tu fecha de compromiso');
-    });
-
-  } catch (error) {
-    console.error("Error en la tarea programada:", error);
+    // Marca fechaCheck si el envío fue exitoso
+    await Ishikawa.updateOne(
+      { _id: padreId, 'actividades._id': actividadId },
+      { $set: { 'actividades.$.fechaCheck': new Date() } }
+    );
+    console.log(`[cron-ish] fechaCheck actualizada: ${actividad}`);
+  } catch (err) {
+    console.error(`[cron-ish] Error enviando a ${responsable?.correo}:`, err?.message || err);
   }
 }
 
-/**
- * Función para ejecutar la tarea sólo si aún no se ha ejecutado hoy.
- * Se puede invocar tanto al iniciar el servidor como por cron.
- */
+// ========== Lógica de tarea ==========
+async function ejecutarTarea() {
+  console.log(`[cron-ish] Tick: ${new Date().toLocaleString('es-MX')}`);
+
+  if (!(await ensureDb())) {
+    console.warn('[cron-ish] DB no disponible; salto tick');
+    return;
+  }
+
+  try {
+    const tasksTomorrow  = await getTasksForDate(moment().add(1, 'day'));
+    const tasksThreeDays = await getTasksForDate(moment().add(3, 'days'));
+
+    console.log(`[cron-ish] Mañana: ${tasksTomorrow.length} | +3 días: ${tasksThreeDays.length}`);
+
+    const trabajos = [
+      ...tasksTomorrow.map(d => procesarEnvio(d, 'Recordatorio: Tu fecha de compromiso es mañana')),
+      ...tasksThreeDays.map(d => procesarEnvio(d, 'Recordatorio: Faltan 3 días para tu fecha de compromiso'))
+    ];
+
+    // Ejecuta en paralelo pero captura errores por tarea
+    await Promise.allSettled(trabajos);
+  } catch (error) {
+    console.error('[cron-ish] Error en la tarea programada:', error);
+  }
+}
+
+// Ejecuta la tarea (con guardias) — se usará tanto en cron como en arranque
 async function ejecutarSiNoEstaChequeada() {
-  // Llamamos a la función que se encarga de enviar correos
-  // Las condiciones para no enviar estarán definidas en la agregación (actividades que ya tienen fechaCheck hoy se descartan)
   await ejecutarTarea();
 }
 
+// ========== Programación ==========
 /**
- * Ejecutar la tarea inmediatamente cuando el servidor se inicia.
+ * Registra el cron y ejecuta una corrida inicial.
+ * Llama a esta función DESPUÉS de await dbConnect() en tu entrypoint.
+ * @param {string} expr - Expresión CRON, por defecto cada 5 minutos (útil en pruebas)
  */
-ejecutarSiNoEstaChequeada();
+function scheduleIshNotifications(expr = '0 10 * * *') {
+  // Corrida inicial (no bloqueante)
+  ejecutarSiNoEstaChequeada().catch(() => {});
+
+  // Programa cron
+  cron.schedule(expr, () => {
+    ejecutarSiNoEstaChequeada().catch(() => {});
+  }, { timezone: 'America/Mexico_City' });
+
+  console.log(`[cron-ish] Programado con expresión "${expr}" (America/Mexico_City)`);
+}
+
+module.exports = { scheduleIshNotifications };

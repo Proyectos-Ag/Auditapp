@@ -131,7 +131,7 @@ export default function AuditReportPage({ variant = 'revision' }) {
   const navigate = useNavigate();
 
   const withIshikawa = true;
-  const { datos, ishikawasMap, loading, error } = useAuditData({ _id, withIshikawa });
+  const { datos, ishikawasMap, loading, error, refetch, upsertDato } = useAuditData({ _id, withIshikawa });
 
   // === Roles
   const tipo = String(userData?.TipoUsuario || '').toLowerCase();
@@ -281,27 +281,30 @@ const isAssignedToCurrentAuditor = React.useCallback((ish) => {
 
   const actualizarEstadoADevuelto = async (id, AuditorLiderEmail) => {
     if (!isAdmin || assignedOnly) return;
-    await api.put(`/datos/estado/${id}`, {
+    const { data: updated } = await api.put(`/datos/estado/${id}`, {
       Estado: 'Devuelto',
       Comentario: notas[id] || '',
       AuditorLiderEmail
     });
+    return updated;
   };
 
   const actualizarEstadoTerminada = async (id, payload) => {
     if (!isAdmin || assignedOnly) return;
-    await api.put(`/datos/estado/${id}`, {
+    const { data: updated }= await api.put(`/datos/estado/${id}`, {
       Estado: 'Terminada',
       ...payload
     });
+    return updated;
   };
 
   const actualizarEstadoFinalizado = async (id, porcentaje) => {
     if (!isAdmin || assignedOnly) return;
-    await api.put(`/datos/estado/${id}`, {
+    const { data: updated } = await api.put(`/datos/estado/${id}`, {
       Estado: 'Finalizado',
       PorcentajeCump: porcentaje
     });
+    return updated;
   };
 
   const eliminarReporte = async (id) => {
@@ -350,10 +353,12 @@ const isAssignedToCurrentAuditor = React.useCallback((ish) => {
       confirmButtonText: 'Sí, rechazar',
       cancelButtonText: 'Cancelar'
     }).then(async (r) => {
-      if (r.isConfirmed) {
-        await actualizarEstadoADevuelto(id, AuditorLiderEmail);
-        setNotaVisibleById(prev => ({ ...prev, [id]: false }));
-      }
+      if (!r.isConfirmed) return;
+      const updated = await actualizarEstadoADevuelto(id, AuditorLiderEmail);
+      setNotaVisibleById(prev => ({ ...prev, [id]: false }));
+      if (updated && updated._id) upsertDato(updated);
+      refetch();
+      Swal.fire('¡Listo!', 'Reporte devuelto', 'success');
     });
   };
 
@@ -367,10 +372,11 @@ const isAssignedToCurrentAuditor = React.useCallback((ish) => {
       confirmButtonText: 'Sí, aprobar',
       cancelButtonText: 'Cancelar'
     }).then(async (r) => {
-      if (r.isConfirmed) {
-        await actualizarEstadoTerminada(id, payload);
-        Swal.fire('¡Listo!', 'Estado actualizado', 'success').then(() => navigate('/revish'));
-      }
+      if (!r.isConfirmed) return;
+      const updated = await actualizarEstadoTerminada(id, payload);
+      if (updated && updated._id) upsertDato(updated);
+      refetch();
+      Swal.fire('¡Listo!', 'Estado actualizado', 'success');
     });
   };
 
@@ -384,9 +390,11 @@ const isAssignedToCurrentAuditor = React.useCallback((ish) => {
       confirmButtonText: 'Sí, finalizar',
       cancelButtonText: 'Cancelar'
     }).then(async (r) => {
-      if (r.isConfirmed) {
-        await actualizarEstadoFinalizado(id, porcentaje);
-      }
+      if (!r.isConfirmed) return;
+      const updated = await actualizarEstadoFinalizado(id, porcentaje);
+      if (updated && updated._id) upsertDato(updated);
+      refetch();
+      Swal.fire('¡Listo!', 'Estado actualizado', 'success');
     });
   };
 
@@ -474,7 +482,7 @@ const isAssignedToCurrentAuditor = React.useCallback((ish) => {
           const notaVisible = !!notaVisibleById[dato._id];
 
           return (
-            <div key={periodIdx} className="reporte-cont">
+            <div key={dato._id} className="reporte-cont">
               <div className="card-header" onClick={() => { /* si quieres colapsar */ }}>
                 <div className="header-title">Fecha de Elaboración: {formatDateES(dato.FechaElaboracion)}</div>
                 <ActionBar

@@ -17,8 +17,7 @@ dbConnect()
   .then(() => ensureRootUser(Usuarios).catch(console.error))
   .catch(err => console.error('Error al conectar a MongoDB:', err));
 
-// === Cron (cárgalo tras iniciar conexión para evitar consultas en cold start) ===
-require('./tarea_config/notificacionIsh');
+const { scheduleIshNotifications } = require('./tarea_config/notificacionIsh');
 
 // === Auto-Update ===
 const GitAutoUpdate = require('./util/gitAutoUpdate');
@@ -90,6 +89,8 @@ app.use(async (req, res, next) => {
     next(createError(503, 'Base de datos no disponible'));
   }
 });
+
+scheduleIshNotifications(); 
 
 // ================================ HEALTH CHECK =================================
 const HEALTH_PATHS = ['/health', '/api/health'];
