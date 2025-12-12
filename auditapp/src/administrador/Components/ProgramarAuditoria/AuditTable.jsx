@@ -26,7 +26,13 @@ import {
   Tooltip,
   FormControl,
   InputLabel,
-  styled
+  styled,
+  Collapse,
+  Box,
+  Checkbox,
+  FormGroup,
+  FormControlLabel,
+  Chip
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -34,11 +40,13 @@ import {
   Cancel as CancelIcon,
   Email as EmailIcon,
   Add as AddIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
   CalendarToday as CalendarIcon,
   Notes as NotesIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  CheckBox as CheckBoxIcon,
+  CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon
 } from '@mui/icons-material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
@@ -154,26 +162,64 @@ const AuditTable = () => {
   const [loading, setLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [show2024, setShow2024] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedAudit, setSelectedAudit] = useState(null);
-  const currentYear = new Date().getFullYear();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [auditToDelete, setAuditToDelete] = useState(null);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [currentNotes, setCurrentNotes] = useState('');
   const [currentAuditId, setCurrentAuditId] = useState('');
   const [currentAuditClient, setCurrentAuditClient] = useState('');
+  const [expandedYears, setExpandedYears] = useState({});
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [customMessage, setCustomMessage] = useState('');
 
   useEffect(() => {
     fetchAudits();
+    fetchAvailableYears();
   }, []);
+
+  // Función para obtener años disponibles del backend
+  const fetchAvailableYears = async () => {
+    try {
+      const response = await api.get('/programas-anuales/audits/years');
+      setAvailableYears(response.data);
+      
+      // Seleccionar el año actual por defecto
+      const currentYear = new Date().getFullYear();
+      if (response.data && response.data.includes(currentYear)) {
+        setSelectedYears([currentYear.toString()]);
+      } else if (response.data && response.data.length > 0) {
+        setSelectedYears([response.data[0].toString()]);
+      }
+    } catch (error) {
+      console.error("Error al obtener años disponibles:", error);
+    }
+  };
+
+  // Función para inicializar los años expandidos
+  useEffect(() => {
+    if (audits.length > 0) {
+      const years = getAvailableYears();
+      const initialExpanded = {};
+      
+      // Por defecto, expandir el año actual y contraer los demás
+      years.forEach(year => {
+        initialExpanded[year] = year === new Date().getFullYear();
+      });
+      
+      setExpandedYears(initialExpanded);
+    }
+  }, [audits]);
 
   const fetchAudits = async () => {
     try {
       setLoading(true);
       const response = await api.get(`/programas-anuales/audits`);
-      setAudits(response.data);
+      setAudits(response.data || []);
     } catch (error) {
       console.error("Error al obtener las auditorías:", error);
       setSuccessMessage('❌ Error al cargar las auditorías');
@@ -182,132 +228,223 @@ const AuditTable = () => {
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewAudit({
-      ...newAudit,
-      [name]: value
+  // Función para obtener todos los años disponibles en las auditorías (con validación)
+  const getAvailableYears = () => {
+    const yearsSet = new Set();
+    
+    // Filtrar auditorías que tengan fechaInicio válida
+    const validAudits = audits.filter(audit => audit && audit.fechaInicio);
+    
+    validAudits.forEach(audit => {
+      try {
+        if (audit && audit.fechaInicio) {
+          const date = new Date(audit.fechaInicio);
+          if (!isNaN(date.getTime())) {
+            const year = date.getFullYear();
+            yearsSet.add(year);
+          }
+        }
+      } catch (error) {
+        console.warn('Error al procesar fecha de auditoría:', error);
+      }
     });
+    
+    // Ordenar años de más reciente a más antiguo
+    return Array.from(yearsSet).sort((a, b) => b - a);
   };
 
-  const captureTableImage = async () => {
-    const table = document.querySelector(".MuiTableContainer-root");
-    if (!table) return null;
-    
-    const tableClone = table.cloneNode(true);
-    tableClone.style.position = 'absolute';
-    tableClone.style.left = '-9999px';
-    tableClone.style.width = table.offsetWidth + 'px';
-    tableClone.style.backgroundColor = '#ffffff';
-    document.body.appendChild(tableClone);
-    
-    const actionColumns = tableClone.querySelectorAll('th:last-child, td:last-child');
-    actionColumns.forEach(col => col.style.display = 'none');
-    
-    const lastRow = tableClone.querySelector('tbody tr:last-child');
-    if (lastRow) lastRow.style.display = 'none';
-    
-    const statusCells = tableClone.querySelectorAll('tbody tr');
-    statusCells.forEach((row, index) => {
-      if (index === statusCells.length - 1) return;
+  // Función para alternar la expansión de un año
+  const toggleYearExpansion = (year) => {
+    setExpandedYears(prev => ({
+      ...prev,
+      [year]: !prev[year]
+    }));
+  };
+
+  // Función para obtener auditorías por año (con validación)
+  const getAuditsByYear = (year) => {
+    const filteredAudits = audits.filter(audit => {
+      if (!audit || !audit.fechaInicio) return false;
       
-      const statusCell = row.querySelector('td:nth-child(4)');
-      if (statusCell) {
-        const status = statusCell.textContent.trim();
+      try {
+        const auditYear = new Date(audit.fechaInicio).getFullYear();
+        return auditYear === year;
+      } catch (error) {
+        console.warn('Error al obtener año de auditoría:', error);
+        return false;
+      }
+    });
+    
+    return sortAuditsByDate(filteredAudits);
+  };
+
+  // Función para capturar tabla específica de años seleccionados
+  const captureSelectedYearsTable = async () => {
+    if (selectedYears.length === 0) return null;
+    
+    // Primero, expandir todos los años seleccionados temporalmente
+    const originalExpandedState = { ...expandedYears };
+    const updatedExpandedState = { ...expandedYears };
+    
+    availableYears.forEach(year => {
+      updatedExpandedState[year] = selectedYears.includes(year.toString());
+    });
+    
+    setExpandedYears(updatedExpandedState);
+    
+    // Esperar un momento para que se rendericen las tablas
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Crear un contenedor temporal para capturar solo los años seleccionados
+    const container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.style.width = '800px';
+    container.style.backgroundColor = '#ffffff';
+    container.style.padding = '20px';
+    
+    // Agregar título
+    const title = document.createElement('h2');
+    title.textContent = `PROGRAMA ANUAL DE AUDITORÍAS - AÑOS: ${selectedYears.sort((a, b) => b - a).join(', ')}`;
+    title.style.color = '#1a237e';
+    title.style.fontFamily = '"Montserrat", "Arial", sans-serif';
+    title.style.fontSize = '1.5rem';
+    title.style.marginBottom = '20px';
+    title.style.textAlign = 'center';
+    container.appendChild(title);
+    
+    // Agregar cada tabla de año seleccionado
+    selectedYears.sort((a, b) => b - a).forEach(year => {
+      const yearAudits = getAuditsByYear(parseInt(year));
+      if (yearAudits.length === 0) return;
+      
+      // Crear encabezado del año
+      const yearHeader = document.createElement('h3');
+      yearHeader.textContent = `AUDITORÍAS ${year}`;
+      yearHeader.style.backgroundColor = '#1a237e';
+      yearHeader.style.color = 'white';
+      yearHeader.style.padding = '12px 16px';
+      yearHeader.style.margin = '20px 0 0 0';
+      yearHeader.style.borderRadius = '4px 4px 0 0';
+      container.appendChild(yearHeader);
+      
+      // Crear tabla para este año
+      const yearTable = document.createElement('table');
+      yearTable.style.width = '100%';
+      yearTable.style.borderCollapse = 'collapse';
+      yearTable.style.border = '1px solid #ddd';
+      yearTable.style.marginBottom = '30px';
+      
+      // Crear encabezados de tabla
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      
+      ['CLIENTE', 'FECHAS', 'MODALIDAD', 'ESTADO'].forEach(headerText => {
+        const th = document.createElement('th');
+        th.textContent = headerText;
+        th.style.backgroundColor = '#f5f5f5';
+        th.style.padding = '12px';
+        th.style.border = '1px solid #ddd';
+        th.style.fontWeight = '600';
+        headerRow.appendChild(th);
+      });
+      
+      thead.appendChild(headerRow);
+      yearTable.appendChild(thead);
+      
+      // Crear cuerpo de tabla
+      const tbody = document.createElement('tbody');
+      
+      yearAudits.forEach(audit => {
+        if (!audit) return;
         
-        statusCell.style.cssText = '';
-        statusCell.style.fontWeight = '500';
-        statusCell.style.textAlign = 'center';
-        statusCell.style.textTransform = 'uppercase';
-        statusCell.style.letterSpacing = '0.5px';
-        statusCell.style.fontSize = '0.75rem';
-        statusCell.style.borderRadius = '4px';
-        statusCell.style.padding = '8px 12px';
-        statusCell.style.minWidth = '100px';
-        statusCell.style.color = 'white';
-        statusCell.style.border = '1px solid #ddd';
+        const row = document.createElement('tr');
         
-        const colorMap = {
+        // Cliente
+        const cellCliente = document.createElement('td');
+        cellCliente.textContent = audit.cliente || 'N/A';
+        cellCliente.style.padding = '12px';
+        cellCliente.style.border = '1px solid #ddd';
+        row.appendChild(cellCliente);
+        
+        // Fechas
+        const cellFechas = document.createElement('td');
+        cellFechas.textContent = `${formatDate(audit.fechaInicio)} - ${formatDate(audit.fechaFin)}`;
+        cellFechas.style.padding = '12px';
+        cellFechas.style.border = '1px solid #ddd';
+        row.appendChild(cellFechas);
+        
+        // Modalidad
+        const cellModalidad = document.createElement('td');
+        cellModalidad.textContent = audit.modalidad || 'N/A';
+        cellModalidad.style.padding = '12px';
+        cellModalidad.style.border = '1px solid #ddd';
+        row.appendChild(cellModalidad);
+        
+        // Estado
+        const cellEstado = document.createElement('td');
+        cellEstado.textContent = audit.status || 'N/A';
+        cellEstado.style.padding = '8px 12px';
+        cellEstado.style.border = '1px solid #ddd';
+        cellEstado.style.textAlign = 'center';
+        cellEstado.style.fontWeight = '500';
+        cellEstado.style.textTransform = 'uppercase';
+        cellEstado.style.borderRadius = '4px';
+        cellEstado.style.minWidth = '100px';
+        cellEstado.style.display = 'inline-block';
+        
+        // Aplicar color según estado
+        const statusColors = {
           'Realizada': '#4caf50',
-          'Programada': '#2196f3', 
+          'Programada': '#2196f3',
           'Por Confirmar': '#ff9800',
           'En Curso': '#9c27b0',
           'No ejecutada': '#f44336',
           'CANCELADA': '#f44336'
         };
         
-        if (colorMap[status]) {
-          statusCell.style.backgroundColor = colorMap[status];
-          statusCell.innerHTML = `<span style="color: white; font-weight: 500;">${status}</span>`;
+        if (audit.status && statusColors[audit.status]) {
+          cellEstado.style.backgroundColor = statusColors[audit.status];
+          cellEstado.style.color = 'white';
         }
-      }
+        
+        row.appendChild(cellEstado);
+        tbody.appendChild(row);
+      });
+      
+      yearTable.appendChild(tbody);
+      container.appendChild(yearTable);
     });
     
-    const tableElement = tableClone.querySelector('table');
-    if (tableElement) {
-      tableElement.style.borderCollapse = 'collapse';
-      tableElement.style.width = '100%';
-      tableElement.style.backgroundColor = '#ffffff';
-    }
+    document.body.appendChild(container);
     
-    const headers = tableClone.querySelectorAll('th');
-    headers.forEach(header => {
-      header.style.backgroundColor = '#1a237e';
-      header.style.color = 'white';
-      header.style.fontWeight = '600';
-      header.style.padding = '12px';
-      header.style.border = '1px solid #ddd';
-    });
-
-    const cells = tableClone.querySelectorAll('td');
-    cells.forEach(cell => {
-      if (!cell.querySelector('span')) {
-        cell.style.padding = '12px';
-        cell.style.border = '1px solid #ddd';
-        cell.style.backgroundColor = '#ffffff';
-      }
-    });
-
-    const canvas = await html2canvas(tableClone, {
+    const canvas = await html2canvas(container, {
       scale: 2,
       backgroundColor: '#ffffff',
       logging: false,
       useCORS: true,
       allowTaint: true,
       removeContainer: true,
-      imageTimeout: 0,
-      onclone: (clonedDoc) => {
-        const clonedStatusCells = clonedDoc.querySelectorAll('tbody tr td:nth-child(4)');
-        clonedStatusCells.forEach(cell => {
-          const status = cell.textContent.trim();
-          const colorMap = {
-            'Realizada': '#4caf50',
-            'Programada': '#2196f3',
-            'Por Confirmar': '#ff9800', 
-            'En Curso': '#9c27b0',
-            'No ejecutada': '#f44336',
-            'CANCELADA': '#f44336'
-          };
-          
-          if (colorMap[status]) {
-            cell.style.backgroundColor = colorMap[status];
-            cell.style.color = 'white';
-            cell.style.fontWeight = '500';
-            cell.style.textAlign = 'center';
-          }
-        });
-      }
+      imageTimeout: 0
     });
     
-    document.body.removeChild(tableClone);
+    document.body.removeChild(container);
+    
+    // Restaurar estado original de expansión
+    setExpandedYears(originalExpandedState);
     
     return new Promise((resolve) => {
       canvas.toBlob((blob) => resolve(blob), "image/png", 1.0);
     });
   };
 
-  const sendAuditEmail = async (auditId) => {
-    const tableImageBlob = await captureTableImage();
+  const sendAuditEmail = async () => {
+    if (selectedYears.length === 0) {
+      setSuccessMessage('⚠️ Debe seleccionar al menos un año');
+      return;
+    }
+
+    const tableImageBlob = await captureSelectedYearsTable();
   
     if (!tableImageBlob) {
       setSuccessMessage('⚠️ No se pudo capturar la tabla para el correo');
@@ -315,17 +452,22 @@ const AuditTable = () => {
     }
   
     const formData = new FormData();
-    formData.append("auditId", auditId);
+    formData.append("selectedYears", JSON.stringify(selectedYears));
+    formData.append("emailSubject", emailSubject || `Programa Anual de Auditorías ${selectedYears.sort((a, b) => b - a).join(', ')}`);
+    formData.append("customMessage", customMessage || 'Se ha actualizado el programa anual de auditorías.');
     formData.append("tablaImagen", tableImageBlob, "auditorias.png");
   
     try {
       setEmailLoading(true);
-      await api.post(
+      const response = await api.post(
         `/programas-anuales/audits/send-email`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
-      setSuccessMessage('📨 Correo enviado exitosamente');
+      setSuccessMessage(`📨 Correo enviado exitosamente para los años: ${selectedYears.sort((a, b) => b - a).join(', ')}`);
+      setEmailDialogOpen(false);
+      setEmailSubject('');
+      setCustomMessage('');
     } catch (error) {
       console.error("Error al enviar el correo:", error);
       setSuccessMessage('❌ Error al enviar el correo');
@@ -376,6 +518,9 @@ const AuditTable = () => {
         status: "Realizada",
         notas: ""
       });
+      
+      // Actualizar años disponibles
+      fetchAvailableYears();
     } catch (error) {
       console.error("Error al agregar auditoría:", error);
       setAudits(audits.filter(audit => audit._id !== tempId));
@@ -418,6 +563,9 @@ const AuditTable = () => {
       
       setEditingAudit(null);
       setSuccessMessage('✅ Auditoría actualizada correctamente');
+      
+      // Actualizar años disponibles
+      fetchAvailableYears();
     } catch (error) {
       console.error("Error al actualizar auditoría:", error);
       setSuccessMessage('❌ Error al actualizar auditoría');
@@ -449,6 +597,9 @@ const AuditTable = () => {
       if (response.data.success) {
         setAudits(audits.filter(audit => audit._id !== auditId));
         setSuccessMessage('✅ Auditoría eliminada correctamente');
+        
+        // Actualizar años disponibles
+        fetchAvailableYears();
       } else {
         setSuccessMessage('⚠️ ' + response.data.message);
       }
@@ -523,28 +674,434 @@ const AuditTable = () => {
   };
 
   const sortAuditsByDate = (auditsArray) => {
-    return auditsArray.sort((a, b) => 
-      new Date(a.fechaInicio) - new Date(b.fechaInicio)
+    return auditsArray.sort((a, b) => {
+      if (!a.fechaInicio || !b.fechaInicio) return 0;
+      return new Date(a.fechaInicio) - new Date(b.fechaInicio);
+    });
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewAudit({
+      ...newAudit,
+      [name]: value
+    });
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Fecha inválida';
+      
+      const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+      return new Intl.DateTimeFormat("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }).format(adjustedDate);
+    } catch (error) {
+      console.error('Error al formatear fecha:', error);
+      return 'Fecha inválida';
+    }
+  };
+
+  // Manejar selección de años para correo
+  const handleYearSelection = (year) => {
+    const yearStr = year.toString();
+    if (selectedYears.includes(yearStr)) {
+      setSelectedYears(selectedYears.filter(y => y !== yearStr));
+    } else {
+      setSelectedYears([...selectedYears, yearStr]);
+    }
+  };
+
+  const selectAllYears = () => {
+    if (availableYears && availableYears.length > 0) {
+      setSelectedYears(availableYears.map(year => year.toString()));
+    }
+  };
+
+  const clearAllYears = () => {
+    setSelectedYears([]);
+  };
+
+  // Función para renderizar la tabla de auditorías para un año específico
+  const renderAuditTable = (year, auditsForYear) => {
+    const isCurrentYear = year === new Date().getFullYear();
+    const isExpanded = expandedYears[year] || false;
+
+    return (
+      <Box key={year} sx={{ marginBottom: '20px' }}>
+        <Paper 
+          elevation={2} 
+          sx={{ 
+            border: `1px solid ${theme.palette.divider}`,
+            overflow: 'hidden',
+            '&:hover': {
+              boxShadow: theme.shadows[4]
+            }
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '12px 16px',
+              backgroundColor: isCurrentYear ? theme.palette.primary.main : theme.palette.grey[200],
+              color: isCurrentYear ? 'white' : theme.palette.text.primary,
+              cursor: 'pointer',
+              transition: 'background-color 0.3s ease',
+              '&:hover': {
+                backgroundColor: isCurrentYear 
+                  ? theme.palette.primary.dark 
+                  : theme.palette.grey[300]
+              }
+            }}
+            onClick={() => toggleYearExpansion(year)}
+          >
+            <Typography variant="h2" sx={{ 
+              margin: 0,
+              fontWeight: 600,
+              fontSize: '1.2rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              AUDITORÍAS {year}
+              <Typography component="span" sx={{ 
+                fontSize: '0.8rem',
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                marginLeft: '10px'
+              }}>
+                {auditsForYear.length} auditoría{auditsForYear.length !== 1 ? 's' : ''}
+              </Typography>
+            </Typography>
+            
+            {selectedYears.includes(year.toString()) && (
+              <Chip 
+                label="Seleccionado"
+                size="small"
+                sx={{ 
+                  backgroundColor: 'white',
+                  color: theme.palette.primary.main,
+                  fontWeight: 'bold'
+                }}
+              />
+            )}
+          </Box>
+          
+          <Collapse in={isExpanded}>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ 
+                      fontWeight: 600,
+                      backgroundColor: theme.palette.grey[100]
+                    }}>CLIENTE</TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600,
+                      backgroundColor: theme.palette.grey[100]
+                    }}>FECHAS</TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600,
+                      backgroundColor: theme.palette.grey[100]
+                    }}>MODALIDAD</TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600,
+                      backgroundColor: theme.palette.grey[100]
+                    }}>ESTADO</TableCell>
+                    {isCurrentYear && (
+                      <TableCell sx={{ 
+                        fontWeight: 600,
+                        backgroundColor: theme.palette.grey[100]
+                      }}>ACCIONES</TableCell>
+                    )}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {auditsForYear.map((audit) => (
+                    <StyledTableRow key={audit._id || audit.id} hover>
+                      {/* Cliente */}
+                      <TableCell sx={{ fontWeight: 500 }}>
+                        {editingAudit?._id === audit._id ? (
+                          <TextField
+                            fullWidth
+                            size="small"
+                            variant="outlined"
+                            name="cliente"
+                            value={editingAudit.cliente || ''}
+                            onChange={handleEditChange}
+                          />
+                        ) : (
+                          audit.cliente || 'N/A'
+                        )}
+                      </TableCell>
+                      
+                      {/* Fechas */}
+                      <TableCell>
+                        {editingAudit?._id === audit._id ? (
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            <TextField
+                              size="small"
+                              type="date"
+                              variant="outlined"
+                              name="fechaInicio"
+                              value={editingAudit.fechaInicio || ''}
+                              onChange={handleEditChange}
+                              InputLabelProps={{ shrink: true }}
+                            />
+                            <TextField
+                              size="small"
+                              type="date"
+                              variant="outlined"
+                              name="fechaFin"
+                              value={editingAudit.fechaFin || ''}
+                              onChange={handleEditChange}
+                              InputLabelProps={{ shrink: true }}
+                            />
+                          </div>
+                        ) : (
+                          <Tooltip title="Ver detalles">
+                            <Button
+                              startIcon={<CalendarIcon />}
+                              onClick={() => handleOpenDialog(audit)}
+                              sx={{
+                                textTransform: 'none',
+                                color: theme.palette.primary.main,
+                                fontWeight: 500
+                              }}
+                              disabled={!audit.fechaInicio || !audit.fechaFin}
+                            >
+                              {formatDate(audit.fechaInicio)} - {formatDate(audit.fechaFin)}
+                            </Button>
+                          </Tooltip>
+                        )}
+                      </TableCell>
+                      
+                      {/* Modalidad */}
+                      <TableCell>
+                        {editingAudit?._id === audit._id ? (
+                          <FormControl fullWidth size="small">
+                            <Select
+                              name="modalidad"
+                              value={editingAudit.modalidad || 'Presencial'}
+                              onChange={handleEditChange}
+                            >
+                              <MenuItem value="Presencial">Presencial</MenuItem>
+                              <MenuItem value="Virtual">Virtual</MenuItem>
+                              <MenuItem value="Mixta">Mixta</MenuItem>
+                            </Select>
+                          </FormControl>
+                        ) : (
+                          audit.modalidad || 'N/A'
+                        )}
+                      </TableCell>
+                      
+                      {/* Estado */}
+                      <TableCell>
+                        {editingAudit?._id === audit._id ? (
+                          <FormControl fullWidth size="small">
+                            <Select
+                              name="status"
+                              value={editingAudit.status || 'Realizada'}
+                              onChange={handleEditChange}
+                              sx={{
+                                backgroundColor: 
+                                  editingAudit.status === 'Realizada' ? '#4caf50' : 
+                                  editingAudit.status === 'Programada' ? '#2196f3' :
+                                  editingAudit.status === 'Por Confirmar' ? '#ff9800' :
+                                  editingAudit.status === 'En Curso' ? '#9c27b0' : '#f44336',
+                                color: 'white',
+                                '& .MuiSelect-icon': {
+                                  color: 'white'
+                                }
+                              }}
+                            >
+                              <MenuItem value="Realizada">Realizada</MenuItem>
+                              <MenuItem value="Programada">Programada</MenuItem>
+                              <MenuItem value="Por Confirmar">Por Confirmar</MenuItem>
+                              <MenuItem value="En Curso">En Curso</MenuItem>
+                              <MenuItem value="No ejecutada">No ejecutada</MenuItem>
+                            </Select>
+                          </FormControl>
+                        ) : (
+                          <StatusCell status={audit.status || 'N/A'}>
+                            {audit.status || 'N/A'}
+                          </StatusCell>
+                        )}
+                      </TableCell>
+                      
+                      {/* Acciones (solo para el año actual) */}
+                      {isCurrentYear && (
+                        <TableCell>
+                          {editingAudit?._id === audit._id ? (
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <Tooltip title="Guardar">
+                                <IconButton
+                                  onClick={handleSaveEdit}
+                                  color="primary"
+                                  size="small"
+                                >
+                                  <SaveIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Cancelar">
+                                <IconButton
+                                  onClick={handleCancelEdit}
+                                  color="error"
+                                  size="small"
+                                >
+                                  <CancelIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <Tooltip title="Editar auditoría">
+                                <IconButton
+                                  onClick={() => handleEditClick(audit)}
+                                  color="primary"
+                                  size="small"
+                                >
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Agregar/Ver notas">
+                                <IconButton
+                                  onClick={() => handleOpenNotesDialog(audit._id, audit.cliente)}
+                                  color="info"
+                                  size="small"
+                                >
+                                  <NotesIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Eliminar auditoría">
+                                <IconButton
+                                  onClick={() => handleDeleteClick(audit._id)}
+                                  color="error"
+                                  size="small"
+                                  disabled={loading}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </div>
+                          )}
+                        </TableCell>
+                      )}
+                    </StyledTableRow>
+                  ))}
+                  
+                  {/* Fila para nueva auditoría (solo para el año actual) */}
+                  {isCurrentYear && (
+                    <StyledTableRow>
+                      <TableCell>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          variant="outlined"
+                          name="cliente"
+                          value={newAudit.cliente}
+                          onChange={handleInputChange}
+                          placeholder="Nombre del cliente"
+                          sx={{ backgroundColor: 'white' }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                          <TextField
+                            size="small"
+                            type="date"
+                            variant="outlined"
+                            name="fechaInicio"
+                            value={newAudit.fechaInicio}
+                            onChange={handleInputChange}
+                            InputLabelProps={{ shrink: true }}
+                            sx={{ backgroundColor: 'white' }}
+                          />
+                          <TextField
+                            size="small"
+                            type="date"
+                            variant="outlined"
+                            name="fechaFin"
+                            value={newAudit.fechaFin}
+                            onChange={handleInputChange}
+                            InputLabelProps={{ shrink: true }}
+                            sx={{ backgroundColor: 'white' }}
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Modalidad</InputLabel>
+                          <Select
+                            name="modalidad"
+                            value={newAudit.modalidad}
+                            onChange={handleInputChange}
+                            label="Modalidad"
+                            sx={{ backgroundColor: 'white' }}
+                          >
+                            <MenuItem value="Presencial">Presencial</MenuItem>
+                            <MenuItem value="Virtual">Virtual</MenuItem>
+                            <MenuItem value="Mixta">Mixta</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </TableCell>
+                      <TableCell>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Estado</InputLabel>
+                          <Select
+                            name="status"
+                            value={newAudit.status}
+                            onChange={handleInputChange}
+                            label="Estado"
+                            sx={{ backgroundColor: 'white' }}
+                          >
+                            <MenuItem value="Realizada">Realizada</MenuItem>
+                            <MenuItem value="Programada">Programada</MenuItem>
+                            <MenuItem value="Por Confirmar">Por Confirmar</MenuItem>
+                            <MenuItem value="En Curso">En Curso</MenuItem>
+                            <MenuItem value="No ejecutada">No ejecutada</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          startIcon={<AddIcon />}
+                          onClick={registerAudit}
+                          disabled={loading}
+                          sx={{
+                            textTransform: 'uppercase',
+                            fontWeight: 600,
+                            letterSpacing: '0.5px'
+                          }}
+                        >
+                          Agregar
+                        </Button>
+                      </TableCell>
+                    </StyledTableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Collapse>
+        </Paper>
+      </Box>
     );
   };
 
-  const audits2024 = sortAuditsByDate(audits.filter(audit => 
-    new Date(audit.fechaInicio).getFullYear() === 2024
-  ));
-  
-  const audits2025 = sortAuditsByDate(audits.filter(audit => 
-    new Date(audit.fechaInicio).getFullYear() === 2025
-  ));
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
-    return new Intl.DateTimeFormat("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric"
-    }).format(adjustedDate);
-  };
+  // Obtener todos los años disponibles
+  const currentYear = new Date().getFullYear();
+  const availableYearsList = getAvailableYears();
 
   return (
     <ThemeProvider theme={theme}>
@@ -606,7 +1163,7 @@ const AuditTable = () => {
             variant="contained"
             color="primary"
             startIcon={<EmailIcon />}
-            onClick={() => sendAuditEmail('all')}
+            onClick={() => setEmailDialogOpen(true)}
             disabled={emailLoading}
             sx={{ 
               fontSize: '0.75rem',
@@ -614,381 +1171,76 @@ const AuditTable = () => {
               borderRadius: '4px'
             }}
           >
-            MANDAR CORREO ELECTRONICO
+            ENVIAR POR CORREO
           </Button>
         </Typography>
 
-        {/* Auditorías 2024 (solo visible en 2025) */}
-        {currentYear === 2025 && (
-          <div style={{ marginBottom: '30px' }}>
-            <Button
+        {/* Controles para expandir/contraer todos */}
+        <Box sx={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<ExpandMoreIcon />}
+            onClick={() => {
+              const allExpanded = {};
+              availableYearsList.forEach(year => {
+                allExpanded[year] = true;
+              });
+              setExpandedYears(allExpanded);
+            }}
+            disabled={availableYearsList.length === 0}
+          >
+            Expandir todo
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<ExpandLessIcon />}
+            onClick={() => {
+              const allCollapsed = {};
+              availableYearsList.forEach(year => {
+                allCollapsed[year] = false;
+              });
+              setExpandedYears(allCollapsed);
+            }}
+            disabled={availableYearsList.length === 0}
+          >
+            Contraer todo
+          </Button>
+          
+          {/* Indicador de años seleccionados para correo */}
+          {selectedYears.length > 0 && (
+            <Chip 
+              label={`${selectedYears.length} año(s) seleccionado(s)`}
+              color="primary"
               variant="outlined"
-              startIcon={show2024 ? <VisibilityOffIcon /> : <VisibilityIcon />}
-              onClick={() => setShow2024(!show2024)}
-              sx={{
-                mb: 2,
-                borderWidth: '2px',
-                '&:hover': { borderWidth: '2px' }
-              }}
-            >
-              {show2024 ? 'OCULTAR 2024' : 'VER AUDITORÍAS 2024'}
-            </Button>
+              sx={{ marginLeft: 'auto' }}
+            />
+          )}
+          
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            Total: {audits.length} auditoría{audits.length !== 1 ? 's' : ''} en {availableYearsList.length} año{availableYearsList.length !== 1 ? 's' : ''}
+          </Typography>
+        </Box>
 
-            {show2024 && (
-              <Paper elevation={2} sx={{ 
-                marginBottom: '30px',
-                border: `1px solid ${theme.palette.divider}`,
-                overflow: 'hidden'
-              }}>
-                <Typography variant="h2" sx={{ 
-                  padding: '12px 16px',
-                  backgroundColor: theme.palette.primary.main,
-                  color: 'white'
-                }}>
-                  AUDITORÍAS 2024
-                </Typography>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ 
-                          fontWeight: 600,
-                          backgroundColor: theme.palette.grey[100]
-                        }}>CLIENTE</TableCell>
-                        <TableCell sx={{ 
-                          fontWeight: 600,
-                          backgroundColor: theme.palette.grey[100]
-                        }}>FECHAS</TableCell>
-                        <TableCell sx={{ 
-                          fontWeight: 600,
-                          backgroundColor: theme.palette.grey[100]
-                        }}>MODALIDAD</TableCell>
-                        <TableCell sx={{ 
-                          fontWeight: 600,
-                          backgroundColor: theme.palette.grey[100]
-                        }}>ESTADO</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {audits2024.map((audit) => (
-                        <StyledTableRow key={audit._id} hover>
-                          <TableCell>{audit.cliente}</TableCell>
-                          <TableCell>
-                            <Tooltip title="Ver detalles">
-                              <Button
-                                startIcon={<CalendarIcon />}
-                                onClick={() => handleOpenDialog(audit)}
-                                sx={{
-                                  textTransform: 'none',
-                                  color: theme.palette.primary.main,
-                                  fontWeight: 500
-                                }}
-                              >
-                                {formatDate(audit.fechaInicio)} - {formatDate(audit.fechaFin)}
-                              </Button>
-                            </Tooltip>
-                          </TableCell>
-                          <TableCell>{audit.modalidad}</TableCell>
-                          <StatusCell status={audit.status}>
-                            {audit.status}
-                          </StatusCell>
-                        </StyledTableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Paper>
-            )}
-          </div>
+        {/* Renderizar tablas por año */}
+        {availableYearsList.length > 0 ? (
+          availableYearsList.map(year => renderAuditTable(year, getAuditsByYear(year)))
+        ) : (
+          <Paper sx={{ 
+            padding: '40px', 
+            textAlign: 'center',
+            backgroundColor: theme.palette.grey[50]
+          }}>
+            <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
+              No hay auditorías registradas
+            </Typography>
+            <Typography variant="body2" sx={{ marginTop: '10px', color: theme.palette.text.secondary }}>
+              Comienza agregando una nueva auditoría
+            </Typography>
+          </Paper>
         )}
 
-        {/* Auditorías del año actual */}
-        <Typography variant="h2" sx={{ 
-          padding: '12px 16px',
-          backgroundColor: theme.palette.primary.main,
-        }}>
-          AUDITORÍAS {currentYear}
-        </Typography>
-        
-        <TableContainer component={Paper} sx={{ 
-          border: `1px solid ${theme.palette.divider}`,
-          borderTop: 'none',
-          boxShadow: 'none'
-        }}>
-          <Table className="audit-table">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600, backgroundColor: theme.palette.grey[100] }}>CLIENTE</TableCell>
-                <TableCell sx={{ fontWeight: 600, backgroundColor: theme.palette.grey[100] }}>FECHAS</TableCell>
-                <TableCell sx={{ fontWeight: 600, backgroundColor: theme.palette.grey[100] }}>MODALIDAD</TableCell>
-                <TableCell sx={{ fontWeight: 600, backgroundColor: theme.palette.grey[100] }}>ESTADO</TableCell>
-                <TableCell sx={{ fontWeight: 600, backgroundColor: theme.palette.grey[100] }}>ACCIONES</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {audits2025.map((audit) => (
-                <StyledTableRow key={audit._id} hover>
-                  {/* Cliente */}
-                  <TableCell sx={{ fontWeight: 500 }}>
-                    {editingAudit?._id === audit._id ? (
-                      <TextField
-                        fullWidth
-                        size="small"
-                        variant="outlined"
-                        name="cliente"
-                        value={editingAudit.cliente}
-                        onChange={handleEditChange}
-                      />
-                    ) : (
-                      audit.cliente
-                    )}
-                  </TableCell>
-                  
-                  {/* Fechas */}
-                  <TableCell>
-                    {editingAudit?._id === audit._id ? (
-                      <div style={{ display: 'flex', gap: '10px' }}>
-                        <TextField
-                          size="small"
-                          type="date"
-                          variant="outlined"
-                          name="fechaInicio"
-                          value={editingAudit.fechaInicio}
-                          onChange={handleEditChange}
-                          InputLabelProps={{ shrink: true }}
-                        />
-                        <TextField
-                          size="small"
-                          type="date"
-                          variant="outlined"
-                          name="fechaFin"
-                          value={editingAudit.fechaFin}
-                          onChange={handleEditChange}
-                          InputLabelProps={{ shrink: true }}
-                        />
-                      </div>
-                    ) : (
-                      <Tooltip title="Ver detalles">
-                        <Button
-                          startIcon={<CalendarIcon />}
-                          onClick={() => handleOpenDialog(audit)}
-                          sx={{
-                            textTransform: 'none',
-                            color: theme.palette.primary.main,
-                            fontWeight: 500
-                          }}
-                        >
-                          {formatDate(audit.fechaInicio)} - {formatDate(audit.fechaFin)}
-                        </Button>
-                      </Tooltip>
-                    )}
-                  </TableCell>
-                  
-                  {/* Modalidad */}
-                  <TableCell>
-                    {editingAudit?._id === audit._id ? (
-                      <FormControl fullWidth size="small">
-                        <Select
-                          name="modalidad"
-                          value={editingAudit.modalidad}
-                          onChange={handleEditChange}
-                        >
-                          <MenuItem value="Presencial">Presencial</MenuItem>
-                          <MenuItem value="Virtual">Virtual</MenuItem>
-                          <MenuItem value="Mixta">Mixta</MenuItem>
-                        </Select>
-                      </FormControl>
-                    ) : (
-                      audit.modalidad
-                    )}
-                  </TableCell>
-                  
-                  {/* Estado */}
-                  <TableCell>
-                    {editingAudit?._id === audit._id ? (
-                      <FormControl fullWidth size="small">
-                        <Select
-                          name="status"
-                          value={editingAudit.status}
-                          onChange={handleEditChange}
-                          sx={{
-                            backgroundColor: 
-                              editingAudit.status === 'Realizada' ? '#4caf50' : 
-                              editingAudit.status === 'Programada' ? '#2196f3' :
-                              editingAudit.status === 'Por Confirmar' ? '#ff9800' :
-                              editingAudit.status === 'En Curso' ? '#9c27b0' : '#f44336',
-                            color: 'white',
-                            '& .MuiSelect-icon': {
-                              color: 'white'
-                            }
-                          }}
-                        >
-                          <MenuItem value="Realizada">Realizada</MenuItem>
-                          <MenuItem value="Programada">Programada</MenuItem>
-                          <MenuItem value="Por Confirmar">Por Confirmar</MenuItem>
-                          <MenuItem value="En Curso">En Curso</MenuItem>
-                          <MenuItem value="No ejecutada">No ejecutada</MenuItem>
-                        </Select>
-                      </FormControl>
-                    ) : (
-                      <StatusCell status={audit.status}>
-                        {audit.status}
-                      </StatusCell>
-                    )}
-                  </TableCell>
-                  
-                  {/* Acciones */}
-                  <TableCell>
-                    {editingAudit?._id === audit._id ? (
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <Tooltip title="Guardar">
-                          <IconButton
-                            onClick={handleSaveEdit}
-                            color="primary"
-                            size="small"
-                          >
-                            <SaveIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Cancelar">
-                          <IconButton
-                            onClick={handleCancelEdit}
-                            color="error"
-                            size="small"
-                          >
-                            <CancelIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <Tooltip title="Editar auditoría">
-                          <IconButton
-                            onClick={() => handleEditClick(audit)}
-                            color="primary"
-                            size="small"
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Agregar/Ver notas">
-                          <IconButton
-                            onClick={() => handleOpenNotesDialog(audit._id, audit.cliente)}
-                            color="info"
-                            size="small"
-                          >
-                            <NotesIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Eliminar auditoría">
-                          <IconButton
-                            onClick={() => handleDeleteClick(audit._id)}
-                            color="error"
-                            size="small"
-                            disabled={loading}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </div>
-                    )}
-                  </TableCell>
-                </StyledTableRow>
-              ))}
-
-              {/* Fila para nueva auditoría */}
-              <StyledTableRow>
-                <TableCell>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    variant="outlined"
-                    name="cliente"
-                    value={newAudit.cliente}
-                    onChange={handleInputChange}
-                    placeholder="Nombre del cliente"
-                    sx={{ backgroundColor: 'white' }}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <TextField
-                      size="small"
-                      type="date"
-                      variant="outlined"
-                      name="fechaInicio"
-                      value={newAudit.fechaInicio}
-                      onChange={handleInputChange}
-                      InputLabelProps={{ shrink: true }}
-                      sx={{ backgroundColor: 'white' }}
-                    />
-                    <TextField
-                      size="small"
-                      type="date"
-                      variant="outlined"
-                      name="fechaFin"
-                      value={newAudit.fechaFin}
-                      onChange={handleInputChange}
-                      InputLabelProps={{ shrink: true }}
-                      sx={{ backgroundColor: 'white' }}
-                    />
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Modalidad</InputLabel>
-                    <Select
-                      name="modalidad"
-                      value={newAudit.modalidad}
-                      onChange={handleInputChange}
-                      label="Modalidad"
-                      sx={{ backgroundColor: 'white' }}
-                    >
-                      <MenuItem value="Presencial">Presencial</MenuItem>
-                      <MenuItem value="Virtual">Virtual</MenuItem>
-                      <MenuItem value="Mixta">Mixta</MenuItem>
-                    </Select>
-                  </FormControl>
-                </TableCell>
-                <TableCell>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Estado</InputLabel>
-                    <Select
-                      name="status"
-                      value={newAudit.status}
-                      onChange={handleInputChange}
-                      label="Estado"
-                      sx={{ backgroundColor: 'white' }}
-                    >
-                      <MenuItem value="Realizada">Realizada</MenuItem>
-                      <MenuItem value="Programada">Programada</MenuItem>
-                      <MenuItem value="Por Confirmar">Por Confirmar</MenuItem>
-                      <MenuItem value="En Curso">En Curso</MenuItem>
-                      <MenuItem value="No ejecutada">No ejecutada</MenuItem>
-                    </Select>
-                  </FormControl>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<AddIcon />}
-                    onClick={registerAudit}
-                    disabled={loading}
-                    sx={{
-                      textTransform: 'uppercase',
-                      fontWeight: 600,
-                      letterSpacing: '0.5px'
-                    }}
-                  >
-                    Agregar
-                  </Button>
-                </TableCell>
-              </StyledTableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-        
         {/* Diálogo de confirmación para eliminar */}
         <Dialog
           open={confirmOpen}
@@ -1047,7 +1299,7 @@ const AuditTable = () => {
                   color: theme.palette.primary.main,
                   fontWeight: 600
                 }}>
-                  {selectedAudit.cliente}
+                  {selectedAudit.cliente || 'N/A'}
                 </Typography>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
@@ -1061,7 +1313,7 @@ const AuditTable = () => {
                   </div>
                   <div>
                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>MODALIDAD:</Typography>
-                    <Typography>{selectedAudit.modalidad}</Typography>
+                    <Typography>{selectedAudit.modalidad || 'N/A'}</Typography>
                   </div>
                   <div>
                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>ESTADO:</Typography>
@@ -1087,7 +1339,7 @@ const AuditTable = () => {
                         color: 'white'
                       })
                     }}>
-                      {selectedAudit.status}
+                      {selectedAudit.status || 'N/A'}
                     </span>
                   </div>
                 </div>
@@ -1150,6 +1402,143 @@ const AuditTable = () => {
               disabled={loading}
             >
               GUARDAR NOTAS
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Diálogo de envío de correo */}
+        <Dialog open={emailDialogOpen} onClose={() => setEmailDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle sx={{ 
+            backgroundColor: theme.palette.primary.main,
+            color: 'white',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            <EmailIcon />
+            ENVIAR PROGRAMA POR CORREO
+          </DialogTitle>
+          <DialogContent sx={{ padding: '20px', mt: 2 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, marginBottom: '15px' }}>
+              Seleccione los años a incluir en el correo:
+            </Typography>
+            
+            <Box sx={{ 
+              border: '1px solid #ddd', 
+              borderRadius: '4px', 
+              padding: '10px',
+              marginBottom: '20px',
+              maxHeight: '200px',
+              overflowY: 'auto'
+            }}>
+              <FormGroup>
+                {availableYears && availableYears.length > 0 ? (
+                  availableYears.map((year) => (
+                    <FormControlLabel
+                      key={year}
+                      control={
+                        <Checkbox
+                          checked={selectedYears.includes(year.toString())}
+                          onChange={() => handleYearSelection(year)}
+                          icon={<CheckBoxOutlineBlankIcon />}
+                          checkedIcon={<CheckBoxIcon />}
+                        />
+                      }
+                      label={`Año ${year}`}
+                      sx={{ 
+                        marginRight: 0,
+                        '& .MuiTypography-root': {
+                          fontWeight: selectedYears.includes(year.toString()) ? 600 : 400
+                        }
+                      }}
+                    />
+                  ))
+                ) : (
+                  <Typography variant="body2" sx={{ color: 'text.secondary', padding: '10px' }}>
+                    No hay años disponibles
+                  </Typography>
+                )}
+              </FormGroup>
+            </Box>
+            
+            <Box sx={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+              <Button 
+                variant="outlined" 
+                size="small" 
+                onClick={selectAllYears}
+                sx={{ flex: 1 }}
+                disabled={!availableYears || availableYears.length === 0}
+              >
+                Seleccionar todos
+              </Button>
+              <Button 
+                variant="outlined" 
+                size="small" 
+                onClick={clearAllYears}
+                sx={{ flex: 1 }}
+                color="error"
+              >
+                Limpiar selección
+              </Button>
+            </Box>
+            
+            {selectedYears.length > 0 && (
+              <Box sx={{ 
+                backgroundColor: '#e8f5e9', 
+                padding: '10px', 
+                borderRadius: '4px',
+                marginBottom: '20px'
+              }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Años seleccionados: {selectedYears.sort((a, b) => b - a).join(', ')}
+                </Typography>
+              </Box>
+            )}
+            
+            <TextField
+              fullWidth
+              label="Asunto del correo"
+              value={emailSubject}
+              onChange={(e) => setEmailSubject(e.target.value)}
+              placeholder={`Ej: Programa Anual de Auditorías ${selectedYears.sort((a, b) => b - a).join(', ')}`}
+              sx={{ marginBottom: '15px' }}
+            />
+            
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Mensaje personalizado"
+              value={customMessage}
+              onChange={(e) => setCustomMessage(e.target.value)}
+              placeholder="Ej: Se ha actualizado el programa anual de auditorías..."
+            />
+            
+            <Typography variant="caption" sx={{ display: 'block', marginTop: '10px', color: 'text.secondary' }}>
+              La tabla incluirá todas las auditorías de los años seleccionados
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ padding: '16px 24px' }}>
+            <Button 
+              onClick={() => {
+                setEmailDialogOpen(false);
+                setEmailSubject('');
+                setCustomMessage('');
+              }}
+              color="primary"
+              variant="outlined"
+            >
+              CANCELAR
+            </Button>
+            <Button 
+              onClick={sendAuditEmail}
+              color="primary"
+              variant="contained"
+              disabled={selectedYears.length === 0 || emailLoading}
+              startIcon={emailLoading ? <CircularProgress size={20} /> : <EmailIcon />}
+            >
+              {emailLoading ? 'ENVIANDO...' : 'ENVIAR CORREO'}
             </Button>
           </DialogActions>
         </Dialog>
