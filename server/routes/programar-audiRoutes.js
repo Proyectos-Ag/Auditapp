@@ -8,18 +8,21 @@ const auditController = require('../controllers/programar-audiController');
 // Ruta para obtener todas las auditorías
 router.get('/audits', auditController.getAudits);
 
+// Ruta para obtener años disponibles
+router.get('/audits/years', auditController.getAvailableYears);
+
 // Ruta para crear una nueva auditoría
 router.post("/audits", auditController.createAudit);
 
+// Ruta para enviar correo con imagen
 router.post("/audits/send-email", upload.single("tablaImagen"), auditController.sendAuditEmail);
 
-// Ruta para actualizar el estado de realizada o programada
+// Ruta para actualizar el estado de una auditoría
 router.put('/audits/:id', auditController.updateAuditStatus);
 
 // Ruta para eliminar auditoría
 router.delete('/audits/:id', auditController.deleteAudit);
 
-// NUEVAS RUTAS PARA NOTAS
 // Ruta para obtener las notas de una auditoría específica
 router.get('/audits/:id/notas', auditController.getAuditNotes);
 
