@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import api from '../../../services/api';
-import logo from '../assets/img/logoAguida-min.png';
-import { useNavigate } from 'react-router-dom';
+// src/.../VistaIshikawas.jsx
+import React, { useEffect, useMemo, useState } from "react";
+import api from "../../../services/api";
+import logo from "../assets/img/logoAguida-min.png";
+import { useNavigate } from "react-router-dom";
+import "./css/VistaIshikawasGrid.css"; // ✅ NUEVO CSS (ruta relativa según tu carpeta)
 
 const VistaIshikawas = () => {
   const [ishikawas, setIshikawas] = useState([]);
@@ -13,225 +15,236 @@ const VistaIshikawas = () => {
   useEffect(() => {
     const fetchDatos = async () => {
       try {
-        const response = await api.get('/ishikawa/ishesp');
-        const responseInc = await api.get('/ishikawa/ishesp-inc');
-        setIshikawas(response.data);
-        setIshikawasInc(responseInc.data);
-        
-        // Inicializar estado expandido para el año actual
+        const response = await api.get("/ishikawa/ishesp");
+        const responseInc = await api.get("/ishikawa/ishesp-inc");
+        setIshikawas(response.data || []);
+        setIshikawasInc(responseInc.data || []);
+
         const currentYear = new Date().getFullYear();
         setExpandedYears({ [currentYear]: true });
       } catch (error) {
-        console.error('Error al obtener los datos:', error);
+        console.error("Error al obtener los datos:", error);
       }
     };
-  
-    fetchDatos();
-  }, []);  
 
-  // Función corregida para formateo de fechas UTC
+    fetchDatos();
+  }, []);
+
+  // ===== helpers fecha (ajuste UTC->local) =====
+  const toLocalFromUTC = (fecha) => {
+    if (!fecha) return null;
+    const d = new Date(fecha);
+    if (Number.isNaN(d.getTime())) return null;
+    d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+    return d;
+  };
+
+  const toTimeFixed = (fecha) => {
+    const d = toLocalFromUTC(fecha);
+    return d ? d.getTime() : 0;
+  };
+
   const formatearFecha = (fecha) => {
-    if (!fecha) return 'Fecha no disponible';
-    
-    const nuevaFecha = new Date(fecha);
-    if (isNaN(nuevaFecha)) return 'Fecha inválida';
-    
-    // Ajustar para problema de zona horaria
-    nuevaFecha.setMinutes(nuevaFecha.getMinutes() + nuevaFecha.getTimezoneOffset());
-    
-    const dia = nuevaFecha.getDate();
-    const mes = nuevaFecha.toLocaleString('es-ES', { month: 'long' });
-    const año = nuevaFecha.getFullYear();
-    
+    const d = toLocalFromUTC(fecha);
+    if (!d) return "Fecha no disponible";
+
+    const dia = d.getDate();
+    const mes = d.toLocaleString("es-ES", { month: "long" });
+    const año = d.getFullYear();
     return `${dia} de ${mes} de ${año}`;
   };
 
+  const sortByFechaDesc = (arr, field = "fecha") =>
+    [...(arr || [])].sort((a, b) => toTimeFixed(b?.[field]) - toTimeFixed(a?.[field]));
+
   const obtenerColorEstado = (estado) => {
     switch (estado) {
-      case 'Hecho':
-        return 'yellow';
-      case 'Rechazado':
-        return 'red';
-      case 'Aprobado':
-        return 'blue';
-      case 'Finalizado':
-        return 'green';
+      case "Hecho":
+        return "yellow";
+      case "Rechazado":
+        return "red";
+      case "Aprobado":
+        return "blue";
+      case "Finalizado":
+        return "green";
       default:
-        return 'black';
+        return "black";
     }
   };
 
-  const formatearEstado = (estado) => {
-    return estado === 'Hecho' ? 'En revisión' : estado;
-  };
+  const formatearEstado = (estado) => (estado === "Hecho" ? "En revisión" : estado);
 
-  const navReporte = (_id) => {
-    navigate(`/diagrama/${_id}`);
-  };
-
-  const handleOpenModal = () => {
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
+  const navReporte = (_id) => navigate(`/diagrama/${_id}`);
 
   const toggleYear = (year) => {
-    setExpandedYears(prev => ({
+    setExpandedYears((prev) => ({
       ...prev,
-      [year]: !prev[year]
+      [year]: !prev[year],
     }));
   };
 
-  // Agrupar ishikawas por año
-  const agruparPorAnio = () => {
+  // ===== data derivada =====
+  const gruposPorAnio = useMemo(() => {
     const grupos = {};
-    const currentYear = new Date().getFullYear();
-    
-    ishikawas.forEach(ishikawa => {
-      const fecha = new Date(ishikawa.fecha);
-      // Ajuste de zona horaria
-      fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset());
-      const year = fecha.getFullYear();
-      
-      if (!grupos[year]) {
-        grupos[year] = [];
-      }
-      
+
+    (ishikawas || []).forEach((ishikawa) => {
+      const d = toLocalFromUTC(ishikawa.fecha);
+      if (!d) return;
+
+      const year = d.getFullYear();
+      if (!grupos[year]) grupos[year] = [];
       grupos[year].push(ishikawa);
     });
-    
-    return grupos;
-  };
 
-  const gruposPorAnio = agruparPorAnio();
-  const anios = Object.keys(gruposPorAnio).sort((a, b) => b - a);
+    Object.keys(grupos).forEach((y) => {
+      grupos[y] = sortByFechaDesc(grupos[y], "fecha");
+    });
+
+    return grupos;
+  }, [ishikawas]);
+
+  const anios = useMemo(
+    () => Object.keys(gruposPorAnio).sort((a, b) => Number(b) - Number(a)),
+    [gruposPorAnio]
+  );
+
   const currentYear = new Date().getFullYear();
 
+  const ishikawasIncOrdenadas = useMemo(() => {
+    // si trae fechaElaboracion úsala; si no, cae a fecha
+    return [...(ishikawasInc || [])].sort(
+      (a, b) =>
+        toTimeFixed(b.fechaElaboracion || b.fecha) - toTimeFixed(a.fechaElaboracion || a.fecha)
+    );
+  }, [ishikawasInc]);
+
   return (
-    <div>
-      <div className='cont-card-repo'>
-        <h1>Revisión de Ishikawa</h1>
-        <button type="button" className='button-proc' onClick={handleOpenModal}>
+    <div className="ishrev-page">
+      {/* Header */}
+      <div className="ishrev-header">
+        <h1 className="ishrev-title">Revisión de Ishikawa</h1>
+
+        <button type="button" className="ishrev-procBtn" onClick={() => setShowModal(true)}>
           En proceso: {ishikawasInc.length} registros
         </button>
       </div>
-      
-      {/* Modal para mostrar los registros en proceso */}
+
+      {/* Modal */}
       {showModal && (
-        <div 
-          className="modal-overlay" 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}
-        >
-          <div 
-            className="modal-content" 
-            style={{
-              background: '#fff',
-              padding: '20px',
-              borderRadius: '8px',
-              width: '80%',
-              maxHeight: '80%',
-              overflowY: 'auto',
-              position: 'relative'
-            }}
-          >
-            <h2>En Proceso</h2>
-            <button 
-              onClick={handleCloseModal} 
-              style={{
-                color:'#fff',
-                backgroundColor:'red',
-                position: 'absolute',
-                top: '10px',
-                borderRadius:'8px',
-                right: '10px'
-              }}
-            >
-              Cerrar
-            </button>
-            {ishikawasInc.length > 0 ? (
-              <div className='cont-card-repo-modal'>
-                {ishikawasInc.map((ishikawa) => (
-                  <div 
-                    key={ishikawa._id} 
-                    className='card-repo-ish'
+        <div className="ishrev-modalOverlay" role="dialog" aria-modal="true">
+          <div className="ishrev-modal">
+            <div className="ishrev-modalTop">
+              <h2 className="ishrev-modalTitle">En Proceso</h2>
+
+              <button className="ishrev-modalClose" onClick={() => setShowModal(false)}>
+                Cerrar
+              </button>
+            </div>
+
+            {ishikawasIncOrdenadas.length > 0 ? (
+              <div className="ishrev-grid ishref-grid--modal">
+                {ishikawasIncOrdenadas.map((ishikawa) => (
+                  <div
+                    key={ishikawa._id}
+                    className="ishrev-card"
                     onClick={() => navReporte(ishikawa._id)}
-                    style={{ cursor: 'pointer' }}
+                    role="button"
+                    tabIndex={0}
                   >
-                    <img src={logo} alt="Logo Empresa" className="logo-empresa-revi" />
-                    <p>Fecha Elaboración: {formatearFecha(ishikawa.fechaElaboracion)}</p>
-                    <p>Realizado por: {ishikawa.auditado}</p>
-                    <p style={{ color: ishikawa.estado === 'Incompleto' ? 'orange' : obtenerColorEstado(ishikawa.estado) }}>
-                      Estado: {ishikawa.estado === 'Incompleto' ? 'En proceso' : formatearEstado(ishikawa.estado)}
-                    </p>
+                    <img src={logo} alt="Logo Empresa" className="ishrev-logo" />
+
+                    <div className="ishrev-info">
+                      <p className="ishrev-line">
+                        <span className="ishrev-label">Fecha:</span>
+                        {formatearFecha(ishikawa.fechaElaboracion || ishikawa.fecha)}
+                      </p>
+
+                      <p className="ishrev-line">
+                        <span className="ishrev-label">Realizó:</span>
+                        {ishikawa.auditado}
+                      </p>
+
+                      <p
+                        className="ishrev-status"
+                        style={{
+                          color:
+                            ishikawa.estado === "Incompleto"
+                              ? "orange"
+                              : obtenerColorEstado(ishikawa.estado),
+                        }}
+                      >
+                        Estado:{" "}
+                        {ishikawa.estado === "Incompleto"
+                          ? "En proceso"
+                          : formatearEstado(ishikawa.estado)}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <h2 className='cont-card-repo'>No hay ishikawas en proceso.</h2>
+              <div className="ishrev-empty">No hay ishikawas en proceso.</div>
             )}
           </div>
         </div>
       )}
 
-      <div className='cont-card-repo'>
+      {/* Lista principal */}
+      <div className="ishrev-grid">
         {anios.length > 0 ? (
-          anios.map(year => {
-            const yearInt = parseInt(year);
-            const isCurrentYear = yearInt === currentYear;
-            const isExpanded = expandedYears[year] || isCurrentYear;
+          anios.map((year) => {
+            const yearInt = Number(year);
+            const isCurrent = yearInt === currentYear;
+            const isExpanded = expandedYears[year] || isCurrent;
 
             return (
               <React.Fragment key={year}>
-                {!isCurrentYear && (
-                  <div 
+                {!isCurrent && (
+                  <button
+                    type="button"
+                    className="ishrev-yearToggle"
                     onClick={() => toggleYear(year)}
-                    style={{
-                      width: '100%',
-                      textAlign: 'center',
-                      padding: '10px',
-                      backgroundColor: '#f0f0f0',
-                      cursor: 'pointer',
-                      margin: '10px 0',
-                      borderRadius: '5px',
-                      fontWeight: 'bold'
-                    }}
                   >
-                    Año: {year} {isExpanded ? '▲' : '▼'}
-                  </div>
+                    Año: {year} {isExpanded ? "▲" : "▼"}
+                  </button>
                 )}
-                
-                {isExpanded && gruposPorAnio[year].map(ishikawa => (
-                  <div 
-                    key={ishikawa._id} 
-                    className='card-repo-ish'
-                    onClick={() => navReporte(ishikawa._id)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <img src={logo} alt="Logo Empresa" className="logo-empresa-revi" />
-                    <p>Fecha Elaboración: {formatearFecha(ishikawa.fecha)}</p>
-                    <p>Realizado por: {ishikawa.auditado}</p>
-                    <p style={{ color: obtenerColorEstado(ishikawa.estado) }}>
-                      Estado: {formatearEstado(ishikawa.estado)}
-                    </p>
-                  </div>
-                ))}
+
+                {isExpanded &&
+                  (gruposPorAnio[year] || []).map((ishikawa) => (
+                    <div
+                      key={ishikawa._id}
+                      className="ishrev-card"
+                      onClick={() => navReporte(ishikawa._id)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <img src={logo} alt="Logo Empresa" className="ishrev-logo" />
+
+                      <div className="ishrev-info">
+                        <p className="ishrev-line">
+                          <span className="ishrev-label">Fecha:</span>
+                          {formatearFecha(ishikawa.fecha)}
+                        </p>
+
+                        <p className="ishrev-line">
+                          <span className="ishrev-label">Realizó:</span>
+                          {ishikawa.auditado}
+                        </p>
+
+                        <p
+                          className="ishrev-status"
+                          style={{ color: obtenerColorEstado(ishikawa.estado) }}
+                        >
+                          Estado: {formatearEstado(ishikawa.estado)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
               </React.Fragment>
             );
           })
         ) : (
-          <h2>No hay ishikawas por revisar.</h2>
+          <div className="ishrev-empty">No hay ishikawas por revisar.</div>
         )}
       </div>
     </div>

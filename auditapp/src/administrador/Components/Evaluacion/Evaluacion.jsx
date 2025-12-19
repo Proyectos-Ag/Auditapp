@@ -789,26 +789,6 @@ const Evaluaciones = () => {
               GCF070 - Sistema de Gestión para la Calidad
             </Typography>
             
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1, mt: 2 }}>
-              <Chip 
-                icon={<TouchApp />} 
-                label="Interfaz táctil optimizada" 
-                color="primary" 
-                variant="outlined"
-              />
-              <Chip 
-                icon={<Animation />} 
-                label="Diseño fluidico" 
-                color="secondary" 
-                variant="outlined"
-              />
-              <Chip 
-                icon={<Palette />} 
-                label="Tema holográfico" 
-                color="success" 
-                variant="outlined"
-              />
-            </Box>
           </Box>
           
           <Divider sx={{ 

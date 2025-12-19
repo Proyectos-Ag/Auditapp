@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    margin: 8rem auto 0;
+    margin: 5rem auto 0;
     margin-top: 8rem;
     width: 80rem;
     max-width: 100rem;
@@ -199,3 +199,226 @@
   .button-proc:hover{
     background-color: #092e44;
   }
+
+  /* ===== Header vs List (evita que cont-card-repo sirva para 2 cosas distintas) ===== */
+.cont-card-repo--header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cont-card-repo--list,
+.cont-card-repo-modal {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 14px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 18px auto 0;
+  padding: 14px;
+  border-radius: 12px;
+}
+
+/* ===== Botón "En proceso" (ya no absoluto) ===== */
+.button-proc {
+  position: static;
+  border: none;
+  background-color: #114f72;
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button-proc:hover {
+  background-color: #092e44;
+}
+
+/* ===== Card horizontal ===== */
+.card-repo-ish {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+
+  margin: 0;               /* ya no margin 10px */
+  max-width: 100%;         /* ya no 10em */
+  cursor: pointer;
+
+  background-color: #c2fabe;
+  border: 2px solid #7bfca2;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-repo-ish:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* (Opcional) si el doblez estorba en cards compactas, puedes comentar estos 2 bloques */
+/*
+.card-repo-ish::before,
+.card-repo-ish::after { display: none; }
+*/
+
+.logo-empresa-revi {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  flex: 0 0 56px;
+
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.card-repo-ish__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0; /* importante para ellipsis */
+  flex: 1;
+}
+
+.card-repo-ish__line {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.2;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-repo-ish__label {
+  font-weight: 700;
+  margin-right: 6px;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.card-repo-ish__status {
+  margin-top: 6px;
+  align-self: flex-start;
+
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.85rem;
+
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 480px) {
+  .cont-card-repo--list,
+  .cont-card-repo-modal {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .card-repo-ish {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .card-repo-ish__line {
+    white-space: normal;
+  }
+}
+
+/* ===== GRID: 4 por fila ===== */
+.cont-card-repo--list,
+.cont-card-repo-modal {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)); /* ✅ 4 por fila */
+  gap: 14px;
+  width: 100%;
+  max-width: 1400px; /* un poco más para que 4 quepan cómodo */
+  margin: 18px auto 0;
+  padding: 14px;
+  border-radius: 12px;
+}
+
+/* El header del año debe ocupar TODO el ancho del grid */
+.year-toggle {
+  grid-column: 1 / -1;
+}
+
+/* ===== Card más compacta para que quepan 4 ===== */
+.card-repo-ish {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px;
+  border-radius: 14px;
+
+  width: 100%;
+  min-width: 0;       /* ✅ evita desbordes raros */
+  margin: 0;
+
+  background-color: #c2fabe;
+  border: 2px solid #7bfca2;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.logo-empresa-revi {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.card-repo-ish__line {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-repo-ish__status {
+  margin-top: 6px;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.82rem;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Responsive (si baja la pantalla, se reduce columnas) ===== */
+@media (max-width: 1200px) {
+  .cont-card-repo--list,
+  .cont-card-repo-modal {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .cont-card-repo--list,
+  .cont-card-repo-modal {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .cont-card-repo--list,
+  .cont-card-repo-modal {
+    grid-template-columns: 1fr;
+  }
+}
