@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import {
   Person, School, Work, Assessment, CheckCircle, Cancel,
-  HowToReg, Star, StarBorder, ArrowBack
+  HowToReg, Star, StarBorder, ArrowBack, EmojiEvents
 } from '@mui/icons-material';
 
 // Estilos personalizados
@@ -43,6 +43,19 @@ const AuditorCard = styled(Card)(({ theme, selected }) => ({
   '&:hover': {
     transform: 'translateY(-5px)',
     boxShadow: theme.shadows[6]
+  }
+}));
+
+const CalificacionCard = styled(Paper)(({ theme, color }) => ({
+  padding: theme.spacing(3),
+  borderRadius: '12px',
+  background: color,
+  color: '#fff',
+  textAlign: 'center',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+  transition: 'transform 0.3s ease',
+  '&:hover': {
+    transform: 'scale(1.05)'
   }
 }));
 
@@ -82,6 +95,38 @@ const renderStars = (value) => {
     );
   }
   return stars;
+};
+
+const getCalificacionInfo = (porcentaje) => {
+  if (porcentaje >= 85 && porcentaje <= 100) {
+    return {
+      nivel: 'Competente y candidato a ser auditor líder',
+      tipo: 'Evaluación Anual',
+      color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      icon: '🏆'
+    };
+  } else if (porcentaje >= 80 && porcentaje <= 84) {
+    return {
+      nivel: 'Competente y es candidato a formar parte del equipo de inocuidad',
+      tipo: 'Evaluación Semestral',
+      color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      icon: '⭐'
+    };
+  } else if (porcentaje >= 60 && porcentaje <= 79) {
+    return {
+      nivel: 'Se puede considerar auditor de entrenamiento',
+      tipo: 'Evaluación Trimestral',
+      color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      icon: '📚'
+    };
+  } else {
+    return {
+      nivel: 'Se considera no competente y fuera del equipo auditor',
+      tipo: 'Requiere Mejora',
+      color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      icon: '⚠️'
+    };
+  }
 };
 
 const AuditorEvaluaciones = () => {
@@ -219,6 +264,206 @@ const AuditorEvaluaciones = () => {
                   </Box>
                 </Grid>
               </Grid>
+            </Box>
+
+            {/* NUEVA SECCIÓN: Calificación Total Obtenida */}
+            <Box sx={{ mb: 4 }}>
+              <HeaderTypography variant="h5">
+                <EmojiEvents sx={{ verticalAlign: 'middle', mr: 1 }} />
+                Calificación Total Obtenida
+              </HeaderTypography>
+              
+              <Grid container spacing={3} sx={{ mt: 1 }}>
+                <Grid item xs={12}>
+                  <CalificacionCard 
+                    elevation={4}
+                    color={getCalificacionInfo(evaluaciones[0]?.porcentajeTotal || 0).color}
+                  >
+                    <Typography variant="h3" sx={{ mb: 2, fontWeight: 700 }}>
+                      {getCalificacionInfo(evaluaciones[0]?.porcentajeTotal || 0).icon}
+                    </Typography>
+                    <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
+                      {evaluaciones[0]?.porcentajeTotal || 0}%
+                    </Typography>
+                    <Typography variant="h6" sx={{ mb: 1 }}>
+                      {getCalificacionInfo(evaluaciones[0]?.porcentajeTotal || 0).nivel}
+                    </Typography>
+                    <Chip 
+                      label={getCalificacionInfo(evaluaciones[0]?.porcentajeTotal || 0).tipo}
+                      sx={{ 
+                        backgroundColor: 'rgba(255,255,255,0.3)', 
+                        color: '#fff',
+                        fontWeight: 600,
+                        mt: 1
+                      }}
+                    />
+                  </CalificacionCard>
+                </Grid>
+              </Grid>
+
+              {/* Tabla de rangos de calificación */}
+              <Box sx={{ mt: 3 }}>
+                <TableContainer 
+                  component={Paper} 
+                  sx={{ 
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)', 
+                    border: '2px solid #1976d2',
+                    borderRadius: '12px',
+                    overflow: 'hidden'
+                  }}
+                >
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: '#1976d2' }}>
+                        <TableCell 
+                          align="center" 
+                          sx={{ 
+                            fontWeight: 700, 
+                            fontSize: '1.1rem',
+                            color: '#fff',
+                            py: 2,
+                            borderRight: '1px solid rgba(255,255,255,0.2)'
+                          }}
+                        >
+                          CALIFICACIÓN TOTAL OBTENIDA
+                        </TableCell>
+                        <TableCell 
+                          align="center" 
+                          sx={{ 
+                            fontWeight: 700, 
+                            fontSize: '1.1rem',
+                            color: '#fff',
+                            py: 2
+                          }}
+                        >
+                          NIVEL DE COMPETENCIA
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      <TableRow 
+                        hover 
+                        sx={{ 
+                          backgroundColor: evaluaciones[0]?.porcentajeTotal >= 80 && evaluaciones[0]?.porcentajeTotal <= 100 ? '#e3f2fd' : '#fff',
+                          '&:hover': { backgroundColor: '#f5f5f5' }
+                        }}
+                      >
+                        <TableCell 
+                          align="center" 
+                          sx={{ 
+                            fontWeight: 600,
+                            fontSize: '1rem',
+                            py: 2.5,
+                            borderRight: '1px solid #e0e0e0'
+                          }}
+                        >
+                          85-100%
+                        </TableCell>
+                        <TableCell 
+                          align="left" 
+                          sx={{ 
+                            fontSize: '0.95rem',
+                            py: 2.5,
+                            pl: 3
+                          }}
+                        >
+                          Competente y candidato a ser auditor líder (evaluación anual)
+                        </TableCell>
+                      </TableRow>
+                      
+                      <TableRow 
+                        hover
+                        sx={{ 
+                          backgroundColor: evaluaciones[0]?.porcentajeTotal >= 80 && evaluaciones[0]?.porcentajeTotal <= 84 ? '#e8f5e9' : '#fafafa',
+                          '&:hover': { backgroundColor: '#f5f5f5' }
+                        }}
+                      >
+                        <TableCell 
+                          align="center" 
+                          sx={{ 
+                            fontWeight: 600,
+                            fontSize: '1rem',
+                            py: 2.5,
+                            borderRight: '1px solid #e0e0e0'
+                          }}
+                        >
+                          80-84%
+                        </TableCell>
+                        <TableCell 
+                          align="left" 
+                          sx={{ 
+                            fontSize: '0.95rem',
+                            py: 2.5,
+                            pl: 3
+                          }}
+                        >
+                          Competente y es candidato a formar parte del equipo de inocuidad (evaluación semestral)
+                        </TableCell>
+                      </TableRow>
+                      
+                      <TableRow 
+                        hover
+                        sx={{ 
+                          backgroundColor: evaluaciones[0]?.porcentajeTotal >= 60 && evaluaciones[0]?.porcentajeTotal <= 79 ? '#fff3e0' : '#fff',
+                          '&:hover': { backgroundColor: '#f5f5f5' }
+                        }}
+                      >
+                        <TableCell 
+                          align="center" 
+                          sx={{ 
+                            fontWeight: 600,
+                            fontSize: '1rem',
+                            py: 2.5,
+                            borderRight: '1px solid #e0e0e0'
+                          }}
+                        >
+                          60-79%
+                        </TableCell>
+                        <TableCell 
+                          align="left" 
+                          sx={{ 
+                            fontSize: '0.95rem',
+                            py: 2.5,
+                            pl: 3
+                          }}
+                        >
+                          Se puede considerar auditor de entrenamiento (evaluación trimestral)
+                        </TableCell>
+                      </TableRow>
+                      
+                      <TableRow 
+                        hover
+                        sx={{ 
+                          backgroundColor: evaluaciones[0]?.porcentajeTotal < 60 ? '#ffebee' : '#fafafa',
+                          '&:hover': { backgroundColor: '#f5f5f5' }
+                        }}
+                      >
+                        <TableCell 
+                          align="center" 
+                          sx={{ 
+                            fontWeight: 600,
+                            fontSize: '1rem',
+                            py: 2.5,
+                            borderRight: '1px solid #e0e0e0'
+                          }}
+                        >
+                          Menor a 59%
+                        </TableCell>
+                        <TableCell 
+                          align="left" 
+                          sx={{ 
+                            fontSize: '0.95rem',
+                            py: 2.5,
+                            pl: 3
+                          }}
+                        >
+                          Se considera no competente y fuera del equipo auditor
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
             </Box>
 
             <Box sx={{ mb: 4 }}>
