@@ -9,12 +9,46 @@ const {
   agregarAccionCorrectiva,
   getAccionesCorrectivasByArea,
   reprogramarFechaCompromiso,
-  actualizarAccionCorrectiva // Nueva función
+  actualizarAccionCorrectiva,
+  migrarTodosLosObjetivos
 } = require("../controllers/ObjetivoController");
 
 // GET /api/objetivos?area=INGENIERIA
 router.get("/", obtenerObjetivos);
 
+// NUEVA RUTA: Forzar actualización de año manualmente
+router.post("/actualizar-año", async (req, res) => {
+  try {
+    await verificarYActualizarAño();
+    res.json({ message: "Año actualizado correctamente para todos los objetivos" });
+  } catch (error) {
+    res.status(500).json({ error: "Error al actualizar año" });
+  }
+});
+
+// NUEVA RUTA: Obtener historial de un objetivo por año
+router.get("/:id/historial/:año", async (req, res) => {
+  try {
+    const Objetivo = require("../models/ObjetivoModel");
+    const objetivo = await Objetivo.findById(req.params.id);
+    
+    if (!objetivo) {
+      return res.status(404).json({ error: "Objetivo no encontrado" });
+    }
+    
+    const año = parseInt(req.params.año);
+    const historial = objetivo.historialAnual.find(h => h.año === año);
+    
+    if (!historial) {
+      return res.status(404).json({ error: "No hay datos para ese año" });
+    }
+    
+    res.json(historial);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al obtener historial" });
+  }
+});
 
 router.get('/test-email', async (req, res) => {
   try {
@@ -29,6 +63,7 @@ router.get('/test-email', async (req, res) => {
     res.status(500).send('Error al enviar correo');
   }
 });
+
 // GET /api/objetivos/acciones?area=INGENIERIA
 router.get("/acciones", getAccionesCorrectivasByArea);
 

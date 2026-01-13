@@ -26,7 +26,7 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  InputBase,
+  InputAdornment,
   Grid,
   Paper,
   useTheme,
@@ -34,23 +34,9 @@ import {
   useMediaQuery,
   AppBar,
   Toolbar,
-  Drawer,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   Divider,
-  BottomNavigation,
-  BottomNavigationAction,
-  Fab,
-  SwipeableDrawer,
-  Avatar,
-  Badge,
-  Tabs,
-  Tab,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails
+  LinearProgress,
+  Avatar
 } from '@mui/material';
 import {
   Search,
@@ -68,16 +54,13 @@ import {
   Menu,
   Add,
   Notifications,
-  Dashboard,
   Assignment,
   DateRange,
   Group,
   ExpandMore,
-  PhoneIphone,
-  Computer,
   ViewModule,
   ViewList,
-  Sort,
+  Download,
   MoreVert
 } from '@mui/icons-material';
 
@@ -96,520 +79,10 @@ const ListaAccionFrecu = () => {
   const [editData, setEditData] = useState({});
   const [nuevaFecha, setNuevaFecha] = useState('');
   const [saving, setSaving] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mobileNavValue, setMobileNavValue] = useState(0);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('fecha');
 
-  // Estilos premium para desktop y mobile
-  const styles = {
-    // Estilos base que se comparten
-    container: {
-      maxWidth: '1800px',
-      margin: '0 auto',
-      padding: isMobile ? '16px 12px' : '40px 24px',
-      background: 'transparent',
-      minHeight: '100vh',
-      paddingBottom: isMobile ? '80px' : '40px',
-    },
-    header: {
-      marginTop: isMobile ? '60px' : '96px',
-      marginBottom: isMobile ? '24px' : '48px',
-      textAlign: 'center',
-    },
-    mainTitle: {
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text',
-      fontWeight: 800,
-      fontSize: isMobile ? '2rem' : '3rem',
-      mb: 2,
-      lineHeight: 1.2,
-    },
-    subtitle: {
-      color: alpha(theme.palette.text.secondary, 0.8),
-      fontSize: isMobile ? '0.9rem' : '1.2rem',
-      fontWeight: 400,
-    },
-    areaTag: {
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      color: 'white',
-      borderRadius: '25px',
-      padding: isMobile ? '8px 16px' : '12px 24px',
-      fontSize: isMobile ? '0.75rem' : '0.875rem',
-      fontWeight: 600,
-      boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '8px',
-      mt: 2,
-    },
-
-    // Mobile App Bar
-    mobileAppBar: {
-      background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.95)} 0%, ${alpha(theme.palette.background.default, 0.95)} 100%)`,
-      backdropFilter: 'blur(20px)',
-      borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-    },
-    mobileToolbar: {
-      minHeight: '60px',
-      justifyContent: 'space-between',
-    },
-    mobileTitle: {
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text',
-      fontWeight: 700,
-      fontSize: '1.1rem',
-    },
-
-    // Stats Grid - Versión Mobile
-    statsGrid: {
-      display: 'grid',
-      gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(240px, 1fr))',
-      gap: isMobile ? '12px' : '24px',
-      mb: isMobile ? '24px' : '48px',
-    },
-    statCard: {
-      background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)} 0%, ${alpha(theme.palette.background.default, 0.8)} 100%)`,
-      backdropFilter: 'blur(20px)',
-      border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-      borderRadius: isMobile ? '16px' : '20px',
-      padding: isMobile ? '16px 12px' : '32px 24px',
-      textAlign: 'center',
-      transition: 'all 0.3s ease',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-      '&:hover': {
-        transform: isMobile ? 'translateY(-4px)' : 'translateY(-8px)',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
-      },
-    },
-    statValue: {
-      fontSize: isMobile ? '1.5rem' : '3rem',
-      fontWeight: 800,
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text',
-      mb: 1,
-    },
-
-    // Controls Section - Mobile
-    controlsSection: {
-      display: 'flex',
-      gap: isMobile ? '8px' : '16px',
-      mb: isMobile ? '16px' : '32px',
-      alignItems: 'center',
-      flexDirection: isMobile ? 'column' : 'row',
-    },
-    searchBox: {
-      flex: 1,
-      maxWidth: isMobile ? '100%' : '400px',
-      position: 'relative',
-      width: '100%',
-    },
-    searchInput: {
-      width: '100%',
-      padding: isMobile ? '12px 12px 12px 40px' : '16px 16px 16px 48px',
-      background: alpha(theme.palette.background.paper, 0.8),
-      backdropFilter: 'blur(20px)',
-      border: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-      borderRadius: isMobile ? '12px' : '16px',
-      fontSize: isMobile ? '0.8rem' : '0.875rem',
-      transition: 'all 0.3s ease',
-      '&:focus': {
-        borderColor: theme.palette.primary.main,
-        boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
-      },
-      '&::placeholder': {
-        color: alpha(theme.palette.text.secondary, 0.6),
-      },
-    },
-    searchIcon: {
-      position: 'absolute',
-      left: isMobile ? '12px' : '16px',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      color: alpha(theme.palette.text.secondary, 0.6),
-      fontSize: isMobile ? '18px' : '20px',
-    },
-    filterButton: {
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      color: 'white',
-      border: 'none',
-      padding: isMobile ? '12px 16px' : '16px 24px',
-      borderRadius: isMobile ? '12px' : '16px',
-      fontWeight: 600,
-      cursor: 'pointer',
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '8px',
-      transition: 'all 0.3s ease',
-      minWidth: isMobile ? '100%' : '120px',
-      justifyContent: 'center',
-      fontSize: isMobile ? '0.8rem' : '0.875rem',
-      '&:hover': {
-        transform: 'translateY(-2px)',
-        boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
-      },
-    },
-
-    // View Controls Mobile
-    viewControls: {
-      display: 'flex',
-      gap: '8px',
-      mb: '16px',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    viewToggle: {
-      background: alpha(theme.palette.background.paper, 0.8),
-      backdropFilter: 'blur(20px)',
-      border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-      borderRadius: '12px',
-      padding: '8px',
-      display: 'flex',
-      gap: '4px',
-    },
-    viewButton: {
-      padding: '8px 12px',
-      borderRadius: '8px',
-      fontSize: '0.75rem',
-      fontWeight: 600,
-      transition: 'all 0.3s ease',
-      minWidth: 'auto',
-      '&.active': {
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white',
-      },
-    },
-
-    // Mobile Grid View
-    mobileGrid: {
-      display: 'grid',
-      gridTemplateColumns: '1fr',
-      gap: '12px',
-    },
-    mobileCard: {
-      background: alpha(theme.palette.background.paper, 0.8),
-      backdropFilter: 'blur(20px)',
-      border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-      borderRadius: '16px',
-      padding: '16px',
-      transition: 'all 0.3s ease',
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-      '&:hover': {
-        transform: 'translateY(-2px)',
-        boxShadow: '0 8px 25px rgba(0, 0, 0, 0.12)',
-      },
-    },
-    cardHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      mb: 2,
-    },
-    cardTitle: {
-      fontWeight: 700,
-      fontSize: '0.9rem',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text',
-    },
-    cardContent: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px',
-    },
-    cardRow: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      fontSize: '0.8rem',
-    },
-    cardLabel: {
-      color: theme.palette.text.secondary,
-      fontWeight: 500,
-    },
-    cardValue: {
-      fontWeight: 600,
-      textAlign: 'right',
-    },
-    cardActions: {
-      display: 'flex',
-      gap: '8px',
-      mt: 2,
-      justifyContent: 'space-between',
-    },
-
-    // Table Styles (para desktop)
-    tableContainer: {
-      background: alpha(theme.palette.background.paper, 0.8),
-      backdropFilter: 'blur(20px)',
-      border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-      borderRadius: isMobile ? '12px' : '20px',
-      overflow: 'hidden',
-      boxShadow: '0 8px 40px rgba(0, 0, 0, 0.1)',
-      display: isMobile ? 'none' : 'block',
-    },
-    tableHead: {
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    },
-    tableHeaderCell: {
-      color: 'white',
-      fontWeight: 600,
-      fontSize: '0.75rem',
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-      padding: isMobile ? '12px 8px' : '20px 16px',
-    },
-    tableRow: {
-      transition: 'all 0.3s ease',
-      '&:hover': {
-        background: alpha(theme.palette.primary.main, 0.02),
-      },
-    },
-    tableCell: {
-      padding: isMobile ? '16px 8px' : '24px 16px',
-      borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-      fontSize: isMobile ? '0.75rem' : '0.875rem',
-    },
-
-    // Status Chip
-    statusChip: {
-      padding: isMobile ? '6px 12px' : '8px 16px',
-      borderRadius: isMobile ? '8px' : '12px',
-      fontWeight: 600,
-      fontSize: isMobile ? '0.7rem' : '0.75rem',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease',
-      '&:hover': {
-        transform: 'scale(1.05)',
-      },
-    },
-
-    // Action Buttons
-    actionButtons: {
-      display: 'flex',
-      gap: isMobile ? '4px' : '8px',
-      flexDirection: isMobile ? 'column' : 'row',
-    },
-    primaryButton: {
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      color: 'white',
-      border: 'none',
-      padding: isMobile ? '8px 12px' : '12px 16px',
-      borderRadius: isMobile ? '8px' : '12px',
-      fontSize: isMobile ? '0.7rem' : '0.75rem',
-      fontWeight: 600,
-      cursor: 'pointer',
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: isMobile ? '4px' : '6px',
-      transition: 'all 0.3s ease',
-      minWidth: 'auto',
-      '&:hover': {
-        transform: 'translateY(-2px)',
-        boxShadow: '0 8px 20px rgba(102, 126, 234, 0.4)',
-      },
-    },
-    secondaryButton: {
-      background: 'transparent',
-      color: theme.palette.text.secondary,
-      border: `1px solid ${alpha(theme.palette.text.secondary, 0.2)}`,
-      padding: isMobile ? '8px 12px' : '12px 16px',
-      borderRadius: isMobile ? '8px' : '12px',
-      fontSize: isMobile ? '0.7rem' : '0.75rem',
-      fontWeight: 600,
-      cursor: 'pointer',
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: isMobile ? '4px' : '6px',
-      transition: 'all 0.3s ease',
-      minWidth: 'auto',
-      '&:hover': {
-        background: alpha(theme.palette.primary.main, 0.05),
-        borderColor: theme.palette.primary.main,
-        color: theme.palette.primary.main,
-      },
-    },
-
-    // Modal Styles
-    modalContainer: {
-      backdropFilter: 'blur(20px)',
-      backgroundColor: alpha('#000', 0.7),
-    },
-    modalPaper: {
-      background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.9)} 0%, ${alpha(theme.palette.background.default, 0.9)} 100%)`,
-      backdropFilter: 'blur(40px)',
-      borderRadius: isMobile ? '16px' : '24px',
-      boxShadow: '0 40px 80px rgba(0, 0, 0, 0.3)',
-      overflow: 'hidden',
-      maxWidth: isMobile ? '95vw' : '600px',
-      width: '95vw',
-      maxHeight: '90vh',
-      overflowY: 'auto',
-      border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-      margin: isMobile ? '16px' : '0',
-    },
-    modalHeader: {
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      color: 'white',
-      padding: isMobile ? '20px' : '32px',
-      position: 'relative',
-    },
-    modalTitle: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      fontWeight: 700,
-      fontSize: isMobile ? '1.2rem' : '1.5rem',
-      margin: 0,
-    },
-    modalSubtitle: {
-      opacity: 0.9,
-      fontSize: isMobile ? '0.75rem' : '0.875rem',
-      margin: '8px 0 0 0',
-    },
-    closeButton: {
-      position: 'absolute',
-      right: isMobile ? '16px' : '24px',
-      top: isMobile ? '16px' : '24px',
-      color: 'white',
-      background: alpha('#fff', 0.2),
-      backdropFilter: 'blur(10px)',
-      border: `1px solid ${alpha('#fff', 0.2)}`,
-      borderRadius: '12px',
-      padding: '8px',
-      transition: 'all 0.3s ease',
-      '&:hover': {
-        background: alpha('#fff', 0.3),
-        transform: 'scale(1.1) rotate(90deg)',
-      },
-    },
-    modalContent: {
-      padding: isMobile ? '20px' : '32px',
-    },
-    formGrid: {
-      display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-      gap: isMobile ? '16px' : '20px',
-      mb: isMobile ? '16px' : '24px',
-    },
-    formGroup: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px',
-    },
-    fullWidthGroup: {
-      gridColumn: '1 / -1',
-    },
-    formLabel: {
-      fontWeight: 600,
-      fontSize: isMobile ? '0.8rem' : '0.875rem',
-      color: theme.palette.text.primary,
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-    },
-    formInput: {
-      '& .MuiOutlinedInput-root': {
-        borderRadius: isMobile ? '8px' : '12px',
-        background: alpha(theme.palette.background.paper, 0.6),
-        backdropFilter: 'blur(20px)',
-        border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-        transition: 'all 0.3s ease',
-        '&:hover': {
-          borderColor: theme.palette.primary.main,
-        },
-        '&.Mui-focused': {
-          borderColor: theme.palette.primary.main,
-          boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
-        },
-      },
-    },
-    modalActions: {
-      padding: isMobile ? '16px 20px' : '24px 32px',
-      borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-      gap: '12px',
-      flexDirection: isMobile ? 'column' : 'row',
-    },
-    dateDisplay: {
-      background: `linear-gradient(135deg, ${alpha('#dcfce7', 0.3)} 0%, ${alpha('#bbf7d0', 0.3)} 100%)`,
-      border: `1px solid ${alpha('#16a34a', 0.2)}`,
-      borderRadius: isMobile ? '12px' : '16px',
-      padding: isMobile ? '16px' : '20px',
-      mb: isMobile ? '16px' : '24px',
-    },
-    historySection: {
-      background: alpha(theme.palette.background.default, 0.5),
-      borderRadius: isMobile ? '8px' : '12px',
-      padding: isMobile ? '16px' : '20px',
-      border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-    },
-
-    // Mobile Bottom Navigation
-    bottomNav: {
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.95)} 0%, ${alpha(theme.palette.background.default, 0.95)} 100%)`,
-      backdropFilter: 'blur(20px)',
-      borderTop: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-      zIndex: 1000,
-    },
-    fabButton: {
-      position: 'fixed',
-      bottom: isMobile ? '80px' : '40px',
-      right: isMobile ? '20px' : '40px',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      color: 'white',
-      '&:hover': {
-        background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-        transform: 'scale(1.1)',
-      },
-    },
-
-    // Mobile Accordion
-    mobileAccordion: {
-      background: 'transparent',
-      boxShadow: 'none',
-      '&:before': {
-        display: 'none',
-      },
-      '&.Mui-expanded': {
-        margin: 0,
-      },
-    },
-    accordionSummary: {
-      background: alpha(theme.palette.background.paper, 0.8),
-      backdropFilter: 'blur(20px)',
-      border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-      borderRadius: '12px',
-      marginBottom: '8px',
-      minHeight: '60px',
-      '&.Mui-expanded': {
-        minHeight: '60px',
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
-      },
-    },
-    accordionDetails: {
-      background: alpha(theme.palette.background.default, 0.5),
-      border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-      borderTop: 'none',
-      borderBottomLeftRadius: '12px',
-      borderBottomRightRadius: '12px',
-      padding: '16px',
-    },
-  };
-
-  // Función corregida para manejar fechas sin problemas de zona horaria
+  // Función para manejar fechas
   const formatDate = (dateString) => {
     if (!dateString) return '';
     
@@ -798,218 +271,226 @@ const ListaAccionFrecu = () => {
   const getStatusColor = (status) => {
     const cleanStatus = status?.replace('indicador', '').trim() || '0%';
     switch(cleanStatus) {
-      case '0%': return { bg: '#fef2f2', color: '#dc2626', border: '#fecaca' };
-      case '25%': return { bg: '#fffbeb', color: '#d97706', border: '#fed7aa' };
-      case '50%': return { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' };
-      case '75%': return { bg: '#eff6ff', color: '#0284c7', border: '#bae6fd' };
-      case '100%': return { bg: '#f0fdf9', color: '#065f46', border: '#a7f3d0' };
-      default: return { bg: '#f8fafc', color: '#475569', border: '#e2e8f0' };
+      case '0%': return { main: '#dc2626', light: '#fef2f2' };
+      case '25%': return { main: '#d97706', light: '#fffbeb' };
+      case '50%': return { main: '#16a34a', light: '#f0fdf4' };
+      case '75%': return { main: '#0284c7', light: '#eff6ff' };
+      case '100%': return { main: '#065f46', light: '#f0fdf9' };
+      default: return { main: '#475569', light: '#f8fafc' };
     }
   };
 
   // Componente para la vista móvil en Grid
   const MobileGridView = () => (
-    <Box sx={styles.mobileGrid}>
+    <Grid container spacing={2}>
       {loading ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <CircularProgress />
-          <Typography sx={{ mt: 2, fontSize: '0.9rem' }}>Cargando acciones...</Typography>
-        </Box>
+        <Grid item xs={12}>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <CircularProgress />
+            <Typography sx={{ mt: 2, color: 'text.secondary' }}>
+              Cargando acciones...
+            </Typography>
+          </Box>
+        </Grid>
       ) : paginatedAcciones.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography>No se encontraron acciones</Typography>
-        </Box>
+        <Grid item xs={12}>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography sx={{ color: 'text.secondary' }}>
+              No se encontraron acciones
+            </Typography>
+          </Box>
+        </Grid>
       ) : (
         paginatedAcciones.map((accion) => {
           const statusColors = getStatusColor(accion.efectividad);
           return (
-            <Card key={accion._id} sx={styles.mobileCard}>
-              <Box sx={styles.cardHeader}>
-                <Typography sx={styles.cardTitle}>
-                  #{accion.noObjetivo || 'N/A'} - {accion.periodo || 'N/A'}
-                </Typography>
-                <Chip
-                  label={accion.efectividad?.replace('indicador', '') || '0%'}
-                  sx={{
-                    ...styles.statusChip,
-                    background: statusColors.bg,
-                    color: statusColors.color,
-                    border: `1px solid ${statusColors.border}`,
-                  }}
-                />
-              </Box>
-              
-              <Box sx={styles.cardContent}>
-                <Box sx={styles.cardRow}>
-                  <Typography sx={styles.cardLabel}>Fecha:</Typography>
-                  <Typography sx={styles.cardValue}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <CalendarToday sx={{ fontSize: 14 }} />
-                      {accion.fecha || 'N/A'}
+            <Grid item xs={12} key={accion._id}>
+              <Card sx={{ borderRadius: 2, boxShadow: 1 }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                        #{accion.noObjetivo || 'N/A'}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        {accion.periodo || 'N/A'}
+                      </Typography>
                     </Box>
-                  </Typography>
-                </Box>
-                
-                <Box sx={styles.cardRow}>
-                  <Typography sx={styles.cardLabel}>Compromiso:</Typography>
-                  <Typography sx={styles.cardValue}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <CalendarToday sx={{ fontSize: 14, color: 'success.main' }} />
-                      {accion.fichaCompromiso || 'N/A'}
-                    </Box>
-                  </Typography>
-                </Box>
-                
-                <Box sx={styles.cardRow}>
-                  <Typography sx={styles.cardLabel}>Responsable:</Typography>
-                  <Typography sx={styles.cardValue}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Person sx={{ fontSize: 14 }} />
-                      {accion.responsable?.nombre || 'N/A'}
-                    </Box>
-                  </Typography>
-                </Box>
-                
-                {accion.acciones && (
-                  <Box sx={{ mt: 1 }}>
-                    <Typography sx={{ ...styles.cardLabel, mb: 0.5 }}>Acciones:</Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                      {accion.acciones.length > 100 ? accion.acciones.substring(0, 100) + '...' : accion.acciones}
-                    </Typography>
+                    <Chip
+                      label={accion.efectividad?.replace('indicador', '') || '0%'}
+                      size="small"
+                      sx={{
+                        backgroundColor: statusColors.light,
+                        color: statusColors.main,
+                        fontWeight: 600
+                      }}
+                    />
                   </Box>
-                )}
-              </Box>
-              
-              <Box sx={styles.cardActions}>
-                <Button 
-                  sx={styles.primaryButton}
-                  onClick={() => handleEdit(accion)}
-                  size="small"
-                >
-                  <Edit sx={{ fontSize: 16 }} />
-                  Editar
-                </Button>
-                <Button 
-                  sx={styles.secondaryButton}
-                  onClick={() => handleOpenReschedule(accion)}
-                  size="small"
-                >
-                  <Refresh sx={{ fontSize: 16 }} />
-                  Reprogramar
-                </Button>
-              </Box>
-            </Card>
+
+                  <Typography variant="body2" sx={{ color: 'text.primary', mb: 2 }}>
+                    {accion.acciones?.substring(0, 100) || 'Sin descripción'}...
+                  </Typography>
+
+                  <Divider sx={{ my: 1 }} />
+
+                  <Grid container spacing={1} sx={{ mb: 2 }}>
+                    <Grid item xs={6}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <CalendarToday sx={{ fontSize: 14, color: 'text.secondary' }} />
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          {accion.fecha || 'N/A'}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <CalendarToday sx={{ fontSize: 14, color: 'success.main' }} />
+                        <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 500 }}>
+                          {accion.fichaCompromiso || 'N/A'}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Person sx={{ fontSize: 14, color: 'text.secondary' }} />
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          {accion.responsable?.nombre || 'Sin responsable'}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<Edit />}
+                      onClick={() => handleEdit(accion)}
+                      sx={{ flex: 1 }}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<Refresh />}
+                      onClick={() => handleOpenReschedule(accion)}
+                      sx={{ flex: 1 }}
+                    >
+                      Reprogramar
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
           );
         })
       )}
-    </Box>
+    </Grid>
   );
 
   // Componente para la vista móvil en Lista (Acordeón)
   const MobileListView = () => (
     <Box>
       {loading ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Box sx={{ textAlign: 'center', py: 8 }}>
           <CircularProgress />
-          <Typography sx={{ mt: 2, fontSize: '0.9rem' }}>Cargando acciones...</Typography>
+          <Typography sx={{ mt: 2, color: 'text.secondary' }}>
+            Cargando acciones...
+          </Typography>
         </Box>
       ) : paginatedAcciones.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography>No se encontraron acciones</Typography>
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography sx={{ color: 'text.secondary' }}>
+            No se encontraron acciones
+          </Typography>
         </Box>
       ) : (
         paginatedAcciones.map((accion) => {
           const statusColors = getStatusColor(accion.efectividad);
           return (
-            <Accordion key={accion._id} sx={styles.mobileAccordion}>
-              <AccordionSummary
-                expandIcon={<ExpandMore />}
-                sx={styles.accordionSummary}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+            <Card key={accion._id} sx={{ mb: 2, borderRadius: 2, boxShadow: 1 }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: '50%', 
+                      backgroundColor: statusColors.main 
+                    }} />
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                        #{accion.noObjetivo} - {accion.periodo}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <CalendarToday sx={{ fontSize: 12 }} />
+                        {accion.fecha}
+                      </Typography>
+                    </Box>
+                  </Box>
                   <Chip
                     label={accion.efectividad?.replace('indicador', '') || '0%'}
+                    size="small"
                     sx={{
-                      ...styles.statusChip,
-                      background: statusColors.bg,
-                      color: statusColors.color,
-                      border: `1px solid ${statusColors.border}`,
+                      backgroundColor: statusColors.light,
+                      color: statusColors.main,
+                      fontWeight: 600
                     }}
                   />
-                  <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                      #{accion.noObjetivo} - {accion.periodo}
-                    </Typography>
-                    <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
-                      {accion.fecha}
-                    </Typography>
-                  </Box>
                 </Box>
-              </AccordionSummary>
-              <AccordionDetails sx={styles.accordionDetails}>
-                <Box sx={styles.cardContent}>
-                  <Box sx={styles.cardRow}>
-                    <Typography sx={styles.cardLabel}>Compromiso:</Typography>
-                    <Typography sx={styles.cardValue}>
-                      {accion.fichaCompromiso || 'N/A'}
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={styles.cardRow}>
-                    <Typography sx={styles.cardLabel}>Responsable:</Typography>
-                    <Typography sx={styles.cardValue}>
-                      {accion.responsable?.nombre || 'N/A'}
-                    </Typography>
-                  </Box>
-                  
-                  {accion.responsable?.email && (
-                    <Box sx={styles.cardRow}>
-                      <Typography sx={styles.cardLabel}>Email:</Typography>
-                      <Typography sx={{ ...styles.cardValue, fontSize: '0.75rem' }}>
-                        {accion.responsable.email}
+
+                <Typography variant="body2" sx={{ color: 'text.primary', mb: 2 }}>
+                  {accion.acciones}
+                </Typography>
+
+                <Grid container spacing={2} sx={{ mb: 2 }}>
+                  <Grid item xs={6}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        Compromiso
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 500 }}>
+                        {accion.fichaCompromiso || 'N/A'}
                       </Typography>
                     </Box>
-                  )}
-                  
-                  {accion.acciones && (
-                    <Box sx={{ mt: 1 }}>
-                      <Typography sx={{ ...styles.cardLabel, mb: 0.5 }}>Acciones:</Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                        {accion.acciones}
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        Responsable
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.primary' }}>
+                        {accion.responsable?.nombre || 'N/A'}
                       </Typography>
                     </Box>
-                  )}
-                  
-                  {accion.observaciones && (
-                    <Box sx={{ mt: 1 }}>
-                      <Typography sx={{ ...styles.cardLabel, mb: 0.5 }}>Observaciones:</Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
-                        {accion.observaciones}
-                      </Typography>
-                    </Box>
-                  )}
-                  
-                  <Box sx={{ ...styles.cardActions, mt: 2 }}>
-                    <Button 
-                      sx={styles.primaryButton}
-                      onClick={() => handleEdit(accion)}
-                      size="small"
-                    >
-                      <Edit sx={{ fontSize: 16 }} />
-                      Editar
-                    </Button>
-                    <Button 
-                      sx={styles.secondaryButton}
-                      onClick={() => handleOpenReschedule(accion)}
-                      size="small"
-                    >
-                      <Refresh sx={{ fontSize: 16 }} />
-                      Reprogramar
-                    </Button>
-                  </Box>
+                  </Grid>
+                </Grid>
+
+                <Divider sx={{ my: 1 }} />
+
+                <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Edit />}
+                    onClick={() => handleEdit(accion)}
+                    sx={{ flex: 1 }}
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Refresh />}
+                    onClick={() => handleOpenReschedule(accion)}
+                    sx={{ flex: 1 }}
+                  >
+                    Reprogramar
+                  </Button>
                 </Box>
-              </AccordionDetails>
-            </Accordion>
+              </CardContent>
+            </Card>
           );
         })
       )}
@@ -1021,478 +502,477 @@ const ListaAccionFrecu = () => {
   }, [label]);
 
   return (
-    <Box sx={styles.container}>
-      {/* Mobile App Bar */}
-      {isMobile && (
-        <AppBar position="fixed" sx={styles.mobileAppBar} elevation={0}>
-          <Toolbar sx={styles.mobileToolbar}>
-            <IconButton
-              edge="start"
-              color="inherit"
-              onClick={() => setMobileMenuOpen(true)}
-            >
-              <Menu />
-            </IconButton>
-            
-            <Typography sx={styles.mobileTitle}>
-              Gestión de Acciones
-            </Typography>
-            
-            <IconButton color="inherit">
-              <Badge badgeContent={4} color="error">
-                <Notifications />
-              </Badge>
-            </IconButton>
-          </Toolbar>
-        </AppBar>
-      )}
+    <Box sx={{ minHeight: '100vh', pb: isMobile ? 8 : 4 }}>
+      
 
-      {/* Header */}
-      <Box sx={styles.header}>
-        <Typography variant="h1" sx={styles.mainTitle}>
-          Gestión de Acciones
-        </Typography>
-        <Typography sx={styles.subtitle}>
-          Monitorea y gestiona todas las acciones del área
-        </Typography>
-        <Chip 
-          label={label || "Área"}
-          sx={styles.areaTag}
-        />
-      </Box>
-
-      {/* Stats Grid */}
-      <Grid container spacing={3} sx={styles.statsGrid}>
-        <Grid item xs={12} sm={6} md={30}>
-          <Card sx={styles.statCard}>
-            <Typography sx={styles.statValue}>{stats.total}</Typography>
-            <Typography sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, fontSize: isMobile ? '0.8rem' : '0.875rem' }}>
-              {isMobile ? 'Total' : 'Total de Acciones'}
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={30}>
-          <Card sx={styles.statCard}>
-            <Typography sx={styles.statValue}>{stats.completadas}</Typography>
-            <Typography sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, fontSize: isMobile ? '0.8rem' : '0.875rem' }}>
-              <CheckCircle fontSize={isMobile ? "small" : "medium"} />
-              {isMobile ? 'Hechas' : 'Completadas'}
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={30}>
-          <Card sx={styles.statCard}>
-            <Typography sx={styles.statValue}>{stats.reprogramadas}</Typography>
-            <Typography sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, fontSize: isMobile ? '0.8rem' : '0.875rem' }}>
-              <Refresh fontSize={isMobile ? "small" : "medium"} />
-              {isMobile ? 'Reprog.' : 'Reprogramadas'}
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={30}>
-          <Card sx={styles.statCard}>
-            <Typography sx={styles.statValue}>{stats.pendientes}</Typography>
-            <Typography sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, fontSize: isMobile ? '0.8rem' : '0.875rem' }}>
-              <Schedule fontSize={isMobile ? "small" : "medium"} />
-              {isMobile ? 'Pend.' : 'Pendientes'}
-            </Typography>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Controls */}
-      <Box sx={styles.controlsSection}>
-        <Box sx={styles.searchBox}>
-          <Search sx={styles.searchIcon} />
-          <InputBase
-            placeholder={isMobile ? "Buscar acciones..." : "Buscar en acciones..."}
-            sx={styles.searchInput}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {/* Main Content */}
+      <Box sx={{ maxWidth: '1400px', mx: 'auto', px: { xs: 2, md: 4 }, py: { xs: 3, md: 4 } }}>
+        {/* Header */}
+        <Box sx={{ mb: { xs: 3, md: 4 } }}>
+          <Typography variant="h5" sx={{ fontWeight: 600, color: '#1e293b', mb: 1 }}>
+            Panel de Control
+          </Typography>
+          <Typography variant="body1" sx={{ color: '#64748b' }}>
+            Gestión y seguimiento de acciones del área {label}
+          </Typography>
         </Box>
-        <Button sx={styles.filterButton}>
-          <FilterList />
-          {isMobile ? "FILTRAR" : "FILTRAR"}
-        </Button>
+
+       {/* Stats Grid */}
+<Grid container spacing={1.5} sx={{ mb: { xs: 2, md: 3 } }}>
+  <Grid item xs={6} sm={3}>
+    <Card sx={{ borderRadius: 1, boxShadow: 0, border: '1px solid #e2e8f0', p: 1.5, minHeight: 'auto' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+        <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500, fontSize: '0.75rem' }}>
+          Total
+        </Typography>
+        <Assignment sx={{ color: '#3b82f6', fontSize: 18 }} />
       </Box>
+      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '1.25rem', lineHeight: 1.2 }}>
+        {stats.total}
+      </Typography>
+      <LinearProgress 
+        variant="determinate" 
+        value={100} 
+        sx={{ height: 1.5, borderRadius: 0.5, backgroundColor: '#f1f5f9', mt: 1 }}
+      />
+    </Card>
+  </Grid>
 
-      {/* Mobile View Controls */}
-      {isMobile && (
-        <Box sx={styles.viewControls}>
-          <Box sx={styles.viewToggle}>
-            <Button 
-              sx={{
-                ...styles.viewButton,
-                ...(viewMode === 'grid' ? { '&.active': styles.viewButton.active } : {})
-              }}
-              className={viewMode === 'grid' ? 'active' : ''}
-              onClick={() => setViewMode('grid')}
-            >
-              <ViewModule sx={{ fontSize: 16 }} />
-            </Button>
-            <Button 
-              sx={{
-                ...styles.viewButton,
-                ...(viewMode === 'list' ? { '&.active': styles.viewButton.active } : {})
-              }}
-              className={viewMode === 'list' ? 'active' : ''}
-              onClick={() => setViewMode('list')}
-            >
-              <ViewList sx={{ fontSize: 16 }} />
-            </Button>
-          </Box>
-          
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <Select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              sx={styles.formInput}
-            >
-              <MenuItem value="fecha">Por Fecha</MenuItem>
-              <MenuItem value="efectividad">Por Efectividad</MenuItem>
-              <MenuItem value="responsable">Por Responsable</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-      )}
+  <Grid item xs={6} sm={3}>
+    <Card sx={{ borderRadius: 1, boxShadow: 0, border: '1px solid #e2e8f0', p: 1.5, minHeight: 'auto' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+        <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500, fontSize: '0.75rem' }}>
+          Hechas
+        </Typography>
+        <CheckCircle sx={{ color: '#10b981', fontSize: 18 }} />
+      </Box>
+      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '1.25rem', lineHeight: 1.2 }}>
+        {stats.completadas}
+      </Typography>
+      <LinearProgress 
+        variant="determinate" 
+        value={stats.total ? (stats.completadas / stats.total) * 100 : 0} 
+        sx={{ 
+          height: 1.5, 
+          borderRadius: 0.5,
+          backgroundColor: '#f1f5f9',
+          mt: 1,
+          '& .MuiLinearProgress-bar': {
+            backgroundColor: '#10b981'
+          }
+        }}
+      />
+    </Card>
+  </Grid>
 
-      {/* Content - Desktop Table or Mobile View */}
-      {!isMobile ? (
-        // Desktop Table View
-        <TableContainer component={Paper} sx={styles.tableContainer}>
-          <Table>
-            <TableHead sx={styles.tableHead}>
-              <TableRow>
-                <TableCell sx={styles.tableHeaderCell}>Fecha</TableCell>
-                <TableCell sx={styles.tableHeaderCell}>No. Objetivo</TableCell>
-                <TableCell sx={styles.tableHeaderCell}>Periodo</TableCell>
-                <TableCell sx={styles.tableHeaderCell}>Acciones</TableCell>
-                <TableCell sx={styles.tableHeaderCell}>Compromiso</TableCell>
-                <TableCell sx={styles.tableHeaderCell}>Responsable</TableCell>
-                <TableCell sx={styles.tableHeaderCell}>Efectividad</TableCell>
-                <TableCell sx={styles.tableHeaderCell}>Observaciones</TableCell>
-                <TableCell sx={styles.tableHeaderCell}>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={9} align="center" sx={styles.tableCell}>
-                    <CircularProgress />
-                    <Typography sx={{ mt: 2 }}>Cargando acciones...</Typography>
-                  </TableCell>
-                </TableRow>
-              ) : paginatedAcciones.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={9} align="center" sx={styles.tableCell}>
-                    <Typography>No se encontraron acciones</Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedAcciones.map((accion) => {
-                  const statusColors = getStatusColor(accion.efectividad);
-                  return (
-                    <TableRow key={accion._id} sx={styles.tableRow}>
-                      <TableCell sx={styles.tableCell}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <CalendarToday sx={{ fontSize: 16, color: 'primary.main' }} />
-                          {accion.fecha || 'N/A'}
-                        </Box>
+  <Grid item xs={6} sm={3}>
+    <Card sx={{ borderRadius: 1, boxShadow: 0, border: '1px solid #e2e8f0', p: 1.5, minHeight: 'auto' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+        <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500, fontSize: '0.75rem' }}>
+          Reprog.
+        </Typography>
+        <Refresh sx={{ color: '#f59e0b', fontSize: 18 }} />
+      </Box>
+      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '1.25rem', lineHeight: 1.2 }}>
+        {stats.reprogramadas}
+      </Typography>
+      <LinearProgress 
+        variant="determinate" 
+        value={stats.total ? (stats.reprogramadas / stats.total) * 100 : 0} 
+        sx={{ 
+          height: 1.5, 
+          borderRadius: 0.5,
+          backgroundColor: '#f1f5f9',
+          mt: 1,
+          '& .MuiLinearProgress-bar': {
+            backgroundColor: '#f59e0b'
+          }
+        }}
+      />
+    </Card>
+  </Grid>
+
+  <Grid item xs={6} sm={3}>
+    <Card sx={{ borderRadius: 1, boxShadow: 0, border: '1px solid #e2e8f0', p: 1.5, minHeight: 'auto' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+        <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500, fontSize: '0.75rem' }}>
+          Pendientes
+        </Typography>
+        <Schedule sx={{ color: '#ef4444', fontSize: 18 }} />
+      </Box>
+      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '1.25rem', lineHeight: 1.2 }}>
+        {stats.pendientes}
+      </Typography>
+      <LinearProgress 
+        variant="determinate" 
+        value={stats.total ? (stats.pendientes / stats.total) * 100 : 0} 
+        sx={{ 
+          height: 1.5, 
+          borderRadius: 0.5,
+          backgroundColor: '#f1f5f9',
+          mt: 1,
+          '& .MuiLinearProgress-bar': {
+            backgroundColor: '#ef4444'
+          }
+        }}
+      />
+    </Card>
+  </Grid>
+</Grid>
+
+        {/* Controls */}
+        <Card sx={{ borderRadius: 2, boxShadow: 1, p: 3, mb: { xs: 3, md: 4 } }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                placeholder="Buscar acciones..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search sx={{ color: '#94a3b8' }} />
+                    </InputAdornment>
+                  ),
+                  sx: { borderRadius: 2 }
+                }}
+                size="small"
+              />
+            </Grid>
+            
+            <Grid item xs={6} md={3}>
+              <FormControl fullWidth size="small">
+                <Select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  sx={{ borderRadius: 2 }}
+                >
+                  <MenuItem value="fecha">Por Fecha</MenuItem>
+                  <MenuItem value="efectividad">Por Efectividad</MenuItem>
+                  <MenuItem value="responsable">Por Responsable</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={6} md={3}>
+              {isMobile && (
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    variant={viewMode === 'grid' ? 'contained' : 'outlined'}
+                    onClick={() => setViewMode('grid')}
+                    size="small"
+                    startIcon={<ViewModule />}
+                    sx={{ flex: 1 }}
+                  >
+                    Grid
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'contained' : 'outlined'}
+                    onClick={() => setViewMode('list')}
+                    size="small"
+                    startIcon={<ViewList />}
+                    sx={{ flex: 1 }}
+                  >
+                    Lista
+                  </Button>
+                </Box>
+              )}
+            </Grid>
+          </Grid>
+        </Card>
+
+        {/* Content */}
+        <Card sx={{ borderRadius: 2, boxShadow: 1, overflow: 'hidden' }}>
+          {/* Desktop Table */}
+          {!isMobile ? (
+            <>
+              <TableContainer>
+                <Table>
+                  <TableHead sx={{ backgroundColor: '#f8fafc' }}>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600, color: '#475569', py: 2 }}>
+                        ID & Periodo
                       </TableCell>
-                      <TableCell sx={styles.tableCell}>
-                        <Typography fontWeight={600}>#{accion.noObjetivo || 'N/A'}</Typography>
+                      <TableCell sx={{ fontWeight: 600, color: '#475569', py: 2 }}>
+                        Acciones
                       </TableCell>
-                      <TableCell sx={styles.tableCell}>{accion.periodo || 'N/A'}</TableCell>
-                      <TableCell sx={styles.tableCell}>{accion.acciones || 'N/A'}</TableCell>
-                      <TableCell sx={styles.tableCell}>
-                        <Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                            <CalendarToday sx={{ fontSize: 16, color: 'success.main' }} />
-                            <Typography fontWeight={600}>{accion.fichaCompromiso || 'N/A'}</Typography>
-                          </Box>
-                          {accion.historialFechas?.slice(0, 2).map((fecha, idx) => (
-                            <Typography key={idx} variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
-                              {fecha}
-                            </Typography>
-                          ))}
-                        </Box>
+                      <TableCell sx={{ fontWeight: 600, color: '#475569', py: 2 }}>
+                        Fechas
                       </TableCell>
-                      <TableCell sx={styles.tableCell}>
-                        <Box>
-                          <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600 }}>
-                            <Person sx={{ fontSize: 16 }} />
-                            {accion.responsable?.nombre || 'N/A'}
-                          </Typography>
-                          <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
-                            <Email sx={{ fontSize: 14 }} />
-                            {accion.responsable?.email || 'N/A'}
-                          </Typography>
-                        </Box>
+                      <TableCell sx={{ fontWeight: 600, color: '#475569', py: 2 }}>
+                        Responsable
                       </TableCell>
-                      <TableCell sx={styles.tableCell}>
-                        <Chip
-                          icon={<BarChart sx={{ fontSize: 14 }} />}
-                          label={accion.efectividad?.replace('indicador', '') || '0%'}
-                          sx={{
-                            ...styles.statusChip,
-                            background: statusColors.bg,
-                            color: statusColors.color,
-                            border: `1px solid ${statusColors.border}`,
-                          }}
-                          onClick={() => handleEdit(accion)}
-                        />
+                      <TableCell sx={{ fontWeight: 600, color: '#475569', py: 2 }}>
+                        Estado
                       </TableCell>
-                      <TableCell sx={styles.tableCell}>{accion.observaciones || 'N/A'}</TableCell>
-                      <TableCell sx={styles.tableCell}>
-                        <Box sx={styles.actionButtons}>
-                          <Button sx={styles.primaryButton} onClick={() => handleEdit(accion)}>
-                            <Edit />
-                            Editar
-                          </Button>
-                          <Button sx={styles.secondaryButton} onClick={() => handleOpenReschedule(accion)}>
-                            <Refresh />
-                            Reprogramar
-                          </Button>
-                        </Box>
+                      <TableCell sx={{ fontWeight: 600, color: '#475569', py: 2 }}>
+                        Acciones
                       </TableCell>
                     </TableRow>
-                  );
-                })
+                  </TableHead>
+                  <TableBody>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                          <CircularProgress />
+                          <Typography sx={{ mt: 2, color: 'text.secondary' }}>
+                            Cargando acciones...
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : paginatedAcciones.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                          <Typography sx={{ color: 'text.secondary' }}>
+                            No se encontraron acciones
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      paginatedAcciones.map((accion) => {
+                        const statusColors = getStatusColor(accion.efectividad);
+                        return (
+                          <TableRow key={accion._id} hover>
+                            <TableCell sx={{ py: 3 }}>
+                              <Box>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#1e293b', mb: 0.5 }}>
+                                  #{accion.noObjetivo || 'N/A'}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#64748b' }}>
+                                  {accion.periodo || 'N/A'}
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell sx={{ py: 3 }}>
+                              <Typography variant="body2" sx={{ color: '#475569' }}>
+                                {accion.acciones || 'Sin descripción'}
+                              </Typography>
+                            </TableCell>
+                            <TableCell sx={{ py: 3 }}>
+                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <CalendarToday sx={{ fontSize: 14, color: '#94a3b8' }} />
+                                  <Typography variant="body2" sx={{ color: '#475569' }}>
+                                    {accion.fecha || 'N/A'}
+                                  </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <CalendarToday sx={{ fontSize: 14, color: '#10b981' }} />
+                                  <Typography variant="body2" sx={{ color: '#059669', fontWeight: 500 }}>
+                                    {accion.fichaCompromiso || 'N/A'}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </TableCell>
+                            <TableCell sx={{ py: 3 }}>
+                              <Box>
+                                <Typography variant="body2" sx={{ fontWeight: 500, color: '#1e293b', mb: 0.5 }}>
+                                  {accion.responsable?.nombre || 'Sin responsable'}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#64748b' }}>
+                                  {accion.responsable?.email || 'N/A'}
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell sx={{ py: 3 }}>
+                              <Chip
+                                label={accion.efectividad?.replace('indicador', '') || '0%'}
+                                size="small"
+                                sx={{
+                                  backgroundColor: statusColors.light,
+                                  color: statusColors.main,
+                                  fontWeight: 600
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell sx={{ py: 3 }}>
+                              <Box sx={{ display: 'flex', gap: 1 }}>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleEdit(accion)}
+                                  sx={{ color: '#3b82f6' }}
+                                >
+                                  <Edit />
+                                </IconButton>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleOpenReschedule(accion)}
+                                  sx={{ color: '#10b981' }}
+                                >
+                                  <Refresh />
+                                </IconButton>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={filteredAcciones.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={(event, newPage) => setPage(newPage)}
+                onRowsPerPageChange={(event) => {
+                  setRowsPerPage(parseInt(event.target.value, 10));
+                  setPage(0);
+                }}
+                sx={{ borderTop: '1px solid #e2e8f0' }}
+              />
+            </>
+          ) : (
+            // Mobile View
+            <Box sx={{ p: 2 }}>
+              {viewMode === 'grid' ? <MobileGridView /> : <MobileListView />}
+              
+              {!loading && paginatedAcciones.length > 0 && (
+                <TablePagination
+                  rowsPerPageOptions={[5, 10, 25]}
+                  component="div"
+                  count={filteredAcciones.length}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  onPageChange={(event, newPage) => setPage(newPage)}
+                  onRowsPerPageChange={(event) => {
+                    setRowsPerPage(parseInt(event.target.value, 10));
+                    setPage(0);
+                  }}
+                />
               )}
-            </TableBody>
-          </Table>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={filteredAcciones.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={(event, newPage) => setPage(newPage)}
-            onRowsPerPageChange={(event) => {
-              setRowsPerPage(parseInt(event.target.value, 10));
-              setPage(0);
-            }}
-          />
-        </TableContainer>
-      ) : (
-        // Mobile View
-        <Box>
-          {viewMode === 'grid' ? <MobileGridView /> : <MobileListView />}
-          
-          {!loading && paginatedAcciones.length > 0 && (
-            <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
-              component="div"
-              count={filteredAcciones.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={(event, newPage) => setPage(newPage)}
-              onRowsPerPageChange={(event) => {
-                setRowsPerPage(parseInt(event.target.value, 10));
-                setPage(0);
-              }}
-              sx={{
-                '& .MuiTablePagination-toolbar': {
-                  padding: '8px',
-                  flexWrap: 'wrap',
-                },
-                '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
-                  fontSize: '0.75rem',
-                  margin: 0,
-                },
-              }}
-            />
+            </Box>
           )}
-        </Box>
-      )}
-
-      {/* Floating Action Button for Mobile */}
-      {isMobile && (
-        <Fab 
-          sx={styles.fabButton} 
-          size="medium"
-          onClick={() => {/* Aquí puedes agregar funcionalidad para crear nueva acción */}}
-        >
-          <Add />
-        </Fab>
-      )}
-
-      {/* Mobile Bottom Navigation */}
-      {isMobile && (
-        <BottomNavigation
-          value={mobileNavValue}
-          onChange={(event, newValue) => setMobileNavValue(newValue)}
-          sx={styles.bottomNav}
-          showLabels
-        >
-          <BottomNavigationAction label="Dashboard" icon={<Dashboard />} />
-          <BottomNavigationAction label="Acciones" icon={<Assignment />} />
-          <BottomNavigationAction label="Calendario" icon={<DateRange />} />
-          <BottomNavigationAction label="Equipo" icon={<Group />} />
-        </BottomNavigation>
-      )}
+        </Card>
+      </Box>
 
       {/* Edit Modal */}
       <Dialog
         open={editModalOpen}
         onClose={() => !saving && setEditModalOpen(false)}
-        maxWidth={false}
-        PaperProps={{ sx: styles.modalPaper }}
-        BackdropProps={{ sx: styles.modalContainer }}
-        fullScreen={isMobile}
+        maxWidth="sm"
+        fullWidth
       >
-        <DialogTitle sx={styles.modalHeader}>
-          <Box sx={styles.modalTitle}>
-            <Edit />
-            Editor de Acción #{selectedAccion?.noObjetivo}
+        <DialogTitle sx={{ borderBottom: '1px solid #e2e8f0' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Edit sx={{ color: '#3b82f6' }} />
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Editar Acción #{selectedAccion?.noObjetivo}
+              </Typography>
+            </Box>
+            <IconButton 
+              onClick={() => !saving && setEditModalOpen(false)}
+              disabled={saving}
+            >
+              <Close />
+            </IconButton>
           </Box>
-          <Typography sx={styles.modalSubtitle}>
-            Modifica la información de esta acción
-          </Typography>
-          <IconButton 
-            sx={styles.closeButton} 
-            onClick={() => !saving && setEditModalOpen(false)}
-            disabled={saving}
-          >
-            <Close />
-          </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={styles.modalContent}>
-          <Grid container spacing={4} sx={styles.formGrid}>
+        <DialogContent sx={{ p: 3 }}>
+          <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
-              <Box sx={styles.formGroup}>
-                <Typography sx={styles.formLabel}>
-                  <Person />
-                  Responsable
-                </Typography>
-                <TextField
-                  fullWidth
-                  value={editData.responsable?.nombre || ''}
-                  onChange={(e) => setEditData({
-                    ...editData,
-                    responsable: { ...editData.responsable, nombre: e.target.value }
-                  })}
+              <TextField
+                fullWidth
+                label="Responsable"
+                value={editData.responsable?.nombre || ''}
+                onChange={(e) => setEditData({
+                  ...editData,
+                  responsable: { ...editData.responsable, nombre: e.target.value }
+                })}
+                disabled={saving}
+                size="small"
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Email"
+                type="email"
+                value={editData.responsable?.email || ''}
+                onChange={(e) => setEditData({
+                  ...editData,
+                  responsable: { ...editData.responsable, email: e.target.value }
+                })}
+                disabled={saving}
+                size="small"
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Efectividad</InputLabel>
+                <Select
+                  value={editData.efectividad || '0%'}
+                  onChange={(e) => setEditData({...editData, efectividad: e.target.value})}
                   disabled={saving}
-                  sx={styles.formInput}
-                  size={isMobile ? "small" : "medium"}
-                />
-              </Box>
+                  label="Efectividad"
+                >
+                  <MenuItem value="0%">0% - No iniciado</MenuItem>
+                  <MenuItem value="25%">25% - En progreso</MenuItem>
+                  <MenuItem value="50%">50% - A la mitad</MenuItem>
+                  <MenuItem value="75%">75% - Casi terminado</MenuItem>
+                  <MenuItem value="100%">100% - Completado</MenuItem>
+                </Select>
+              </FormControl>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Box sx={styles.formGroup}>
-                <Typography sx={styles.formLabel}>
-                  <Email />
-                  Email
-                </Typography>
-                <TextField
-                  fullWidth
-                  type="email"
-                  value={editData.responsable?.email || ''}
-                  onChange={(e) => setEditData({
-                    ...editData,
-                    responsable: { ...editData.responsable, email: e.target.value }
-                  })}
-                  disabled={saving}
-                  sx={styles.formInput}
-                  size={isMobile ? "small" : "medium"}
-                />
-              </Box>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Box sx={styles.formGroup}>
-                <Typography sx={styles.formLabel}>
-                  <BarChart />
-                  Efectividad
-                </Typography>
-                <FormControl fullWidth sx={styles.formInput} size={isMobile ? "small" : "medium"}>
-                  <Select
-                    value={editData.efectividad || '0%'}
-                    onChange={(e) => setEditData({...editData, efectividad: e.target.value})}
-                    disabled={saving}
-                  >
-                    <MenuItem value="0%">0% - No iniciado</MenuItem>
-                    <MenuItem value="25%">25% - En progreso</MenuItem>
-                    <MenuItem value="50%">50% - A la mitad</MenuItem>
-                    <MenuItem value="75%">75% - Casi terminado</MenuItem>
-                    <MenuItem value="100%">100% - Completado</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Box sx={styles.formGroup}>
-                <Typography sx={styles.formLabel}>
-                  Periodo
-                </Typography>
-                <TextField
-                  fullWidth
-                  value={selectedAccion?.periodo || ''}
-                  disabled
-                  sx={styles.formInput}
-                  size={isMobile ? "small" : "medium"}
-                />
-              </Box>
+              <TextField
+                fullWidth
+                label="Periodo"
+                value={selectedAccion?.periodo || ''}
+                disabled
+                size="small"
+              />
             </Grid>
 
             <Grid item xs={12}>
-              <Box sx={styles.formGroup}>
-                <Typography sx={styles.formLabel}>
-                  Acciones
-                </Typography>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={isMobile ? 2 : 3}
-                  value={editData.acciones || ''}
-                  onChange={(e) => setEditData({...editData, acciones: e.target.value})}
-                  disabled={saving}
-                  sx={styles.formInput}
-                  size={isMobile ? "small" : "medium"}
-                />
-              </Box>
+              <TextField
+                fullWidth
+                label="Acciones"
+                multiline
+                rows={3}
+                value={editData.acciones || ''}
+                onChange={(e) => setEditData({...editData, acciones: e.target.value})}
+                disabled={saving}
+                size="small"
+              />
             </Grid>
 
             <Grid item xs={12}>
-              <Box sx={styles.formGroup}>
-                <Typography sx={styles.formLabel}>
-                  Observaciones
-                </Typography>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={isMobile ? 2 : 3}
-                  value={editData.observaciones || ''}
-                  onChange={(e) => setEditData({...editData, observaciones: e.target.value})}
-                  disabled={saving}
-                  sx={styles.formInput}
-                  size={isMobile ? "small" : "medium"}
-                />
-              </Box>
+              <TextField
+                fullWidth
+                label="Observaciones"
+                multiline
+                rows={3}
+                value={editData.observaciones || ''}
+                onChange={(e) => setEditData({...editData, observaciones: e.target.value})}
+                disabled={saving}
+                size="small"
+              />
             </Grid>
           </Grid>
         </DialogContent>
 
-        <DialogActions sx={styles.modalActions}>
+        <DialogActions sx={{ p: 3, borderTop: '1px solid #e2e8f0' }}>
           <Button 
-            sx={styles.secondaryButton}
+            variant="outlined"
             onClick={() => setEditModalOpen(false)}
             disabled={saving}
-            fullWidth={isMobile}
           >
-            <Close />
             Cancelar
           </Button>
           <Button 
-            sx={styles.primaryButton}
+            variant="contained"
             onClick={handleSaveEdit}
             disabled={saving}
-            startIcon={saving ? <CircularProgress size={16} /> : <CheckCircle />}
-            fullWidth={isMobile}
+            startIcon={saving ? <CircularProgress size={20} /> : <CheckCircle />}
           >
             {saving ? 'Guardando...' : 'Guardar Cambios'}
           </Button>
@@ -1503,94 +983,100 @@ const ListaAccionFrecu = () => {
       <Dialog
         open={rescheduleModalOpen}
         onClose={() => !saving && setRescheduleModalOpen(false)}
-        maxWidth={false}
-        PaperProps={{ sx: styles.modalPaper }}
-        BackdropProps={{ sx: styles.modalContainer }}
-        fullScreen={isMobile}
+        maxWidth="sm"
+        fullWidth
       >
-        <DialogTitle sx={styles.modalHeader}>
-          <Box sx={styles.modalTitle}>
-            <Refresh />
-            Reprogramar Fecha
+        <DialogTitle sx={{ borderBottom: '1px solid #e2e8f0' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Refresh sx={{ color: '#10b981' }} />
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Reprogramar Fecha
+              </Typography>
+            </Box>
+            <IconButton 
+              onClick={() => !saving && setRescheduleModalOpen(false)}
+              disabled={saving}
+            >
+              <Close />
+            </IconButton>
           </Box>
-          <Typography sx={styles.modalSubtitle}>
-            Establece una nueva fecha de compromiso
-          </Typography>
-          <IconButton 
-            sx={styles.closeButton} 
-            onClick={() => !saving && setRescheduleModalOpen(false)}
-            disabled={saving}
-          >
-            <Close />
-          </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={styles.modalContent}>
-          <Box sx={styles.dateDisplay}>
-            <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600, color: 'success.main', mb: 1, fontSize: isMobile ? '0.9rem' : '1rem' }}>
-              <CalendarToday />
-              Fecha Actual: {selectedAccion?.fichaCompromiso || 'N/A'}
+        <DialogContent sx={{ p: 3 }}>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" sx={{ color: '#64748b', mb: 1 }}>
+              Fecha Actual de Compromiso
             </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              Compromiso vigente
+            <Typography variant="body1" sx={{ color: '#059669', fontWeight: 500 }}>
+              {selectedAccion?.fichaCompromiso || 'N/A'}
             </Typography>
           </Box>
 
-          <Box sx={styles.formGroup}>
-            <Typography sx={styles.formLabel}>
-              <CalendarToday />
-              Nueva Fecha de Compromiso
-            </Typography>
-            <TextField
-              fullWidth
-              type="date"
-              value={nuevaFecha}
-              onChange={(e) => setNuevaFecha(e.target.value)}
-              disabled={saving}
-              sx={styles.formInput}
-              InputLabelProps={{ shrink: true }}
-              inputProps={{
-                min: new Date().toISOString().split('T')[0]
-              }}
-              size={isMobile ? "small" : "medium"}
-            />
-          </Box>
+          <TextField
+            fullWidth
+            label="Nueva Fecha de Compromiso"
+            type="date"
+            value={nuevaFecha}
+            onChange={(e) => setNuevaFecha(e.target.value)}
+            disabled={saving}
+            size="small"
+            InputLabelProps={{ shrink: true }}
+            inputProps={{
+              min: new Date().toISOString().split('T')[0]
+            }}
+          />
 
           {selectedAccion?.historialFechas && selectedAccion.historialFechas.length > 0 && (
-            <Box sx={styles.historySection}>
-              <Typography sx={{ ...styles.formLabel, mb: 2 }}>
-                <TrendingUp />
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="subtitle2" sx={{ color: '#64748b', mb: 2 }}>
                 Historial de Reprogramaciones
               </Typography>
-              {selectedAccion.historialFechas.map((fecha, index) => (
-                <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1 }}>
-                  <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', fontSize: isMobile ? '0.8rem' : '0.875rem' }}>
-                    <CalendarToday sx={{ fontSize: 14 }} />
-                    {fecha}
-                  </Typography>
-                  <Chip label={`#${index + 1}`} size="small" color="primary" />
-                </Box>
-              ))}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {selectedAccion.historialFechas.map((fecha, index) => (
+                  <Box 
+                    key={index} 
+                    sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      py: 1,
+                      px: 2,
+                      borderRadius: 1,
+                      backgroundColor: '#f8fafc'
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CalendarToday sx={{ fontSize: 14, color: '#94a3b8' }} />
+                      <Typography variant="body2" sx={{ color: '#475569' }}>
+                        {fecha}
+                      </Typography>
+                    </Box>
+                    <Chip 
+                      label={`#${index + 1}`} 
+                      size="small"
+                      sx={{ backgroundColor: '#e2e8f0', color: '#475569' }}
+                    />
+                  </Box>
+                ))}
+              </Box>
             </Box>
           )}
         </DialogContent>
 
-        <DialogActions sx={styles.modalActions}>
+        <DialogActions sx={{ p: 3, borderTop: '1px solid #e2e8f0' }}>
           <Button 
-            sx={styles.secondaryButton}
+            variant="outlined"
             onClick={() => setRescheduleModalOpen(false)}
             disabled={saving}
-            fullWidth={isMobile}
           >
-            <Close />
             Cancelar
           </Button>
           <Button 
-            sx={styles.primaryButton}
+            variant="contained"
             onClick={handleReprogramar}
             disabled={!nuevaFecha || saving}
-            startIcon={saving ? <CircularProgress size={16} /> : <CheckCircle />}
-            fullWidth={isMobile}
+            startIcon={saving ? <CircularProgress size={20} /> : <CheckCircle />}
           >
             {saving ? 'Reprogramando...' : 'Confirmar Reprogramación'}
           </Button>
