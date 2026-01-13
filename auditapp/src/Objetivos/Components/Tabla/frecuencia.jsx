@@ -12,12 +12,17 @@ const TablaObjetivosArea = () => {
   const [valores, setValores] = useState({});
   const [cambios, setCambios] = useState({});
   const [showPanel, setShowPanel] = useState(false);
+  const [showHistorial, setShowHistorial] = useState(false);
+  const [historialData, setHistorialData] = useState([]);
+  const [añoHistorial, setAñoHistorial] = useState(2025);
   const [panelPosition, setPanelPosition] = useState({ x: 100, y: 100 });
   const [panelSize, setPanelSize] = useState({ width: 500, height: 400 });
   const [dragging, setDragging] = useState(false);
   const [resizing, setResizing] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState(0);
+  const [activeTabHistorial, setActiveTabHistorial] = useState(0);
+  const [añoActual] = useState(new Date().getFullYear());
 
   useEffect(() => {
     if (dragging || resizing) {
@@ -39,7 +44,6 @@ const TablaObjetivosArea = () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dragging, resizing]);
 
   const handleMouseDown = (e) => {
@@ -68,6 +72,41 @@ const TablaObjetivosArea = () => {
   const handleMouseUp = () => {
     setDragging(false);
     setResizing(false);
+  };
+
+  const cargarHistorial = async () => {
+    try {
+      const response = await api.get(`/api/objetivos`, { params: { area: label } });
+      
+      const objetivosConHistorial = response.data
+        .filter(obj => obj.historialAnual && obj.historialAnual.length > 0)
+        .map(obj => {
+          const historial = obj.historialAnual.find(h => h.año === añoHistorial);
+          return historial ? { ...obj, historialSeleccionado: historial } : null;
+        })
+        .filter(obj => obj !== null);
+
+      if (objetivosConHistorial.length === 0) {
+        Swal.fire({
+          icon: 'info',
+          title: 'Sin datos históricos',
+          text: `No hay datos del año ${añoHistorial} para esta área.`,
+          confirmButtonColor: '#4a6fa5'
+        });
+        return;
+      }
+
+      setHistorialData(objetivosConHistorial);
+      setShowHistorial(true);
+    } catch (error) {
+      console.error('Error al cargar historial:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo cargar el historial',
+        confirmButtonColor: '#4a6fa5'
+      });
+    }
   };
 
   useEffect(() => {
@@ -107,13 +146,49 @@ const TablaObjetivosArea = () => {
         setObjetivos(objetivosData);
         setValores(valoresIniciales);
         setLoading(false);
+        
+        const objetivosDesactualizados = objetivosData.filter(
+          obj => obj.añoActual && obj.añoActual < añoActual
+        );
+        
+        if (objetivosDesactualizados.length > 0) {
+          Swal.fire({
+            title: '⚠️ Nuevo Año Detectado',
+            html: `Se detectaron ${objetivosDesactualizados.length} objetivo(s) con datos del año ${objetivosDesactualizados[0].añoActual}.<br><br>¿Deseas resetear los indicadores para el año ${añoActual}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#4a6fa5',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, actualizar año',
+            cancelButtonText: 'Cancelar',
+          }).then(async (result) => {
+            if (result.isConfirmed) {
+              try {
+                await api.post('/api/objetivos/migrar-año');
+                Swal.fire({
+                  title: '✓ Año Actualizado',
+                  text: `Los objetivos se han actualizado al año ${añoActual}`,
+                  icon: 'success',
+                  confirmButtonColor: '#4a6fa5'
+                });
+                window.location.reload();
+              } catch (error) {
+                Swal.fire({
+                  title: 'Error',
+                  text: 'No se pudo actualizar el año',
+                  icon: 'error'
+                });
+              }
+            }
+          });
+        }
       } catch (error) {
         console.error("Error al cargar objetivos:", error);
         setLoading(false);
       }
     }
     fetchObjetivos();
-  }, [label]);
+  }, [label, añoActual]);
 
   const handleBlur = (name, objetivoId, meta) => {
     const valor = valores[`${objetivoId}.${name}`];
@@ -213,20 +288,24 @@ const TablaObjetivosArea = () => {
     }
   };
 
-  const renderTablaFrecuencia = (meses, titulo, index) => {
+  const renderTablaFrecuencia = (meses, titulo, index, esHistorial = false) => {
+    const datos = esHistorial ? historialData : objetivos;
+    const tabActivo = esHistorial ? activeTabHistorial : activeTab;
+    const setTabActivo = esHistorial ? setActiveTabHistorial : setActiveTab;
+    
     return (
-      <div className={`frecuencia-container ${activeTab === index ? 'active' : ''}`}>
-        <div className="frecuencia-header" onClick={() => setActiveTab(index)}>
+      <div className={`frecuencia-container ${tabActivo === index ? 'active' : ''}`}>
+        <div className="frecuencia-header" onClick={() => setTabActivo(index)}>
           <h4>{titulo}</h4>
-          <span className="toggle-icon">{activeTab === index ? '▼' : '►'}</span>
+          <span className="toggle-icon">{tabActivo === index ? '▼' : '►'}</span>
         </div>
         
-        {activeTab === index && (
+        {tabActivo === index && (
           <div className="frecuencia-content">
             <table className="objetivos-tabla">
               <thead>
                 <tr>
-                  <th rowSpan="2" className="header-bg">OBJ 2025</th>
+                  <th rowSpan="2" className="header-bg">OBJ {esHistorial ? añoHistorial : añoActual}</th>
                   <th rowSpan="2" className="header-bg">META</th>
                   {meses.map((mes) => (
                     <th colSpan="5" key={mes.nombre} className="header-bg">
@@ -245,23 +324,33 @@ const TablaObjetivosArea = () => {
                 </tr>
               </thead>
               <tbody>
-                {objetivos.map((objetivo, idx) => (
+                {datos.map((objetivo, idx) => (
                   <tr key={objetivo._id} className={idx % 2 === 0 ? 'even-row' : 'odd-row'}>
                     <td className="objetivo-numero">{idx + 1}</td>
                     <td className="objetivo-meta">{objetivo.metaFrecuencia}</td>
                     {meses.map((mes) =>
-                      ["S1", "S2", "S3", "S4", "S5"].map((semana) => (
-                        <td key={`${mes.nombre}-${semana}`} className="semana-cell">
-                          <input
-                            type="text"
-                            name={`${mes.campo}.${semana}`}
-                            value={valores[`${objetivo._id}.${mes.campo}.${semana}`] || ''}
-                            onChange={(e) => handleChange(e, objetivo._id)}
-                            onBlur={() => handleBlur(`${mes.campo}.${semana}`, objetivo._id, objetivo.metaFrecuencia)}
-                            className="input-frecuencia"
-                          />
-                        </td>
-                      ))
+                      ["S1", "S2", "S3", "S4", "S5"].map((semana) => {
+                        const valor = esHistorial 
+                          ? objetivo.historialSeleccionado?.indicadores?.[mes.campo]?.[semana] || ''
+                          : valores[`${objetivo._id}.${mes.campo}.${semana}`] || '';
+                        
+                        return (
+                          <td key={`${mes.nombre}-${semana}`} className="semana-cell">
+                            {esHistorial ? (
+                              <span className="valor-historial">{valor}</span>
+                            ) : (
+                              <input
+                                type="text"
+                                name={`${mes.campo}.${semana}`}
+                                value={valor}
+                                onChange={(e) => handleChange(e, objetivo._id)}
+                                onBlur={() => handleBlur(`${mes.campo}.${semana}`, objetivo._id, objetivo.metaFrecuencia)}
+                                className="input-frecuencia"
+                              />
+                            )}
+                          </td>
+                        );
+                      })
                     ).flat()}
                   </tr>
                 ))}
@@ -307,7 +396,9 @@ const TablaObjetivosArea = () => {
     <div className="tabla-container">
       <div className="header-container">
         <h1 className="tabla-titulo">SISTEMA DE GESTIÓN DE CALIDAD</h1>
-        <h2 className="tabla-subtitulo">SEGUIMIENTO POR FRECUENCIA - ÁREA: {label.toUpperCase()}</h2>
+        <h2 className="tabla-subtitulo">
+          SEGUIMIENTO POR FRECUENCIA - ÁREA: {label.toUpperCase()} - AÑO {añoActual}
+        </h2>
       </div>
 
       <div className="botones-container">
@@ -316,6 +407,13 @@ const TablaObjetivosArea = () => {
           onClick={() => navigate(`/acciones-list/${label}`)}
         >
           ACCIONES CORRECTIVAS
+        </button>
+
+        <button 
+          className="btn-historial"
+          onClick={cargarHistorial}
+        >
+          📊 VER HISTORIAL {añoHistorial}
         </button>
 
         <button 
@@ -334,6 +432,23 @@ const TablaObjetivosArea = () => {
         </button>
       </div>
 
+      {/* Modal de Historial */}
+      {showHistorial && (
+        <div className="modal-overlay" onClick={() => setShowHistorial(false)}>
+          <div className="modal-historial" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-historial-header">
+              <h2>📊 HISTORIAL {añoHistorial} - {label.toUpperCase()}</h2>
+              <button className="modal-close" onClick={() => setShowHistorial(false)}>✕</button>
+            </div>
+            <div className="modal-historial-body">
+              {periodos.map((periodo, index) => 
+                renderTablaFrecuencia(periodo.meses, periodo.titulo, index, true)
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {showPanel && (
         <div
           className="panel-flotante"
@@ -349,7 +464,7 @@ const TablaObjetivosArea = () => {
         >
           <div className="resize-handle"></div>
           <div className="panel-header">
-            <h4>OBJETIVOS DEL ÁREA: {label.toUpperCase()}</h4>
+            <h4>OBJETIVOS DEL ÁREA: {label.toUpperCase()} - {añoActual}</h4>
             <button 
               className="panel-close"
               onClick={() => setShowPanel(false)}
@@ -372,12 +487,12 @@ const TablaObjetivosArea = () => {
 
       <div className="frecuencias-container">
         {periodos.map((periodo, index) => 
-          renderTablaFrecuencia(periodo.meses, periodo.titulo, index)
+          renderTablaFrecuencia(periodo.meses, periodo.titulo, index, false)
         )}
       </div>
 
       <div className="footer-note">
-        <p>Sistema de seguimiento de objetivos por frecuencia - Versión 2025</p>
+        <p>Sistema de seguimiento de objetivos por frecuencia - Año {añoActual}</p>
       </div>
     </div>
   );

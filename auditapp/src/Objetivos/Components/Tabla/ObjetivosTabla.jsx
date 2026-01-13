@@ -13,6 +13,9 @@ const ObjetivosTabla = () => {
   const [tablaData, setTablaData] = useState([]);
   const [modoEdicion, setModoEdicion] = useState({});
   const [loading, setLoading] = useState(true);
+  const [showHistorial, setShowHistorial] = useState(false);
+  const [historialData, setHistorialData] = useState([]);
+  const [añoHistorial, setAñoHistorial] = useState(2025);
 
   // Función para calcular promedio por trimestre
   const calcularPromedioTrimestre = (objetivo, campos) => {
@@ -62,11 +65,73 @@ const ObjetivosTabla = () => {
     }
   };
 
+  const cargarHistorial = async () => {
+    try {
+      const response = await api.get(`/api/objetivos`, { params: { area: label } });
+      
+      const objetivosConHistorial = response.data
+        .filter(obj => obj.historialAnual && obj.historialAnual.length > 0)
+        .map(obj => {
+          const historial = obj.historialAnual.find(h => h.año === añoHistorial);
+          if (historial) {
+            return {
+              ...obj,
+              historialSeleccionado: historial,
+              promedioENEABR_hist: calcularPromedioTrimestreHistorial(historial.indicadores, ['indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR']),
+              promedioMAYOAGO_hist: calcularPromedioTrimestreHistorial(historial.indicadores, ['indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO']),
+              promedioSEPDIC_hist: calcularPromedioTrimestreHistorial(historial.indicadores, ['indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC']),
+            };
+          }
+          return null;
+        })
+        .filter(obj => obj !== null);
+
+      if (objetivosConHistorial.length === 0) {
+        Swal.fire({
+          icon: 'info',
+          title: 'Sin datos históricos',
+          text: `No hay datos del año ${añoHistorial} para esta área.`,
+          confirmButtonColor: '#3085d6'
+        });
+        return;
+      }
+
+      setHistorialData(objetivosConHistorial);
+      setShowHistorial(true);
+    } catch (error) {
+      console.error('Error al cargar historial:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo cargar el historial',
+        confirmButtonColor: '#3085d6'
+      });
+    }
+  };
+
+  const calcularPromedioTrimestreHistorial = (indicadores, campos) => {
+    const semanas = ["S1", "S2", "S3", "S4", "S5"];
+    let todosLosValores = [];
+    
+    campos.forEach(campo => {
+      if (indicadores[campo]) {
+        semanas.forEach(semana => {
+          const valor = indicadores[campo][semana];
+          if (valor !== undefined && valor !== null && valor !== "") {
+            todosLosValores.push(parseFloat(valor) || 0);
+          }
+        });
+      }
+    });
+    
+    if (todosLosValores.length === 0) return 0;
+    return (todosLosValores.reduce((acc, val) => acc + val, 0) / todosLosValores.length).toFixed(2);
+  };
+
   useEffect(() => {
     if (label) {
       fetchObjetivos();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [label]);
 
   const manejarAgregarFila = async () => {
@@ -134,11 +199,9 @@ const ObjetivosTabla = () => {
   };
 
   const manejarCancelarEdicion = (id) => {
-    // Si es una fila temporal, la eliminamos
     if (id.startsWith("temp-")) {
       setTablaData((prev) => prev.filter((item) => item._id !== id));
     }
-    // Si es una fila existente, solo quitamos el modo de edición
     setModoEdicion((prev) => {
       const { [id]: _, ...rest } = prev;
       return rest;
@@ -194,7 +257,6 @@ const ObjetivosTabla = () => {
         confirmButtonColor: "#3085d6",
       });
       
-      // Recalcular promedios después de guardar
       await fetchObjetivos();
     } catch (error) {
       Swal.fire({
@@ -290,6 +352,12 @@ const ObjetivosTabla = () => {
         </div>
         <div className="dashboard-actions">
           <button 
+            className="history-button"
+            onClick={cargarHistorial}
+          >
+            <i className="fas fa-history"></i> Ver Historial {añoHistorial}
+          </button>
+          <button 
             className="primary-button"
             onClick={() => navigate(`frecuencia/${label}`)}
           >
@@ -305,6 +373,56 @@ const ObjetivosTabla = () => {
           )}
         </div>
       </div>
+
+      {/* Modal de Historial */}
+      {showHistorial && (
+        <div className="modal-overlay-historia" onClick={() => setShowHistorial(false)}>
+          <div className="modal-historial-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-historial-header">
+              <h2>📊 HISTORIAL {añoHistorial} - {label.toUpperCase()}</h2>
+              <button className="modal-close-btn" onClick={() => setShowHistorial(false)}>✕</button>
+            </div>
+            <div className="modal-historial-body">
+              <div className="objectives-table-container">
+                <table className="objectives-table">
+                  <thead>
+                    <tr>
+                      <th className="column-narrow">#</th>
+                      <th className="column-wide">Objetivo</th>
+                      <th className="column-medium">Recursos</th>
+                      <th className="column-medium">Meta / Frecuencia</th>
+                      <th className="column-narrow">ENE - ABR</th>
+                      <th className="column-narrow">MAY - AGO</th>
+                      <th className="column-narrow">SEP - DIC</th>
+                      <th className="column-medium">Observaciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {historialData.map((row, index) => (
+                      <tr key={row._id}>
+                        <td className="column-centered">{index + 1}</td>
+                        <td><div className="text-content">{row.objetivo}</div></td>
+                        <td><div className="text-content">{row.recursos}</div></td>
+                        <td><div className="text-content text-center">{row.metaFrecuencia}</div></td>
+                        <td className="column-centered">
+                          {renderProgressBar(row.promedioENEABR_hist)}
+                        </td>
+                        <td className="column-centered">
+                          {renderProgressBar(row.promedioMAYOAGO_hist)}
+                        </td>
+                        <td className="column-centered">
+                          {renderProgressBar(row.promedioSEPDIC_hist)}
+                        </td>
+                        <td><div className="text-content">{row.observaciones}</div></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="loading-container">
