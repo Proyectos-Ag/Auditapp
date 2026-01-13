@@ -138,6 +138,7 @@ const AuditorEvaluaciones = () => {
     const obtenerAuditores = async () => {
       try {
         const responseEvaluaciones = await api.get(`/evaluacion/eva-esp`);
+        console.log('evaluacionesDisp:', responseEvaluaciones.data);
         setEvaluacionesDisp(responseEvaluaciones.data);
       } catch (error) {
         console.error('Error al obtener auditores:', error);
@@ -207,7 +208,7 @@ const AuditorEvaluaciones = () => {
                     <CardContent>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                          {auditor.nombre.charAt(0)}
+                          {(auditor?.nombre || 'N/A').toString().charAt(0)}
                         </Avatar>
                         <Box>
                           <Typography variant="h6" component="div">

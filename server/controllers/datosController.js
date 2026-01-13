@@ -571,28 +571,17 @@ const datosEstado = async (req, res)=>{
             return res.status(404).json({ error: 'Datos no encontrados' });
         }
 
-        // Actualizar el estado, el comentario y el porcentaje de cumplimiento si están presentes
-        datos.Estado = Estado;
-        if (Comentario) {
-            datos.Comentario = Comentario;
-        }
-        if (PorcentajeCump) {
-            datos.PorcentajeCump = PorcentajeCump;
-        }
-        if (PuntuacionObten) {
-            datos.PuntuacionObten = PuntuacionObten;
-        }
-        if (PuntuacionConf) {
-            datos.PuntuacionConf = PuntuacionConf;
-        }
-        if (Estatus) {
-            datos.Estatus = Estatus;
-        }
-        if (PorcentajeTotal) {
-            datos.PorcentajeTotal = PorcentajeTotal;
-        }
+        const update = { Estado };
+        if (Comentario !== undefined)      update.Comentario = Comentario;
+        if (PorcentajeCump !== undefined)  update.PorcentajeCump = PorcentajeCump;
+        if (PuntuacionObten !== undefined) update.PuntuacionObten = PuntuacionObten;
+        if (PuntuacionConf !== undefined)  update.PuntuacionConf = PuntuacionConf;
+        if (Estatus !== undefined)         update.Estatus = Estatus;
+        if (PorcentajeTotal !== undefined) update.PorcentajeTotal = PorcentajeTotal;
 
-        await datos.save();
+        // 2) Actualiza y devuelve el documento actualizado
+        const updated = await Datos.findByIdAndUpdate(id, update, { new: true, runValidators: true }).lean();
+        if (!updated) return res.status(404).json({ error: 'Datos no encontrados' });
 
         let estadoEmail = Estado;
         let comentario = Comentario;
@@ -634,7 +623,7 @@ const datosEstado = async (req, res)=>{
       }
     });
 
-        res.status(200).json({ message: 'Estado actualizado correctamente' });
+    return res.status(200).json(updated);
     } catch (error) {
         console.error('Error al actualizar el estado:', error);
         res.status(500).json({ error: 'Error interno del servidor', details: error.message });
