@@ -463,3 +463,101 @@
   display: flex;
   align-items: center;
 }
+
+/* =========================
+   EVIDENCIA: no expandir columna
+   ========================= */
+
+/* 1) fuerza layout fijo para que la tabla no crezca por el contenido */
+.ishr-efectividadTable {
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* 2) La columna 6 es "Evidencia" (Actividad, Responsable, Fecha, Sí, No, Evidencia, Acción) */
+.ishr-efectividadTable th:nth-child(6),
+.ishr-efectividadTable td:nth-child(6) {
+  width: 240px;        /* ajusta a gusto */
+  max-width: 240px;
+}
+
+/* evita que el contenido empuje la celda */
+.ishr-efectividadTable td:nth-child(6) {
+  overflow: hidden;
+}
+
+/* Contenedor general de evidencias */
+.ishr-evidenceCell {
+  max-width: 240px;    /* igual al ancho de la columna */
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* botones de cámara/pdf */
+.ishr-evidenceActions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Lista: miniaturas en wrap + altura fija con scroll */
+.ishr-evidenceList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  max-height: 96px;     /* 2 filas aprox; sube/baja si quieres */
+  overflow: auto;
+  padding-right: 2px;   /* para que no tape el scroll */
+}
+
+/* Cada evidencia como "thumbnail" fijo */
+.ishr-evidenceItem {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;       /* no crece */
+}
+
+/* Imagen miniatura */
+.ishr-evidenceImg {
+  width: 46px;
+  height: 46px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  cursor: zoom-in;
+}
+
+/* PDF: que se vea como cuadrito (no como link largo) */
+.ishr-pdfLink {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+  text-decoration: none;
+  overflow: hidden;
+  padding: 4px;
+}
+
+/* oculta el nombre largo del PDF para que no estire */
+.ishr-pdfLink span {
+  display: none;
+}
+
+/* Si tu botón de eliminar (✕) tapa feo, lo acomoda */
+.ishr-miniDanger {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  line-height: 18px;
+  font-size: 12px;
+}
