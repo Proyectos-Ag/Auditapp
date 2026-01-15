@@ -422,3 +422,50 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================
+   Readonly blocks con estilo ishn
+   ========================= */
+.ishn-readonlyBox{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.18);
+  background: #fff;
+  color: #0b0b0b;
+  font-size: 14px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ishn-readonlyText{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.18);
+  background: #fff;
+  color: #0b0b0b;
+  font-size: 14px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Opcional: que EFECTIVIDAD se vea igual sin cambiar tu lógica */
+.ishn-tableWrap textarea.no-border,
+.ishn-tableWrap input.no-border{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.18);
+  background: #fff;
+  box-sizing: border-box;
+}
+.ishn-tableWrap textarea.no-border{
+  min-height: 60px;
+  resize: none;
+}
+.ishn-tableWrap input[type="date"].no-border{
+  padding: 10px 12px;
+}
