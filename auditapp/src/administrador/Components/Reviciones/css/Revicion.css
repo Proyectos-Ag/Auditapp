@@ -325,7 +325,7 @@ table, th, td {
 .pill--auditoria { border-color: #7bc2fc; color: #0c3a52; }
 
 /* (opcional) mejora pequeñas cosas de tarjeta en tu estilo actual */
-.card-repo p { margin: .25rem 0; }
+.card-repo p { margin: .25rem 10; }
 /* Badges por estado */
 .badge--revision { background: #ffc107; color: #333; }       /* ámbar */
 .badge--revisadas { background: #3F3D73; color: #fff; }      /* primario */
@@ -336,4 +336,3 @@ table, th, td {
 
 /* Detalles menores */
 .card-meta { display: flex; justify-content: flex-end; margin-bottom: .35rem; }
-.card-repo p { margin: .25rem 0; }

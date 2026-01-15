@@ -267,18 +267,6 @@
 .card-repo-ish::after { display: none; }
 */
 
-.logo-empresa-revi {
-  width: 56px;
-  height: 56px;
-  object-fit: contain;
-  flex: 0 0 56px;
-
-  border-radius: 12px;
-  background: #ffffff;
-  padding: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
 .card-repo-ish__info {
   display: flex;
   flex-direction: column;
@@ -368,17 +356,6 @@
   box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
 
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.logo-empresa-revi {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
-  object-fit: contain;
-  border-radius: 12px;
-  background: #ffffff;
-  padding: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .card-repo-ish__line {
