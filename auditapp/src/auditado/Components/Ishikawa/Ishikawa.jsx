@@ -655,65 +655,74 @@ const handleCausaChange = nuevaCausa => {
 };
  
  if (registro || aprobado || proceso) {
-    return (  
-      <div className='content-diagrama'>
+  return (
+  <div className="ishn-content">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault(); // Prevenir el envío automático del formulario
+        if (isEditing || asignado) {
+          Actualizar();
+        } else {
+          Guardar();
+        }
+      }}
+    >
+      {/* Barra de acciones */}
+      <Stack
+        className="ishn-actions"
+        direction="row"
+        spacing={2}
+        justifyContent="space-between"
+        alignItems="center"
+      >
+        <Button
+          variant="text"
+          sx={{ color: "white" }}
+          startIcon={<SaveIcon />}
+          onClick={(e) => {
+            e.preventDefault();
+            handleSaveOrUpdate();
+          }}
+          disabled={!asignado && !rechazo}
+        >
+          Guardar
+        </Button>
 
-        <form onSubmit={(e) => {
-          e.preventDefault(); // Prevenir el envío automático del formulario
-          if (isEditing || asignado) {
-            Actualizar();
-          } else {
-            Guardar();
-          }
-        }}>
+        <Button
+          variant="text"
+          sx={{ color: "white" }}
+          endIcon={<SendIcon />}
+          type="submit"
+          disabled={!asignado && !rechazo}
+        >
+          Enviar
+        </Button>
+      </Stack>
 
-          <Stack
-            className="acciones-ish-container"
-            direction="row"
-            spacing={2}
-            justifyContent="space-between"
-            alignItems="center"
-            width="96%"
-          >
-    
-            <Button
-              variant="text"
-              sx={{ color: 'white' }}
-              startIcon={<SaveIcon />}
-              onClick={e => { e.preventDefault(); handleSaveOrUpdate(); }}
-              disabled={!asignado && !rechazo}
-            >
-              Guardar
-            </Button>
-    
-            <Button
-              variant="text"
-              sx={{ color: 'white' }}
-              endIcon={<SendIcon />}
-              type="submit"
-              disabled={!asignado && !rechazo}
-            >
-              Enviar
-            </Button>
-            
-          </Stack>
-
-          {proceso && (
-        <Alert severity="info" icon={<span style={{ fontSize: 40 }}>📝</span>} sx={{ my: 2 }}>
+      {/* Estados */}
+      {proceso && (
+        <Alert
+          severity="info"
+          icon={<span style={{ fontSize: 40 }}>📝</span>}
+          sx={{ my: 2 }}
+        >
           <AlertTitle>En proceso de revisión</AlertTitle>
           Su diagrama está siendo evaluado por el administrador.
         </Alert>
       )}
 
-      {/* — Aprobado — */}
       {aprobado && (
-        <Alert severity="success" icon={<span style={{ fontSize: 40 }}>🎉</span>} sx={{ my: 2 }}>
+        <Alert
+          severity="success"
+          icon={<span style={{ fontSize: 40 }}>🎉</span>}
+          sx={{ my: 2 }}
+        >
           <AlertTitle>¡Aprobado!</AlertTitle>
-          El diagrama ha sido aprobado. Se ha enviado el diagrama en formato PDF a su correo electronico.
+          El diagrama ha sido aprobado. Se ha enviado el diagrama en formato PDF a
+          su correo electronico.
         </Alert>
       )}
 
-      {/* — Rechazado con nota — */}
       {rechazo && (
         <Alert severity="error" sx={{ my: 2 }}>
           <AlertTitle>Diagrama Rechazado</AlertTitle>
@@ -724,55 +733,51 @@ const handleCausaChange = nuevaCausa => {
       {asignado && (
         <Alert severity="info" sx={{ my: 2 }}>
           <AlertTitle>Ishikawa Asignado</AlertTitle>
-          Realice el llenado del diagrama y envíelo para su revisión. Se le notificará el resultado de la revisión.
+          Realice el llenado del diagrama y envíelo para su revisión. Se le
+          notificará el resultado de la revisión.
         </Alert>
       )}
 
-      {formData.estado === 'Finalizado' && !proceso && !aprobado && (
+      {formData.estado === "Finalizado" && !proceso && !aprobado && (
         <Alert severity="info" sx={{ my: 2 }}>
           <AlertTitle>Estado: Finalizado</AlertTitle>
           El proceso ha sido finalizado. Ya no se permiten modificaciones.
         </Alert>
       )}
-        <div className="image-container-auditado">
 
-          <img src={Logo} alt="Logo Aguida" className='logo-empresa' />
-          <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
-          <div className='posicion-en'>
-          {programa?.Descripcion && programa.Descripcion
-            .filter(desc => desc.ID === id && programa.Nombre === nombre)
-            .map((desc, index) => {
-              return(
-                <h2 key={index} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                Problema:
-                <div 
-                  className="problema-input" 
-                  style={{
-                    marginLeft:'6em',
-                    padding: '8px', 
-                    borderRadius: '4px',
-                    backgroundColor: revisado ? '#f5f5f5' : 'transparent',
-                    display: 'inline-block'
-                  }}
-                >
-                  {(descripcion?.Observacion && datos?.PuntuacionMaxima) ? descripcion.Observacion : descripcion.Problema}
-                </div>
-              </h2>
-              
-            )})}
-            <div style={{ display: 'flex', position:'absolute' }}>
-              <h2>Afectación: </h2> 
-              <h3 style={{marginTop:'1.65rem', marginLeft:'0.5rem'}}>{id} {programa?.Nombre}</h3>
-            </div>
+      {/* Contenido */}
+      <div className="ishn-edit">
+        {/* ===================== PART 1 ===================== */}
+        <div id="pdf-content-part1" className="ishn-card">
+
+          <h1>Ishikawa</h1>
+
+          <div className="ishn-info">
+            <h2>
+              Problema:
+              <div className="ishn-input" style={{ backgroundColor: revisado ? "#f5f5f5" : "#fff" }}>
+                {(descripcion?.Observacion && datos?.PuntuacionMaxima)
+                  ? descripcion?.Observacion
+                  : descripcion?.Problema}
+              </div>
+            </h2>
+
+            <h2>
+              Afectación:
+              <div className="ishn-input" style={{ backgroundColor: "#fff" }}>
+                {id} {programa?.Nombre}
+              </div>
+            </h2>
           </div>
-          <div className='posicion-en-3'>
-          GCF015
-          </div>
-          <div className='posicion-en-2'>
+
+          <div className="ishn-code">GCF015</div>
+
+          <div className="ishn-meta">
             <h3>Fecha: {fechaElaboracion}</h3>
           </div>
-          <div  style={{ marginTop:'3.5rem'}}>
-           <NewIshikawa
+
+          <div className="ishn-diagramWrap">
+            <NewIshikawa
               diagrama={diagrama}
               setDiagrama={setDiagrama}
               problema={formData.problema}
@@ -782,11 +787,26 @@ const handleCausaChange = nuevaCausa => {
             />
           </div>
 
-          <div className='button-parti-ish-asg'>
-          <div style={{ width: '64rem' }}>
-            {/* Contenedor de chips y campo de busqueda */}
-              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-              <button className='button-part'> ⚇</button>
+          {/* Participantes */}
+          <div className="ishn-people">
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "0.5rem",
+                  marginBottom: "1rem",
+                }}
+              >
+                <button
+                  type="button"
+                  className="ishn-peopleBtn"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  ⚇
+                </button>
+
                 {selectedParticipants.map((participant, index) => (
                   <Chip
                     key={index}
@@ -794,20 +814,19 @@ const handleCausaChange = nuevaCausa => {
                     onDelete={() => handleDelete(participant)}
                   />
                 ))}
-                {/* Campo de busqueda */}
+
                 <TextField
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Buscar nombre..."
                   variant="outlined"
                   size="small"
-                  style={{ minWidth: '200px' }}
+                  style={{ minWidth: "200px" }}
                 />
               </div>
 
-              {/* Lista de sugerencias */}
               {suggestions.length > 0 && (
-                <Paper style={{ maxHeight: '10rem', overflowY: 'auto', marginBottom: '1rem' }}>
+                <Paper style={{ maxHeight: "10rem", overflowY: "auto", marginBottom: "1rem" }}>
                   <List>
                     {suggestions.map((participant, index) => (
                       <ListItem
@@ -822,37 +841,54 @@ const handleCausaChange = nuevaCausa => {
                 </Paper>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* ===================== PART 2 ===================== */}
+        <div id="pdf-content-part2" className="ishn-card">
+          <div className="ishn-textBlock">
+            <h3>No conformidad:</h3>
+            <div className="ishn-textarea" style={{ textAlign: "justify" }}>
+              {requisito}
             </div>
-          
-  
-          {programa?.Descripcion && programa.Descripcion
-            .filter(desc => desc.ID === id && programa.Nombre === nombre)
-            .map((desc, index) => {
-  
-              return (
-                <div key={index}>
-                  <div className='posicion-bo-audi'>
-                    <h3>No conformidad:</h3>
-                       <div style={{width:'70em', textAlign:'justify'}}>{desc.Requisito}</div>
-                    <h3>Hallazgo:</h3>
-                    <div className='hallazgo-container'> {/*aqui va la observacion*/}
-                      <div style={{width:'70em', textAlign:'justify'}}>{datos.PuntuacionMaxima ? desc.Hallazgo : desc.Observacion}</div>
-                    </div>
-                    <h3>Acción inmediata o corrección: </h3>
-                    <textarea type="text" className="textarea-acc" name='correccion' value={formData.correccion} onChange={handleDatos}
-                      style={{ width:'64rem', color:'#000000'}} placeholder="Agregar Acción. . ." required disabled={revisado} ></textarea>
-                    <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
-                    <textarea type="text" className="textarea-acc" name='causa' value={formData.causa} onChange={handleDatos}
-                      style={{ width:'64rem', marginBottom:'20px', color:'#000000'}} 
-                      placeholder="Seleccione la causa desde el diagrama"  onKeyDown={(e) => e.preventDefault()} required ></textarea>
-                  </div>
-    
-                </div>
-              );
-            })}
-          <div className='table-ish'>
+
+            <h3>Hallazgo:</h3>
+            <div className="ishn-textarea" style={{ textAlign: "justify" }}>
+              {hallazgo}
+            </div>
+
+            <h3>Acción inmediata o corrección:</h3>
+            <textarea
+              className="ishn-textarea"
+              name="correccion"
+              value={formData.correccion}
+              onChange={handleDatos}
+              placeholder="Agregar Acción. . ."
+              required
+              disabled={revisado}
+              style={{ color: "#000" }}
+            />
+
+            <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
+            <textarea
+              className="ishn-textarea"
+              name="causa"
+              value={formData.causa}
+              onChange={handleDatos}
+              placeholder="Seleccione la causa desde el diagrama"
+              onKeyDown={(e) => e.preventDefault()}
+              required
+              style={{ marginBottom: 20, color: "#000" }}
+            />
+          </div>
+        </div>
+
+        {/* ===================== PART 3 ===================== */}
+        <div id="pdf-content-part3" className="ishn-card">
+          <div className="ishn-tableWrap">
             <h3>SOLUCIÓN</h3>
-            <table style={{border:'none'}}>
+
+            <table>
               <thead>
                 <tr>
                   <th className="conformity-header">Actividad</th>
@@ -860,104 +896,156 @@ const handleCausaChange = nuevaCausa => {
                   <th className="conformity-header">Fecha Compromiso</th>
                 </tr>
               </thead>
+
               <tbody>
-                  {actividades.map((actividad, index) => (
-                    <tr key={index}>
-                      <td>
-                        <textarea
-                          className='table-input'
-                          type="text"
-                          value={actividad.actividad}
-                          onChange={(e) => handleActividadChange(index, 'actividad', e.target.value)}
-                          placeholder='Agregar Actividad. . .'
-                          required
-                          disabled={revisado}
-                        />
-                      </td>
-                      <td>
-                      {actividad?.responsable && actividad.responsable.map((resp, idx) => (
-                        <Chip
-                          key={idx}
-                          label={`${resp.nombre}`}
-                          onDelete={() => handleDeleteResponsable(index, idx)}
-                          style={{ margin: '0.2rem' }}
-                          variant="outlined"
-                        />
-                      ))}
-              
+                {actividades.map((actividad, index) => (
+                  <tr key={index}>
+                    <td>
+                      <textarea
+                        className="ishn-tableInput"
+                        type="text"
+                        value={actividad.actividad}
+                        onChange={(e) =>
+                          handleActividadChange(index, "actividad", e.target.value)
+                        }
+                        placeholder="Agregar Actividad. . ."
+                        required
+                        disabled={revisado}
+                      />
+                    </td>
+
+                    <td>
+                      {actividad?.responsable &&
+                        actividad.responsable.map((resp, idx) => (
+                          <Chip
+                            key={idx}
+                            label={`${resp.nombre}`}
+                            onDelete={() => handleDeleteResponsable(index, idx)}
+                            style={{ margin: "0.2rem" }}
+                            variant="outlined"
+                          />
+                        ))}
+
                       <Busqueda onSelect={(user) => handleResponsableSelect(index, user)} />
+                    </td>
 
-                      </td>
-                      <td>
-                      {
-                      (revisado) ? null : (
-                      <div>
-                       <select
-                          onChange={(e) => handleSelectChange(e, actividad.fechaCompromiso.length - 1 - actividad.fechaCompromiso.slice().reverse().findIndex(fecha => fecha === e.target.value))}
-                          style={{ color: colores[actividad.fechaCompromiso.length - 1]} } // Inicializa con el color del primer elemento invertido
-                        >
-                                    {actividad.fechaCompromiso.slice().reverse().map((fecha, index) => (
-                                        <option
-                                            key={index}
-                                            className={`option-${index}`}
-                                            style={{ color: colores[(actividad.fechaCompromiso.length - 1 - index) % colores.length] }}
-                                        >
-                                            {fecha}
-                                        </option>
-                                    ))}
-                                </select>
+                    <td>
+                      {revisado ? null : (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+                          <select
+                            onChange={(e) =>
+                              handleSelectChange(
+                                e,
+                                actividad.fechaCompromiso.length -
+                                  1 -
+                                  actividad.fechaCompromiso
+                                    .slice()
+                                    .reverse()
+                                    .findIndex((fecha) => fecha === e.target.value)
+                              )
+                            }
+                            style={{
+                              color: colores[actividad.fechaCompromiso.length - 1],
+                              maxWidth: 220,
+                            }}
+                          >
+                            {actividad.fechaCompromiso
+                              .slice()
+                              .reverse()
+                              .map((fecha, idx) => (
+                                <option
+                                  key={idx}
+                                  className={`option-${idx}`}
+                                  style={{
+                                    color:
+                                      colores[
+                                        (actividad.fechaCompromiso.length - 1 - idx) %
+                                          colores.length
+                                      ],
+                                  }}
+                                >
+                                  {fecha}
+                                </option>
+                              ))}
+                          </select>
+
                           {aprobado ? (
-                              <>
-                                  <input
-                                      type="date"
-                                      onChange={(e) => handleTempFechaChange(e.target.value)}
-                                      required
-                                  />
-                                  <button onClick={(e) => { e.preventDefault();handleUpdateFechaCompromiso(index)
-                                   }} className='button-new-date'>
-                                      Reprogramar Fecha
-                                  </button>
-                              </>
-                          ) : (
+                            <>
                               <input
-                                  type="date"
-                                  onChange={(e) => handleActividadChange(index, 'fechaCompromiso', e.target.value)}
-                                  required
+                                type="date"
+                                onChange={(e) => handleTempFechaChange(e.target.value)}
+                                required
                               />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleUpdateFechaCompromiso(index);
+                                }}
+                                className="button-new-date"
+                              >
+                                Reprogramar Fecha
+                              </button>
+                            </>
+                          ) : (
+                            <input
+                              type="date"
+                              onChange={(e) =>
+                                handleActividadChange(
+                                  index,
+                                  "fechaCompromiso",
+                                  e.target.value
+                                )
+                              }
+                              required
+                            />
                           )}
-                      </div>
+                        </div>
                       )}
 
-                      {
-                      (!revisado) ? null : (
-                        <div >
-                           {ajustarFecha(actividad.fechaCompromiso.slice(-1)[0])}
-                        </div>
-                        )}
-                      </td>
-                      {(revisado || aprobado) ? null : ( 
-                      <td className='cancel-acc'>
-                        {index !== 0 && (
-                          <button onClick={() => eliminarFilaActividad(index)}>Eliminar</button>
-                        )}
-                      </td>
+                      {!revisado ? null : (
+                        <div>{ajustarFecha(actividad.fechaCompromiso.slice(-1)[0])}</div>
                       )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {
-              (revisado || aprobado || proceso) ? null : ( 
-              <button  onClick={(e) => {
-                e.preventDefault();
-                agregarFilaActividad();
-              }} className='button-agregar'>Agregar Fila</button>
+                    </td>
+
+                    {revisado || aprobado ? null : (
+                      <td className="ishn-tableDangerCell">
+                        {index !== 0 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              eliminarFilaActividad(index);
+                            }}
+                          >
+                            Eliminar
+                          </button>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {revisado || aprobado || proceso ? null : (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  agregarFilaActividad();
+                }}
+                className="ishn-addRowBtn"
+              >
+                Agregar Fila
+              </button>
             )}
-            </div>
           </div>
-          </form>
         </div>
-    );
+      </div>
+    </form>
+  </div>
+);
   } else {
     return <div>Error al cargar los datos</div>;
   };
