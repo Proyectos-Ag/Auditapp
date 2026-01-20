@@ -1,13 +1,12 @@
-// src/features/auditoria/components/ActionBar.jsx
 export default function ActionBar({
   variant,
-  onNotaToggle,     // () => void
+  onNotaToggle,
   notaVisible,
-  onRechazar,       // () => void
-  onAprobar,        // () => void
-  onEliminar,       // () => void
-  onFinalizar,      // () => void
-  onExportPDF,      // () => void
+  onRechazar,
+  onAprobar, 
+  onEliminar,
+  onFinalizar,
+  onExportPDF,
 }) {
   return (
     <div className="action-bar">

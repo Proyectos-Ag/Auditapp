@@ -1,4 +1,3 @@
-// config/dbconfig.js  (CommonJS)
 const mongoose = require('mongoose');
 const EmpleadoCapacitacionSchema = require('../models/EmpleadoCapacitacionSchema');
 

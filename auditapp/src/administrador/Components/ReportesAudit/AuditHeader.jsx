@@ -1,4 +1,3 @@
-// src/features/auditoria/components/AuditHeader.jsx
 import logo from "../assets/img/logoAguida.png";
 
 export default function AuditHeader() {

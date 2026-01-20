@@ -248,6 +248,8 @@ const AuditCalendar = () => {
           api.get('/programas-anuales/audits')
         ]);
 
+        console.log('Datos response:', datosRes,'Otros:', progRes);
+
         const datos = Array.isArray(datosRes.data) ? datosRes.data : [];
         const prog = Array.isArray(progRes.data) ? progRes.data : [];
 
@@ -377,11 +379,13 @@ const AuditCalendar = () => {
       }
       if (pendingFilters.fechaInicio) {
         const s = getStartDate(audit);
-        if (!s || s < new Date(pendingFilters.fechaInicio)) return false;
+        const fi = parseDateLocal(pendingFilters.fechaInicio);
+        if (!s || !fi || s < fi) return false;
       }
       if (pendingFilters.fechaFin) {
         const e = getEndDate(audit);
-        if (!e || e > new Date(pendingFilters.fechaFin)) return false;
+        const ff = parseDateLocal(pendingFilters.fechaFin);
+        if (!e || !ff || e > ff) return false;
       }
       return true;
     });
@@ -395,18 +399,44 @@ const AuditCalendar = () => {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
 
+  // Parsea fechas tipo "YYYY-MM-DD" como LOCAL (evita que se recorran por zona horaria)
+const parseDateLocal = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+
+  const s = String(value);
+
+  // "2026-01-07" => new Date(2026, 0, 7)  (LOCAL)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const [y, m, d] = s.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  // ISO con hora (ej: "2026-01-07T10:00:00Z") => normal
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+};
+
+const isSameDay = (a, b) =>
+  a && b &&
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
+
+
   // Normalized date helpers: prefer mapped `start`/`end`, then legacy fields
   const getStartDate = (audit) => {
     if (!audit) return null;
     const s = audit.start || audit.FechaInicio || audit.fechaInicio || audit.FechaElaboracion;
-    return s ? new Date(s) : null;
+    return parseDateLocal(s);
   };
 
   const getEndDate = (audit) => {
     if (!audit) return null;
     const e = audit.end || audit.FechaFin || audit.fechaFin;
-    return e ? new Date(e) : null;
+    return parseDateLocal(e);
   };
+
 
   // Display helpers to provide sensible fallbacks for program-scheduled audits
   const getDisplayTitle = (audit) => {
@@ -432,13 +462,12 @@ const AuditCalendar = () => {
     if (audit._source === 'program') {
       const s = audit.fechaInicio || audit.start;
       const e = audit.fechaFin || audit.end;
-      if (s && e) {
-        try {
-          return `${new Date(s).toLocaleDateString()} - ${new Date(e).toLocaleDateString()}`;
-        } catch (err) {
-          return `${s} - ${e}`;
-        }
-      }
+
+      const ds = parseDateLocal(s);
+      const de = parseDateLocal(e);
+
+      if (ds && de) return `${ds.toLocaleDateString()} - ${de.toLocaleDateString()}`;
+      if (ds) return `${ds.toLocaleDateString()}`;
       return `${s || ''}`;
     }
     return audit.Duracion || '';
@@ -455,9 +484,9 @@ const AuditCalendar = () => {
   };
 
   const getAuditsForDate = (date) => {
-    return auditorias.filter(audit => {
+    return auditorias.filter((audit) => {
       const auditDate = getStartDate(audit);
-      return auditDate && auditDate.toDateString() === date.toDateString();
+      return auditDate && isSameDay(auditDate, date);
     });
   };
 
@@ -963,7 +992,7 @@ const AuditCalendar = () => {
                     <Paper
                       elevation={auditsOnDate.length > 0 ? 3 : 1}
                       sx={{
-                        height: '100%',
+                        height: '90%',
                         minHeight: 140,
                         p: 1.5,
                         borderRadius: 2,
