@@ -1,6 +1,7 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { UserContext } from '../../../App';
 import { useNavigate } from 'react-router-dom';
+import api from '../../../services/api';
 import {
   Box,
   Typography,
@@ -19,7 +20,8 @@ import {
   Slide,
   Fade,
   IconButton,
-  Tooltip
+  Tooltip,
+  CircularProgress
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -41,9 +43,26 @@ import {
   People as PeopleIcon,
   Computer as ComputerIcon,
   AllInbox as AllInboxIcon,
-  MenuBook as MenuBookIcon
+  MenuBook as MenuBookIcon,
+  FolderSpecial as FolderSpecialIcon
 } from '@mui/icons-material';
 import { AcUnit as EcoIcon } from '@mui/icons-material';
+
+// ✅ Función para normalizar texto (eliminar acentos, convertir a minúsculas)
+const normalizeText = (text) => {
+  if (!text) return '';
+  return text
+    .toString()
+    .normalize("NFD") // Descomponer acentos
+    .replace(/[\u0300-\u036f]/g, "") // Eliminar diacríticos
+    .toLowerCase()
+    .trim();
+};
+
+// ✅ Función para comparar áreas ignorando mayúsculas/minúsculas y acentos
+const compareAreas = (area1, area2) => {
+  return normalizeText(area1) === normalizeText(area2);
+};
 
 // Íconos personalizados para cada área
 const areaIcons = {
@@ -70,28 +89,113 @@ const areaIcons = {
   "CALIDAD E INOCUIDAD": <VerifiedUserIcon fontSize="medium" />
 };
 
-const menuItems = [
-  { label: "CONTROL Y CUIDADO AMBIENTAL", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL Y CUIDADO AMBIENTAL", "CONTROL DE PLAGAS", "Control y Cuidado Ambiental"] },
-  { label: "EMBARQUE", roles: ["administrador", "auditor", "auditado"], areas: ["EMBARQUE", "REVISIÓN", "PRODUCTO TERMINADO", "Planeación y Logística"] },
-  { label: "MANTENIMIENTO SERVICIOS", roles: ["administrador", "auditor", "auditado"], areas: ["MANTENIMIENTO SERVICIOS", "Mantenimiento Procesos"] },
-  { label: "SEGURIDAD E HIGIENE Y SANIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["SEGURIDAD E HIGIENE Y SANIDAD", "CONTROL DE PLAGAS", "Seguridad e Higiene y Sanidad"] },
-  { label: "INGENIERÍA", roles: ["administrador", "auditor", "auditado"], areas: ["INGENIERÍA", "Ingeniería"] },
-  { label: "COORDINADOR DE MATERIA PRIMA", roles: ["administrador", "auditor", "auditado"], areas: ["COORDINADOR DE MATERIA PRIMA", "MATERIA PRIMA"] },
-  { label: "GERENCIA PLANEACIÓN Y LOGÍSTICA", roles: ["administrador", "auditor", "auditado"], areas: ["GERENCIA PLANEACIÓN Y LOGÍSTICA", "Planeación y Logística", "PL MATERIA PRIMA"] },
-  { label: "MANTENIMIENTO TETRA PAK", roles: ["administrador", "auditor", "auditado"], areas: ["MANTENIMIENTO TETRA PAK", "Mantenimiento Tetra"] },
-  { label: "CONTROL DE PLAGAS", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL DE PLAGAS", "SEGURIDAD E HIGIENE Y SANIDAD", "Seguridad e Higiene y Sanidad"] },
-  { label: "AGUIDA", roles: ["administrador", "auditor", "auditado"], areas: ["AGUIDA"] },
-  { label: "PESADAS", roles: ["administrador", "auditor", "auditado"], areas: ["PESADAS"] },
-  { label: "PRODUCCIÓN", roles: ["administrador", "auditor", "auditado"], areas: ["PRODUCCIÓN","Producción"] },
-  { label: "ASEGURAMIENTO DE CALIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["ASEGURAMIENTO DE CALIDAD", "LIBERACIÓN DE PT"] },
-  { label: "COMPRAS", roles: ["administrador", "auditor", "auditado"], areas: ["COMPRAS", "Compras"] },
-  { label: "ADMINISTRADOR", roles: ["administrador"], areas: ["ADMINISTRADOR"] },
-  { label: "REVISIÓN", roles: ["administrador", "auditor", "auditado"], areas: ["REVISIÓN", "EMBARQUE", "PRODUCTO TERMINADO", "Planeación y Logística"] },
-  { label: "VALIDACIÓN", roles: ["administrador", "auditor", "auditado"], areas: ["VALIDACIÓN", "Producción.", "Validación","PRODUCCIÓN."] },
-  { label: "LIBERACIÓN DE PT", roles: ["administrador", "auditor", "auditado"], areas: ["LIBERACIÓN DE PT", "ASEGURAMIENTO DE CALIDAD"] },
-  { label: "RECURSOS HUMANOS", roles: ["administrador", "auditor", "auditado"], areas: ["RECURSOS HUMANOS"] },
-  { label: "SISTEMAS", roles: ["administrador", "auditor", "auditado"], areas: ["SISTEMAS"] },
-  { label: "CALIDAD E INOCUIDAD", roles: ["administrador", "auditor", "auditado"], areas: ["CONTROL Y CUIDADO AMBIENTAL", "EMBARQUE", "MANTENIMIENTO SERVICIOS", "SEGURIDAD E HIGIENE Y SANIDAD", "INGENIERÍA", "COORDINADOR DE MATERIA PRIMA", "GERENCIA PLANEACIÓN Y LOGÍSTICA", "MANTENIMIENTO TETRA PAK", "CONTROL DE PLAGAS", "AGUIDA", "PESADAS", "PRODUCCIÓN", "ASEGURAMIENTO DE CALIDAD", "COMPRAS", "ADMINISTRADOR", "REVISIÓN", "VALIDACIÓN", "LIBERACIÓN DE PT", "RECURSOS HUMANOS", "SAFETY GOALS"] }
+// Menús estáticos originales - AHORA CON ÁREAS NORMALIZADAS EN LAS COMPARACIONES
+const menuItemsEstaticos = [
+  { 
+    label: "CONTROL Y CUIDADO AMBIENTAL", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["CONTROL Y CUIDADO AMBIENTAL", "CONTROL DE PLAGAS", "Control y Cuidado Ambiental"] 
+  },
+  { 
+    label: "EMBARQUE", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["EMBARQUE", "REVISIÓN", "PRODUCTO TERMINADO", "Planeación y Logística"] 
+  },
+  { 
+    label: "MANTENIMIENTO SERVICIOS", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["MANTENIMIENTO SERVICIOS", "Mantenimiento Procesos"] 
+  },
+  { 
+    label: "SEGURIDAD E HIGIENE Y SANIDAD", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["SEGURIDAD E HIGIENE Y SANIDAD", "CONTROL DE PLAGAS", "Seguridad e Higiene y Sanidad"] 
+  },
+  { 
+    label: "INGENIERÍA", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["INGENIERÍA", "Ingeniería"] 
+  },
+  { 
+    label: "COORDINADOR DE MATERIA PRIMA", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["COORDINADOR DE MATERIA PRIMA", "MATERIA PRIMA"] 
+  },
+  { 
+    label: "GERENCIA PLANEACIÓN Y LOGÍSTICA", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["GERENCIA PLANEACIÓN Y LOGÍSTICA", "Planeación y Logística", "PL MATERIA PRIMA"] 
+  },
+  { 
+    label: "MANTENIMIENTO TETRA PAK", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["MANTENIMIENTO TETRA PAK", "Mantenimiento Tetra"] 
+  },
+  { 
+    label: "CONTROL DE PLAGAS", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["CONTROL DE PLAGAS", "SEGURIDAD E HIGIENE Y SANIDAD", "Seguridad e Higiene y Sanidad"] 
+  },
+  { 
+    label: "AGUIDA", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["AGUIDA"] 
+  },
+  { 
+    label: "PESADAS", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["PESADAS"] 
+  },
+  { 
+    label: "PRODUCCIÓN", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["PRODUCCIÓN","Producción"] 
+  },
+  { 
+    label: "ASEGURAMIENTO DE CALIDAD", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["ASEGURAMIENTO DE CALIDAD", "LIBERACIÓN DE PT"] 
+  },
+  { 
+    label: "COMPRAS", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["COMPRAS", "Compras"] 
+  },
+  { 
+    label: "ADMINISTRADOR", 
+    roles: ["administrador"], 
+    areas: ["ADMINISTRADOR"] 
+  },
+  { 
+    label: "REVISIÓN", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["REVISIÓN", "EMBARQUE", "PRODUCTO TERMINADO", "Planeación y Logística"] 
+  },
+  { 
+    label: "VALIDACIÓN", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["VALIDACIÓN", "Producción.", "Validación","PRODUCCIÓN."] 
+  },
+  { 
+    label: "LIBERACIÓN DE PT", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["LIBERACIÓN DE PT", "ASEGURAMIENTO DE CALIDAD"] 
+  },
+  { 
+    label: "RECURSOS HUMANOS", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["RECURSOS HUMANOS"] 
+  },
+  { 
+    label: "SISTEMAS", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["SISTEMAS"] 
+  },
+  { 
+    label: "CALIDAD E INOCUIDAD", 
+    roles: ["administrador", "auditor", "auditado"], 
+    areas: ["CONTROL Y CUIDADO AMBIENTAL", "EMBARQUE", "MANTENIMIENTO SERVICIOS", "SEGURIDAD E HIGIENE Y SANIDAD", "INGENIERÍA", "COORDINADOR DE MATERIA PRIMA", "GERENCIA PLANEACIÓN Y LOGÍSTICA", "MANTENIMIENTO TETRA PAK", "CONTROL DE PLAGAS", "AGUIDA", "PESADAS", "PRODUCCIÓN", "ASEGURAMIENTO DE CALIDAD", "COMPRAS", "ADMINISTRADOR", "REVISIÓN", "VALIDACIÓN", "LIBERACIÓN DE PT", "RECURSOS HUMANOS", "SAFETY GOALS"] 
+  }
 ];
 
 const StyledMenuItem = styled(Paper)(({ theme }) => ({
@@ -132,8 +236,95 @@ const MenuByRoleAndArea = () => {
   const { userData } = useContext(UserContext);
   const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
+  const [menuItemsDinamicos, setMenuItemsDinamicos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // ✅ Cargar objetivos multi-departamento dinámicos
+  useEffect(() => {
+    const cargarObjetivosMultiDepartamento = async () => {
+      if (!userData || !userData.TipoUsuario) {
+        setLoading(false);
+        return;
+      }
+
+      const tipoUsuario = userData.TipoUsuario.toLowerCase();
+      const esAdministrador = tipoUsuario === 'administrador' || tipoUsuario === 'invitado';
+
+      try {
+        let objetivosMulti = [];
+
+        if (esAdministrador) {
+          // ✅ ADMINISTRADOR: Obtener TODOS los objetivos multi-departamento
+          console.log('🔍 Administrador: Cargando TODOS los objetivos multi-departamento');
+          const response = await api.get('/api/objetivos');
+          objetivosMulti = response.data.filter(obj => obj.nombreObjetivoGeneral && obj.objetivosEspecificos);
+        } else {
+          // ✅ USUARIO NORMAL: Obtener solo objetivos de su área
+          if (!userData.area) {
+            setLoading(false);
+            return;
+          }
+          console.log('🔍 Buscando objetivos multi-departamento para área:', userData.area);
+          const response = await api.get(`/api/objetivos/area/${userData.area}`);
+          objetivosMulti = response.data.filter(obj => obj.nombreObjetivoGeneral && obj.objetivosEspecificos);
+        }
+
+        console.log('📥 Objetivos multi-departamento encontrados:', objetivosMulti);
+
+        // Transformar objetivos multi-departamento en items de menú
+        const menusDinamicos = objetivosMulti
+          .map(objetivo => {
+            if (esAdministrador) {
+              // ✅ Administrador: Crear un menú por cada área en objetivosEspecificos
+              return objetivo.objetivosEspecificos.map(objEspecifico => ({
+                label: `${objetivo.nombreObjetivoGeneral.toUpperCase()} - ${objEspecifico.area}`,
+                roles: ["administrador", "auditor", "auditado"],
+                areas: [objEspecifico.area],
+                isMultiDepartamento: true,
+                objetivoId: objetivo._id,
+                departamento: objEspecifico.departamento,
+                area: objEspecifico.area,
+                objetivoEspecifico: objEspecifico
+              }));
+            } else {
+              // ✅ Usuario normal: Solo mostrar su área - USANDO COMPARACIÓN NORMALIZADA
+              const objEspecifico = objetivo.objetivosEspecificos?.find(
+                obj => compareAreas(obj.area, userData.area)
+              );
+
+              if (!objEspecifico) {
+                console.warn(`⚠️ No se encontró objetivo específico para área ${userData.area} en objetivo ${objetivo.nombreObjetivoGeneral}`);
+                return null;
+              }
+
+              return {
+                label: objetivo.nombreObjetivoGeneral.toUpperCase(),
+                roles: ["administrador", "auditor", "auditado"],
+                areas: [userData.area],
+                isMultiDepartamento: true,
+                objetivoId: objetivo._id,
+                departamento: objEspecifico.departamento,
+                area: objEspecifico.area,
+                objetivoEspecifico: objEspecifico
+              };
+            }
+          })
+          .flat() // Aplanar array para administradores
+          .filter(item => item !== null); // Remover nulls
+
+        console.log('✅ Menús dinámicos generados:', menusDinamicos);
+        setMenuItemsDinamicos(menusDinamicos);
+        setLoading(false);
+      } catch (error) {
+        console.error('❌ Error al cargar objetivos multi-departamento:', error);
+        setLoading(false);
+      }
+    };
+
+    cargarObjetivosMultiDepartamento();
+  }, [userData]);
 
   if (!userData || !userData.TipoUsuario) {
     return (
@@ -146,9 +337,10 @@ const MenuByRoleAndArea = () => {
   }
 
   const tipoUsuario = userData.TipoUsuario.toLowerCase();
-  // Tratar a los invitados como administradores para visibilidad de menú (servidor sigue siendo readonly)
   const effectiveTipo = tipoUsuario === 'invitado' ? 'administrador' : tipoUsuario;
-  let filteredItems = menuItems.filter(item => item.roles.includes(effectiveTipo));
+
+  // ✅ Filtrar menús ESTÁTICOS según rol y área - USANDO COMPARACIÓN NORMALIZADA
+  let filteredItemsEstaticos = menuItemsEstaticos.filter(item => item.roles.includes(effectiveTipo));
 
   if (effectiveTipo !== 'administrador') {
     if (!userData.area) {
@@ -160,15 +352,34 @@ const MenuByRoleAndArea = () => {
         </Box>
       );
     }
-    const areaUpper = userData.area.toUpperCase();
-    filteredItems = filteredItems.filter(item => item.areas.some(area => area.toUpperCase() === areaUpper));
+    // Normalizar el área del usuario para comparación
+    const userAreaNormalized = normalizeText(userData.area);
+    
+    filteredItemsEstaticos = filteredItemsEstaticos.filter(item => 
+      item.areas.some(area => normalizeText(area) === userAreaNormalized)
+    );
   }
 
-  const handleItemClick = (label) => {
-    if (label === "CALIDAD E INOCUIDAD") {
+  // ✅ COMBINAR menús estáticos + dinámicos
+  const allMenuItems = [...filteredItemsEstaticos, ...menuItemsDinamicos];
+
+  const handleItemClick = (item) => {
+    if (item.label === "CALIDAD E INOCUIDAD") {
       setOpenDialog(true);
+    } else if (item.isMultiDepartamento) {
+      // ✅ Navegar a ObjetivosTabla con información del objetivo multi-departamento
+      navigate(`/objetivos/${item.objetivoId}`, { 
+        state: { 
+          esMultiDepartamento: true,
+          objetivoGeneral: item.label,
+          area: item.area,
+          departamento: item.departamento,
+          objetivoId: item.objetivoId
+        } 
+      });
     } else {
-      navigate(`/objetivos/${label}`);
+      // ✅ Navegar a objetivo normal (tradicional)
+      navigate(`/objetivos/${item.label}`);
     }
   };
 
@@ -177,8 +388,8 @@ const MenuByRoleAndArea = () => {
       {/* Encabezado */}
       <Box 
         sx={{ 
-          pt: 12, // Añadido padding top de 12 (aproximadamente 3-4 pulgadas)
-          mb: 6, // Aumenté el margen inferior para más separación
+          pt: 12,
+          mb: 6,
           display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
           alignItems: 'center',
@@ -205,14 +416,14 @@ const MenuByRoleAndArea = () => {
           </Typography>
         </Box>
 
-        {filteredItems.some(item => item.label === "CALIDAD E INOCUIDAD") && (
+        {filteredItemsEstaticos.some(item => item.label === "CALIDAD E INOCUIDAD") && (
           <Tooltip title="Ver información de calidad e inocuidad" arrow>
             <Button
               variant="contained"
               color="secondary"
               size={isMobile ? "medium" : "large"}
               startIcon={<VerifiedUserIcon />}
-              onClick={() => handleItemClick("CALIDAD E INOCUIDAD")}
+              onClick={() => setOpenDialog(true)}
               sx={{
                 borderRadius: '50px',
                 px: isMobile ? 3 : 4,
@@ -231,39 +442,65 @@ const MenuByRoleAndArea = () => {
 
       <Divider sx={{ my: 4, borderWidth: 1 }} />
 
-      {/* Menú de opciones */}
-      <Grid container spacing={2}> {/* Reduje el espaciado entre tarjetas */}
-        {filteredItems
+      {/* ✅ Indicador de carga */}
+      {loading && (
+        <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+          <CircularProgress />
+          <Typography variant="body1" sx={{ ml: 2 }}>
+            Cargando objetivos multi-departamento...
+          </Typography>
+        </Box>
+      )}
+
+      {/* Menú de opciones (Estáticos + Dinámicos) */}
+      <Grid container spacing={2}>
+        {allMenuItems
           .filter(item => item.label !== "CALIDAD E INOCUIDAD")
           .map((item, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+            <Grid item xs={12} sm={6} md={4} lg={3} key={`${item.label}-${index}`}>
               <Fade in timeout={500 + (index * 100)}>
                 <StyledMenuItem 
                   elevation={3}
-                  onClick={() => handleItemClick(item.label)}
+                  onClick={() => handleItemClick(item)}
+                  sx={{
+                    // ✅ Estilo diferente para menús dinámicos
+                    border: item.isMultiDepartamento ? `2px solid ${theme.palette.secondary.main}` : 'none'
+                  }}
                 >
                   <Avatar
                     sx={{
                       bgcolor: 'transparent',
-                      color: theme.palette.primary.main,
+                      color: item.isMultiDepartamento ? theme.palette.secondary.main : theme.palette.primary.main,
                       width: 50,
                       height: 20,
                       mb: 1
                     }}
                   >
-                    {areaIcons[item.label] || <AssignmentTurnedInIcon fontSize="medium" />}
+                    {item.isMultiDepartamento 
+                      ? <FolderSpecialIcon fontSize="medium" />
+                      : (areaIcons[item.label] || <AssignmentTurnedInIcon fontSize="medium" />)
+                    }
                   </Avatar>
                   <Typography 
-                    variant="subtitle1" // Cambié a subtitle1 para texto más compacto
+                    variant="subtitle1"
                     align="center" 
                     sx={{
-                      fontWeight: 'medium',
+                      fontWeight: item.isMultiDepartamento ? 'bold' : 'medium',
                       wordBreak: 'break-word',
-                      fontSize: '0.9rem' // Tamaño de fuente más pequeño
+                      fontSize: '0.9rem'
                     }}
                   >
                     {item.label}
                   </Typography>
+                  {item.isMultiDepartamento && (
+                    <Typography 
+                      variant="caption" 
+                      color="secondary" 
+                      sx={{ mt: 0.5, fontSize: '0.7rem' }}
+                    >
+                      Multi-Departamento
+                    </Typography>
+                  )}
                 </StyledMenuItem>
               </Fade>
             </Grid>

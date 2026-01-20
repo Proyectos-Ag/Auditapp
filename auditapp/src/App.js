@@ -70,6 +70,7 @@ import AccionesCorrectivasList from './Objetivos/Components/Tabla/AccionesCorrec
 import SaeftyGoals from './Objetivos/Components/Tabla/objetivoslistsaeftygoals.jsx'
 import Concentrado from './Objetivos/Components/Tabla/concentrado.jsx'
 import RegistroAccionCorrectiva from './Objetivos/Components/Tabla/AccionesCorrectivas.jsx'
+import RegistroObjetivos from './Objetivos/Components/Tabla/CrearObjetivoMultiDepartamento.jsx';
 
 //Gestion de Cambios
 import GestionCambioForm from './gestion/GestionCambioForm.jsx';
@@ -182,17 +183,20 @@ export const UserContext = createContext(null);
               <Route path="/ish-vac-esp" element={<ProtectedRoute><GestorIsh/></ProtectedRoute>}/>
               <Route path="/new" element={<ProtectedRoute><NewIshikawa/></ProtectedRoute>}/>
 
-                {/*Objetivos*/}
+               // En la sección de Objetivos, actualiza las rutas:
 
-              <Route path="/objetivos" element={<ProtectedRoute><Objetivos/></ProtectedRoute>}/>
-              <Route path="/menu" element={<ProtectedRoute><Menu/></ProtectedRoute>}/>
-              <Route path="/objetivos/:label" element={<ProtectedRoute><Tabla/></ProtectedRoute>}/>
-              <Route path="/objetivos/:label/frecuencia/:label" element={<Frecuencia />} />
-              <Route path="/acciones" element={<AccionesCorrectivas />} />
-              <Route path="/acciones-list/:label" element={<AccionesCorrectivasList />} />
-              <Route path="/registro-accion" element={<ProtectedRoute><RegistroAccionCorrectiva/></ProtectedRoute>}/>
-              <Route path="/saefty-goals2" element={<SaeftyGoals />} />
-              <Route path="/concentradon" element={<Concentrado />} />
+{/*Objetivos*/}
+<Route path="/objetivos" element={<ProtectedRoute><Objetivos/></ProtectedRoute>}/>
+<Route path="/menu" element={<ProtectedRoute><Menu/></ProtectedRoute>}/>
+<Route path="/objetivos/:label" element={<ProtectedRoute><Tabla/></ProtectedRoute>}/>
+<Route path="/objetivos/frecuencia/:label" element={<ProtectedRoute><Frecuencia/></ProtectedRoute>}/>
+<Route path="/objetivos/frecuencia/multi/:objetivoId" element={<ProtectedRoute><Frecuencia/></ProtectedRoute>}/>
+<Route path="/acciones" element={<AccionesCorrectivas />} />
+<Route path="/acciones-list/:label" element={<AccionesCorrectivasList />} />
+<Route path="/registro-accion" element={<ProtectedRoute><RegistroAccionCorrectiva/></ProtectedRoute>}/>
+<Route path="/saefty-goals2" element={<SaeftyGoals />} />
+<Route path="/concentradon" element={<Concentrado />} />
+<Route path="/registroObjetivo" element={<ProtectedRoute><RegistroObjetivos/></ProtectedRoute>}/>
 
               {/*Gestion de Cambios*/}
               <Route path="/gestion-cambio/:id" element={<ProtectedRoute><GestionCambioForm/></ProtectedRoute>}/>

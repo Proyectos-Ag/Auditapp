@@ -1,14 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../services/api';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import './css/TablaObjetivosArea.css';
+
+// ✅ Función para normalizar texto
+const normalizeText = (text) => {
+  if (!text) return '';
+  return text
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+};
 
 const TablaObjetivosArea = () => {
   const { label } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // ✅ Determinar si es multi-departamento
+  const esMultiDepartamento = location.pathname.includes('/multi/');
+  const objetivoIdMulti = esMultiDepartamento ? label : null;
+  
+  // ✅ Obtener área del state o del parámetro
+  const area = esMultiDepartamento ? location.state?.area : label;
+  const objetivoGeneral = location.state?.objetivoGeneral || '';
+  
   const [objetivos, setObjetivos] = useState([]);
-  const [, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [valores, setValores] = useState({});
   const [cambios, setCambios] = useState({});
   const [showPanel, setShowPanel] = useState(false);
@@ -76,15 +97,48 @@ const TablaObjetivosArea = () => {
 
   const cargarHistorial = async () => {
     try {
-      const response = await api.get(`/api/objetivos`, { params: { area: label } });
+      let response;
+      let objetivosConHistorial = [];
       
-      const objetivosConHistorial = response.data
-        .filter(obj => obj.historialAnual && obj.historialAnual.length > 0)
-        .map(obj => {
-          const historial = obj.historialAnual.find(h => h.año === añoHistorial);
-          return historial ? { ...obj, historialSeleccionado: historial } : null;
-        })
-        .filter(obj => obj !== null);
+      if (esMultiDepartamento && objetivoIdMulti) {
+        // ✅ Historial para objetivo multi-departamento
+        response = await api.get(`/api/objetivos/${objetivoIdMulti}`);
+        const objetivoMulti = response.data;
+        
+        const areaBuscarNormalizada = normalizeText(area || '');
+        const objetivoEspecifico = objetivoMulti.objetivosEspecificos?.find(
+          obj => normalizeText(obj.area) === areaBuscarNormalizada
+        );
+        
+        if (objetivoEspecifico && objetivoEspecifico.historialAnual) {
+          const historial = objetivoEspecifico.historialAnual.find(h => h.año === añoHistorial);
+          if (historial) {
+            objetivosConHistorial = [{
+              ...objetivoEspecifico,
+              _id: objetivoIdMulti + '-' + objetivoEspecifico.area,
+              historialSeleccionado: historial
+            }];
+          }
+        }
+      } else {
+        // ✅ Historial para objetivos tradicionales
+        response = await api.get(`/api/objetivos`, { params: { area: label } });
+        
+        // ✅ FILTRAR: Solo objetivos tradicionales (sin nombreObjetivoGeneral)
+        const objetivosTradicionales = response.data.filter(objetivo => {
+          // Solo incluir objetivos que NO tengan nombreObjetivoGeneral
+          // y que coincidan exactamente con el área
+          return !objetivo.nombreObjetivoGeneral && objetivo.area === label;
+        });
+        
+        objetivosConHistorial = objetivosTradicionales
+          .filter(obj => obj.historialAnual && obj.historialAnual.length > 0)
+          .map(obj => {
+            const historial = obj.historialAnual.find(h => h.año === añoHistorial);
+            return historial ? { ...obj, historialSeleccionado: historial } : null;
+          })
+          .filter(obj => obj !== null);
+      }
 
       if (objetivosConHistorial.length === 0) {
         Swal.fire({
@@ -112,83 +166,213 @@ const TablaObjetivosArea = () => {
   useEffect(() => {
     async function fetchObjetivos() {
       try {
-        const response = await api.get(
-          `/api/objetivos`,
-          { params: { area: label } }
-        );
-        const objetivosData = response.data;
-  
-        const valoresIniciales = {};
-        objetivosData.forEach((objetivo) => {
-          [
-            "indicadorENEABR",
-            "indicadorFEB",
-            "indicadorMAR",
-            "indicadorABR",
-            "indicadorMAYOAGO",
-            "indicadorJUN",
-            "indicadorJUL",
-            "indicadorAGO",
-            "indicadorSEPDIC",
-            "indicadorOCT",
-            "indicadorNOV",
-            "indicadorDIC",
-          ].forEach((campo) => {
-            if (objetivo[campo]) {
-              ["S1", "S2", "S3", "S4", "S5"].forEach((semana) => {
-                valoresIniciales[`${objetivo._id}.${campo}.${semana}`] =
-                  objetivo[campo][semana] || "";
+        let objetivosData = [];
+        let valoresIniciales = {};
+        
+        if (esMultiDepartamento && objetivoIdMulti) {
+          // ✅ Cargar objetivo multi-departamento específico
+          console.log('🔍 Cargando objetivo multi-departamento con ID:', objetivoIdMulti);
+          const response = await api.get(`/api/objetivos/${objetivoIdMulti}`);
+          const objetivoMulti = response.data;
+          
+          if (!area) {
+            console.error('❌ No se especificó área para objetivo multi-departamento');
+            Swal.fire({
+              icon: 'error',
+              title: 'Área no especificada',
+              text: 'No se pudo determinar el área del objetivo multi-departamento.',
+              confirmButtonColor: '#4a6fa5'
+            });
+            setLoading(false);
+            return;
+          }
+          
+          // Normalizar área de búsqueda
+          const areaBuscarNormalizada = normalizeText(area);
+          
+          // Buscar objetivo específico
+          let objetivoEspecifico = null;
+          
+          if (objetivoMulti.objetivosEspecificos) {
+            objetivoEspecifico = objetivoMulti.objetivosEspecificos.find(obj => {
+              if (!obj.area) return false;
+              return normalizeText(obj.area) === areaBuscarNormalizada;
+            });
+          }
+          
+          if (!objetivoEspecifico && objetivoMulti.objetivosEspecificos?.length > 0) {
+            // Usar el primero como fallback
+            objetivoEspecifico = objetivoMulti.objetivosEspecificos[0];
+            console.log('🔄 Usando primer objetivo como fallback:', objetivoEspecifico.area);
+          }
+          
+          if (objetivoEspecifico) {
+            console.log('✅ Objetivo específico encontrado:', objetivoEspecifico);
+            
+            objetivosData = [{
+              _id: objetivoIdMulti + '-' + objetivoEspecifico.area,
+              objetivo: objetivoEspecifico.objetivo || '',
+              metaFrecuencia: objetivoEspecifico.metaFrecuencia || '',
+              indicadorENEABR: objetivoEspecifico.indicadorENEABR || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+              indicadorFEB: objetivoEspecifico.indicadorFEB || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+              indicadorMAR: objetivoEspecifico.indicadorMAR || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+              indicadorABR: objetivoEspecifico.indicadorABR || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+              indicadorMAYOAGO: objetivoEspecifico.indicadorMAYOAGO || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+              indicadorJUN: objetivoEspecifico.indicadorJUN || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+              indicadorJUL: objetivoEspecifico.indicadorJUL || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+              indicadorAGO: objetivoEspecifico.indicadorAGO || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+              indicadorSEPDIC: objetivoEspecifico.indicadorSEPDIC || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+              indicadorOCT: objetivoEspecifico.indicadorOCT || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+              indicadorNOV: objetivoEspecifico.indicadorNOV || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+              indicadorDIC: objetivoEspecifico.indicadorDIC || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+              esMultiDepartamento: true,
+              objetivoGeneral: objetivoMulti.nombreObjetivoGeneral,
+              objetivoIdMulti: objetivoIdMulti,
+              area: objetivoEspecifico.area
+            }];
+            
+            // Preparar valores iniciales
+            objetivosData.forEach((objetivo) => {
+              [
+                "indicadorENEABR",
+                "indicadorFEB",
+                "indicadorMAR",
+                "indicadorABR",
+                "indicadorMAYOAGO",
+                "indicadorJUN",
+                "indicadorJUL",
+                "indicadorAGO",
+                "indicadorSEPDIC",
+                "indicadorOCT",
+                "indicadorNOV",
+                "indicadorDIC",
+              ].forEach((campo) => {
+                if (objetivo[campo]) {
+                  ["S1", "S2", "S3", "S4", "S5"].forEach((semana) => {
+                    valoresIniciales[`${objetivo._id}.${campo}.${semana}`] =
+                      objetivo[campo][semana] || "";
+                  });
+                }
               });
-            }
+            });
+          } else {
+            console.error('❌ No se pudo encontrar ningún objetivo específico');
+            Swal.fire({
+              icon: "error",
+              title: "Objetivo no encontrado",
+              text: `No se encontró un objetivo específico para el área "${area}" en este objetivo multi-departamento.`,
+              confirmButtonColor: "#4a6fa5",
+            });
+          }
+        } else {
+          // ✅ Cargar SOLO objetivos tradicionales (NO multi-departamento)
+          console.log('🔍 Cargando objetivos tradicionales para área:', label);
+          const response = await api.get(
+            `/api/objetivos`,
+            { params: { area: label } }
+          );
+          
+          // ✅ FILTRAR: Solo objetivos tradicionales (sin nombreObjetivoGeneral)
+          objetivosData = response.data.filter(objetivo => {
+            // Solo incluir objetivos que:
+            // 1. NO tengan nombreObjetivoGeneral (no son multi-departamento)
+            // 2. Tengan área exactamente igual al label
+            return !objetivo.nombreObjetivoGeneral && objetivo.area === label;
           });
-        });
+          
+          console.log('✅ Objetivos tradicionales encontrados:', objetivosData.length);
+          console.log('📊 Total objetivos recibidos del backend:', response.data.length);
+          
+          // Log para debugging
+          response.data.forEach((obj, idx) => {
+            console.log(`Objetivo ${idx + 1}:`, {
+              _id: obj._id,
+              area: obj.area,
+              nombreObjetivoGeneral: obj.nombreObjetivoGeneral || 'NO (tradicional)',
+              incluido: !obj.nombreObjetivoGeneral && obj.area === label ? '✅ INCLUIDO' : '❌ EXCLUIDO'
+            });
+          });
+    
+          objetivosData.forEach((objetivo) => {
+            [
+              "indicadorENEABR",
+              "indicadorFEB",
+              "indicadorMAR",
+              "indicadorABR",
+              "indicadorMAYOAGO",
+              "indicadorJUN",
+              "indicadorJUL",
+              "indicadorAGO",
+              "indicadorSEPDIC",
+              "indicadorOCT",
+              "indicadorNOV",
+              "indicadorDIC",
+            ].forEach((campo) => {
+              if (objetivo[campo]) {
+                ["S1", "S2", "S3", "S4", "S5"].forEach((semana) => {
+                  valoresIniciales[`${objetivo._id}.${campo}.${semana}`] =
+                    objetivo[campo][semana] || "";
+                });
+              }
+            });
+          });
+        }
   
         setObjetivos(objetivosData);
         setValores(valoresIniciales);
         setLoading(false);
         
-        const objetivosDesactualizados = objetivosData.filter(
-          obj => obj.añoActual && obj.añoActual < añoActual
-        );
-        
-        if (objetivosDesactualizados.length > 0) {
-          Swal.fire({
-            title: '⚠️ Nuevo Año Detectado',
-            html: `Se detectaron ${objetivosDesactualizados.length} objetivo(s) con datos del año ${objetivosDesactualizados[0].añoActual}.<br><br>¿Deseas resetear los indicadores para el año ${añoActual}?`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#4a6fa5',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, actualizar año',
-            cancelButtonText: 'Cancelar',
-          }).then(async (result) => {
-            if (result.isConfirmed) {
-              try {
-                await api.post('/api/objetivos/migrar-año');
-                Swal.fire({
-                  title: '✓ Año Actualizado',
-                  text: `Los objetivos se han actualizado al año ${añoActual}`,
-                  icon: 'success',
-                  confirmButtonColor: '#4a6fa5'
-                });
-                window.location.reload();
-              } catch (error) {
-                Swal.fire({
-                  title: 'Error',
-                  text: 'No se pudo actualizar el año',
-                  icon: 'error'
-                });
+        // ✅ Verificar actualización de año (solo para objetivos tradicionales)
+        if (!esMultiDepartamento && objetivosData.length > 0) {
+          const objetivosDesactualizados = objetivosData.filter(
+            obj => obj.añoActual && obj.añoActual < añoActual
+          );
+          
+          if (objetivosDesactualizados.length > 0) {
+            Swal.fire({
+              title: '⚠️ Nuevo Año Detectado',
+              html: `Se detectaron ${objetivosDesactualizados.length} objetivo(s) con datos del año ${objetivosDesactualizados[0].añoActual}.<br><br>¿Deseas resetear los indicadores para el año ${añoActual}?`,
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#4a6fa5',
+              cancelButtonColor: '#6c757d',
+              confirmButtonText: 'Sí, actualizar año',
+              cancelButtonText: 'Cancelar',
+            }).then(async (result) => {
+              if (result.isConfirmed) {
+                try {
+                  await api.post('/api/objetivos/migrar-año');
+                  Swal.fire({
+                    title: '✓ Año Actualizado',
+                    text: `Los objetivos se han actualizado al año ${añoActual}`,
+                    icon: 'success',
+                    confirmButtonColor: '#4a6fa5'
+                  });
+                  window.location.reload();
+                } catch (error) {
+                  Swal.fire({
+                    title: 'Error',
+                    text: 'No se pudo actualizar el año',
+                    icon: 'error'
+                  });
+                }
               }
-            }
-          });
+            });
+          }
         }
       } catch (error) {
         console.error("Error al cargar objetivos:", error);
         setLoading(false);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudieron cargar los objetivos. Intenta de nuevo.',
+          confirmButtonColor: '#4a6fa5'
+        });
       }
     }
     fetchObjetivos();
-  }, [label, añoActual]);
+  }, [label, esMultiDepartamento, objetivoIdMulti, area, añoActual]);
 
   const handleBlur = (name, objetivoId, meta) => {
     const valor = valores[`${objetivoId}.${name}`];
@@ -217,10 +401,10 @@ const TablaObjetivosArea = () => {
                   objetivo: {
                     numero: objetivos.indexOf(objetivo) + 1,
                     objetivo: objetivo.objetivo,
-                    area: label
+                    area: esMultiDepartamento ? area : label
                   },
                   periodo: name.split(".")[0],
-                  label: label
+                  label: esMultiDepartamento ? area : label
                 }
               });
             } catch (error) {
@@ -249,22 +433,41 @@ const TablaObjetivosArea = () => {
       for (const [key, value] of Object.entries(cambios)) {
         if (value) {
           const [objetivoId, campo] = key.split('.');
-          if (campo.startsWith('indicador')) {
+          
+          if (esMultiDepartamento) {
+            // ✅ Guardar cambios en objetivo multi-departamento
+            const [objetivoMultiId, areaObjetivo] = objetivoId.split('-');
             const semanas = ["S1", "S2", "S3", "S4", "S5"];
             const indicadorData = semanas.reduce((acc, semana) => {
               acc[semana] = valores[`${objetivoId}.${campo}.${semana}`] || "";
               return acc;
             }, {});
-            await api.put(`/api/objetivos/${objetivoId}`, {
-              [campo]: indicadorData,
+            
+            await api.put(`/api/objetivos/multi/${objetivoMultiId}/indicador`, {
+              area: areaObjetivo,
+              campo: campo,
+              valores: indicadorData
             });
           } else {
-            await api.put(`/api/objetivos/${objetivoId}`, {
-              [campo]: isNaN(valores[key]) ? valores[key] : Number(valores[key]),
-            });
+            // ✅ Guardar cambios en objetivo tradicional
+            if (campo.startsWith('indicador')) {
+              const semanas = ["S1", "S2", "S3", "S4", "S5"];
+              const indicadorData = semanas.reduce((acc, semana) => {
+                acc[semana] = valores[`${objetivoId}.${campo}.${semana}`] || "";
+                return acc;
+              }, {});
+              await api.put(`/api/objetivos/${objetivoId}`, {
+                [campo]: indicadorData,
+              });
+            } else {
+              await api.put(`/api/objetivos/${objetivoId}`, {
+                [campo]: isNaN(valores[key]) ? valores[key] : Number(valores[key]),
+              });
+            }
           }
         }
       }
+      
       Swal.fire({
         title: '¡Guardado!',
         text: 'Los datos han sido guardados exitosamente.',
@@ -392,19 +595,41 @@ const TablaObjetivosArea = () => {
     },
   ];
 
+  // ✅ Mostrar loader mientras carga
+  if (loading) {
+    return (
+      <div className="tabla-container">
+        <div className="loading-container">
+          <div className="loader"></div>
+          <p>Cargando objetivos...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="tabla-container">
       <div className="header-container">
         <h1 className="tabla-titulo">SISTEMA DE GESTIÓN DE CALIDAD</h1>
         <h2 className="tabla-subtitulo">
-          SEGUIMIENTO POR FRECUENCIA - ÁREA: {label.toUpperCase()} - AÑO {añoActual}
+          SEGUIMIENTO POR FRECUENCIA - 
+          {esMultiDepartamento 
+            ? ` OBJETIVO MULTI-DEPARTAMENTO: ${objetivoGeneral.toUpperCase() || ''}` 
+            : ` ÁREA: ${label?.toUpperCase() || ''}`
+          } 
+          - AÑO {añoActual}
         </h2>
+        {esMultiDepartamento && objetivos[0] && (
+          <h3 className="tabla-area-multi">
+            Área específica: {objetivos[0]?.area?.toUpperCase() || area?.toUpperCase() || ''}
+          </h3>
+        )}
       </div>
 
       <div className="botones-container">
         <button 
           className="button-acciones"
-          onClick={() => navigate(`/acciones-list/${label}`)}
+          onClick={() => navigate(`/acciones-list/${esMultiDepartamento ? area : label}`)}
         >
           ACCIONES CORRECTIVAS
         </button>
@@ -437,7 +662,7 @@ const TablaObjetivosArea = () => {
         <div className="modal-overlay" onClick={() => setShowHistorial(false)}>
           <div className="modal-historial" onClick={(e) => e.stopPropagation()}>
             <div className="modal-historial-header">
-              <h2>📊 HISTORIAL {añoHistorial} - {label.toUpperCase()}</h2>
+              <h2>📊 HISTORIAL {añoHistorial} - {esMultiDepartamento ? area?.toUpperCase() || '' : label?.toUpperCase() || ''}</h2>
               <button className="modal-close" onClick={() => setShowHistorial(false)}>✕</button>
             </div>
             <div className="modal-historial-body">
@@ -464,7 +689,13 @@ const TablaObjetivosArea = () => {
         >
           <div className="resize-handle"></div>
           <div className="panel-header">
-            <h4>OBJETIVOS DEL ÁREA: {label.toUpperCase()} - {añoActual}</h4>
+            <h4>
+              {esMultiDepartamento 
+                ? `OBJETIVO MULTI-DEPARTAMENTO: ${objetivoGeneral}` 
+                : `OBJETIVOS DEL ÁREA: ${label?.toUpperCase() || ''}`
+              } 
+              - {añoActual}
+            </h4>
             <button 
               className="panel-close"
               onClick={() => setShowPanel(false)}
@@ -492,7 +723,7 @@ const TablaObjetivosArea = () => {
       </div>
 
       <div className="footer-note">
-        <p>Sistema de seguimiento de objetivos por frecuencia - Año {añoActual}</p>
+        <p>Sistema de seguimiento de objetivos por fredscuasencia - Año {añoActual}</p>
       </div>
     </div>
   );

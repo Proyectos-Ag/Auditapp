@@ -30,15 +30,15 @@ const AccionCorrectivaSchema = new mongoose.Schema({
   ultimaNotificacion: Date
 }, { _id: true });
 
-const ObjetivoSchema = new mongoose.Schema({
-  area: { type: String, required: true },
+// Subdocumento para objetivos específicos por departamento
+const ObjetivoEspecificoSchema = new mongoose.Schema({
+  departamento: { type: String, required: true },
+  area: { type: String, required: true }, // ✅ AGREGADO: Campo area
   objetivo: { type: String, required: true },
   recursos: { type: String, default: "" },
   metaFrecuencia: { type: String, default: "" },
   
-  // NUEVO: Campo para rastrear el año actual
-  añoActual: { type: Number, default: () => new Date().getFullYear() },
-  
+  // Campos de indicadores por semana
   indicadorENEABR: { type: SemanaSchema, default: () => ({}) },
   indicadorFEB: { type: SemanaSchema, default: () => ({}) },
   indicadorMAR: { type: SemanaSchema, default: () => ({}) },
@@ -51,10 +51,11 @@ const ObjetivoSchema = new mongoose.Schema({
   indicadorOCT: { type: SemanaSchema, default: () => ({}) },
   indicadorNOV: { type: SemanaSchema, default: () => ({}) },
   indicadorDIC: { type: SemanaSchema, default: () => ({}) },
+  
   observaciones: { type: String, default: "" },
   accionesCorrectivas: { type: [AccionCorrectivaSchema], default: [] },
   
-  // NUEVO: Historial de años anteriores (opcional)
+  // Historial por departamento
   historialAnual: [{
     año: Number,
     indicadores: {
@@ -74,42 +75,81 @@ const ObjetivoSchema = new mongoose.Schema({
   }]
 });
 
-// Middleware para verificar y resetear año
+const ObjetivoSchema = new mongoose.Schema({
+  // Paso 1: Nombre del objetivo general
+  nombreObjetivoGeneral: { type: String, required: true },
+  
+  // Paso 2: Departamentos que pueden ver este objetivo
+  departamentosAsignados: [{ type: String, required: true }],
+  
+  // Paso 3: Objetivos específicos por departamento/area
+  objetivosEspecificos: [ObjetivoEspecificoSchema],
+  
+  // Información general
+  creadoPor: {
+    usuarioId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    nombre: { type: String },
+    fecha: { type: Date, default: Date.now }
+  },
+  
+  // Año actual (se sincroniza entre todos los objetivos específicos)
+  añoActual: { type: Number, default: () => new Date().getFullYear() },
+  
+  // Estado del objetivo
+  activo: { type: Boolean, default: true },
+  fechaCreacion: { type: Date, default: Date.now },
+  fechaActualizacion: { type: Date, default: Date.now },
+  
+  // ✅ AGREGADO: Campo area para compatibilidad con sistema anterior
+  area: { type: String }
+});
+
+// Middleware para actualizar fecha de actualización
+ObjetivoSchema.pre('save', function(next) {
+  this.fechaActualizacion = Date.now();
+  next();
+});
+
+// Middleware para sincronizar año entre objetivos específicos
 ObjetivoSchema.pre('save', function(next) {
   const añoActualSistema = new Date().getFullYear();
   
-  // Si el año cambió, archivar datos y resetear
+  // Si el año cambió, actualizar todos los objetivos específicos
   if (this.añoActual < añoActualSistema) {
-    // Archivar datos del año anterior
-    const datosAñoAnterior = {
-      año: this.añoActual,
-      indicadores: {
-        indicadorENEABR: this.indicadorENEABR,
-        indicadorFEB: this.indicadorFEB,
-        indicadorMAR: this.indicadorMAR,
-        indicadorABR: this.indicadorABR,
-        indicadorMAYOAGO: this.indicadorMAYOAGO,
-        indicadorJUN: this.indicadorJUN,
-        indicadorJUL: this.indicadorJUL,
-        indicadorAGO: this.indicadorAGO,
-        indicadorSEPDIC: this.indicadorSEPDIC,
-        indicadorOCT: this.indicadorOCT,
-        indicadorNOV: this.indicadorNOV,
-        indicadorDIC: this.indicadorDIC
+    this.objetivosEspecificos.forEach(objetivo => {
+      // Archivar datos del año anterior
+      if (!objetivo.historialAnual) {
+        objetivo.historialAnual = [];
       }
-    };
-    
-    this.historialAnual.push(datosAñoAnterior);
-    
-    // Resetear todos los indicadores
-    const camposIndicadores = [
-      'indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR',
-      'indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO',
-      'indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC'
-    ];
-    
-    camposIndicadores.forEach(campo => {
-      this[campo] = { S1: "", S2: "", S3: "", S4: "", S5: "" };
+      
+      objetivo.historialAnual.push({
+        año: this.añoActual,
+        indicadores: {
+          indicadorENEABR: objetivo.indicadorENEABR,
+          indicadorFEB: objetivo.indicadorFEB,
+          indicadorMAR: objetivo.indicadorMAR,
+          indicadorABR: objetivo.indicadorABR,
+          indicadorMAYOAGO: objetivo.indicadorMAYOAGO,
+          indicadorJUN: objetivo.indicadorJUN,
+          indicadorJUL: objetivo.indicadorJUL,
+          indicadorAGO: objetivo.indicadorAGO,
+          indicadorSEPDIC: objetivo.indicadorSEPDIC,
+          indicadorOCT: objetivo.indicadorOCT,
+          indicadorNOV: objetivo.indicadorNOV,
+          indicadorDIC: objetivo.indicadorDIC
+        }
+      });
+      
+      // Resetear todos los indicadores
+      const camposIndicadores = [
+        'indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR',
+        'indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO',
+        'indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC'
+      ];
+      
+      camposIndicadores.forEach(campo => {
+        objetivo[campo] = { S1: "", S2: "", S3: "", S4: "", S5: "" };
+      });
     });
     
     // Actualizar el año
