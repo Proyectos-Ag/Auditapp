@@ -286,7 +286,8 @@ const MenuByRoleAndArea = () => {
                 objetivoId: objetivo._id,
                 departamento: objEspecifico.departamento,
                 area: objEspecifico.area,
-                objetivoEspecifico: objEspecifico
+                objetivoEspecifico: objEspecifico,
+                objetivoGeneral: objetivo.nombreObjetivoGeneral // ✅ Agregar esta propiedad
               }));
             } else {
               // ✅ Usuario normal: Solo mostrar su área - USANDO COMPARACIÓN NORMALIZADA
@@ -307,7 +308,8 @@ const MenuByRoleAndArea = () => {
                 objetivoId: objetivo._id,
                 departamento: objEspecifico.departamento,
                 area: objEspecifico.area,
-                objetivoEspecifico: objEspecifico
+                objetivoEspecifico: objEspecifico,
+                objetivoGeneral: objetivo.nombreObjetivoGeneral // ✅ Agregar esta propiedad
               };
             }
           })
@@ -371,15 +373,20 @@ const MenuByRoleAndArea = () => {
       navigate(`/objetivos/${item.objetivoId}`, { 
         state: { 
           esMultiDepartamento: true,
-          objetivoGeneral: item.label,
+          objetivoGeneral: item.objetivoGeneral || item.label, // ✅ Usar objetivoGeneral si existe
           area: item.area,
           departamento: item.departamento,
           objetivoId: item.objetivoId
         } 
       });
     } else {
-      // ✅ Navegar a objetivo normal (tradicional)
-      navigate(`/objetivos/${item.label}`);
+      // ✅ Navegar a objetivo normal (tradicional) - ASEGURAR que esMultiDepartamento sea false
+      navigate(`/objetivos/${item.label}`, {
+        state: {
+          esMultiDepartamento: false,
+          area: item.label // Para mantener consistencia
+        }
+      });
     }
   };
 

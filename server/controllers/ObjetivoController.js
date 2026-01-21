@@ -335,14 +335,60 @@ const crearObjetivo = async (req, res) => {
 const actualizarObjetivo = async (req, res) => {
   try {
     const { id } = req.params;
-    const actualizado = await Objetivo.findByIdAndUpdate(id, req.body, { new: true });
-    if (!actualizado) {
+    const datosActualizados = req.body;
+    
+    console.log('📝 Actualizando objetivo:', { id, datosActualizados });
+    
+    // Primero obtener el objetivo actual
+    const objetivoActual = await Objetivo.findById(id);
+    
+    if (!objetivoActual) {
       return res.status(404).json({ error: "Objetivo no encontrado" });
     }
-    res.json(actualizado);
+    
+    // Verificar si es un objetivo tradicional
+    const esTradicional = !objetivoActual.nombreObjetivoGeneral && objetivoActual.area;
+    
+    if (esTradicional) {
+      // Para objetivos tradicionales, actualizar solo los campos necesarios
+      const camposPermitidos = [
+        'indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR',
+        'indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO',
+        'indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC',
+        'observaciones', 'añoActual', 'activo'
+      ];
+      
+      // Filtrar solo los campos permitidos
+      const datosParaActualizar = {};
+      Object.keys(datosActualizados).forEach(key => {
+        if (camposPermitidos.includes(key)) {
+          datosParaActualizar[key] = datosActualizados[key];
+        }
+      });
+      
+      console.log('📤 Actualizando objetivo tradicional con:', datosParaActualizar);
+      
+      // Usar findByIdAndUpdate para evitar triggers del middleware
+      const actualizado = await Objetivo.findByIdAndUpdate(
+        id,
+        { $set: datosParaActualizar },
+        { new: true, runValidators: true }
+      );
+      
+      res.json(actualizado);
+      
+    } else {
+      // Para objetivos multi-departamento, usar update normal
+      const actualizado = await Objetivo.findByIdAndUpdate(id, datosActualizados, { new: true });
+      res.json(actualizado);
+    }
+    
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error al actualizar objetivo" });
+    console.error('❌ Error al actualizar objetivo:', error);
+    res.status(500).json({ 
+      error: "Error al actualizar objetivo",
+      details: error.message 
+    });
   }
 };
 
@@ -383,25 +429,79 @@ const agregarAccionCorrectiva = async (req, res) => {
 
 const getAccionesCorrectivasByArea = async (req, res) => {
   try {
-    const { area } = req.query;
-    console.log('Area: ', area);
-    if (!area) {
-      return res.status(400).json({ error: "El parámetro 'area' es obligatorio." });
+    const { area, esMultiDepartamento, objetivoId } = req.query;
+    console.log('🔍 Parámetros recibidos:', { area, esMultiDepartamento, objetivoId });
+
+    if (!area && !objetivoId) {
+      return res.status(400).json({ error: "Se requiere el parámetro 'area' u 'objetivoId'." });
     }
 
-    const objetivos = await Objetivo.find({ area });
-
     let acciones = [];
-    objetivos.forEach((objetivo) => {
+
+    if (esMultiDepartamento === 'true' && objetivoId) {
+      // ✅ Para objetivos multi-departamento: buscar por objetivoId
+      console.log('🔍 Buscando acciones para objetivo multi-departamento ID:', objetivoId);
+      
+      const objetivo = await Objetivo.findById(objetivoId);
+      
+      if (!objetivo) {
+        return res.status(404).json({ error: "Objetivo multi-departamento no encontrado" });
+      }
+
+      // Buscar acciones en el objetivo específico del área
+      if (objetivo.objetivosEspecificos && objetivo.objetivosEspecificos.length > 0) {
+        const objetivoEspecifico = objetivo.objetivosEspecificos.find(
+          obj => obj.area === area || obj._id.toString() === area
+        );
+        
+        if (objetivoEspecifico && objetivoEspecifico.accionesCorrectivas) {
+          // Acciones del objetivo específico
+          acciones = objetivoEspecifico.accionesCorrectivas.map((accion) => ({
+            ...accion.toObject(),
+            idObjetivo: objetivo._id,
+            idObjetivoEspecifico: objetivoEspecifico._id,
+            area: objetivoEspecifico.area,
+            departamento: objetivoEspecifico.departamento,
+            objetivo: objetivoEspecifico.objetivo,
+            esMultiDepartamento: true,
+            objetivoGeneral: objetivo.nombreObjetivoGeneral
+          }));
+        }
+      }
+      
+      // También incluir acciones del nivel principal (si las hay)
       if (objetivo.accionesCorrectivas && objetivo.accionesCorrectivas.length > 0) {
-        const accionesEnriquecidas = objetivo.accionesCorrectivas.map((accion) => ({
+        const accionesPrincipales = objetivo.accionesCorrectivas.map((accion) => ({
           ...accion.toObject(),
           idObjetivo: objetivo._id,
+          esMultiDepartamento: true,
+          esNivelPrincipal: true,
+          objetivoGeneral: objetivo.nombreObjetivoGeneral
         }));
-        acciones = acciones.concat(accionesEnriquecidas);
+        acciones = [...acciones, ...accionesPrincipales];
       }
-    });
+      
+    } else {
+      // ✅ Para objetivos tradicionales: buscar por área
+      console.log('🔍 Buscando acciones para área tradicional:', area);
+      
+      const objetivos = await Objetivo.find({ area });
 
+      objetivos.forEach((objetivo) => {
+        if (objetivo.accionesCorrectivas && objetivo.accionesCorrectivas.length > 0) {
+          const accionesEnriquecidas = objetivo.accionesCorrectivas.map((accion) => ({
+            ...accion.toObject(),
+            idObjetivo: objetivo._id,
+            area: objetivo.area,
+            objetivo: objetivo.objetivo,
+            esMultiDepartamento: false
+          }));
+          acciones = acciones.concat(accionesEnriquecidas);
+        }
+      });
+    }
+
+    console.log(`✅ Encontradas ${acciones.length} acciones`);
     res.status(200).json(acciones);
   } catch (error) {
     console.error("Error en getAccionesCorrectivasByArea:", error);

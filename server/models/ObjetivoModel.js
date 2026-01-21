@@ -33,24 +33,24 @@ const AccionCorrectivaSchema = new mongoose.Schema({
 // Subdocumento para objetivos específicos por departamento
 const ObjetivoEspecificoSchema = new mongoose.Schema({
   departamento: { type: String, required: true },
-  area: { type: String, required: true }, // ✅ AGREGADO: Campo area
+  area: { type: String, required: true },
   objetivo: { type: String, required: true },
   recursos: { type: String, default: "" },
   metaFrecuencia: { type: String, default: "" },
   
   // Campos de indicadores por semana
-  indicadorENEABR: { type: SemanaSchema, default: () => ({}) },
-  indicadorFEB: { type: SemanaSchema, default: () => ({}) },
-  indicadorMAR: { type: SemanaSchema, default: () => ({}) },
-  indicadorABR: { type: SemanaSchema, default: () => ({}) },
-  indicadorMAYOAGO: { type: SemanaSchema, default: () => ({}) },
-  indicadorJUN: { type: SemanaSchema, default: () => ({}) },
-  indicadorJUL: { type: SemanaSchema, default: () => ({}) },
-  indicadorAGO: { type: SemanaSchema, default: () => ({}) },
-  indicadorSEPDIC: { type: SemanaSchema, default: () => ({}) },
-  indicadorOCT: { type: SemanaSchema, default: () => ({}) },
-  indicadorNOV: { type: SemanaSchema, default: () => ({}) },
-  indicadorDIC: { type: SemanaSchema, default: () => ({}) },
+  indicadorENEABR: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorFEB: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorMAR: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorABR: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorMAYOAGO: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorJUN: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorJUL: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorAGO: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorSEPDIC: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorOCT: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorNOV: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorDIC: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
   
   observaciones: { type: String, default: "" },
   accionesCorrectivas: { type: [AccionCorrectivaSchema], default: [] },
@@ -76,14 +76,54 @@ const ObjetivoEspecificoSchema = new mongoose.Schema({
 });
 
 const ObjetivoSchema = new mongoose.Schema({
-  // Paso 1: Nombre del objetivo general
-  nombreObjetivoGeneral: { type: String, required: true },
+  // Para objetivos multi-departamento
+  nombreObjetivoGeneral: { type: String },
   
-  // Paso 2: Departamentos que pueden ver este objetivo
-  departamentosAsignados: [{ type: String, required: true }],
+  // Departamentos que pueden ver este objetivo
+  departamentosAsignados: [{ type: String }],
   
-  // Paso 3: Objetivos específicos por departamento/area
+  // Objetivos específicos por departamento/area
   objetivosEspecificos: [ObjetivoEspecificoSchema],
+  
+  // Para objetivos tradicionales
+  area: { type: String },
+  objetivo: { type: String },
+  recursos: { type: String, default: "" },
+  metaFrecuencia: { type: String, default: "" },
+  
+  // Campos de indicadores por semana (para objetivos tradicionales)
+  indicadorENEABR: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorFEB: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorMAR: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorABR: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorMAYOAGO: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorJUN: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorJUL: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorAGO: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorSEPDIC: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorOCT: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorNOV: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  indicadorDIC: { type: SemanaSchema, default: () => ({ S1: "", S2: "", S3: "", S4: "", S5: "" }) },
+  
+  observaciones: { type: String, default: "" },
+  accionesCorrectivas: { type: [AccionCorrectivaSchema], default: [] },
+  historialAnual: [{
+    año: Number,
+    indicadores: {
+      indicadorENEABR: SemanaSchema,
+      indicadorFEB: SemanaSchema,
+      indicadorMAR: SemanaSchema,
+      indicadorABR: SemanaSchema,
+      indicadorMAYOAGO: SemanaSchema,
+      indicadorJUN: SemanaSchema,
+      indicadorJUL: SemanaSchema,
+      indicadorAGO: SemanaSchema,
+      indicadorSEPDIC: SemanaSchema,
+      indicadorOCT: SemanaSchema,
+      indicadorNOV: SemanaSchema,
+      indicadorDIC: SemanaSchema
+    }
+  }],
   
   // Información general
   creadoPor: {
@@ -92,16 +132,13 @@ const ObjetivoSchema = new mongoose.Schema({
     fecha: { type: Date, default: Date.now }
   },
   
-  // Año actual (se sincroniza entre todos los objetivos específicos)
+  // Año actual
   añoActual: { type: Number, default: () => new Date().getFullYear() },
   
   // Estado del objetivo
   activo: { type: Boolean, default: true },
   fechaCreacion: { type: Date, default: Date.now },
-  fechaActualizacion: { type: Date, default: Date.now },
-  
-  // ✅ AGREGADO: Campo area para compatibilidad con sistema anterior
-  area: { type: String }
+  fechaActualizacion: { type: Date, default: Date.now }
 });
 
 // Middleware para actualizar fecha de actualización
@@ -110,53 +147,161 @@ ObjetivoSchema.pre('save', function(next) {
   next();
 });
 
-// Middleware para sincronizar año entre objetivos específicos
+// Middleware CORREGIDO para manejar cambio de año
 ObjetivoSchema.pre('save', function(next) {
   const añoActualSistema = new Date().getFullYear();
   
-  // Si el año cambió, actualizar todos los objetivos específicos
-  if (this.añoActual < añoActualSistema) {
-    this.objetivosEspecificos.forEach(objetivo => {
-      // Archivar datos del año anterior
-      if (!objetivo.historialAnual) {
-        objetivo.historialAnual = [];
-      }
+  // Solo procesar si el año cambió
+  if (this.isNew || this.añoActual < añoActualSistema) {
+    
+    // Para objetivos tradicionales
+    if (this.area && !this.nombreObjetivoGeneral) {
+      // Verificar si tiene datos actuales
+      const tieneDatosActuales = this.tieneDatosIndicadores();
       
-      objetivo.historialAnual.push({
-        año: this.añoActual,
-        indicadores: {
-          indicadorENEABR: objetivo.indicadorENEABR,
-          indicadorFEB: objetivo.indicadorFEB,
-          indicadorMAR: objetivo.indicadorMAR,
-          indicadorABR: objetivo.indicadorABR,
-          indicadorMAYOAGO: objetivo.indicadorMAYOAGO,
-          indicadorJUN: objetivo.indicadorJUN,
-          indicadorJUL: objetivo.indicadorJUL,
-          indicadorAGO: objetivo.indicadorAGO,
-          indicadorSEPDIC: objetivo.indicadorSEPDIC,
-          indicadorOCT: objetivo.indicadorOCT,
-          indicadorNOV: objetivo.indicadorNOV,
-          indicadorDIC: objetivo.indicadorDIC
+      if (tieneDatosActuales && this.añoActual < añoActualSistema) {
+        // Archivar datos del año anterior
+        if (!this.historialAnual) {
+          this.historialAnual = [];
+        }
+        
+        this.historialAnual.push({
+          año: this.añoActual,
+          indicadores: {
+            indicadorENEABR: this.indicadorENEABR,
+            indicadorFEB: this.indicadorFEB,
+            indicadorMAR: this.indicadorMAR,
+            indicadorABR: this.indicadorABR,
+            indicadorMAYOAGO: this.indicadorMAYOAGO,
+            indicadorJUN: this.indicadorJUN,
+            indicadorJUL: this.indicadorJUL,
+            indicadorAGO: this.indicadorAGO,
+            indicadorSEPDIC: this.indicadorSEPDIC,
+            indicadorOCT: this.indicadorOCT,
+            indicadorNOV: this.indicadorNOV,
+            indicadorDIC: this.indicadorDIC
+          }
+        });
+        
+        // Resetear indicadores solo si el año cambió
+        if (this.añoActual < añoActualSistema) {
+          this.resetearIndicadores();
+        }
+      }
+    }
+    
+    // Para objetivos multi-departamento
+    if (this.nombreObjetivoGeneral && this.objetivosEspecificos) {
+      this.objetivosEspecificos.forEach(objetivo => {
+        const tieneDatos = objetivo.tieneDatosIndicadores();
+        
+        if (tieneDatos && this.añoActual < añoActualSistema) {
+          // Archivar datos del año anterior
+          if (!objetivo.historialAnual) {
+            objetivo.historialAnual = [];
+          }
+          
+          objetivo.historialAnual.push({
+            año: this.añoActual,
+            indicadores: {
+              indicadorENEABR: objetivo.indicadorENEABR,
+              indicadorFEB: objetivo.indicadorFEB,
+              indicadorMAR: objetivo.indicadorMAR,
+              indicadorABR: objetivo.indicadorABR,
+              indicadorMAYOAGO: objetivo.indicadorMAYOAGO,
+              indicadorJUN: objetivo.indicadorJUN,
+              indicadorJUL: objetivo.indicadorJUL,
+              indicadorAGO: objetivo.indicadorAGO,
+              indicadorSEPDIC: objetivo.indicadorSEPDIC,
+              indicadorOCT: objetivo.indicadorOCT,
+              indicadorNOV: objetivo.indicadorNOV,
+              indicadorDIC: objetivo.indicadorDIC
+            }
+          });
+          
+          // Resetear indicadores solo si el año cambió
+          if (this.añoActual < añoActualSistema) {
+            objetivo.resetearIndicadores();
+          }
         }
       });
-      
-      // Resetear todos los indicadores
-      const camposIndicadores = [
-        'indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR',
-        'indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO',
-        'indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC'
-      ];
-      
-      camposIndicadores.forEach(campo => {
-        objetivo[campo] = { S1: "", S2: "", S3: "", S4: "", S5: "" };
-      });
-    });
+    }
     
     // Actualizar el año
-    this.añoActual = añoActualSistema;
+    if (this.añoActual < añoActualSistema) {
+      this.añoActual = añoActualSistema;
+    }
   }
   
   next();
 });
+
+// Método para verificar si tiene datos en los indicadores
+ObjetivoSchema.methods.tieneDatosIndicadores = function() {
+  const campos = [
+    'indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR',
+    'indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO',
+    'indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC'
+  ];
+  
+  for (const campo of campos) {
+    if (this[campo]) {
+      const semanas = ['S1', 'S2', 'S3', 'S4', 'S5'];
+      for (const semana of semanas) {
+        if (this[campo][semana] && this[campo][semana] !== "") {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+};
+
+// Método para resetear indicadores
+ObjetivoSchema.methods.resetearIndicadores = function() {
+  const camposIndicadores = [
+    'indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR',
+    'indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO',
+    'indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC'
+  ];
+  
+  camposIndicadores.forEach(campo => {
+    this[campo] = { S1: "", S2: "", S3: "", S4: "", S5: "" };
+  });
+};
+
+// Método para ObjetivoEspecificoSchema
+ObjetivoEspecificoSchema.methods.tieneDatosIndicadores = function() {
+  const campos = [
+    'indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR',
+    'indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO',
+    'indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC'
+  ];
+  
+  for (const campo of campos) {
+    if (this[campo]) {
+      const semanas = ['S1', 'S2', 'S3', 'S4', 'S5'];
+      for (const semana of semanas) {
+        if (this[campo][semana] && this[campo][semana] !== "") {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+};
+
+// Método para resetear indicadores de ObjetivoEspecificoSchema
+ObjetivoEspecificoSchema.methods.resetearIndicadores = function() {
+  const camposIndicadores = [
+    'indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR',
+    'indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO',
+    'indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC'
+  ];
+  
+  camposIndicadores.forEach(campo => {
+    this[campo] = { S1: "", S2: "", S3: "", S4: "", S5: "" };
+  });
+};
 
 module.exports = mongoose.model("Objetivo", ObjetivoSchema);

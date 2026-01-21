@@ -1,20 +1,25 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useContext } from "react";
 import BotonesRol from "../../../resources/botones-rol";
 import './css/Inicio.css';
 import videoFile from '../assets/img/UpscaleVideo_1_20240628.webm';
 import menu from "../assets/img/menu.png";
 import { useNavigate } from "react-router-dom";
 import Nieve from "../../../resources/event";
+import { UserContext } from "../../../App";
 
 const Inicio = () => {
   const videoRef = useRef(null);
   const navigate = useNavigate();
+  const { userData } = useContext(UserContext); // Usando el mismo patrón que BotonesRol
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.play();
     }
   }, []);
+
+  // Verificar si el usuario es administrador
+  const esAdministrador = userData?.TipoUsuario === 'administrador';
 
   return (
     <div>
@@ -51,11 +56,14 @@ const Inicio = () => {
               <p>...</p>
             </div>
 
-            <div className="card-home" onClick={() => navigate("/registroObjetivo")}>
-              Registro
-              <br/><br/>
-              <img src={menu} alt="menu" className='imagen-mini' />
-            </div>
+            {/* Mostrar solo si es administrador */}
+            {esAdministrador && (
+              <div className="card-home" onClick={() => navigate("/registroObjetivo")}>
+                Registro
+                <br/><br/>
+                <img src={menu} alt="menu" className='imagen-mini' />
+              </div>
+            )}
             
             <div className="card-home" onClick={() => navigate("/saefty-goals2")}>
               Safety Goals
