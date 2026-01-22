@@ -398,7 +398,7 @@ const obtenerDatosEspAud = async (req, res) => {
     const datos = await Datos.find({
       _id: idRep,
       Estado: 'Terminada'
-    }, '_id FechaElaboracion TipoAuditoria Duracion Estado'); 
+    }, '_id FechaElaboracion TipoAuditoria Duracion Estado Cliente'); 
 
     res.status(200).json(datos);
   } catch (error) {

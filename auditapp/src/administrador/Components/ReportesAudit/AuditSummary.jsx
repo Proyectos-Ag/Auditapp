@@ -1,4 +1,3 @@
-// src/features/auditoria/components/AuditSummary.jsx
 import React, { useMemo } from 'react';
 import { formatDateES } from '../../../utils/ishikawa';
 import './css/audit_summary.css';
@@ -36,7 +35,7 @@ export default function AuditSummary({ dato, puntosObtenidos, total, porcentajeT
           {dato.Cliente && <div className="item"><span className="bold">Cliente:</span> {dato.Cliente}</div>}
         </div>
         <div className="right">
-          {dato.Cliente && <div className="item"><span className="bold">Fecha auditoría:</span> {dato.FechaEvaluacion}</div>}
+          {dato.Cliente && <div className="item"><span className="bold">Fecha auditoría:</span> {formatDateES(dato.FechaInicio)}</div>}
           <div className="item"><span className="bold">Fecha elaboración:</span> {formatDateES(dato.FechaElaboracion)}</div>
         </div>
       </div>
