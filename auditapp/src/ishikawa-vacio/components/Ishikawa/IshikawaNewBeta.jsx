@@ -7,7 +7,6 @@ import SendIcon from '@mui/icons-material/Send';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import './css/Ishikawa.css'
-import Logo from "../assets/img/logoAguida.png";
 import { Alert, AlertTitle } from '@mui/material';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
@@ -820,7 +819,7 @@ const handleCausaChange = nuevaCausa => {
 const pdfRef = useRef();
 
   return (
-    <div className="content-diagrama">
+    <div className="ishn-content">
 
       <form onSubmit={(e) => {
           e.preventDefault(); // Prevenir el envío automático del formulario
@@ -834,7 +833,7 @@ const pdfRef = useRef();
       <div>
         {console.log('estado seleccionado: ', formData.estado)}
       <Stack
-        className="acciones-ish-container"
+        className="ishn-actions"
         direction="row"
         spacing={2}
         justifyContent="space-between"
@@ -965,7 +964,7 @@ const pdfRef = useRef();
 
       {/*Mensaje de generacion*/}
         {isLoading && (
-            <div className="loading-overlay">
+            <div className="ishn-loadingOverlay">
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <CircularProgress variant="determinate" value={progress} />
                     <p>{progress}%</p>
@@ -1013,29 +1012,28 @@ const pdfRef = useRef();
           <Diagrama recordId={selectedRecordId} />
         ) : (
 
-        <div className="edit-container">
+        <div className="ishn-edit">
 
-        <div id='pdf-content-part1' className="image-container-dia" >
-        <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
+        <div id='pdf-content-part1' className="ishn-card" >
         <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
-          <div className='posicion-en'>
+          <div className='ishn-info'>
             <h2>Problema:
-              <input type="text" className="problema-input" name='problema'
+              <input type="text" className="ishn-input" name='problema'
                 style={{ marginTop: '0.4rem', color: '#000000' }} placeholder="Agregar problema. . ." required 
                 value={formData.problema} onChange={handleFormDataChange} disabled={isReadOnly} />
             </h2>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <h2>Afectación:
-                <input type="text" className="problema-input" name='afectacion'
+                <input type="text" className="ishn-input" name='afectacion'
                   style={{ marginTop: '0.4rem', color: '#000000' }} placeholder="Agregar afectación. . ." required 
                   value={formData.afectacion} onChange={handleFormDataChange} disabled={isReadOnly} />
               </h2>
             </div>
           </div>
-          <div className='posicion-en-3'>
+          <div className='ishn-code'>
           GCF015
           </div>
-          <div className='posicion-en-2'>
+          <div className='ishn-meta'>
             <h3>Fecha: 
             <input type="date" name='fecha' value={formData.fecha}
                   style={{ marginTop: '0.4rem', color: '#000000', padding: '6px 32px 6px 8px' }} placeholder="Agregar afectación. . ." required 
@@ -1044,7 +1042,7 @@ const pdfRef = useRef();
             <h3>Folio: {formData.folio}{console.log('folio: ', formData)}</h3>
           </div>
 
-          <div className='new-ishikawa'>
+          <div className='ishn-diagramWrap'>
           <NewIshikawa
             diagrama={diagrama}
             setDiagrama={setDiagrama}
@@ -1055,11 +1053,11 @@ const pdfRef = useRef();
           />
           </div> 
 
-          <div className='button-parti-ish'>
+          <div className='ishn-people'>
           <div style={{ width: '64rem' }}>
             {/* Contenedor de chips y campo de busqueda */}
               <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-              <button className='button-part'>⚇</button>
+              <button className='ishn-peopleBtn'>⚇</button>
                 {selectedParticipants.map((participant, index) => (
                   <Chip
                     key={index}
@@ -1100,23 +1098,23 @@ const pdfRef = useRef();
             </div>
           </div>
 
-          <div className="image-container2-dia" id='pdf-content-part2'>
+          <div className="ishn-card" id='pdf-content-part2'>
           <div>
-            <div className='posicion-bo' style={{ marginRight: '5rem' }}>
+            <div className='ishn-textBlock' style={{ marginRight: '5rem' }}>
               <h3>No conformidad:</h3>
-              <AutoGrowTextarea type="text" className="textarea-acc" name='requisito'
+              <AutoGrowTextarea type="text" className="ishn-textarea" name='requisito'
                 style={{textAlign: 'justify' }} placeholder="Agregar Acción. . ." 
                 value={formData.requisito} onChange={handleFormDataChange} required disabled={isReadOnly} />
               <h3>Hallazgo:</h3>
-              <AutoGrowTextarea type="text" className="textarea-acc" name='hallazgo'
+              <AutoGrowTextarea type="text" className="ishn-textarea" name='hallazgo'
                 style={{color: '#000000' }} placeholder="Agregar Hallazgo. . ." 
                 value={formData.hallazgo} onChange={handleFormDataChange} required disabled={isReadOnly}/>
               <h3>Acción inmediata o corrección:</h3>
-              <AutoGrowTextarea type="text" className="textarea-acc" name='correccion'
+              <AutoGrowTextarea type="text" className="ishn-textarea" name='correccion'
                 style={{color: '#000000' }} placeholder="Agregar Acción. . ." 
                 value={formData.correccion} onChange={handleFormDataChange} required disabled={isReadOnly}/>
               <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
-              <AutoGrowTextarea type="text" className="textarea-acc" name='causa'
+              <AutoGrowTextarea type="text" className="ishn-textarea" name='causa'
                  style={{ marginBottom: '20px', overflowWrap: 'break-word' }} 
                  placeholder="Seleccione la causa desde el diagrama"  onKeyDown={(e) => e.preventDefault()} 
                   value={formData.causa} onChange={handleFormDataChange} required disabled={isReadOnly}/>
@@ -1124,8 +1122,8 @@ const pdfRef = useRef();
           </div>
           </div>
 
-          <div className='image-container3-dia' id='pdf-content-part3'>
-          <div className='table-ish'>
+          <div className='ishn-card' id='pdf-content-part3'>
+          <div className='ishn-tableWrap'>
           <h3>SOLUCIÓN</h3>
             <table style={{ border: 'none' }}>
               <thead>
@@ -1141,7 +1139,7 @@ const pdfRef = useRef();
                     <td>
                     <AutoGrowTextarea
                       key={index}
-                      className="table-input"
+                      className="ishn-tableInput"
                       placeholder="Agregar actividad..."
                       value={actividad.actividad}
                       onChange={e => {
@@ -1225,7 +1223,7 @@ const pdfRef = useRef();
                        </div>
                     </td>
 
-                    <td className='cancel-acc'>
+                    <td className='ishn-tableDangerCell'>
                       <button type='button' onClick={() => eliminarFilaActividad(index)} disabled={isReadOnly}>Eliminar</button>
                     </td>
                   </tr>
@@ -1235,7 +1233,7 @@ const pdfRef = useRef();
             <button type='button' onClick={(e) => {
               e.preventDefault();
               agregarFilaActividad();
-            }} className='button-agregar' disabled={isReadOnly}>Agregar Fila</button>
+            }} className='ishn-addRowBtn' disabled={isReadOnly}>Agregar Fila</button>
           </div>
           </div>
           </div>

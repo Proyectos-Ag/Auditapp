@@ -5,10 +5,9 @@ import Swal from "sweetalert2";
 import api from "../../../services/api";
 import "./css/Diagrama.css";
 
-// ✅ Reutiliza estilos de IshikawaRev (barra superior + contenedores)
 import "../IshikawaRev/css/IshikawaRev.css";
 
-import Logo from "../assets/img/logoAguida.png";
+import "../../../ishikawa-vacio/components/Ishikawa/css/Ishikawa.css";
 
 import Fotos from "../IshikawaRev/Foto";
 import IshPDF from "../IshikawaRev/IshPDF";
@@ -56,7 +55,7 @@ const Diagrama = () => {
 
   // Correcciones del diagrama visible
   const [correcciones, setCorrecciones] = useState([
-    { actividad: "", responsable: "", fechaCompromiso: null, cerrada: "", evidencia: "" },
+    { actividad: "", responsable: "", fechaCompromiso: null, cerrada: "", evidencia: [] },
   ]);
 
   // UI / Evidencias
@@ -105,6 +104,35 @@ const Diagrama = () => {
     await inst.generatePDF({ download: false, participantes });
   };
 
+  const normalizeEvidenciaArr = (e) => {
+  if (e == null) return [];
+  if (Array.isArray(e)) return e.filter(Boolean).map(x => String(x).trim()).filter(Boolean);
+  const s = String(e).trim();
+  return s ? [s] : [];
+};
+
+const parseEvidencia = (evidencia) => {
+  const raw = String(evidencia || "").trim();
+  if (!raw) return { kind: "none" };
+
+  if (raw.includes("||")) {
+    const [url, name] = raw.split("||").map((x) => x.trim());
+    const isPdf = (name || "").toLowerCase().endsWith(".pdf");
+    return { kind: isPdf ? "pdf" : "link", url, name: name || "Archivo" };
+  }
+
+  const isPdf = raw.toLowerCase().endsWith(".pdf");
+  return { kind: isPdf ? "pdf" : "img", url: raw, name: isPdf ? "PDF" : "" };
+};
+
+const buildFileName = (docId, rowIndex, evIndex, file) => {
+  const isPdf = file?.type === "application/pdf";
+  const extFromName = (file?.name || "").split(".").pop();
+  const ext = isPdf ? "pdf" : (extFromName || "jpg");
+  return `${isPdf ? "pdf" : "img"}_${docId}_${rowIndex}_${Date.now()}_${evIndex}.${ext}`;
+};
+
+
   // === Data ===
   const fetchData = async () => {
     try {
@@ -143,7 +171,11 @@ const Diagrama = () => {
           fechaCompromiso = d.toISOString().split("T")[0];
         }
       }
-      return { ...c, fechaCompromiso };
+      return {
+        ...c,
+        fechaCompromiso,
+        evidencia: normalizeEvidenciaArr(c.evidencia),
+      };
     });
 
     if (correccionesIniciales.length === 0) {
@@ -152,7 +184,7 @@ const Diagrama = () => {
         responsable: "",
         fechaCompromiso: null,
         cerrada: "",
-        evidencia: "",
+        evidencia: [],
       });
     }
 
@@ -309,9 +341,13 @@ const Diagrama = () => {
 
   // === Evidencias ===
   const handleCapture = (file) => {
-    if (selectedField) {
-      setCapturedPhotos((prev) => ({ ...prev, [selectedField]: file }));
-    }
+    if (!selectedField) return;
+
+    setCapturedPhotos((prev) => ({
+      ...prev,
+      [selectedField]: [...(prev[selectedField] || []), file],
+    }));
+
     setModalOpen(false);
   };
 
@@ -339,22 +375,26 @@ const Diagrama = () => {
   };
 
   const handleUploadFile = (fieldKey) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".pdf";
-    input.style.display = "none";
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".pdf";
+  input.multiple = true; // ✅ varios PDFs
+  input.style.display = "none";
 
-    input.onchange = (event) => {
-      const file = event.target.files?.[0];
-      if (file) {
-        setCapturedPhotos((prev) => ({ ...prev, [fieldKey]: file }));
-      }
-    };
+  input.onchange = (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
 
-    document.body.appendChild(input);
-    input.click();
-    document.body.removeChild(input);
+    setCapturedPhotos((prev) => ({
+      ...prev,
+      [fieldKey]: [...(prev[fieldKey] || []), ...files],
+    }));
   };
+
+  document.body.appendChild(input);
+  input.click();
+  document.body.removeChild(input);
+};
 
   const handleEliminarEvidencia = async (index, idIsh, idCorr) => {
     try {
@@ -397,16 +437,26 @@ const Diagrama = () => {
           const updated = { ...c };
 
           const key = `${ishId}_${index}`;
-          const file = capturedPhotos[key];
+          const pendingFiles = capturedPhotos[key] || [];
 
-          if (!file) return updated;
+          const existing = normalizeEvidenciaArr(updated.evidencia);
+          if (!pendingFiles.length) {
+            updated.evidencia = existing;
+            return updated;
+          }
 
-          const fileType = file.type;
-          const fileName = fileType === "application/pdf" ? `pdf_${ishId}_${index}` : `image_${ishId}_${index}`;
+          const uploaded = await Promise.all(
+            pendingFiles.map(async (file, evIndex) => {
+              const fileName = buildFileName(ishId, index, evIndex, file);
+              const fileUrl = await uploadImageToFirebase(file, fileName);
 
-          const fileUrl = await uploadImageToFirebase(file, fileName);
+              return file.type === "application/pdf"
+                ? `${fileUrl} || ${file.name}`
+                : fileUrl;
+            })
+          );
 
-          updated.evidencia = fileType === "application/pdf" ? `${fileUrl} || ${file.name}` : fileUrl;
+          updated.evidencia = [...existing, ...uploaded];
           return updated;
         })
       );
@@ -416,7 +466,7 @@ const Diagrama = () => {
         responsable: c.responsable || "",
         fechaCompromiso: c.fechaCompromiso || null,
         cerrada: c.cerrada || "",
-        evidencia: c.evidencia || "",
+        evidencia: normalizeEvidenciaArr(c.evidencia),
       }));
 
       await api.put(`/ishikawa/${ishId}`, dataToSend, {
@@ -443,22 +493,33 @@ const Diagrama = () => {
       handleOpen();
 
       const correccionesActualizadas = await Promise.all(
-        correcciones.map(async (c, index) => {
-          const updated = { ...c };
+      correcciones.map(async (c, index) => {
+        const updated = { ...c };
 
-          const key = `${ishId}_${index}`;
-          const file = capturedPhotos[key];
+        const key = `${ishId}_${index}`;
+        const pendingFiles = capturedPhotos[key] || [];
 
-          if (!file) return updated;
-
-          const fileType = file.type;
-          const fileName = fileType === "application/pdf" ? `pdf_${ishId}_${index}` : `image_${ishId}_${index}`;
-          const fileUrl = await uploadImageToFirebase(file, fileName);
-
-          updated.evidencia = fileType === "application/pdf" ? `${fileUrl} || ${file.name}` : fileUrl;
+        const existing = normalizeEvidenciaArr(updated.evidencia);
+        if (!pendingFiles.length) {
+          updated.evidencia = existing;
           return updated;
-        })
-      );
+        }
+
+        const uploaded = await Promise.all(
+          pendingFiles.map(async (file, evIndex) => {
+            const fileName = buildFileName(ishId, index, evIndex, file);
+            const fileUrl = await uploadImageToFirebase(file, fileName);
+
+            return file.type === "application/pdf"
+              ? `${fileUrl} || ${file.name}`
+              : fileUrl;
+          })
+        );
+
+        updated.evidencia = [...existing, ...uploaded];
+        return updated;
+      })
+    );
 
       const dataToSend = {
         correcciones: correccionesActualizadas.map((c) => ({
@@ -506,7 +567,7 @@ const Diagrama = () => {
   };
 
   return (
-    <div className="top-diagrama">
+    <div >
       {/* Carga */}
       <Backdrop
         sx={(theme) => ({ color: "#fff", zIndex: theme.zIndex.drawer + 1 })}
@@ -516,7 +577,7 @@ const Diagrama = () => {
         <CircularProgress color="inherit" />
       </Backdrop>
 
-      <div className="content-diagrama">
+      <div className="ishn-content">
         {ishikawas.map((ishikawa, index) => {
           const { idAfect, programaNombre } = parseAfectacion(ishikawa.afectacion);
 
@@ -533,11 +594,11 @@ const Diagrama = () => {
                 <div>
                   {/* ✅ Barra superior estilo IshikawaRev */}
                   <Stack
-                    className="acciones-ish-container"
+                    className="ishn-actions"
                     direction="row"
                     spacing={3}
                     alignItems="center"
-                    width="96%"
+                    width="100%"
                   >
                     <Box sx={{ flexGrow: 1 }}>
                       <Typography variant="subtitle1" color="white" gutterBottom>
@@ -674,30 +735,29 @@ const Diagrama = () => {
                   )}
 
                   {/* ====== CONTENIDO ====== */}
-                  <div id="pdf-content-part1" className="image-container">
-                    <img src={Logo} alt="Logo Aguida" className="logo-empresa-ish" />
-                    <h1 style={{ position: "absolute", fontSize: "40px" }}>Ishikawa</h1>
+                  <div id="pdf-content-part1" className="ishn-card">
+                    <h1>Ishikawa</h1>
 
-                    <div className="posicion-en">
-                      <div style={{ display: "flex", alignItems: "center" }}>
-                        <h2 style={{ marginLeft: "50rem", marginRight: "10px" }}>Problema: </h2>
-                        <div style={{ width: "50rem", fontSize: "20px" }}>{ishikawa.problema}</div>
-                      </div>
+                    <div className="ishn-code">GCF015</div>
 
-                      <div style={{ display: "flex", alignItems: "center" }}>
-                        <h2 style={{ marginLeft: "50rem", marginRight: "10px" }}>Afectación: </h2>
-                        <div style={{ width: "50rem", fontSize: "20px" }}>{ishikawa.afectacion}</div>
-                      </div>
+                    <div className="ishn-info">
+                      <h2>
+                        Problema:
+                      </h2>
+                      <div className="ishr-readonlyBlock">{ishikawa.problema || "—"}</div>
+
+                      <h2>
+                        Afectación:
+                      </h2>
+                       <div className="ishr-readonlyBlock">{ishikawa.afectacion || "—"}</div>
                     </div>
 
-                    <div className="posicion-en-3">GCF015</div>
-
-                    <div className="posicion-en-2">
-                      <h3>Fecha: {ishikawa.fecha}</h3>
-                      <h3>Folio: {ishikawa.folio}</h3>
+                    <div className="ishn-meta">
+                      <h3>Fecha: {ishikawa.fecha || "—"}</h3>
+                      <h3>Folio: {ishikawa.folio || "—"}</h3>
                     </div>
 
-                    <div style={{ marginTop: "-1em" }}>
+                    <div className="ishn-diagramWrap">
                       <NewIshikawaFin
                         key={ishikawa._id}
                         diagrama={ishikawa.diagrama}
@@ -707,54 +767,60 @@ const Diagrama = () => {
                       />
                     </div>
 
-                    <div className="button-pasti">
-                      <div className="cont-part">
-                        <button
-                          className="button-part"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setShowPart((p) => !p);
-                          }}
-                        >
-                          ⚇
-                        </button>
+                    <div className="ishn-people">
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                          <button
+                            className="ishn-peopleBtn"
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setShowPart((p) => !p);
+                            }}
+                            title="Participantes"
+                          >
+                            ⚇
+                          </button>
 
-                        {showPart && <div className="part-div">{ishikawa.participantes}</div>}
+                          {showPart && (
+                            <div className="ishn-readonlyBox" style={{ flex: 1, minWidth: 260 }}>
+                              {ishikawa.participantes || "—"}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="image-container2" id="pdf-content-part2">
-                    <div className="posicion-bo">
+                  <div id="pdf-content-part2" className="ishn-card">
+                    <div className="ishn-textBlock">
                       <h3>No conformidad:</h3>
-                      <div style={{ width: "70rem", textAlign: "justify", overflowWrap: "break-word" }}>
-                        {ishikawa.requisito}
-                      </div>
+                      <div className="ishn-readonlyText">{ishikawa.requisito || "—"}</div>
 
-                      <h3>Hallazgo:</h3>
-                      <div style={{ width: "70rem", overflowWrap: "break-word" }}>{ishikawa.hallazgo}</div>
+                      <h3 style={{ marginTop: 12 }}>Hallazgo:</h3>
+                      <div className="ishn-readonlyText">{ishikawa.hallazgo || "—"}</div>
 
-                      <h3>Acción inmediata o corrección: </h3>
-                      <div style={{ width: "70rem", overflowWrap: "break-word" }}>{ishikawa.correccion}</div>
+                      <h3 style={{ marginTop: 12 }}>Acción inmediata o corrección:</h3>
+                      <div className="ishn-readonlyText">{ishikawa.correccion || "—"}</div>
 
-                      <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
-                      <div style={{ marginBottom: "20px", width: "72rem", overflowWrap: "break-word" }}>
-                        {ishikawa.causa}
-                      </div>
+                      <h3 style={{ marginTop: 12 }}>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
+                      <div className="ishn-readonlyText">{ishikawa.causa || "—"}</div>
                     </div>
                   </div>
 
-                  <div className="image-container3" id="pdf-content-part3">
-                    <div className="table-ish">
-                      <table style={{ border: "none" }}>
+                  <div id="pdf-content-part3" className="ishn-card">
+                    <div className="ishn-tableWrap">
+                      <h3>SOLUCIÓN</h3>
+
+                      <table>
                         <thead>
-                          <tr><h3>SOLUCIÓN</h3></tr>
                           <tr>
                             <th className="conformity-header">Actividad</th>
                             <th className="conformity-header">Responsable</th>
                             <th className="conformity-header">Fecha Compromiso</th>
                           </tr>
                         </thead>
+
                         <tbody>
                           {ishikawa.actividades?.map((actividad, i) => (
                             <tr key={i}>
@@ -775,7 +841,7 @@ const Diagrama = () => {
                                         {idx < arr.length - 1 ? ", " : ""}
                                       </span>
                                     ))
-                                  : typeof actividad.responsable === "object" && actividad.responsable !== null
+                                  : (typeof actividad.responsable === "object" && actividad.responsable !== null)
                                   ? (actividad.responsable.nombre
                                       ? <span>{actividad.responsable.nombre}</span>
                                       : <span>{
@@ -797,205 +863,243 @@ const Diagrama = () => {
                         </tbody>
                       </table>
 
-                      {/* EFECTIVIDAD (igual lógica que ya tenías) */}
+                      {/* EFECTIVIDAD (editable) */}
                       {(isAprobado || isFinalizado) ? (
                         <>
-                        <table style={{ border: "none" }}>
-                          <thead>
-                            <tr><h3>EFECTIVIDAD</h3></tr>
-                            <tr>
-                              <th className="conformity-header">Actividad</th>
-                              <th className="conformity-header">Responsable</th>
-                              <th className="conformity-header">Fecha Verificación</th>
-                              <th colSpan="2" className="conformity-header">
-                                Acción Correctiva Cerrada
-                                <div style={{ display: "flex" }}>
-                                  <div className="left">Sí</div>
-                                  <div className="right">No</div>
-                                </div>
-                              </th>
-                              <th className="conformity-header" style={{ width: "10em" }}>Evidencia</th>
-                            </tr>
-                          </thead>
+                          <h3 style={{ marginTop: 16 }}>EFECTIVIDAD</h3>
 
-                          <tbody>
-                            {correcciones.map((correccion, idx) => {
-                              const fieldKey = `${ishikawa._id}_${idx}`;
+                          <table>
+                            <thead>
+                              <tr>
+                                <th className="conformity-header">Actividad</th>
+                                <th className="conformity-header">Responsable</th>
+                                <th className="conformity-header">Fecha Verificación</th>
+                                <th colSpan="2" className="conformity-header">
+                                  Acción Correctiva Cerrada
+                                  <div style={{ display: "flex" }}>
+                                    <div className="left">Sí</div>
+                                    <div className="right">No</div>
+                                  </div>
+                                </th>
+                                <th className="conformity-header" style={{ width: "10em" }}>
+                                  Evidencia
+                                </th>
+                              </tr>
+                            </thead>
 
-                              return (
-                                <tr key={idx} onClick={() => setSelectedIndex(idx)}>
-                                  <td>
-                                    <textarea
-                                      value={correccion.actividad}
-                                      onChange={(e) => handleCorreccionChange(idx, "actividad", e.target.value)}
-                                      className="no-border"
-                                      required
-                                    />
-                                  </td>
+                            <tbody>
+                              {correcciones.map((correccion, idx) => {
+                                const fieldKey = `${ishikawa._id}_${idx}`;
 
-                                  <td>
-                                    <textarea
-                                      value={correccion.responsable}
-                                      onChange={(e) => handleCorreccionChange(idx, "responsable", e.target.value)}
-                                      className="no-border"
-                                      required
-                                    />
-                                  </td>
+                                return (
+                                  <tr key={idx} onClick={() => setSelectedIndex(idx)}>
+                                    <td>
+                                      <textarea
+                                        value={correccion.actividad}
+                                        onChange={(e) => handleCorreccionChange(idx, "actividad", e.target.value)}
+                                        className="no-border"
+                                        required
+                                      />
+                                    </td>
 
-                                  <td>
-                                    <input
-                                      type="date"
-                                      value={correccion.fechaCompromiso || ""}
-                                      onChange={(e) => handleCorreccionChange(idx, "fechaCompromiso", e.target.value)}
-                                      className="no-border"
-                                      required
-                                    />
-                                  </td>
+                                    <td>
+                                      <textarea
+                                        value={correccion.responsable}
+                                        onChange={(e) => handleCorreccionChange(idx, "responsable", e.target.value)}
+                                        className="no-border"
+                                        required
+                                      />
+                                    </td>
 
-                                  <td>
-                                    <input
-                                      type="checkbox"
-                                      checked={correccion.cerrada === "Sí"}
-                                      onChange={(e) => handleCorreccionChange(idx, "cerrada", e.target.checked)}
-                                      className="no-border"
-                                    />
-                                  </td>
+                                    <td>
+                                      <input
+                                        type="date"
+                                        value={correccion.fechaCompromiso || ""}
+                                        onChange={(e) => handleCorreccionChange(idx, "fechaCompromiso", e.target.value)}
+                                        className="no-border"
+                                        required
+                                      />
+                                    </td>
 
-                                  <td>
-                                    <input
-                                      type="checkbox"
-                                      checked={correccion.cerrada === "No"}
-                                      onChange={(e) => handleCorreccionChange(idx, "cerradaNo", e.target.checked)}
-                                      className="no-border"
-                                    />
-                                  </td>
+                                    <td>
+                                      <input
+                                        type="checkbox"
+                                        checked={correccion.cerrada === "Sí"}
+                                        onChange={(e) => handleCorreccionChange(idx, "cerrada", e.target.checked)}
+                                        className="no-border"
+                                      />
+                                    </td>
 
-                                  <td>
-                                    <link
-                                      rel="stylesheet"
-                                      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-                                    />
+                                    <td>
+                                      <input
+                                        type="checkbox"
+                                        checked={correccion.cerrada === "No"}
+                                        onChange={(e) => handleCorreccionChange(idx, "cerradaNo", e.target.checked)}
+                                        className="no-border"
+                                      />
+                                    </td>
 
-                                    {isAprobado && (
-                                      <>
-                                        <div
-                                          className="button-foto"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            handleOpenModal(fieldKey);
-                                          }}
-                                        >
-                                          <span className="material-symbols-outlined">add_a_photo</span>
+                                                                      <td>
+                                  {(() => {
+                                    const fieldKey = `${ishikawa._id}_${idx}`;
+                                    const evidenciasGuardadas = normalizeEvidenciaArr(correccion.evidencia);
+                                    const evidenciasPendientes = capturedPhotos[fieldKey] || [];
+
+                                    const openZoom = (url) => {
+                                      setSelectedImage(url);
+                                      setImageModalOpen(true);
+                                    };
+
+                                    return (
+                                      <div className="ishr-evidenceCell">
+                                        {isAprobado && (
+                                          <div className="ishr-evidenceActions">
+                                            <button
+                                              type="button"
+                                              className="ishr-iconBtn"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                handleOpenModal(fieldKey);
+                                              }}
+                                              title="Tomar foto"
+                                            >
+                                              📷
+                                            </button>
+
+                                            <button
+                                              type="button"
+                                              className="ishr-iconBtn"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                handleUploadFile(fieldKey);
+                                              }}
+                                              title="Subir PDF(s)"
+                                            >
+                                              <UploadFileIcon fontSize="small" />
+                                            </button>
+                                          </div>
+                                        )}
+
+                                        {/* Guardadas */}
+                                        <div className="ishr-evidenceList">
+                                          {evidenciasGuardadas.map((evStr, evIndex) => {
+                                            const ev = parseEvidencia(evStr);
+                                            if (ev.kind === "none") return null;
+
+                                            return (
+                                              <div key={`saved-${evIndex}`} className="ishr-evidenceItem">
+                                                {ev.kind === "pdf" ? (
+                                                  <a
+                                                    href={ev.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="ishr-pdfLink"
+                                                    title={ev.name}
+                                                  >
+                                                    <PictureAsPdfIcon sx={{ color: "red" }} />
+                                                    <span>{ev.name}</span>
+                                                  </a>
+                                                ) : (
+                                                  <img
+                                                    src={ev.url}
+                                                    alt="Evidencia"
+                                                    className="ishr-evidenceImg"
+                                                    onClick={() => openZoom(ev.url)}
+                                                  />
+                                                )}
+                                              </div>
+                                            );
+                                          })}
                                         </div>
 
-                                        <div
-                                          className="button-foto"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            handleUploadFile(fieldKey);
-                                          }}
-                                        >
-                                          <UploadFileIcon />
+                                        {/* Pendientes */}
+                                        <div className="ishr-evidenceList">
+                                          {evidenciasPendientes.map((file, pIndex) => {
+                                            const isPdf = file.type === "application/pdf";
+                                            const previewUrl = URL.createObjectURL(file);
+
+                                            return (
+                                              <div key={`pending-${pIndex}`} className="ishr-evidenceItem">
+                                                {isPdf ? (
+                                                  <a
+                                                    className="ishr-pdfLink"
+                                                    href={previewUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                  >
+                                                    <PictureAsPdfIcon sx={{ color: "red" }} />
+                                                    <span>{file.name || "Ver PDF"}</span>
+                                                  </a>
+                                                ) : (
+                                                  <img
+                                                    className="ishr-evidenceImg"
+                                                    src={previewUrl}
+                                                    alt="Pendiente"
+                                                    onClick={() => openZoom(previewUrl)}
+                                                  />
+                                                )}
+
+                                                {isAprobado && (
+                                                  <button
+                                                    type="button"
+                                                    className="ishr-miniDanger"
+                                                    onClick={(e) => {
+                                                      e.preventDefault();
+                                                      setCapturedPhotos((prev) => {
+                                                        const arr = [...(prev[fieldKey] || [])];
+                                                        arr.splice(pIndex, 1);
+                                                        return { ...prev, [fieldKey]: arr };
+                                                      });
+                                                    }}
+                                                    title="Quitar evidencia pendiente"
+                                                  >
+                                                    ✕
+                                                  </button>
+                                                )}
+                                              </div>
+                                            );
+                                          })}
                                         </div>
-                                      </>
-                                    )}
+                                      </div>
+                                    );
+                                  })()}
+                                </td>
 
-                                    {correccion.evidencia &&
-                                      (correccion.evidencia.endsWith(".pdf") ? (
-                                        <a
-                                          href={correccion.evidencia.split(" || ")[0]}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          style={{ textDecoration: "none", display: "flex", alignItems: "center" }}
-                                        >
-                                          <PictureAsPdfIcon sx={{ color: "red", fontSize: "40px", marginRight: "8px" }} />
-                                          {correccion.evidencia.split(" || ")[1]?.replace(/"/g, "")}
-                                        </a>
-                                      ) : (
-                                        <img
-                                          src={correccion.evidencia}
-                                          alt="Evidencia"
-                                          style={{ width: "100%", height: "auto" }}
-                                          className="hallazgo-imagen"
-                                          onClick={() => handleImageClick(correccion.evidencia)}
-                                        />
-                                      ))}
-
-                                    {capturedPhotos[fieldKey] &&
-                                      (capturedPhotos[fieldKey].type === "application/pdf" ? (
-                                        <div>
-                                          <a
-                                            href={URL.createObjectURL(capturedPhotos[fieldKey])}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                          >
-                                            {capturedPhotos[fieldKey].name || "Ver PDF"}
-                                          </a>
-                                        </div>
-                                      ) : (
-                                        <div>
-                                          <img
-                                            src={URL.createObjectURL(capturedPhotos[fieldKey])}
-                                            alt="Captura"
-                                            style={{ width: "100%", height: "auto" }}
-                                            onClick={() => handleImageClick(URL.createObjectURL(capturedPhotos[fieldKey]))}
-                                          />
-                                        </div>
-                                      ))}
-                                  </td>
-
-                                  <td className="cancel-acc">
-                                    {isAprobado && idx > 0 && (
-                                      <button
-                                        className="eliminar-ev"
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          handleEliminarFila(idx);
-                                        }}
-                                      >
-                                        Eliminar
-                                      </button>
-                                    )}
-                                  </td>
-
-                                  {imageModalOpen && (
-                                    <div className="modal-overlay" onClick={closeModal}>
-                                      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                        <img src={selectedImage} alt="Ampliada" className="modal-image" />
+                                    <td className="cancel-acc">
+                                      {isAprobado && idx > 0 && (
                                         <button
                                           className="eliminar-ev"
                                           onClick={(e) => {
                                             e.preventDefault();
-                                            EliminarEv(idx, ishikawa._id, correccion._id);
+                                            handleEliminarFila(idx);
                                           }}
                                         >
-                                          Eliminar Evidencia
+                                          Eliminar
                                         </button>
-                                      </div>
-                                    </div>
-                                  )}
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                        <div style={{ width: "100%", display: "flex", justifyContent: "flex-end", marginTop: "12px" }}>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+
+                          <div style={{ width: "100%", display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
                             <Button
-                            variant="variant"
-                            size="small"
-                            startIcon={<AddCircleOutlineIcon />}
-                            sx={{ color: "green", borderColor: "rgba(255,255,255,0.35)" }}
-                            onClick={(e) => {
+                              variant="text"
+                              size="small"
+                              startIcon={<AddCircleOutlineIcon />}
+                              sx={{ color: "green" }}
+                              onClick={(e) => {
                                 e.preventDefault();
                                 handleAgregarFila();
-                            }}
+                              }}
                             >
-                            Agregar fila
+                              Agregar fila
                             </Button>
-                        </div>
+                          </div>
                         </>
                       ) : null}
-
                     </div>
 
                     <Fotos open={modalOpen} onClose={() => setModalOpen(false)} onCapture={handleCapture} />

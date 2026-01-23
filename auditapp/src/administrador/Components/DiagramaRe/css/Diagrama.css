@@ -267,18 +267,6 @@
 .card-repo-ish::after { display: none; }
 */
 
-.logo-empresa-revi {
-  width: 56px;
-  height: 56px;
-  object-fit: contain;
-  flex: 0 0 56px;
-
-  border-radius: 12px;
-  background: #ffffff;
-  padding: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
 .card-repo-ish__info {
   display: flex;
   flex-direction: column;
@@ -370,17 +358,6 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.logo-empresa-revi {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
-  object-fit: contain;
-  border-radius: 12px;
-  background: #ffffff;
-  padding: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
 .card-repo-ish__line {
   margin: 0;
   font-size: 0.86rem;
@@ -421,4 +398,51 @@
   .cont-card-repo-modal {
     grid-template-columns: 1fr;
   }
+}
+
+/* =========================
+   Readonly blocks con estilo ishn
+   ========================= */
+.ishn-readonlyBox{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.18);
+  background: #fff;
+  color: #0b0b0b;
+  font-size: 14px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ishn-readonlyText{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.18);
+  background: #fff;
+  color: #0b0b0b;
+  font-size: 14px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Opcional: que EFECTIVIDAD se vea igual sin cambiar tu lógica */
+.ishn-tableWrap textarea.no-border,
+.ishn-tableWrap input.no-border{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.18);
+  background: #fff;
+  box-sizing: border-box;
+}
+.ishn-tableWrap textarea.no-border{
+  min-height: 60px;
+  resize: none;
+}
+.ishn-tableWrap input[type="date"].no-border{
+  padding: 10px 12px;
 }

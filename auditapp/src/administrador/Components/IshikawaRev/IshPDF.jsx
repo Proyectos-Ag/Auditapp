@@ -466,23 +466,60 @@ doc.text(label, textXcenter, textYcenter, { align: 'center' });
     }
   };
 
-  // Función de tablas paginadas (la dejas igual a la que ya tenías, con pequeños ajustes de tamaño)
-  const generatePaginatedTable = (doc, headers, rows, startX, startY, columnWidths, pageHeight, margin, headerHeight = 20) => {
-    // NOTE: Solo se modificó esta función para implementar el comportamiento pedido.
-
+  // Función de tablas paginadas
+  // Función de tablas paginadas (MODIFICADA):
+  // - Soporta evidencia como array (varias imágenes / pdfs / textos)
+  // - Permite NO repetir encabezado de tabla en nuevas páginas
+  const generatePaginatedTable = (
+    doc,
+    headers,
+    rows,
+    startX,
+    startY,
+    columnWidths,
+    pageHeight,
+    margin,
+    headerHeight = 20,
+    repeatHeaderOnNewPage = true,     // 👈 NUEVO
+    evidenceColIndex = 4              // 👈 NUEVO (por defecto col 4 = Evidencia)
+  ) => {
     let y = startY;
     const tableWidth = columnWidths.reduce((a, b) => a + b, 0);
-    const lineHeight = 12; // altura por línea
+
+    const lineHeight = 12;
     const padding = 4;
+    const itemGap = 4; // separación entre evidencias dentro de la celda
+
+    const isDataImage = (s) => typeof s === "string" && s.startsWith("data:image");
+    const isPdfUrl = (s) => typeof s === "string" && /\.pdf(\?|#|$)/i.test(s);
+
+    const normalizeEvidenceItems = (cell) => {
+      if (cell === null || cell === undefined) return [];
+      if (Array.isArray(cell)) return cell.map(String).map(s => s.trim()).filter(Boolean);
+      const s = String(cell).trim();
+      return s ? [s] : [];
+    };
+
+    const parsePdfToken = (s, idx) => {
+      // Soporta "url||filename" o solo "url"
+      if (s.includes("||")) {
+        const [url, filename] = s.split("||");
+        return {
+          url: (url || "").trim(),
+          filename: (filename || `Evidencia ${idx + 1}.pdf`).trim(),
+        };
+      }
+      return { url: s, filename: `Evidencia ${idx + 1}.pdf` };
+    };
 
     const drawTableHeader = () => {
-      doc.setFillColor('#179e6a');
-      doc.rect(startX, y, tableWidth, headerHeight, 'F');
-      doc.setFont('helvetica', 'bold').setFontSize(10).setTextColor(255, 255, 255);
+      doc.setFillColor("#179e6a");
+      doc.rect(startX, y, tableWidth, headerHeight, "F");
+      doc.setFont("helvetica", "bold").setFontSize(10).setTextColor(255, 255, 255);
 
       let x = startX;
       headers.forEach((text, i) => {
-        const lines = doc.splitTextToSize(text, columnWidths[i] - padding * 2);
+        const lines = doc.splitTextToSize(String(text || ""), columnWidths[i] - padding * 2);
         lines.forEach((line, lineIdx) => {
           doc.text(line, x + padding, y + padding + (lineIdx * lineHeight) + 8);
         });
@@ -497,78 +534,104 @@ doc.text(label, textXcenter, textYcenter, { align: 'center' });
       y += headerHeight;
     };
 
-    // Dibujar encabezado por primera vez
+    const newPageForTable = () => {
+      doc.addPage();
+      y = margin;
+
+      // 👇 aquí controlas si se repite o no el encabezado de tabla
+      if (repeatHeaderOnNewPage) drawTableHeader();
+    };
+
+    // Dibuja header de tabla SOLO al inicio (siempre)
     drawTableHeader();
 
-    const drawRowFromLines = (cellLines, imgDimsForRow) => {
-      // cellLines: array of arrays (each cell -> array of text lines) OR for evidence column with image -> special marker
-      let maxLines = 1;
-      cellLines.forEach((cl, idx) => {
-        if (idx === 4 && imgDimsForRow && imgDimsForRow.h) {
-          const imgLines = Math.ceil((imgDimsForRow.h) / lineHeight);
-          maxLines = Math.max(maxLines, imgLines);
-        } else {
-          maxLines = Math.max(maxLines, cl ? cl.length : 0);
+    const buildEvidenceDraw = (rawEvidenceItems, maxW) => {
+      const items = [];
+      let innerH = 0;
+
+      rawEvidenceItems.forEach((ev, idx) => {
+        if (!ev) return;
+
+        if (isDataImage(ev)) {
+          try {
+            const props = doc.getImageProperties(ev);
+            const w = Math.min(props.width, maxW);
+            const h = (props.height * w) / props.width;
+            items.push({ kind: "img", data: ev, w, h });
+            innerH += h + itemGap;
+          } catch {
+            const lines = doc.splitTextToSize(`🚫 Error imagen ${idx + 1}`, maxW);
+            items.push({ kind: "text", lines });
+            innerH += lines.length * lineHeight + itemGap;
+          }
+          return;
         }
+
+        if (ev.includes("||") || isPdfUrl(ev)) {
+          const { url, filename } = parsePdfToken(ev, idx);
+          const lines = doc.splitTextToSize(filename, maxW);
+          items.push({ kind: "pdf", url, filename, lines });
+          innerH += lines.length * lineHeight + itemGap;
+          return;
+        }
+
+        // texto normal
+        const lines = doc.splitTextToSize(String(ev), maxW);
+        items.push({ kind: "text", lines });
+        innerH += lines.length * lineHeight + itemGap;
       });
 
-      const rowHeight = maxLines * lineHeight + padding * 2;
+      if (items.length > 0) innerH -= itemGap; // quita gap final
+      return { items, innerH };
+    };
 
-      // Si no cabe en la página, se debe crear una nueva (esto deberá haber sido chequeado antes de llamar a esta función)
+    const drawRow = (cellLines, evidenceDraw, rowHeight) => {
       doc.setDrawColor(0);
       doc.rect(startX, y, tableWidth, rowHeight);
 
       let x = startX;
+
       cellLines.forEach((cl, i) => {
-        doc.setFont('helvetica','normal').setFontSize(10).setTextColor(0, 0, 0);
+        doc.setFont("helvetica", "normal").setFontSize(10).setTextColor(0, 0, 0);
 
-        if (i === 4 && imgDimsForRow && imgDimsForRow.data) {
-          try {
-            const { data: imgData, w, h } = imgDimsForRow;
-            doc.addImage(
-              imgData,
-              'JPEG',
-              x + padding,
-              y + padding,
-              w,
-              h
-            );
-          } catch {
-            doc.text('⚠️ Error en imagen', x + padding, y + padding + 10);
-          }
-        }
-        else if (i === 4 && cl && cl[0] && typeof cl[0] === 'string' && cl[0].includes('.pdf')) {
-          // pdf link cell
-          const [url, filename] = cl[0].split('||').map(s => s.trim());
-          doc.setFontSize(10).setTextColor(0, 0, 255);
+        if (i === evidenceColIndex) {
           const maxW = columnWidths[i] - padding * 2;
-          const textLines = doc.splitTextToSize(filename, maxW);
+          let cy = y + padding;
 
-          textLines.forEach((line, idx) => {
-            doc.text(
-              line,
-              x + padding,
-              y + padding + idx * lineHeight + 8
-            );
+          (evidenceDraw?.items || []).forEach((it) => {
+            if (it.kind === "img") {
+              try {
+                doc.addImage(it.data, "JPEG", x + padding, cy, it.w, it.h);
+                cy += it.h + itemGap;
+              } catch {
+                doc.text("⚠️ Error en imagen", x + padding, cy + 10);
+                cy += lineHeight + itemGap;
+              }
+              return;
+            }
+
+            if (it.kind === "pdf") {
+              doc.setTextColor(0, 0, 255);
+              it.lines.forEach((ln, li) => {
+                doc.text(ln, x + padding, cy + li * lineHeight + 8);
+              });
+
+              const linkH = it.lines.length * lineHeight;
+              doc.link(x + padding, cy, maxW, linkH, { url: it.url });
+              doc.setTextColor(0, 0, 0);
+              cy += linkH + itemGap;
+              return;
+            }
+
+            // text
+            (it.lines || []).forEach((ln, li) => {
+              doc.text(ln, x + padding, cy + li * lineHeight + 8);
+            });
+            cy += (it.lines?.length || 1) * lineHeight + itemGap;
           });
-
-          doc.link(
-            x + padding,
-            y + padding,
-            maxW,
-            textLines.length * lineHeight,
-            { url }
-          );
-          doc.setTextColor(0, 0, 0);
-        }
-        else {
-          // texto normal
+        } else {
           (cl || []).forEach((line, idx) => {
-            doc.text(
-              line,
-              x + padding,
-              y + padding + idx * lineHeight + 8
-            );
+            doc.text(line, x + padding, y + padding + idx * lineHeight + 8);
           });
         }
 
@@ -581,107 +644,84 @@ doc.text(label, textXcenter, textYcenter, { align: 'center' });
       y += rowHeight;
     };
 
-    // Procesar filas: permitimos dividir celdas de texto entre páginas, excepto la columna de evidencia (índice 4)
     let i = 0;
     while (i < rows.length) {
       const row = rows[i];
 
-      // Precalcular lines por celda y dimensiones de imagen si aplica
+      // 1) líneas de texto normales
       const cellLines = row.map((cell, idx) => {
-        if (idx === 4 && typeof cell === 'string' && (cell.startsWith('data:image') || cell.includes('.pdf'))) {
-          // dejamos el contenido tal cual en una sola línea para la columna evidencia
-          return [cell];
-        }
-        return doc.splitTextToSize((cell || '').toString(), columnWidths[idx] - padding * 2);
+        if (idx === evidenceColIndex) return [""]; // se dibuja aparte
+        return doc.splitTextToSize(String(cell || ""), columnWidths[idx] - padding * 2);
       });
 
-      let imgDims = null;
-      // calcular dimensiones si es imagen
-      if (cellLines[4] && cellLines[4][0] && typeof cellLines[4][0] === 'string' && cellLines[4][0].startsWith && cellLines[4][0].startsWith('data:image')) {
-        try {
-          const imgData = cellLines[4][0];
-          const props = doc.getImageProperties(imgData);
-          const maxW = columnWidths[4] - padding * 2;
-          const w = Math.min(props.width, maxW);
-          const h = (props.height * w) / props.width;
-          imgDims = { data: imgData, w, h };
-        } catch {
-          imgDims = null;
-        }
-      }
+      // 2) evidencia (varias)
+      const evidenceRaw = normalizeEvidenceItems(row[evidenceColIndex]);
+      const evidenceMaxW = columnWidths[evidenceColIndex] - padding * 2;
+      let evidenceDraw = buildEvidenceDraw(evidenceRaw.length ? evidenceRaw : ["N/A"], evidenceMaxW);
 
-      // calcular maxLines teniendo en cuenta la imagen
-      let maxLines = 1;
-      cellLines.forEach((cl, idx) => {
-        if (idx === 4 && imgDims && imgDims.h) {
-          maxLines = Math.max(maxLines, Math.ceil(imgDims.h / lineHeight));
-        } else {
-          maxLines = Math.max(maxLines, cl.length);
-        }
-      });
+      // 3) calcular altura de fila
+      const maxTextLines = Math.max(
+        1,
+        ...cellLines.map((cl, idx) => (idx === evidenceColIndex ? 1 : (cl?.length || 1)))
+      );
+      const textInnerH = maxTextLines * lineHeight;
+      const evidenceInnerH = evidenceDraw.innerH || lineHeight;
 
-      const rowHeight = maxLines * lineHeight + padding * 2;
+      const innerH = Math.max(textInnerH, evidenceInnerH);
+      const rowHeight = innerH + padding * 2;
 
-      // Si la fila entera no cabe en la página actual...
+      // 4) Si no cabe en la página actual:
       if (y + rowHeight > pageHeight - margin) {
-        // Si la columna evidencia es una imagen y no cabe, MOVER fila completa a la siguiente página
-        if (imgDims && imgDims.h + padding * 2 > pageHeight - margin - y) {
-          doc.addPage();
-          y = margin;
-          drawTableHeader();
-          // ahora si cabe en la nueva página lo dibujamos
-          drawRowFromLines(cellLines, imgDims);
-          i += 1;
+        // Si la evidencia es grande (imágenes), mover la fila completa
+        const hasImages = (evidenceDraw.items || []).some(it => it.kind === "img");
+        const availableInnerH = (pageHeight - margin - y - padding * 2);
+
+        // Si ni siquiera cabe el bloque de evidencia en el espacio restante, página nueva
+        if (hasImages || evidenceInnerH > availableInnerH) {
+          newPageForTable();
+          continue; // reintentar misma fila
+        }
+
+        // Intentar partir SOLO texto (manteniendo evidencia solo en la primera parte)
+        const availableLines = Math.floor(availableInnerH / lineHeight);
+        if (availableLines <= 0) {
+          newPageForTable();
           continue;
         }
 
-        // Para filas sin imagen grande: intentar partir el contenido de texto
-        const availableHeight = pageHeight - margin - y - padding * 2;
-        const availableLines = Math.floor(availableHeight / lineHeight);
-
-        if (availableLines <= 0) {
-          // no hay espacio útil: nueva página y dibujar encabezado
-          doc.addPage();
-          y = margin;
-          drawTableHeader();
-          continue; // re-evaluar la misma fila en la nueva página
-        }
-
-        // construir la parte que cabe en esta página y la parte restante
         const firstPartCellLines = cellLines.map((cl, idx) => {
-          if (idx === 4) return cl; // evidencia no se divide
+          if (idx === evidenceColIndex) return cl;
           return (cl || []).slice(0, availableLines);
         });
 
-        const remainderRow = cellLines.map((cl, idx) => {
-          if (idx === 4) return ''; // evidencia no se divide
-          const rem = (cl || []).slice(availableLines);
-          return rem.join('\n');
+        const remainderRow = row.map((cell, idx) => {
+          if (idx === evidenceColIndex) return ""; // evidencia solo en la primera parte
+          const full = doc.splitTextToSize(String(cell || ""), columnWidths[idx] - padding * 2);
+          const rem = (full || []).slice(availableLines);
+          return rem.join("\n");
         });
 
-        // dibujar la primera parte
-        drawRowFromLines(firstPartCellLines, imgDims);
+        // altura de la primera parte
+        const firstMaxTextLines = Math.max(
+          1,
+          ...firstPartCellLines.map((cl, idx) => (idx === evidenceColIndex ? 1 : (cl?.length || 1)))
+        );
+        const firstTextH = firstMaxTextLines * lineHeight;
+        const firstInnerH = Math.max(firstTextH, evidenceInnerH);
+        const firstRowH = firstInnerH + padding * 2;
 
-        // reemplazar la fila actual por la fila restante (si queda contenido)
-        const hasRemainder = remainderRow.some(r => r && r.toString().trim());
-        if (hasRemainder) {
-          rows[i] = remainderRow;
-        } else {
-          // no queda nada: avanzar
-          i += 1;
-        }
+        drawRow(firstPartCellLines, evidenceDraw, firstRowH);
 
-        // pasar a nueva página y dibujar encabezado para continuar
-        doc.addPage();
-        y = margin;
-        drawTableHeader();
+        const hasRemainder = remainderRow.some((r, idx) => idx !== evidenceColIndex && String(r || "").trim());
+        if (hasRemainder) rows[i] = remainderRow;
+        else i += 1;
 
-        // si quedaba remainder, lo conservará en la misma posición i (no incrementamos) para procesarlo ahora
+        newPageForTable();
         continue;
       }
 
-      // Si cabe entero en la página, dibujar normalmente
-      drawRowFromLines(cellLines, imgDims);
+      // 5) Dibujar fila normal
+      drawRow(cellLines, evidenceDraw, rowHeight);
       i += 1;
     }
 
@@ -1007,51 +1047,78 @@ if (espacioRestanteParaTabla < (headerHeightEstimado + filaMinimaEstimado + 6)) 
       ];
 
       yOffset = generatePaginatedTable(
-          doc,
-          solHeaders,
-          solRows,
-          margin,
-          yOffset,
-          solCols,
-          pageHeight,
-          margin
-        ) + 20;
+        doc,
+        solHeaders,
+        solRows,
+        margin,
+        yOffset,
+        solCols,
+        pageHeight,
+        margin,
+        20, 
+        false  
+      ) + 20;
+
 
       if (ishikawa.correcciones?.length > 0) {
         // EFECTIVIDAD: solo saltar si no hay espacio mínimo para header + al menos una fila
-const espacioRestanteParaEfect = pageHeight - margin - yOffset;
-const headerHeightEfect = 30; // en tu llamada a generatePaginatedTable pasas 30 como headerHeight por defecto
-const filaMinimaEfect = 24;
-if (espacioRestanteParaEfect < (headerHeightEfect + filaMinimaEfect + 6)) {
-  doc.addPage();
-  yOffset = margin;
-}
+        const espacioRestanteParaEfect = pageHeight - margin - yOffset;
+        const headerHeightEfect = 30; // en tu llamada a generatePaginatedTable pasas 30 como headerHeight por defecto
+        const filaMinimaEfect = 24;
+        if (espacioRestanteParaEfect < (headerHeightEfect + filaMinimaEfect + 6)) {
+          doc.addPage();
+          yOffset = margin;
+        }
 
 
-        doc.setFont(BASE_FONT,'bold').setFontSize(LABEL_SIZE).setTextColor(0)
-          .text('EFECTIVIDAD', margin, yOffset);
-        yOffset += 20;
+                doc.setFont(BASE_FONT,'bold').setFontSize(LABEL_SIZE).setTextColor(0)
+                  .text('EFECTIVIDAD', margin, yOffset);
+                yOffset += 20;
 
-        const effHeaders = [
-          'Actividad',
-          'Responsable',
-          'Fecha Verificación',
-          'Acción Correctiva Cerrada',
-          'Evidencia'
-        ];
+                const effHeaders = [
+                  'Actividad',
+                  'Responsable',
+                  'Fecha Verificación',
+                  'Acción Correctiva Cerrada',
+                  'Evidencia'
+                ];
 
-        const effRows = await Promise.all(ishikawa.correcciones.map(async c => {
-          let evidenciaContent = 'N/A';
+                const isPdfUrl = (url) => /\.pdf(\?|#|$)/i.test(String(url || ""));
 
-          if (c.evidencia) {
-            if (c.evidencia.includes('.pdf')) {
-              evidenciaContent = c.evidencia;
-            } else {
+        const toPdfToken = (url, idx) => {
+          // "url||nombreVisible" para que la tabla lo dibuje como link
+          return `${url}||Evidencia ${idx + 1}.pdf`;
+        };
+
+        const effRows = await Promise.all(
+          (ishikawa.correcciones || []).map(async (c) => {
+            // ✅ normaliza evidencia a array
+            const evidArr = Array.isArray(c.evidencia)
+              ? c.evidencia.filter(Boolean)
+              : (c.evidencia ? [c.evidencia] : []);
+
+            // ✅ construye múltiples evidencias (dataURL para imágenes, token para pdf)
+            const evidenciasCell = [];
+
+            for (let j = 0; j < evidArr.length; j++) {
+              const evUrl = evidArr[j];
+
+              if (!evUrl) continue;
+
+              // PDF → link
+              if (isPdfUrl(evUrl)) {
+                evidenciasCell.push(toPdfToken(evUrl, j));
+                continue;
+              }
+
+              // Imagen → dataURL
               try {
                 const img = new Image();
-                img.crossOrigin = 'Anonymous';
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
+                img.crossOrigin = "Anonymous";
+
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
                 await new Promise((resolve, reject) => {
                   img.onload = () => {
                     canvas.width = img.width;
@@ -1060,24 +1127,28 @@ if (espacioRestanteParaEfect < (headerHeightEfect + filaMinimaEfect + 6)) {
                     resolve();
                   };
                   img.onerror = reject;
-                  img.src = c.evidencia;
+                  img.src = evUrl;
                 });
-                evidenciaContent = canvas.toDataURL('image/jpeg', 0.7);
+
+                evidenciasCell.push(canvas.toDataURL("image/jpeg", 0.7));
               } catch {
-                evidenciaContent = '🚫 Error cargando imagen';
+                evidenciasCell.push(`🚫 Error cargando imagen ${j + 1}`);
               }
             }
-          }
 
-          const rawDate = (c.fechaCompromiso?.slice?.(-1) || '') || '';
-          return [
-            c.actividad,
-            getResponsable(c.responsable).join(', '),
-            rawDate ? rawDate : '',
-            c.cerrada || '',
-            evidenciaContent
-          ];
-        }));
+            if (evidenciasCell.length === 0) evidenciasCell.push("N/A");
+
+            const rawDate = (c.fechaCompromiso?.slice?.(-1) || "") || "";
+
+            return [
+              c.actividad,
+              getResponsable(c.responsable).join(", "),
+              rawDate ? rawDate : "",
+              c.cerrada || "",
+              evidenciasCell, // ✅ ahora mandamos ARRAY a la tabla
+            ];
+          })
+        );
 
         const effCols = [
           availableWidth * 0.25, // Actividad (25%)
@@ -1088,16 +1159,18 @@ if (espacioRestanteParaEfect < (headerHeightEfect + filaMinimaEfect + 6)) {
         ];
 
         yOffset = generatePaginatedTable(
-            doc,
-            effHeaders,
-            effRows,
-            margin,
-            yOffset,
-            effCols,
-            pageHeight,
-            margin,
-            30
-          ) + 20;
+          doc,
+          effHeaders,
+          effRows,
+          margin,
+          yOffset,
+          effCols,
+          pageHeight,
+          margin,
+          30, 
+          false 
+        ) + 20;
+
       }
 
       // Guardar o enviar
