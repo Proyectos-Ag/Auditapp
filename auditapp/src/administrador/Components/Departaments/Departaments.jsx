@@ -71,10 +71,9 @@ const Departaments = () => {
       setLoading(true);
       try {
         const response = await api.get('/areas');
-        if (!response.ok) {
-          throw new Error('No se pudo obtener la lista de áreas');
-        }
-        const data = await response.json();
+        // Eliminar la verificación de response.ok
+        // Axios y muchos wrappers lanzan error automáticamente si el status no es 2xx
+        const data = response.data || response;
         setAreas(data);
       } catch (error) {
         console.error(error);
@@ -126,83 +125,82 @@ const Departaments = () => {
   };
 
   const agregarArea = async () => {
-  try {
-    const payload = {
-      ...nuevaArea,
-      areas: (nuevaArea.areas || [])
-        .map(a => a.trim())
-        .filter(Boolean),
-    };
+    try {
+      const payload = {
+        ...nuevaArea,
+        areas: (nuevaArea.areas || [])
+          .map(a => a.trim())
+          .filter(Boolean),
+      };
 
-    const { data } = await api.post('/areas', payload);
+      const response = await api.post('/areas', payload);
+      const creada = response.data?.area ?? response.data;
 
-    const creada = data?.area ?? data;
+      setAreas(prev => [...prev, creada]);
+      setNuevaArea({ departamento: '', areas: [] });
+      setMostrarFormularioArea(false);
 
-    setAreas(prev => [...prev, creada]);
-    setNuevaArea({ departamento: '', areas: [] });
-    setMostrarFormularioArea(false);
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Éxito',
-      text: 'Área agregada correctamente',
-      confirmButtonColor: '#1976d2',
-    });
-  } catch (err) {
-    console.error('Error al agregar el área:', err?.response?.data || err);
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: err?.response?.data?.message || 'No se pudo agregar el área',
-      confirmButtonColor: '#1976d2',
-    });
-  }
-};
+      Swal.fire({
+        icon: 'success',
+        title: 'Éxito',
+        text: 'Área agregada correctamente',
+        confirmButtonColor: '#1976d2',
+      });
+    } catch (err) {
+      console.error('Error al agregar el área:', err?.response?.data || err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err?.response?.data?.message || 'No se pudo agregar el área',
+        confirmButtonColor: '#1976d2',
+      });
+    }
+  };
 
   const eliminarArea = async (areaId) => {
-  const result = await Swal.fire({
-    title: '¿Eliminar departamento?',
-    text: 'Esta acción no se puede deshacer',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Eliminar',
-    cancelButtonText: 'Cancelar',
-  });
-
-  if (!result.isConfirmed) return;
-
-  try {
-    await api.delete(`/areas/${areaId}`);
-
-    setAreas(prev => prev.filter(area => area._id !== areaId));
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Éxito',
-      text: 'Departamento eliminado correctamente',
-      confirmButtonColor: '#1976d2',
+    const result = await Swal.fire({
+      title: '¿Eliminar departamento?',
+      text: 'Esta acción no se puede deshacer',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
     });
-  } catch (err) {
-    const status = err?.response?.status;
-    const backendMsg = err?.response?.data?.message || err?.response?.data?.error;
 
-    const msg =
-      status === 409
-        ? 'No se puede eliminar: el departamento tiene referencias asociadas.'
-        : backendMsg || 'No se pudo eliminar el área';
+    if (!result.isConfirmed) return;
 
-    console.error('Error al eliminar el área:', err?.response?.data || err);
+    try {
+      await api.delete(`/areas/${areaId}`);
 
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: msg,
-      confirmButtonColor: '#1976d2',
-    });
-  }
-};
+      setAreas(prev => prev.filter(area => area._id !== areaId));
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Éxito',
+        text: 'Departamento eliminado correctamente',
+        confirmButtonColor: '#1976d2',
+      });
+    } catch (err) {
+      const status = err?.response?.status;
+      const backendMsg = err?.response?.data?.message || err?.response?.data?.error;
+
+      const msg =
+        status === 409
+          ? 'No se puede eliminar: el departamento tiene referencias asociadas.'
+          : backendMsg || 'No se pudo eliminar el área';
+
+      console.error('Error al eliminar el área:', err?.response?.data || err);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: msg,
+        confirmButtonColor: '#1976d2',
+      });
+    }
+  };
 
   const abrirModalActualizar = (areaId) => {
     const areaSeleccionada = areas.find(area => area._id === areaId);
@@ -215,44 +213,44 @@ const Departaments = () => {
   };
 
   const actualizarArea = async () => {
-  try {
-    const payload = {
-      ...valoresAreaSeleccionada,
-      areas: (valoresAreaSeleccionada.areas || [])
-        .map(a => a.trim())
-        .filter(Boolean),
-    };
+    try {
+      const payload = {
+        ...valoresAreaSeleccionada,
+        areas: (valoresAreaSeleccionada.areas || [])
+          .map(a => a.trim())
+          .filter(Boolean),
+      };
 
-    const { data } = await api.patch(`/areas/${areaSeleccionadaId}`, payload);
-    const actualizada = data?.area ?? data;
+      const response = await api.patch(`/areas/${areaSeleccionadaId}`, payload);
+      const actualizada = response.data?.area ?? response.data;
 
-    setAreas(prev => prev.map(a => (a._id === areaSeleccionadaId ? actualizada : a)));
-    setMostrarModalActualizar(false);
+      setAreas(prev => prev.map(a => (a._id === areaSeleccionadaId ? actualizada : a)));
+      setMostrarModalActualizar(false);
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Éxito',
-      text: 'Área actualizada correctamente',
-      confirmButtonColor: '#1976d2',
-    });
-  } catch (err) {
-    const status = err?.response?.status;
-    const backendMsg = err?.response?.data?.message || err?.response?.data?.error;
+      Swal.fire({
+        icon: 'success',
+        title: 'Éxito',
+        text: 'Área actualizada correctamente',
+        confirmButtonColor: '#1976d2',
+      });
+    } catch (err) {
+      const status = err?.response?.status;
+      const backendMsg = err?.response?.data?.message || err?.response?.data?.error;
 
-    const msg =
-      status === 409 ? 'No se puede actualizar: conflicto de datos.'
-      : status === 404 ? 'El área ya no existe.'
-      : backendMsg || 'No se pudo actualizar el área';
+      const msg =
+        status === 409 ? 'No se puede actualizar: conflicto de datos.'
+        : status === 404 ? 'El área ya no existe.'
+        : backendMsg || 'No se pudo actualizar el área';
 
-    console.error('Error al actualizar el área:', err?.response?.data || err);
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: msg,
-      confirmButtonColor: '#1976d2',
-    });
-  }
-};
+      console.error('Error al actualizar el área:', err?.response?.data || err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: msg,
+        confirmButtonColor: '#1976d2',
+      });
+    }
+  };
 
   return (
     <Box sx={{ padding: '40px', marginTop: '3em' }}>

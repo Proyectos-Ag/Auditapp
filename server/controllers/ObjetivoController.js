@@ -150,12 +150,21 @@ cron.schedule('0 8 * * *', async () => {
   }
 });
 
-// GET /api/objetivos?area=INGENIERIA
+// ✅ MODIFICADA: GET /api/objetivos?area=INGENIERIA - SOLO objetivos tradicionales
 const obtenerObjetivos = async (req, res) => {
   try {
     const { area } = req.query;
-    const query = area ? { area } : {};
+    
+    // ✅ FILTRAR: Solo objetivos tradicionales (NO multi-departamento)
+    const query = area ? { 
+      area: area,
+      nombreObjetivoGeneral: { $exists: false } // Solo objetivos sin nombreObjetivoGeneral
+    } : { nombreObjetivoGeneral: { $exists: false } };
+    
     let objetivos = await Objetivo.find(query);
+    
+    console.log(`🔍 Buscando objetivos tradicionales para área: ${area}`);
+    console.log(`📊 Resultados encontrados: ${objetivos.length} objetivos tradicionales`);
     
     // Migrar objetivos sin año automáticamente
     const objetivosMigrados = [];
@@ -171,7 +180,93 @@ const obtenerObjetivos = async (req, res) => {
     res.json(objetivosMigrados);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error al obtener objetivos" });
+    res.status(500).json({ error: "Error al obtener objetivos tradicionales" });
+  }
+};
+
+// ✅ NUEVA: GET /api/objetivos/multi/area?area=PESADAS - Solo objetivos multi-departamento por área
+const obtenerObjetivosMultiPorArea = async (req, res) => {
+  try {
+    const { area } = req.query;
+    
+    if (!area) {
+      return res.status(400).json({ error: "El parámetro 'area' es requerido" });
+    }
+    
+    console.log(`🔍 Buscando objetivos multi-departamento para área: ${area}`);
+    
+    // Buscar objetivos multi-departamento que tengan esta área en objetivosEspecificos
+    const objetivosMulti = await Objetivo.find({
+      "objetivosEspecificos.area": area,
+      nombreObjetivoGeneral: { $exists: true } // Solo objetivos multi-departamento
+    });
+    
+    console.log(`📊 Encontrados ${objetivosMulti.length} objetivos multi-departamento`);
+    
+    // Transformar para devolver solo los objetivos específicos del área
+    const objetivosEspecificos = [];
+    
+    objetivosMulti.forEach(objetivoMulti => {
+      const especificosParaArea = objetivoMulti.objetivosEspecificos.filter(
+        obj => obj.area === area
+      );
+      
+      especificosParaArea.forEach(especifico => {
+        objetivosEspecificos.push({
+          _id: objetivoMulti._id + '-' + especifico.area,
+          area: especifico.area,
+          objetivo: especifico.objetivo,
+          recursos: especifico.recursos,
+          metaFrecuencia: especifico.metaFrecuencia,
+          indicadorENEABR: especifico.indicadorENEABR || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+          indicadorFEB: especifico.indicadorFEB || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+          indicadorMAR: especifico.indicadorMAR || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+          indicadorABR: especifico.indicadorABR || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+          indicadorMAYOAGO: especifico.indicadorMAYOAGO || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+          indicadorJUN: especifico.indicadorJUN || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+          indicadorJUL: especifico.indicadorJUL || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+          indicadorAGO: especifico.indicadorAGO || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+          indicadorSEPDIC: especifico.indicadorSEPDIC || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+          indicadorOCT: especifico.indicadorOCT || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+          indicadorNOV: especifico.indicadorNOV || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+          indicadorDIC: especifico.indicadorDIC || { S1: "", S2: "", S3: "", S4: "", S5: "" },
+          observaciones: especifico.observaciones,
+          esMultiDepartamento: true,
+          objetivoGeneral: objetivoMulti.nombreObjetivoGeneral,
+          objetivoIdMulti: objetivoMulti._id,
+          departamento: especifico.departamento,
+          accionesCorrectivas: especifico.accionesCorrectivas || [],
+          historialAnual: especifico.historialAnual || []
+        });
+      });
+    });
+    
+    console.log(`✅ Devolviendo ${objetivosEspecificos.length} objetivos específicos multi-departamento`);
+    res.json(objetivosEspecificos);
+  } catch (error) {
+    console.error('Error al obtener objetivos multi por área:', error);
+    res.status(500).json({ error: "Error al obtener objetivos multi-departamento" });
+  }
+};
+
+// Obtener un objetivo por ID
+const obtenerObjetivoPorId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const objetivo = await Objetivo.findById(id);
+    
+    if (!objetivo) {
+      return res.status(404).json({ error: "Objetivo no encontrado" });
+    }
+    
+    res.json(objetivo);
+  } catch (error) {
+    console.error('❌ Error al obtener objetivo por ID:', error);
+    res.status(500).json({ 
+      error: "Error al obtener objetivo",
+      details: error.message 
+    });
   }
 };
 
@@ -240,14 +335,60 @@ const crearObjetivo = async (req, res) => {
 const actualizarObjetivo = async (req, res) => {
   try {
     const { id } = req.params;
-    const actualizado = await Objetivo.findByIdAndUpdate(id, req.body, { new: true });
-    if (!actualizado) {
+    const datosActualizados = req.body;
+    
+    console.log('📝 Actualizando objetivo:', { id, datosActualizados });
+    
+    // Primero obtener el objetivo actual
+    const objetivoActual = await Objetivo.findById(id);
+    
+    if (!objetivoActual) {
       return res.status(404).json({ error: "Objetivo no encontrado" });
     }
-    res.json(actualizado);
+    
+    // Verificar si es un objetivo tradicional
+    const esTradicional = !objetivoActual.nombreObjetivoGeneral && objetivoActual.area;
+    
+    if (esTradicional) {
+      // Para objetivos tradicionales, actualizar solo los campos necesarios
+      const camposPermitidos = [
+        'indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR',
+        'indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO',
+        'indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC',
+        'observaciones', 'añoActual', 'activo'
+      ];
+      
+      // Filtrar solo los campos permitidos
+      const datosParaActualizar = {};
+      Object.keys(datosActualizados).forEach(key => {
+        if (camposPermitidos.includes(key)) {
+          datosParaActualizar[key] = datosActualizados[key];
+        }
+      });
+      
+      console.log('📤 Actualizando objetivo tradicional con:', datosParaActualizar);
+      
+      // Usar findByIdAndUpdate para evitar triggers del middleware
+      const actualizado = await Objetivo.findByIdAndUpdate(
+        id,
+        { $set: datosParaActualizar },
+        { new: true, runValidators: true }
+      );
+      
+      res.json(actualizado);
+      
+    } else {
+      // Para objetivos multi-departamento, usar update normal
+      const actualizado = await Objetivo.findByIdAndUpdate(id, datosActualizados, { new: true });
+      res.json(actualizado);
+    }
+    
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error al actualizar objetivo" });
+    console.error('❌ Error al actualizar objetivo:', error);
+    res.status(500).json({ 
+      error: "Error al actualizar objetivo",
+      details: error.message 
+    });
   }
 };
 
@@ -288,25 +429,79 @@ const agregarAccionCorrectiva = async (req, res) => {
 
 const getAccionesCorrectivasByArea = async (req, res) => {
   try {
-    const { area } = req.query;
-    console.log('Area: ', area);
-    if (!area) {
-      return res.status(400).json({ error: "El parámetro 'area' es obligatorio." });
+    const { area, esMultiDepartamento, objetivoId } = req.query;
+    console.log('🔍 Parámetros recibidos:', { area, esMultiDepartamento, objetivoId });
+
+    if (!area && !objetivoId) {
+      return res.status(400).json({ error: "Se requiere el parámetro 'area' u 'objetivoId'." });
     }
 
-    const objetivos = await Objetivo.find({ area });
-
     let acciones = [];
-    objetivos.forEach((objetivo) => {
+
+    if (esMultiDepartamento === 'true' && objetivoId) {
+      // ✅ Para objetivos multi-departamento: buscar por objetivoId
+      console.log('🔍 Buscando acciones para objetivo multi-departamento ID:', objetivoId);
+      
+      const objetivo = await Objetivo.findById(objetivoId);
+      
+      if (!objetivo) {
+        return res.status(404).json({ error: "Objetivo multi-departamento no encontrado" });
+      }
+
+      // Buscar acciones en el objetivo específico del área
+      if (objetivo.objetivosEspecificos && objetivo.objetivosEspecificos.length > 0) {
+        const objetivoEspecifico = objetivo.objetivosEspecificos.find(
+          obj => obj.area === area || obj._id.toString() === area
+        );
+        
+        if (objetivoEspecifico && objetivoEspecifico.accionesCorrectivas) {
+          // Acciones del objetivo específico
+          acciones = objetivoEspecifico.accionesCorrectivas.map((accion) => ({
+            ...accion.toObject(),
+            idObjetivo: objetivo._id,
+            idObjetivoEspecifico: objetivoEspecifico._id,
+            area: objetivoEspecifico.area,
+            departamento: objetivoEspecifico.departamento,
+            objetivo: objetivoEspecifico.objetivo,
+            esMultiDepartamento: true,
+            objetivoGeneral: objetivo.nombreObjetivoGeneral
+          }));
+        }
+      }
+      
+      // También incluir acciones del nivel principal (si las hay)
       if (objetivo.accionesCorrectivas && objetivo.accionesCorrectivas.length > 0) {
-        const accionesEnriquecidas = objetivo.accionesCorrectivas.map((accion) => ({
+        const accionesPrincipales = objetivo.accionesCorrectivas.map((accion) => ({
           ...accion.toObject(),
           idObjetivo: objetivo._id,
+          esMultiDepartamento: true,
+          esNivelPrincipal: true,
+          objetivoGeneral: objetivo.nombreObjetivoGeneral
         }));
-        acciones = acciones.concat(accionesEnriquecidas);
+        acciones = [...acciones, ...accionesPrincipales];
       }
-    });
+      
+    } else {
+      // ✅ Para objetivos tradicionales: buscar por área
+      console.log('🔍 Buscando acciones para área tradicional:', area);
+      
+      const objetivos = await Objetivo.find({ area });
 
+      objetivos.forEach((objetivo) => {
+        if (objetivo.accionesCorrectivas && objetivo.accionesCorrectivas.length > 0) {
+          const accionesEnriquecidas = objetivo.accionesCorrectivas.map((accion) => ({
+            ...accion.toObject(),
+            idObjetivo: objetivo._id,
+            area: objetivo.area,
+            objetivo: objetivo.objetivo,
+            esMultiDepartamento: false
+          }));
+          acciones = acciones.concat(accionesEnriquecidas);
+        }
+      });
+    }
+
+    console.log(`✅ Encontradas ${acciones.length} acciones`);
     res.status(200).json(acciones);
   } catch (error) {
     console.error("Error en getAccionesCorrectivasByArea:", error);
@@ -338,14 +533,277 @@ const migrarTodosLosObjetivos = async (req, res) => {
   }
 };
 
+const crearObjetivoMultiDepartamento = async (req, res) => {
+  try {
+    const { nombreObjetivoGeneral, departamentosAsignados, objetivosEspecificos, usuario } = req.body;
+    
+    // ✅ Log para debugging
+    console.log('📥 Datos recibidos en backend:');
+    console.log('nombreObjetivoGeneral:', nombreObjetivoGeneral);
+    console.log('departamentosAsignados:', departamentosAsignados);
+    console.log('objetivosEspecificos:', JSON.stringify(objetivosEspecificos, null, 2));
+    
+    // Validar datos requeridos
+    if (!nombreObjetivoGeneral || !departamentosAsignados || departamentosAsignados.length === 0) {
+      return res.status(400).json({ 
+        error: "Nombre del objetivo y departamentos asignados son requeridos" 
+      });
+    }
+    
+    // ✅ Validar que cada objetivo específico tenga el campo 'area'
+    if (objetivosEspecificos && objetivosEspecificos.length > 0) {
+      for (const objEsp of objetivosEspecificos) {
+        if (!objEsp.area) {
+          console.error('❌ Objetivo específico sin área:', objEsp);
+          return res.status(400).json({ 
+            error: `El objetivo para el departamento "${objEsp.departamento}" no tiene área asignada` 
+          });
+        }
+        if (!objEsp.departamento) {
+          console.error('❌ Objetivo específico sin departamento:', objEsp);
+          return res.status(400).json({ 
+            error: "Todos los objetivos específicos deben tener departamento asignado" 
+          });
+        }
+        if (!objEsp.objetivo) {
+          console.error('❌ Objetivo específico sin descripción:', objEsp);
+          return res.status(400).json({ 
+            error: `El objetivo para "${objEsp.area}" del departamento "${objEsp.departamento}" está vacío` 
+          });
+        }
+      }
+    }
+    
+    // Crear el objetivo principal
+    const nuevoObjetivo = new Objetivo({
+      nombreObjetivoGeneral,
+      departamentosAsignados,
+      objetivosEspecificos: objetivosEspecificos || [],
+      creadoPor: {
+        usuarioId: usuario?.id,
+        nombre: usuario?.nombre || "Sistema",
+        fecha: new Date()
+      },
+      añoActual: new Date().getFullYear(),
+      activo: true
+    });
+    
+    const saved = await nuevoObjetivo.save();
+    
+    // ✅ Log del documento guardado
+    console.log('✅ Objetivo guardado exitosamente:');
+    console.log('ID:', saved._id);
+    console.log('Objetivos específicos guardados:', saved.objetivosEspecificos.length);
+    saved.objetivosEspecificos.forEach((obj, index) => {
+      console.log(`  ${index + 1}. Depto: ${obj.departamento}, Área: ${obj.area}`);
+    });
+    
+    res.status(201).json(saved);
+  } catch (error) {
+    console.error('❌ Error al crear objetivo multi-departamento:', error);
+    res.status(500).json({ 
+      error: "Error al crear objetivo",
+      details: error.message 
+    });
+  }
+};
+
+// Función para obtener objetivos por departamento (mantiene compatibilidad)
+const obtenerObjetivosPorDepartamento = async (req, res) => {
+  try {
+    const { departamento } = req.query;
+    
+    if (!departamento) {
+      return res.status(400).json({ error: "El parámetro 'departamento' es requerido" });
+    }
+    
+    // Buscar objetivos donde el departamento esté en la lista de departamentos asignados
+    const objetivos = await Objetivo.find({ 
+      departamentosAsignados: departamento,
+      activo: true 
+    });
+    
+    // Transformar los datos para mantener compatibilidad con el frontend existente
+    const objetivosTransformados = [];
+    
+    objetivos.forEach(objetivoGeneral => {
+      const objetivoEspecifico = objetivoGeneral.objetivosEspecificos.find(
+        obj => obj.departamento === departamento
+      );
+      
+      if (objetivoEspecifico) {
+        objetivosTransformados.push({
+          _id: objetivoGeneral._id,
+          area: departamento,
+          objetivo: objetivoEspecifico.objetivo,
+          recursos: objetivoEspecifico.recursos,
+          metaFrecuencia: objetivoEspecifico.metaFrecuencia,
+          añoActual: objetivoGeneral.añoActual,
+          indicadorENEABR: objetivoEspecifico.indicadorENEABR,
+          indicadorFEB: objetivoEspecifico.indicadorFEB,
+          indicadorMAR: objetivoEspecifico.indicadorMAR,
+          indicadorABR: objetivoEspecifico.indicadorABR,
+          indicadorMAYOAGO: objetivoEspecifico.indicadorMAYOAGO,
+          indicadorJUN: objetivoEspecifico.indicadorJUN,
+          indicadorJUL: objetivoEspecifico.indicadorJUL,
+          indicadorAGO: objetivoEspecifico.indicadorAGO,
+          indicadorSEPDIC: objetivoEspecifico.indicadorSEPDIC,
+          indicadorOCT: objetivoEspecifico.indicadorOCT,
+          indicadorNOV: objetivoEspecifico.indicadorNOV,
+          indicadorDIC: objetivoEspecifico.indicadorDIC,
+          observaciones: objetivoEspecifico.observaciones,
+          accionesCorrectivas: objetivoEspecifico.accionesCorrectivas,
+          historialAnual: objetivoEspecifico.historialAnual
+        });
+      }
+    });
+    
+    res.json(objetivosTransformados);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al obtener objetivos" });
+  }
+};
+
+const obtenerObjetivosPorArea = async (req, res) => {
+  try {
+    const { area } = req.params;
+    
+    if (!area) {
+      return res.status(400).json({ error: "El parámetro 'area' es requerido" });
+    }
+    
+    // Buscar objetivos donde el área esté en los departamentos asignados
+    // o en los objetivos específicos
+    const objetivos = await Objetivo.find({
+      $or: [
+        { departamentosAsignados: { $in: [area] } },
+        { "objetivosEspecificos.area": area },
+        { area: area } // Para compatibilidad con objetivos antiguos
+      ],
+      activo: true
+    });
+    
+    res.json(objetivos);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al obtener objetivos" });
+  }
+};
+
+// Actualizar objetivo específico de multi-departamento
+const actualizarObjetivoEspecifico = async (req, res) => {
+  try {
+    const { objetivoId } = req.params;
+    const { objetivoEspecificoId, objetivo, recursos, metaFrecuencia, observaciones } = req.body;
+    
+    console.log('📝 Actualizando objetivo específico:', { objetivoId, objetivoEspecificoId });
+    
+    const objetivoMulti = await Objetivo.findById(objetivoId);
+    
+    if (!objetivoMulti) {
+      return res.status(404).json({ error: "Objetivo multi-departamento no encontrado" });
+    }
+    
+    // Buscar el objetivo específico
+    const objetivoEspecifico = objetivoMulti.objetivosEspecificos.find(
+      obj => obj._id.toString() === objetivoEspecificoId
+    );
+    
+    if (!objetivoEspecifico) {
+      return res.status(404).json({ error: "Objetivo específico no encontrado" });
+    }
+    
+    // Actualizar campos
+    if (objetivo !== undefined) objetivoEspecifico.objetivo = objetivo;
+    if (recursos !== undefined) objetivoEspecifico.recursos = recursos;
+    if (metaFrecuencia !== undefined) objetivoEspecifico.metaFrecuencia = metaFrecuencia;
+    if (observaciones !== undefined) objetivoEspecifico.observaciones = observaciones;
+    
+    await objetivoMulti.save();
+    
+    res.json({
+      success: true,
+      message: "Objetivo específico actualizado correctamente",
+      objetivoEspecifico
+    });
+  } catch (error) {
+    console.error('❌ Error al actualizar objetivo específico:', error);
+    res.status(500).json({ 
+      error: "Error al actualizar objetivo específico",
+      details: error.message 
+    });
+  }
+};
+
+// Actualizar indicador de objetivo específico
+const actualizarIndicadorObjetivoEspecifico = async (req, res) => {
+  try {
+    const { objetivoId } = req.params;
+    const { area, campo, valores } = req.body;
+    
+    console.log('📝 Actualizando indicador:', { objetivoId, area, campo });
+    
+    const objetivoMulti = await Objetivo.findById(objetivoId);
+    
+    if (!objetivoMulti) {
+      return res.status(404).json({ error: "Objetivo multi-departamento no encontrado" });
+    }
+    
+    // Buscar el objetivo específico por área
+    const objetivoEspecifico = objetivoMulti.objetivosEspecificos.find(
+      obj => obj.area === area
+    );
+    
+    if (!objetivoEspecifico) {
+      return res.status(404).json({ error: `Objetivo específico para el área ${area} no encontrado` });
+    }
+    
+    // Validar que el campo sea un indicador válido
+    const indicadoresValidos = [
+      'indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR',
+      'indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO',
+      'indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC'
+    ];
+    
+    if (!indicadoresValidos.includes(campo)) {
+      return res.status(400).json({ error: "Campo de indicador no válido" });
+    }
+    
+    // Actualizar el indicador
+    objetivoEspecifico[campo] = valores;
+    
+    await objetivoMulti.save();
+    
+    res.json({
+      success: true,
+      message: "Indicador actualizado correctamente",
+      objetivoEspecifico
+    });
+  } catch (error) {
+    console.error('❌ Error al actualizar indicador:', error);
+    res.status(500).json({ 
+      error: "Error al actualizar indicador",
+      details: error.message 
+    });
+  }
+};
+
 module.exports = {
   obtenerObjetivos,
+  obtenerObjetivoPorId,
   crearObjetivo,
   actualizarObjetivo,
   eliminarObjetivo,
   agregarAccionCorrectiva,
+  obtenerObjetivosPorArea,
   getAccionesCorrectivasByArea,
+  crearObjetivoMultiDepartamento,
+  obtenerObjetivosPorDepartamento,
   reprogramarFechaCompromiso,
   actualizarAccionCorrectiva,
-  migrarTodosLosObjetivos
+  migrarTodosLosObjetivos,
+  actualizarObjetivoEspecifico,
+  actualizarIndicadorObjetivoEspecifico,
+  obtenerObjetivosMultiPorArea // ✅ Nueva función exportada
 };
