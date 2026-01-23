@@ -20,6 +20,7 @@ const CrearObjetivoMultiDepartamento = () => {
   
   // Paso 3: Objetivos específicos por departamento/área
   const [objetivosEspecificos, setObjetivosEspecificos] = useState([]);
+  const [contadorObjetivos, setContadorObjetivos] = useState(1); // Para IDs únicos
   
   // Cargar departamentos con sus áreas
   useEffect(() => {
@@ -62,11 +63,16 @@ const CrearObjetivoMultiDepartamento = () => {
     
     if (existe) {
       // Si ya está seleccionado, lo quitamos
-      setDepartamentosSeleccionados(
-        departamentosSeleccionados.filter(item => 
-          !(item.departamento === departamento && item.area === areaMayusculas)
-        )
+      const nuevosSeleccionados = departamentosSeleccionados.filter(item => 
+        !(item.departamento === departamento && item.area === areaMayusculas)
       );
+      setDepartamentosSeleccionados(nuevosSeleccionados);
+      
+      // También quitamos todos los objetivos asociados a esta área
+      const nuevosObjetivos = objetivosEspecificos.filter(obj => 
+        !(obj.departamento === departamento && obj.area === areaMayusculas)
+      );
+      setObjetivosEspecificos(nuevosObjetivos);
     } else {
       // Si no está, lo agregamos con área en mayúsculas
       setDepartamentosSeleccionados([
@@ -79,24 +85,149 @@ const CrearObjetivoMultiDepartamento = () => {
   // Inicializar objetivos específicos cuando se seleccionan departamentos/áreas
   useEffect(() => {
     if (departamentosSeleccionados.length > 0) {
-      const nuevosObjetivos = departamentosSeleccionados.map(item => ({
-        departamento: item.departamento,
-        area: item.area, 
-        objetivo: '',
-        recursos: '',
-        metaFrecuencia: ''
-      }));
+      // Solo agregar objetivos iniciales si no hay ninguno para estas áreas
+      const areasConObjetivos = [...new Set(objetivosEspecificos.map(obj => 
+        `${obj.departamento}-${obj.area}`
+      ))];
+      
+      const nuevosObjetivos = [...objetivosEspecificos];
+      
+      departamentosSeleccionados.forEach(item => {
+        const key = `${item.departamento}-${item.area}`;
+        if (!areasConObjetivos.includes(key)) {
+          nuevosObjetivos.push({
+            id: Date.now() + Math.random(), // ID único temporal
+            departamento: item.departamento,
+            area: item.area,
+            objetivo: '',
+            recursos: '',
+            metaFrecuencia: ''
+          });
+        }
+      });
+      
       setObjetivosEspecificos(nuevosObjetivos);
-    } else {
-      setObjetivosEspecificos([]);
+      setContadorObjetivos(prev => prev + 1);
     }
   }, [departamentosSeleccionados]);
   
   // Manejar cambios en objetivos específicos
-  const handleCambioObjetivoEspecifico = (index, campo, valor) => {
-    const nuevosObjetivos = [...objetivosEspecificos];
-    nuevosObjetivos[index][campo] = valor;
+  const handleCambioObjetivoEspecifico = (id, campo, valor) => {
+    const nuevosObjetivos = objetivosEspecificos.map(obj => 
+      obj.id === id ? { ...obj, [campo]: valor } : obj
+    );
     setObjetivosEspecificos(nuevosObjetivos);
+  };
+  
+  // Agregar nuevo objetivo para cualquier área seleccionada
+  const agregarNuevoObjetivo = () => {
+    if (departamentosSeleccionados.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin áreas seleccionadas',
+        text: 'Primero selecciona al menos un área en el Paso 2',
+        confirmButtonColor: '#4a6fa5'
+      });
+      return;
+    }
+    
+    // Mostrar selector de área
+    Swal.fire({
+      title: 'Seleccionar área para nuevo objetivo',
+      html: `
+        <p>Selecciona el área para el nuevo objetivo:</p>
+        <select id="area-select" class="swal2-select">
+          ${departamentosSeleccionados.map((item, index) => 
+            `<option value="${index}">${item.departamento} - ${item.area}</option>`
+          ).join('')}
+        </select>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Agregar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#4a6fa5',
+      preConfirm: () => {
+        const select = document.getElementById('area-select');
+        const selectedIndex = select.value;
+        return selectedIndex;
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const selectedIndex = parseInt(result.value);
+        const selectedArea = departamentosSeleccionados[selectedIndex];
+        
+        const nuevoObjetivo = {
+          id: Date.now() + Math.random(), // ID único temporal
+          departamento: selectedArea.departamento,
+          area: selectedArea.area,
+          objetivo: '',
+          recursos: '',
+          metaFrecuencia: ''
+        };
+        
+        setObjetivosEspecificos(prev => [...prev, nuevoObjetivo]);
+        setContadorObjetivos(prev => prev + 1);
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Nuevo objetivo agregado',
+          text: `Se agregó un nuevo objetivo para ${selectedArea.area}`,
+          confirmButtonColor: '#4a6fa5',
+          timer: 1500
+        });
+      }
+    });
+  };
+  
+  // Eliminar objetivo específico
+  const eliminarObjetivo = (id) => {
+    Swal.fire({
+      title: '¿Eliminar este objetivo?',
+      text: 'Esta acción no se puede deshacer',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#4a6fa5',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const objetivoAEliminar = objetivosEspecificos.find(obj => obj.id === id);
+        const nuevosObjetivos = objetivosEspecificos.filter(obj => obj.id !== id);
+        
+        // Verificar si es el último objetivo para esta área
+        const otrosObjetivosMismaArea = nuevosObjetivos.filter(obj => 
+          obj.departamento === objetivoAEliminar.departamento && 
+          obj.area === objetivoAEliminar.area
+        );
+        
+        if (otrosObjetivosMismaArea.length === 0) {
+          // Si era el último objetivo para esta área, preguntar si también quitar el área
+          Swal.fire({
+            title: '¿Quitar el área también?',
+            text: `No hay más objetivos para ${objetivoAEliminar.area}. ¿Deseas quitar el área de la selección?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#4a6fa5',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, quitar área',
+            cancelButtonText: 'No, mantener área'
+          }).then((result2) => {
+            if (result2.isConfirmed) {
+              // Quitar área de la selección
+              const nuevasAreas = departamentosSeleccionados.filter(item => 
+                !(item.departamento === objetivoAEliminar.departamento && 
+                  item.area === objetivoAEliminar.area)
+              );
+              setDepartamentosSeleccionados(nuevasAreas);
+            }
+            setObjetivosEspecificos(nuevosObjetivos);
+          });
+        } else {
+          setObjetivosEspecificos(nuevosObjetivos);
+        }
+      }
+    });
   };
   
   // Validar paso actual
@@ -127,6 +258,16 @@ const CrearObjetivoMultiDepartamento = () => {
         return true;
         
       case 3:
+        if (objetivosEspecificos.length === 0) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Sin objetivos',
+            text: 'Debes agregar al menos un objetivo específico',
+            confirmButtonColor: '#4a6fa5'
+          });
+          return false;
+        }
+        
         for (const objetivo of objetivosEspecificos) {
           if (!objetivo.objetivo.trim()) {
             Swal.fire({
@@ -196,7 +337,7 @@ const CrearObjetivoMultiDepartamento = () => {
       }));
       
       // Extraer departamentos únicos
-      const departamentosUnicos = [...new Set(departamentosSeleccionados.map(item => item.departamento))];
+      const departamentosUnicos = [...new Set(objetivosEspecificos.map(item => item.departamento))];
       
       const objetivoData = {
         nombreObjetivoGeneral,
@@ -207,14 +348,21 @@ const CrearObjetivoMultiDepartamento = () => {
         añoActual: new Date().getFullYear()
       };
       
-      console.log('📤 Datos a enviar:', JSON.stringify(objetivoData, null, 2));
+      console.log('📤 Datos a enviar:');
+      console.log('Nombre objetivo general:', nombreObjetivoGeneral);
+      console.log('Total objetivos específicos:', objetivosTransformados.length);
+      console.log('Departamentos involucrados:', departamentosUnicos);
       
       const response = await api.post('/api/objetivos/multi-departamento', objetivoData);
       
       Swal.fire({
         icon: 'success',
         title: '¡Objetivo creado!',
-        text: `Se ha creado el objetivo "${nombreObjetivoGeneral}" para ${departamentosSeleccionados.length} área(s)`,
+        html: `
+          <p>Se ha creado el objetivo: <strong>${nombreObjetivoGeneral}</strong></p>
+          <p>Total de objetivos específicos: <strong>${objetivosEspecificos.length}</strong></p>
+          <p>Áreas involucradas: <strong>${departamentosSeleccionados.length}</strong></p>
+        `,
         confirmButtonColor: '#4a6fa5'
       }).then(() => {
         navigate('/objetivos');
@@ -239,6 +387,13 @@ const CrearObjetivoMultiDepartamento = () => {
     return departamentosSeleccionados.some(
       item => item.departamento === departamento && item.area === areaMayusculas
     );
+  };
+  
+  // Contar objetivos por área
+  const contarObjetivosPorArea = (departamento, area) => {
+    return objetivosEspecificos.filter(obj => 
+      obj.departamento === departamento && obj.area === area.toUpperCase().trim()
+    ).length;
   };
   
   // Renderizar paso actual
@@ -298,6 +453,8 @@ const CrearObjetivoMultiDepartamento = () => {
                       <div className="areas-grid">
                         {depto.areas.map((area, areaIndex) => {
                           const seleccionada = estaSeleccionado(depto.departamento, area);
+                          const cantidadObjetivos = contarObjetivosPorArea(depto.departamento, area);
+                          
                           return (
                             <div 
                               key={areaIndex}
@@ -310,6 +467,11 @@ const CrearObjetivoMultiDepartamento = () => {
                               <div className="area-info">
                                 <div className="area-nombre">{area}</div>
                                 <div className="area-departamento">{depto.departamento}</div>
+                                {seleccionada && cantidadObjetivos > 0 && (
+                                  <div className="area-contador">
+                                    {cantidadObjetivos} objetivo{cantidadObjetivos !== 1 ? 's' : ''}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           );
@@ -327,11 +489,17 @@ const CrearObjetivoMultiDepartamento = () => {
                 <p className="no-seleccionados">No hay áreas seleccionadas</p>
               ) : (
                 <div className="seleccionados-lista">
-                  {departamentosSeleccionados.map((item, index) => (
-                    <span key={index} className="badge-area">
-                      {item.departamento} - {item.area}
-                    </span>
-                  ))}
+                  {departamentosSeleccionados.map((item, index) => {
+                    const cantidadObjetivos = contarObjetivosPorArea(item.departamento, item.area);
+                    return (
+                      <span key={index} className="badge-area">
+                        {item.departamento} - {item.area}
+                        {cantidadObjetivos > 0 && (
+                          <span className="badge-contador">{cantidadObjetivos}</span>
+                        )}
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -341,62 +509,135 @@ const CrearObjetivoMultiDepartamento = () => {
       case 3:
         return (
           <div className="paso-container">
-            <h3>Paso 3: Definir Objetivos Específicos</h3>
-            <p className="instrucciones">
-              Define el objetivo específico, recursos y meta para cada área seleccionada:
-            </p>
-            
-            <div className="objetivos-especificos-container">
-              {objetivosEspecificos.map((objetivo, index) => (
-                <div key={index} className="objetivo-especifico-card">
-                  <div className="card-header">
-                    <h4>Área: {objetivo.area}</h4>
-                    <div className="card-subtitle">Departamento: {objetivo.departamento}</div>
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor={`objetivo-${index}`}>Objetivo Específico *</label>
-                    <textarea
-                      id={`objetivo-${index}`}
-                      value={objetivo.objetivo}
-                      onChange={(e) => handleCambioObjetivoEspecifico(index, 'objetivo', e.target.value)}
-                      placeholder={`Describe el objetivo específico para ${objetivo.area} del departamento ${objetivo.departamento}`}
-                      className="form-textarea"
-                      rows="3"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor={`recursos-${index}`}>Recursos</label>
-                    <textarea
-                      id={`recursos-${index}`}
-                      value={objetivo.recursos}
-                      onChange={(e) => handleCambioObjetivoEspecifico(index, 'recursos', e.target.value)}
-                      placeholder={`Recursos necesarios para ${objetivo.area}`}
-                      className="form-textarea"
-                      rows="2"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor={`meta-${index}`}>Meta / Frecuencia</label>
-                    <input
-                      type="text"
-                      id={`meta-${index}`}
-                      value={objetivo.metaFrecuencia}
-                      onChange={(e) => handleCambioObjetivoEspecifico(index, 'metaFrecuencia', e.target.value)}
-                      placeholder="Ej: 95% mensual"
-                      className="form-input"
-                    />
-                  </div>
-                  
-                  <div className="ejemplo-objetivo">
-                    <strong>Ejemplo para {objetivo.area}:</strong>
-                    <p>"Reducir el tiempo de procesamiento de solicitudes en un 20% mediante la implementación de un sistema automatizado"</p>
-                  </div>
-                </div>
-              ))}
+            <div className="paso-header">
+              <h3>Paso 3: Definir Objetivos Específicos</h3>
+              <button 
+                className="btn-agregar-objetivo"
+                onClick={agregarNuevoObjetivo}
+                disabled={departamentosSeleccionados.length === 0}
+              >
+                <span>+</span> Agregar Nuevo Objetivo
+              </button>
             </div>
+            
+            <div className="instrucciones-container">
+              <p className="instrucciones">
+                Define el objetivo específico, recursos y meta para cada área seleccionada.
+                Puedes agregar tantos objetivos como necesites para cada área.
+              </p>
+              <div className="estadisticas-objetivos">
+                <div className="estadistica">
+                  <span className="estadistica-valor">{objetivosEspecificos.length}</span>
+                  <span className="estadistica-label">Objetivos totales</span>
+                </div>
+                <div className="estadistica">
+                  <span className="estadistica-valor">{departamentosSeleccionados.length}</span>
+                  <span className="estadistica-label">Áreas seleccionadas</span>
+                </div>
+                <div className="estadistica">
+                  <span className="estadistica-valor">
+                    {[...new Set(departamentosSeleccionados.map(item => item.departamento))].length}
+                  </span>
+                  <span className="estadistica-label">Departamentos</span>
+                </div>
+              </div>
+            </div>
+            
+            {objetivosEspecificos.length === 0 ? (
+              <div className="sin-objetivos">
+                <div className="sin-objetivos-icon">📝</div>
+                <h4>No hay objetivos definidos</h4>
+                <p>Comienza agregando tu primer objetivo usando el botón "Agregar Nuevo Objetivo"</p>
+                <button 
+                  className="btn-agregar-primer"
+                  onClick={agregarNuevoObjetivo}
+                  disabled={departamentosSeleccionados.length === 0}
+                >
+                  + Agregar Primer Objetivo
+                </button>
+              </div>
+            ) : (
+              <div className="objetivos-especificos-container">
+                {objetivosEspecificos.map((objetivo, index) => (
+                  <div key={objetivo.id} className="objetivo-especifico-card">
+                    <div className="card-header">
+                      <div className="card-header-left">
+                        <h4>Objetivo #{index + 1}</h4>
+                        <div className="card-subtitle">
+                          <span className="badge-area-card">{objetivo.area}</span>
+                          <span className="badge-depto-card">{objetivo.departamento}</span>
+                        </div>
+                      </div>
+                      <div className="card-header-right">
+                        <button
+                          className="btn-eliminar-card"
+                          onClick={() => eliminarObjetivo(objetivo.id)}
+                          title="Eliminar este objetivo"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor={`objetivo-${objetivo.id}`}>
+                        Objetivo Específico *
+                      </label>
+                      <textarea
+                        id={`objetivo-${objetivo.id}`}
+                        value={objetivo.objetivo}
+                        onChange={(e) => handleCambioObjetivoEspecifico(objetivo.id, 'objetivo', e.target.value)}
+                        placeholder={`Describe el objetivo específico para ${objetivo.area} del departamento ${objetivo.departamento}`}
+                        className="form-textarea"
+                        rows="3"
+                      />
+                    </div>
+                    
+                    <div className="form-row">
+                      <div className="form-col">
+                        <label htmlFor={`recursos-${objetivo.id}`}>Recursos</label>
+                        <textarea
+                          id={`recursos-${objetivo.id}`}
+                          value={objetivo.recursos}
+                          onChange={(e) => handleCambioObjetivoEspecifico(objetivo.id, 'recursos', e.target.value)}
+                          placeholder={`Recursos necesarios para ${objetivo.area}`}
+                          className="form-textarea"
+                          rows="2"
+                        />
+                      </div>
+                      <div className="form-col">
+                        <label htmlFor={`meta-${objetivo.id}`}>Meta / Frecuencia</label>
+                        <input
+                          type="text"
+                          id={`meta-${objetivo.id}`}
+                          value={objetivo.metaFrecuencia}
+                          onChange={(e) => handleCambioObjetivoEspecifico(objetivo.id, 'metaFrecuencia', e.target.value)}
+                          placeholder="Ej: 95% mensual"
+                          className="form-input"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="ejemplo-objetivo">
+                      <strong>Ejemplo para {objetivo.area}:</strong>
+                      <p>"Reducir el tiempo de procesamiento de solicitudes en un 20% mediante la implementación de un sistema automatizado"</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {objetivosEspecificos.length > 0 && (
+              <div className="botones-inferiores">
+                <button 
+                  className="btn-agregar-mas"
+                  onClick={agregarNuevoObjetivo}
+                  disabled={departamentosSeleccionados.length === 0}
+                >
+                  + Agregar Otro Objetivo
+                </button>
+              </div>
+            )}
           </div>
         );
         
@@ -425,7 +666,7 @@ const CrearObjetivoMultiDepartamento = () => {
           </div>
           <div className={`step ${pasoActual >= 3 ? 'active' : ''}`}>
             <div className="step-number">3</div>
-            <div className="step-label">Objetivos Específicos</div>
+            <div className="step-label">Definir Objetivos</div>
           </div>
         </div>
       </div>
@@ -484,26 +725,50 @@ const CrearObjetivoMultiDepartamento = () => {
             </span>
           </div>
           <div className="resumen-item">
-            <span className="resumen-label">Objetivos específicos:</span>
+            <span className="resumen-label">Objetivos definidos:</span>
             <span className="resumen-valor">
               {objetivosEspecificos.length > 0 
-                ? `${objetivosEspecificos.length} definidos` 
+                ? `${objetivosEspecificos.length} objetivo(s)` 
                 : 'Por definir'}
             </span>
           </div>
         </div>
         
-        {/* Detalle de áreas seleccionadas */}
-        {departamentosSeleccionados.length > 0 && (
-          <div className="detalle-areas">
-            <h5>Detalle de áreas:</h5>
-            <div className="areas-lista-detalle">
-              {departamentosSeleccionados.map((item, index) => (
-                <div key={index} className="area-detalle-item">
-                  <span className="area-detalle-departamento">{item.departamento}:</span>
-                  <span className="area-detalle-nombre">{item.area}</span>
-                </div>
-              ))}
+        {/* Detalle de áreas y objetivos */}
+        {(departamentosSeleccionados.length > 0 || objetivosEspecificos.length > 0) && (
+          <div className="detalle-completo">
+            <h5>Detalle por área:</h5>
+            <div className="areas-objetivos-detalle">
+              {departamentosSeleccionados.map((area, index) => {
+                const objetivosDeEstaArea = objetivosEspecificos.filter(obj => 
+                  obj.departamento === area.departamento && 
+                  obj.area === area.area
+                );
+                
+                return (
+                  <div key={index} className="area-detalle-completo">
+                    <div className="area-detalle-header">
+                      <span className="area-detalle-departamento">{area.departamento}:</span>
+                      <span className="area-detalle-nombre">{area.area}</span>
+                      <span className="area-detalle-contador">
+                        {objetivosDeEstaArea.length} objetivo{objetivosDeEstaArea.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    {objetivosDeEstaArea.length > 0 && (
+                      <div className="objetivos-area-lista">
+                        {objetivosDeEstaArea.map((obj, objIndex) => (
+                          <div key={objIndex} className="objetivo-resumen">
+                            <span className="objetivo-indice">#{objIndex + 1}</span>
+                            <span className="objetivo-texto">
+                              {obj.objetivo.substring(0, 60)}...
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
