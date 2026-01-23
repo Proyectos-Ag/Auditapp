@@ -1,220 +1,259 @@
-import React, { useState, useEffect } from 'react';
-import api from '../../../services/api';
-import './css/Diagrama.css'
-import Logo from "../assets/img/logoAguida.png";
-import NewIshikawaFin from '../Ishikawa/NewIshikawaFin';
+import React, { useEffect, useMemo, useState } from "react";
+import api from "../../../services/api";
+import "../Ishikawa/css/Ishikawa.css";
 
-const Diagrama = ({ recordId }) =>  {
-    const [ishikawa, setIshikawa] = useState([]);
-    const [showPart, setShowPart] = useState(true);
+import { Box, Chip, Typography, Stack, Alert, AlertTitle, Skeleton } from "@mui/material";
 
-    useEffect(() => {
-        if (!recordId) return;
-    
-        const fetchData = async () => {
-          try {
-            const response = await api.get(
-              `/ishikawa/vac/por/${recordId}`
-            );
-            setIshikawa(response.data);
-          } catch (error) {
-            console.error('Error fetching data:', error);
-          }
-        };
-    
-        fetchData();
-      }, [recordId]);
-    
+// Diagrama final (solo lectura)
+import NewIshikawaFin from "../Ishikawa/NewIshikawaFin";
 
-    useEffect(() => {
-        const simulateInputChange = () => {
-          const textareas = document.querySelectorAll('textarea');
-          textareas.forEach((textarea) => {
-            const event = {
-              target: textarea,
-              name: textarea.name,
-              value: textarea.value
-            };
-            handleInputChange(event);
-          });
-        };
-    
-        simulateInputChange(); // Ejecutar la función al cargar el componente
-    
-      }, [ishikawa]);   
+import AutoGrowTextarea from "../../../resources/AutoGrowTextarea";
 
-    const handleInputChange = (e) => {
-        const { value } = e.target;
-      
-        // Define el tamaño de fuente según el rango de caracteres
-        let fontSize;
-        if (value.length > 125) {
-          fontSize = '10.3px'; // Menos de 78 caracteres
-        } else if (value.length > 100) {
-          fontSize = '11px'; // Menos de 62 caracteres
-        } else if (value.length > 88) {
-          fontSize = '12px'; // Menos de 62 caracteres
-        } else if (value.length > 78) {
-          fontSize = '13px'; // Menos de 62 caracteres
-        } else if (value.length > 65) {
-          fontSize = '14px'; // Menos de 62 caracteres
-        } else {
-          fontSize = '15px'; // Por defecto
-        }
+const Diagrama = ({ recordId }) => {
+  const [ishikawa, setIshikawa] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-        e.target.style.fontSize = fontSize;
-      };
+  useEffect(() => {
+    if (!recordId) return;
 
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get(`/ishikawa/vac/por/${recordId}`);
+        setIshikawa(res.data || null);
+      } catch (e) {
+        console.error("Error fetching data:", e);
+        setIshikawa(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [recordId]);
+
+  const participantesArray = useMemo(() => {
+    const raw = String(ishikawa?.participantes || "").trim();
+    if (!raw) return [];
+    // soporta " / " o "/" o comas por si acaso
+    return raw
+      .split(/\s*\/\s*|,\s*/g)
+      .map((x) => x.trim())
+      .filter(Boolean);
+  }, [ishikawa?.participantes]);
+
+  const formatDateInputValue = (value) => {
+    // Para <input type="date"> se necesita YYYY-MM-DD
+    // Si tu backend ya manda YYYY-MM-DD, se queda igual.
+    const v = String(value || "").trim();
+    if (!v) return "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+
+    // Si viene como DateString, intenta parsear
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return "";
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const formatDateCell = (value) => {
+    const v = String(value || "").trim();
+    if (!v) return "--";
+    const d = new Date(`${v}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return v;
+    return d.toLocaleDateString();
+  };
+
+  const formatResponsables = (responsable) => {
+    if (!responsable) return "--";
+
+    const pickName = (r) => {
+      if (r == null) return "";
+      if (typeof r === "string") return r;
+      if (typeof r === "object") {
+        if (r.nombre) return r.nombre;
+        // Caso raro: objeto con keys numéricas
+        const keys = Object.keys(r).filter((k) => !Number.isNaN(Number(k))).sort((a, b) => Number(a) - Number(b));
+        if (keys.length) return keys.map((k) => r[k]).join("");
+      }
+      return String(r);
+    };
+
+    if (Array.isArray(responsable)) {
+      const flat = responsable.flat(Infinity);
+      return flat.map(pickName).map((s) => s.trim()).filter(Boolean).join(", ") || "--";
+    }
+
+    if (typeof responsable === "object") return pickName(responsable) || "--";
+    return String(responsable);
+  };
+
+  if (loading) {
     return (
-        <div>
-            <div >
-                    <div >
-                        <div id='pdf-content-part1' className="image-container-dia" >
-                        <img src={Logo} alt="Logo Aguida" className='logo-empresa-ish' />
-                        <h1 style={{position:'absolute', fontSize:'40px'}}>Ishikawa</h1>
-                        <div className='posicion-en'>
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <h2 style={{ marginLeft: '50rem', marginRight: '10px' }}>Problema: </h2>
-                                <div style={{ width: '50rem', fontSize: '20px' }}>{ishikawa.problema}</div>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <h2 style={{ marginLeft: '50rem', marginRight: '10px' }}>Afectación: </h2>
-                                <div style={{ width: '50rem', fontSize: '20px' }}>{ishikawa.afectacion}</div>
-                            </div>
-                        </div>
-                        <div className='posicion-en-3'>
-                            GCF015
-                        </div>
-                        <div className='posicion-en-2'>
-                            <h3>Fecha: {ishikawa.fecha}</h3>
-                        </div>
-                        <div className='new-ishikawa'>
-                        {/* en tu Diagrama.jsx */}
-                            <NewIshikawaFin
-                            key={recordId}
-                            diagrama={ishikawa.diagrama}
-                            problema={ishikawa.problema}
-                            causa={ishikawa.causa}
-                            ID={recordId}
-                            />
-
-                         </div> 
-                        <div className='button-parti-dia'>
-                            <div className='cont-part'>
-                        <button className='button-part' onClick={(e) => {
-                            e.preventDefault();
-                            setShowPart(!showPart)
-                            }}>
-                            ⚇
-                        </button>
-                        {showPart && (
-                        <div className='part-div'>{ishikawa.participantes}</div>
-                            )}
-                        </div>
-                        </div>
-                        </div>
-                         
-                        <div id='pdf-content-part2' className="image-container2-dia">
-                        <div >
-                            <div className='posicion-bo'>
-                                <h3>No conformidad:</h3>
-                                <div style={{width: '70rem', textAlign: 'justify', overflowWrap: 'break-word' }}> {ishikawa.requisito}</div>
-                                <h3>Hallazgo:</h3>
-                                <div className='hallazgo-container'>
-                                    <div style={{width:'70rem', overflowWrap: 'break-word'}}>{ishikawa.hallazgo}</div>
-                                </div>
-                                <h3>Acción inmediata o corrección: </h3>
-                                <div style={{width:'70rem', overflowWrap: 'break-word'}}>
-                                {ishikawa.correccion}</div>
-                                <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
-                                <div style={{ marginBottom: '20px', width:'70rem', overflowWrap: 'break-word' }}>{ishikawa.causa}</div>
-                            </div>
-                        </div>
-                        </div>
-                        <div className='image-container3-dia' id='pdf-content-part3'>
-                        <div className='table-ish'>
-                        <h3>SOLUCIÓN</h3>
-                        <table style={{ border: 'none' }}>
-                            <thead>
-                                <tr>
-                                    <th className="conformity-header">Actividad</th>
-                                    <th className="conformity-header">Responsable</th>
-                                    <th className="conformity-header">Fecha Compromiso</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {ishikawa.actividades && ishikawa.actividades.map((actividad, i) => (
-                                    <tr key={i}>
-                                        <td>{actividad.actividad}</td>
-                                        <td>{
-                                Array.isArray(actividad.responsable)
-                                    ? actividad.responsable.flat().map((r, i, arr) => (
-                                        <span key={i}>
-                                        {typeof r === 'object'
-                                            ? (r.nombre 
-                                                ? r.nombre 
-                                                : Object.keys(r)
-                                                    .filter(key => !isNaN(key))
-                                                    .sort((a, b) => a - b)
-                                                    .map(key => r[key])
-                                                    .join('')
-                                            )
-                                            : r
-                                        }
-                                        {i < arr.length - 1 ? ', ' : ''}
-                                        </span>
-                                    ))
-                                    : (
-                                    // Caso en que "actividad.responsable" es un objeto
-                                    typeof actividad.responsable === 'object' &&
-                                    actividad.responsable !== null &&
-                                    (actividad.responsable.nombre 
-                                        ? <span>{actividad.responsable.nombre}</span>
-                                        : <span>{
-                                            Object.keys(actividad.responsable)
-                                                .filter(key => !isNaN(key))
-                                                .sort((a, b) => a - b)
-                                                .map(key => actividad.responsable[key])
-                                                .join('')
-                                            }</span>
-                                    )
-                                    )
-                                }</td>
-                                        <td>{new Date(actividad.fechaCompromiso + 'T00:00:00').toLocaleDateString()}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        <h3>EFECTIVIDAD</h3>
-                        <table style={{ border: 'none' }}>
-                            <thead>
-                                <tr>
-                                    <th className="conformity-header">Actividad</th>
-                                    <th className="conformity-header">Responsable</th>
-                                    <th className="conformity-header">Fecha Compromiso</th>
-                                    <th colSpan="2" className="conformity-header">
-                                        Acción Correctiva Cerrada
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {ishikawa.correcciones && ishikawa.correcciones.map((accion, i) => (
-                                    <tr key={i}>
-                                        <td>{accion.actividad}</td>
-                                        <td>{accion.responsable}</td>
-                                        <td>{new Date(accion.fechaCompromiso + 'T00:00:00').toLocaleDateString()}</td>
-                                        <td>{accion.cerrada}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        </div>
-                        </div>
-                      </div>
-                    </div>
-            </div>
-        
+      <div className="ishn-content">
+        <div className="ishn-edit">
+          <div className="ishn-card">
+            <Skeleton variant="text" height={44} width="40%" />
+            <Skeleton variant="rounded" height={220} />
+          </div>
+          <div className="ishn-card">
+            <Skeleton variant="rounded" height={260} />
+          </div>
+          <div className="ishn-card">
+            <Skeleton variant="rounded" height={260} />
+          </div>
+        </div>
+      </div>
     );
+  }
+
+  if (!ishikawa) {
+    return (
+      <div className="ishn-content">
+        <Alert severity="warning">
+          <AlertTitle>No se encontró el registro</AlertTitle>
+          No hay datos para mostrar.
+        </Alert>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="ishn-edit">
+        {/* =================== PART 1 =================== */}
+        <div id="pdf-content-part1" className="ishn-card">
+          <h1>Ishikawa</h1>
+
+          <div className="ishn-info">
+            <h2>
+              Problema:
+              <input className="ishn-input" value={ishikawa.problema || ""} disabled />
+            </h2>
+
+            <h2>
+              Afectación:
+              <input className="ishn-input" value={ishikawa.afectacion || ""} disabled />
+            </h2>
+          </div>
+
+          <div className="ishn-code">GCF015</div>
+
+          <div className="ishn-meta">
+            <h3>
+              Fecha:
+              <input type="date" value={formatDateInputValue(ishikawa.fecha)} disabled />
+            </h3>
+            <h3>Folio: {ishikawa.folio || "--"}</h3>
+          </div>
+
+          <div className="ishn-diagramWrap">
+            <NewIshikawaFin
+              key={recordId}
+              diagrama={ishikawa.diagrama}
+              problema={ishikawa.problema}
+              causa={ishikawa.causa}
+              ID={recordId}
+            />
+          </div>
+
+          <div className="ishn-people">
+            <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
+              {participantesArray.length ? (
+                participantesArray.map((p, idx) => (
+                  <Chip key={`${p}-${idx}`} label={p} size="small" variant="outlined" />
+                ))
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Sin participantes
+                </Typography>
+              )}
+            </Stack>
+          </div>
+        </div>
+
+        {/* =================== PART 2 =================== */}
+        <div id="pdf-content-part2" className="ishn-card">
+          <div className="ishn-textBlock">
+            <h3>No conformidad:</h3>
+            <AutoGrowTextarea className="ishn-textarea" value={ishikawa.requisito || ""} disabled />
+
+            <h3>Hallazgo:</h3>
+            <AutoGrowTextarea className="ishn-textarea" value={ishikawa.hallazgo || ""} disabled />
+
+            <h3>Acción inmediata o corrección:</h3>
+            <AutoGrowTextarea className="ishn-textarea" value={ishikawa.correccion || ""} disabled />
+
+            <h3>Causa del problema (Ishikawa, TGN, W-W, DCR):</h3>
+            <AutoGrowTextarea className="ishn-textarea" value={ishikawa.causa || ""} disabled />
+          </div>
+        </div>
+
+        {/* =================== PART 3 =================== */}
+        <div id="pdf-content-part3" className="ishn-card">
+          <div className="ishn-tableWrap">
+            <h3>SOLUCIÓN</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Actividad</th>
+                  <th>Responsable</th>
+                  <th>Fecha Compromiso</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(ishikawa.actividades || []).map((act, i) => (
+                  <tr key={i}>
+                    <td>{act?.actividad || "--"}</td>
+                    <td>{formatResponsables(act?.responsable)}</td>
+                    <td>{formatDateCell(act?.fechaCompromiso)}</td>
+                  </tr>
+                ))}
+                {(!ishikawa.actividades || ishikawa.actividades.length === 0) && (
+                  <tr>
+                    <td colSpan={3} style={{ textAlign: "center" }}>
+                      Sin actividades
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            <h3>EFECTIVIDAD</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Actividad</th>
+                  <th>Responsable</th>
+                  <th>Fecha Compromiso</th>
+                  <th>Acción Correctiva Cerrada</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(ishikawa.correcciones || []).map((acc, i) => (
+                  <tr key={i}>
+                    <td>{acc?.actividad || "--"}</td>
+                    <td>{String(acc?.responsable || "--")}</td>
+                    <td>{formatDateCell(acc?.fechaCompromiso)}</td>
+                    <td>{String(acc?.cerrada ?? "--")}</td>
+                  </tr>
+                ))}
+                {(!ishikawa.correcciones || ishikawa.correcciones.length === 0) && (
+                  <tr>
+                    <td colSpan={4} style={{ textAlign: "center" }}>
+                      Sin acciones de efectividad
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Diagrama;

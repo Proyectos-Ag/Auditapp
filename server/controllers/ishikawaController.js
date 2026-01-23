@@ -10,6 +10,23 @@ const nodemailer = require('nodemailer');
 const storage = multer.memoryStorage(); // Almacenar el archivo en memoria
 const upload = multer({ storage: storage });
 
+// ✅ Convierte evidencia vieja (string) o nueva (array) a array siempre
+const normalizeEvidencia = (e) => {
+  if (e == null) return [];
+  if (Array.isArray(e)) return e.filter(Boolean).map((x) => String(x).trim()).filter(Boolean);
+
+  const s = String(e).trim();
+  return s ? [s] : [];
+};
+
+const normalizeCorrecciones = (arr) => {
+  if (!Array.isArray(arr)) return [];
+  return arr.map((c) => ({
+    ...c,
+    evidencia: normalizeEvidencia(c.evidencia),
+  }));
+};
+
 const crearIshikawa = async (req, res) => {
   try {
       const newIshikawa = new Ishikawa(req.body);
@@ -461,34 +478,45 @@ const actualizarFechaCompromiso = async (req, res) => {
 };
 
 
-  const eliminarEvidencia = async (req, res) => {
-    try {
-        const { index, idIsh, idCorr } = req.params;
+const eliminarEvidencia = async (req, res) => {
+  try {
+    const { idIsh, idCorr, evIndex } = req.params;
 
-        // Buscar el documento Ishikawa por su _id
-        const ishikawa = await Ishikawa.findById(idIsh);
-
-        if (!ishikawa) {
-            return res.status(404).json({ error: 'Ishikawa no encontrado' });
-        }
-
-        // Buscar la corrección dentro de ishikawa por su _id
-        const correccion = ishikawa.correcciones.id(idCorr);
-
-        if (!correccion) {
-            return res.status(400).json({ error: 'Corrección no encontrada' });
-        }
-
-        // Eliminar la evidencia
-        correccion.evidencia = ''; // O null, según tu preferencia
-
-        // Guardar los cambios en la base de datos
-        await ishikawa.save();
-
-        res.status(200).json({ message: 'Evidencia eliminada exitosamente' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+    const ishikawa = await Ishikawa.findById(idIsh);
+    if (!ishikawa) {
+      return res.status(404).json({ error: 'Ishikawa no encontrado' });
     }
+
+    const correccion = ishikawa.correcciones.id(idCorr);
+    if (!correccion) {
+      return res.status(400).json({ error: 'Corrección no encontrada' });
+    }
+
+    // ✅ Por si venía como string en docs viejos
+    correccion.evidencia = normalizeEvidencia(correccion.evidencia);
+
+    // Si viene evIndex -> elimina solo ese elemento
+    if (evIndex !== undefined) {
+      const i = Number(evIndex);
+      if (Number.isNaN(i) || i < 0 || i >= correccion.evidencia.length) {
+        return res.status(400).json({ error: 'Índice de evidencia inválido' });
+      }
+      correccion.evidencia.splice(i, 1);
+    } else {
+      // Si NO viene evIndex -> elimina todas
+      correccion.evidencia = [];
+    }
+
+    await ishikawa.save();
+
+    return res.status(200).json({
+      message: 'Evidencia eliminada exitosamente',
+      evidencia: correccion.evidencia,
+    });
+  } catch (error) {
+    console.error('Error al eliminar evidencia:', error);
+    return res.status(500).json({ error: error.message });
+  }
 };
 
 const obtenerIshikawaEspInc = async (req, res) => {
@@ -561,88 +589,88 @@ const eliminarIshikawasPorIdRep = async (req, res) => {
 
 const actualizarIshikawa = async (req, res) => {
   try {
-      const { id } = req.params; // Obtiene la ID desde los parámetros de la URL
-      const correcciones = req.body; // Los datos enviados desde el frontend
-      console.log(correcciones);
+    const { id } = req.params;
 
-      if (!Array.isArray(correcciones) || correcciones.length === 0) {
-          return res.status(400).json({ error: 'No se enviaron correcciones para actualizar' });
-      }
+    // ✅ normaliza (por si llega evidencia como string)
+    const correcciones = normalizeCorrecciones(req.body);
 
-      // Verifica que el Ishikawa exista antes de intentar actualizarlo
-      const existingIshikawa = await Ishikawa.findById(id);
-      if (!existingIshikawa) {
-          return res.status(404).json({ error: 'Ishikawa no encontrado' });
-      }
+    if (!Array.isArray(correcciones) || correcciones.length === 0) {
+      return res.status(400).json({ error: 'No se enviaron correcciones para actualizar' });
+    }
 
-      // Actualiza las correcciones en el modelo
-      existingIshikawa.correcciones = correcciones;
+    const existingIshikawa = await Ishikawa.findById(id);
+    if (!existingIshikawa) {
+      return res.status(404).json({ error: 'Ishikawa no encontrado' });
+    }
 
-      // Guarda los cambios
-      const updatedIshikawa = await existingIshikawa.save();
+    existingIshikawa.correcciones = correcciones;
+    const updatedIshikawa = await existingIshikawa.save();
 
-      res.status(200).json({
-          message: 'Ishikawa actualizado exitosamente',
-          data: updatedIshikawa,
-      });
+    res.status(200).json({
+      message: 'Ishikawa actualizado exitosamente',
+      data: updatedIshikawa,
+    });
   } catch (error) {
-      console.error('Error al actualizar Ishikawa:', error);
-      res.status(500).json({
-          error: 'Ocurrió un error al actualizar el Ishikawa',
-          details: error.message,
-      });
+    console.error('Error al actualizar Ishikawa:', error);
+    res.status(500).json({
+      error: 'Ocurrió un error al actualizar el Ishikawa',
+      details: error.message,
+    });
   }
 };
 
 const ishikawaFinalizado = async (req, res) => {
   try {
-      const { id } = req.params;
-      const { correcciones, estado } = req.body;
+    const { id } = req.params;
+    const { correcciones: rawCorrecciones, estado } = req.body;
 
-      if (!Array.isArray(correcciones) || correcciones.length === 0) {
-          return res.status(400).json({ error: 'No se enviaron correcciones para actualizar' });
-      }
+    const correcciones = normalizeCorrecciones(rawCorrecciones);
 
-      const isCorreccionValid = correcciones.every(correccion => 
-          correccion.actividad && 
-          correccion.responsable && 
-          correccion.fechaCompromiso && 
-          correccion.cerrada !== undefined && 
-          (correccion.evidencia !== undefined)
-      );
+    if (!Array.isArray(correcciones) || correcciones.length === 0) {
+      return res.status(400).json({ error: 'No se enviaron correcciones para actualizar' });
+    }
 
-      if (!isCorreccionValid) {
-          return res.status(400).json({ error: 'Las correcciones contienen datos inválidos' });
-      }
+    // ✅ Validación: evidencia ahora es array (puede estar vacío si tú lo permites)
+    const isCorreccionValid = correcciones.every((c) =>
+      c.actividad &&
+      c.responsable &&
+      c.fechaCompromiso &&
+      c.cerrada !== undefined &&
+      Array.isArray(c.evidencia) // 👈 antes era string/undefined
+    );
 
-      const updatedIshikawa = await Ishikawa.findByIdAndUpdate(
-          id,
-          { 
-              $set: { 
-                  correcciones, 
-                  ...(estado && { estado }) 
-              }
-          },
-          { new: true }
-      );
+    if (!isCorreccionValid) {
+      return res.status(400).json({ error: 'Las correcciones contienen datos inválidos' });
+    }
 
-      if (!updatedIshikawa) {
-          return res.status(404).json({ error: 'Ishikawa no encontrado' });
-      }
+    const updatedIshikawa = await Ishikawa.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          correcciones,
+          ...(estado && { estado }),
+        },
+      },
+      { new: true }
+    );
 
-      res.status(200).json({
-          message: 'Ishikawa actualizado exitosamente',
-          data: updatedIshikawa,
-      });
+    if (!updatedIshikawa) {
+      return res.status(404).json({ error: 'Ishikawa no encontrado' });
+    }
+
+    res.status(200).json({
+      message: 'Ishikawa actualizado exitosamente',
+      data: updatedIshikawa,
+    });
   } catch (error) {
-      if (error.name === 'CastError') {
-          return res.status(400).json({ error: 'ID inválido' });
-      }
-      console.error('Error al actualizar Ishikawa:', error);
-      res.status(500).json({
-          error: 'Ocurrió un error al actualizar el Ishikawa',
-          details: error.message,
-      });
+    if (error.name === 'CastError') {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+    console.error('Error al actualizar Ishikawa:', error);
+    res.status(500).json({
+      error: 'Ocurrió un error al actualizar el Ishikawa',
+      details: error.message,
+    });
   }
 };
 

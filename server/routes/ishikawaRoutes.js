@@ -25,7 +25,7 @@ router.put('/fin/:id', ishikawaController.ishikawaFinalizado);
 router.put('/completo/:id', ishikawaController.actualizarIshikawaCompleto);
 router.put('/acceso/:id', ishikawaController.actualizarAcceso);
 router.put('/estado/:id', ishikawaController.actualizarEstado);
-router.put('/eliminar-evidencia/:index/:idIsh/:idCorr', ishikawaController.eliminarEvidencia);
+router.put('/eliminar-evidencia/:index/:idIsh/:idCorr/:evIndex?', ishikawaController.eliminarEvidencia);
 router.delete('/delete/:id', ishikawaController.deleteIshikawa);
 router.delete('/eliminar/:idRep', ishikawaController.eliminarIshikawasPorIdRep);
 router.post('/enviar-pdf', upload.single("pdf"), ishikawaController.enviarPDF);

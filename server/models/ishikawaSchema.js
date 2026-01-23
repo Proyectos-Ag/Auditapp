@@ -39,7 +39,7 @@ const correccionSchema = new mongoose.Schema({
     responsable: String,
     fechaCompromiso: [String],
     cerrada: String,
-    evidencia: String
+    evidencia: { type: [String], default: [] }
 });
 
 const accesoSchema = new mongoose.Schema({
