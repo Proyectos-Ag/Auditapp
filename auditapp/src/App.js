@@ -37,7 +37,6 @@ import VistaIshikawas from './administrador/Components/DiagramaRe/VistaIshikawas
 import ProgramarAuditoria from './administrador/Components/ProgramarAuditoria/AuditTable.jsx';
 import IshikawaDashboard from './administrador/Components/EstadisticasIsh/IshikawaDashboard.jsx';
 import VistaRevicion from './administrador/Components/Reviciones/VistaRevicion.jsx';
-
 import EstaUsi from './administrador/Components/Estausuario.jsx';
 
 //Auditor
@@ -54,7 +53,6 @@ import Reporte from './auditado/Components/Reportes/Reporte.jsx';
 
 //Ishikawas Vacios
 import DiagramaIshVac from './ishikawa-vacio/components/DiagramaRe/Diagrama.jsx';
-//import IshikawaVac from './ishikawa-vacio/components/Ishikawa/Ishikawa.jsx';
 import InicioIsh from './ishikawa-vacio/components/Home/inicio.jsx';
 import GestorIsh from './ishikawa-vacio/components/Ishikawa/GestorIsh.jsx';
 import NewIshikawa from './ishikawa-vacio/components/Ishikawa/NewIshikawa.jsx';
@@ -66,13 +64,14 @@ import Objetivos from './Objetivos/Components/Home/Inicio.jsx';
 import Tabla from './Objetivos/Components/Tabla/ObjetivosTabla.jsx'
 import ObjetivosMultiTabla from './Objetivos/Components/Tabla/ObjetivosMultiTabla.jsx';
 import Frecuencia from './Objetivos/Components/Tabla/frecuencia.jsx'
-import FrecuenciaMultiTabla from './Objetivos/Components/Tabla/FrecuenciaMultiTabla.jsx'; // <-- NUEVO IMPORT
+import FrecuenciaMultiTabla from './Objetivos/Components/Tabla/FrecuenciaMultiTabla.jsx';
 import AccionesCorrectivas from './Objetivos/Components/Tabla/AccionesCorrectivas.jsx';
 import AccionesCorrectivasList from './Objetivos/Components/Tabla/AccionesCorrectivasList.jsx';
 import SaeftyGoals from './Objetivos/Components/Tabla/objetivoslistsaeftygoals.jsx'
 import Concentrado from './Objetivos/Components/Tabla/concentrado.jsx'
 import RegistroAccionCorrectiva from './Objetivos/Components/Tabla/AccionesCorrectivas.jsx'
 import RegistroObjetivos from './Objetivos/Components/Tabla/CrearObjetivoMultiDepartamento.jsx';
+import FrecuenciaMultiAreaTabla from './Objetivos/Components/Tabla/FrecuenciaMultiTabla.jsx';
 
 
 //Gestion de Cambios
@@ -102,160 +101,163 @@ const Auditado = lazy(() => import('./auditado/Components/Home/Inicio.jsx'));
 //Axios
 axios.defaults.withCredentials = true;
 
-
 export const UserContext = createContext(null);
 
+const MainContent = () => {
+  const location = useLocation();
+  const { userData } = useContext(UserContext);
 
-  const MainContent = () => {
-    const location = useLocation();
-    const { userData } = useContext(UserContext);
-  
-    // Rutas donde no queremos que se muestren MigasPan e IconMenu
-    const excludedRoutes = ['/','/correo-prog-audi', '/mobile-sign'];
-  
-    return (
-      <>
-  {!excludedRoutes.includes(location.pathname)&& UserContext && <Navbar />}
-  {!excludedRoutes.includes(location.pathname)&& UserContext && <MigasPan />}
-  {!excludedRoutes.includes(location.pathname)&& UserContext &&<IconMenu />}
-        {/* Banner para modo solo lectura */}
-        {userData?.permisos === 'readonly' && (
-          <div style={{background:'#ffefc2',padding:8,textAlign:'center',borderBottom:'1px solid #e2c58a'}}>
-            Estás navegando con una cuenta invitada (solo lectura). No puedes crear ni editar registros.
-          </div>
-        )}
-        <Suspense fallback={<div>Loading...</div>}>
-          <Routes>
+  // Rutas donde no queremos que se muestren MigasPan e IconMenu
+  const excludedRoutes = ['/','/correo-prog-audi', '/mobile-sign'];
+
+  return (
+    <>
+      {!excludedRoutes.includes(location.pathname) && userData && <Navbar />}
+      {!excludedRoutes.includes(location.pathname) && userData && <MigasPan />}
+      {!excludedRoutes.includes(location.pathname) && userData && <IconMenu />}
+      
+      {/* Banner para modo solo lectura */}
+      {userData?.permisos === 'readonly' && (
+        <div style={{background:'#ffefc2',padding:8,textAlign:'center',borderBottom:'1px solid #e2c58a'}}>
+          Estás navegando con una cuenta invitada (solo lectura). No puedes crear ni editar registros.
+        </div>
+      )}
+      
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          {/* Página de login */}
           <Route path="/" element={<Login />} /> 
           <Route path="/correo-prog-audi" element={<ProgramarAuditoria/>}/>
-              <Route path="/admin" element={<ProtectedRoute allowedRoles={['administrador']}><Administrador /></ProtectedRoute>} />
-              <Route path="/auditor" element={<ProtectedRoute><Auditor /></ProtectedRoute>} />
-              <Route path="/auditado" element={<ProtectedRoute><Auditado /></ProtectedRoute>} />
+          
+          {/* Roles principales */}
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['administrador']}><Administrador /></ProtectedRoute>} />
+          <Route path="/auditor" element={<ProtectedRoute><Auditor /></ProtectedRoute>} />
+          <Route path="/auditado" element={<ProtectedRoute><Auditado /></ProtectedRoute>} />
 
-              {/*Administrador*/}
+          {/* Administrador */}
+          <Route path="/datos" element={<ProtectedRoute allowedRoles={['administrador']}><Datos/></ProtectedRoute>}/>
+          <Route path="/programa" element={<ProtectedRoute allowedRoles={['administrador']}><Programas/></ProtectedRoute>}/>
+          <Route path="/usuarios" element={<ProtectedRoute allowedRoles={['administrador']}><Usuarios /></ProtectedRoute>} />
+          <Route path="/usuariosRegistrados" element={<ProtectedRoute allowedRoles={['administrador']}><UsuariosRegis /></ProtectedRoute>} /> 
+          <Route path="/revicion/:_id" element={<ProtectedRoute allowedRoles={['administrador']}><Revicion /></ProtectedRoute>} />
+          <Route path="/terminada/:_id" element={<ProtectedRoute allowedRoles={['administrador']}><Terminada /></ProtectedRoute>} />
+          <Route path="/finalizadas/:_id" element={<ProtectedRoute allowedRoles={['administrador']}><Finalizada/></ProtectedRoute>}/>
+          <Route path="/ishikawa" element={<ProtectedRoute allowedRoles={['administrador']}><Ishikawa/></ProtectedRoute>} />
+          <Route path="/ishikawa/:_id/:id/:nombre" element={<ProtectedRoute allowedRoles={['administrador']}><IshikawaRev/></ProtectedRoute>}/>
+          <Route path="/vistafin" element={<ProtectedRoute allowedRoles={['administrador']}><VistaFinalizadas/></ProtectedRoute>}/>
+          <Route path="/auditcalendar" element={<ProtectedRoute allowedRoles={['administrador']}><Calendarioss/></ProtectedRoute>} />
+          <Route path="/calendario" element={<ProtectedRoute allowedRoles={['administrador']}><Calendarios /></ProtectedRoute>} />
+          <Route path="/estado-usuario" element={<ProtectedRoute allowedRoles={['administrador','auditor','auditado']}><EstaUsi /></ProtectedRoute>} />
+          <Route path="/departamento" element={<ProtectedRoute allowedRoles={['administrador']}><Departaments /></ProtectedRoute>} />
+          <Route path="/diagrama/:_id" element={<ProtectedRoute allowedRoles={['administrador']}><Diagrama /></ProtectedRoute>} />
+          <Route path="/carga" element={<ProtectedRoute allowedRoles={['administrador']}><CargaMasiva /></ProtectedRoute>} />
+          <Route path="/estadisticas" element={<ProtectedRoute allowedRoles={['administrador']}><Estadisticas /></ProtectedRoute>} />
+          <Route path="/revish" element={<ProtectedRoute allowedRoles={['administrador']}><RevIshi /></ProtectedRoute>} />
+          <Route path="/evuaauditor" element={<ProtectedRoute allowedRoles={['administrador']}><Evaluacion /></ProtectedRoute>} />
+          <Route path="/vereva" element={<ProtectedRoute allowedRoles={['administrador']}><Verevaluaciones/></ProtectedRoute>}/>
+          <Route path="/ishikawasesp" element={<ProtectedRoute allowedRoles={['administrador']}><VistaIshikawas/></ProtectedRoute>}/>
+          <Route path="/prog-audi" element={<ProtectedRoute allowedRoles={['administrador']}><ProgramarAuditoria/></ProtectedRoute>}/>
+          <Route path="/ishikawas-estadisticas" element={<ProtectedRoute allowedRoles={['administrador']}><IshikawaDashboard/></ProtectedRoute>}/>
+          <Route path="/ver-reali" element={<ProtectedRoute allowedRoles={['administrador']}><VistaRevicion/></ProtectedRoute>}/>
+          <Route path="/registroObjetivo" element={<ProtectedRoute allowedRoles={['administrador']}><RegistroObjetivos/></ProtectedRoute>}/>
 
-              <Route path="/datos" element={<ProtectedRoute allowedRoles={['administrador']}><Datos/></ProtectedRoute>}/>
-              <Route path="/programa" element={<ProtectedRoute allowedRoles={['administrador']}><Programas/></ProtectedRoute>}/>
-              <Route path="/usuarios" element={<ProtectedRoute allowedRoles={['administrador']}><Usuarios /></ProtectedRoute>} />
-              <Route path="/usuariosRegistrados" element={<ProtectedRoute allowedRoles={['administrador']}><UsuariosRegis /></ProtectedRoute>} /> 
-              <Route path="/revicion/:_id" element={<ProtectedRoute allowedRoles={['administrador']}><Revicion /></ProtectedRoute>} />
-              <Route path="/terminada/:_id" element={<ProtectedRoute allowedRoles={['administrador']}><Terminada /></ProtectedRoute>} />
-              <Route path="/finalizadas/:_id" element={<ProtectedRoute allowedRoles={['administrador']}><Finalizada/></ProtectedRoute>}/>
-              <Route path="/ishikawa" element={<ProtectedRoute allowedRoles={['administrador']}><Ishikawa/></ProtectedRoute>} />
-              <Route path="/ishikawa/:_id/:id/:nombre" element={<ProtectedRoute allowedRoles={['administrador']}><IshikawaRev/></ProtectedRoute>}/>
-              <Route path="/vistafin" element={<ProtectedRoute allowedRoles={['administrador']}><VistaFinalizadas/></ProtectedRoute>}/>
-              <Route path="/auditcalendar" element={<ProtectedRoute allowedRoles={['administrador']}><Calendarioss/></ProtectedRoute>} />
+          {/* Auditor */}
+          <Route path="/pendiente" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><PendienteAuditor/></ProtectedRoute>}/> 
+          <Route path="/reporte" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><ReporteAuditor/></ProtectedRoute>}/> 
+          <Route path="/reporte-vista" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><VistaReporte/></ProtectedRoute>}/> 
+          <Route path="/informacion" element={<ProtectedRoute><InformacionAuditor/></ProtectedRoute>}/>
+          <Route path="/reporte/:_id" element={<ProtectedRoute><AuditReportPage/></ProtectedRoute>}/>
 
-              <Route path="/calendario" element={<ProtectedRoute allowedRoles={['administrador']}><Calendarios /></ProtectedRoute>} />
+          {/* Auditado */}
+          <Route path="/auditado/reporte/:_id" element={<ProtectedRoute><ReporteAuditado/></ProtectedRoute>}/>
+          <Route path="/auditado/ishikawa/:_id/:id/:nombre" element={<ProtectedRoute><IshikawaAuditado/></ProtectedRoute>}/>
+          <Route path="/auditado/diagrama" element={<ProtectedRoute><DiagramaAuditado/></ProtectedRoute>}/>
+          <Route path="/auditado/vistarep" element={<ProtectedRoute><VistaReportesAuditado/></ProtectedRoute>}/>
+          <Route path="/reportes-auditado" element={<ProtectedRoute><Reporte/></ProtectedRoute>}/>
 
-              <Route path="/estado-usuario" element={<ProtectedRoute allowedRoles={['administrador','auditor','auditado']}><EstaUsi /></ProtectedRoute>} />
+          {/* Ishikawas vacios */}
+          <Route path="/ishikawavacio" element={<ProtectedRoute><DiagramaIshVac/></ProtectedRoute>}/>
+          <Route path="/diagramas" element={<ProtectedRoute><CreacionIshikawa2/></ProtectedRoute>}/>
+          <Route path="/inicio-ishvac" element={<ProtectedRoute><InicioIsh/></ProtectedRoute>}/>
+          <Route path="/ish-vac-esp" element={<ProtectedRoute><GestorIsh/></ProtectedRoute>}/>
+          <Route path="/new" element={<ProtectedRoute><NewIshikawa/></ProtectedRoute>}/>
 
-              <Route path="/departamento" element={<ProtectedRoute allowedRoles={['administrador']}><Departaments /></ProtectedRoute>} />
-              <Route path="/diagrama/:_id" element={<ProtectedRoute allowedRoles={['administrador']}><Diagrama /></ProtectedRoute>} />
-              <Route path="/carga" element={<ProtectedRoute allowedRoles={['administrador']}><CargaMasiva /></ProtectedRoute>} />
-              <Route path="/estadisticas" element={<ProtectedRoute allowedRoles={['administrador']}><Estadisticas /></ProtectedRoute>} />
-              <Route path="/revish" element={<ProtectedRoute allowedRoles={['administrador']}><RevIshi /></ProtectedRoute>} />
-              <Route path="/evuaauditor" element={<ProtectedRoute allowedRoles={['administrador']}><Evaluacion /></ProtectedRoute>} />
-              <Route path="/vereva" element={<ProtectedRoute allowedRoles={['administrador']}><Verevaluaciones/></ProtectedRoute>}/>
-              <Route path="/ishikawasesp" element={<ProtectedRoute allowedRoles={['administrador']}><VistaIshikawas/></ProtectedRoute>}/>
-              <Route path="/prog-audi" element={<ProtectedRoute allowedRoles={['administrador']}><ProgramarAuditoria/></ProtectedRoute>}/>
-              <Route path="/ishikawas-estadisticas" element={<ProtectedRoute allowedRoles={['administrador']}><IshikawaDashboard/></ProtectedRoute>}/>
-              <Route path="/ver-reali" element={<ProtectedRoute allowedRoles={['administrador']}><VistaRevicion/></ProtectedRoute>}/>
-              <Route path="/registroObjetivo" element={<ProtectedRoute allowedRoles={['administrador']}><RegistroObjetivos/></ProtectedRoute>}/>
+          {/* ✅ OBJETIVOS - SECCIÓN COMPLETA */}
+          <Route path="/objetivos" element={<ProtectedRoute><Objetivos/></ProtectedRoute>}/>
+          <Route path="/menu" element={<ProtectedRoute><Menu/></ProtectedRoute>}/>
+          
+          {/* RUTA PARA OBJETIVOS TRADICIONALES Y MULTI-DEPARTAMENTO INDIVIDUAL */}
+          <Route path="/objetivos/:label" element={
+            <ProtectedRoute>
+              {(location.state?.esMultiDepartamento) ? 
+                <ObjetivosMultiTabla /> : 
+                <Tabla />
+              }
+            </ProtectedRoute>
+          }/>
 
+          <Route path="/objetivos/frecuencia-area/:area" element={
+  <ProtectedRoute>
+    <FrecuenciaMultiAreaTabla />
+  </ProtectedRoute>
+} />
+          
+          {/* ✅ NUEVA RUTA: Vista unificada de TODOS los objetivos multi-departamento de un área */}
+          <Route path="/objetivos/multi-area/:area" element={
+            <ProtectedRoute>
+              <ObjetivosMultiTabla />
+            </ProtectedRoute>
+          }/>
+          
+          {/* Ruta específica para frecuencia */}
+          <Route path="/objetivos/:label/frecuencia/:label" element={
+            <ProtectedRoute>
+              {(location.state?.esMultiDepartamento) ? 
+                <FrecuenciaMultiTabla /> : 
+                <Frecuencia />
+              }
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/acciones" element={<AccionesCorrectivas />} />
+          <Route path="/acciones-list/:label" element={<AccionesCorrectivasList />} />
+          <Route path="/registro-accion" element={<ProtectedRoute><RegistroAccionCorrectiva/></ProtectedRoute>}/>
+          <Route path="/saefty-goals2" element={<SaeftyGoals />} />
+          <Route path="/concentradon" element={<Concentrado />} />
 
-              {/*Auditor*/}
+          {/* Gestion de Cambios */}
+          <Route path="/gestion-cambio/:id" element={<ProtectedRoute><GestionCambioForm/></ProtectedRoute>}/>
+          <Route path="/gestion-cambio" element={<ProtectedRoute><GestionCambioForm/></ProtectedRoute>}/>
+          <Route path="/solicitud-cambio/:id" element={<ProtectedRoute><GestionList/></ProtectedRoute>}/>
+          <Route path="/gestion" element={<ProtectedRoute><Home/></ProtectedRoute>}/>
+          <Route path="/vista-solictudes" element={<ProtectedRoute><VistaSolicitudesCambios/></ProtectedRoute>}/>
+          <Route path="/vista-solictudes-rev" element={<ProtectedRoute><RevisionSolicitudesCambios/></ProtectedRoute>}/>
+          <Route path="/validacion-form" element={<ProtectedRoute><ValidacionForm/></ProtectedRoute>}/>
+          <Route path="/mobile-sign" element={<MobileSign />} />
+          
+          {/* Invitaciones */}
+          <Route path="/generar-invitacion" element={<ProtectedRoute allowedRoles={["administrador"]}><GenerarInvitacion /></ProtectedRoute>} />
+          <Route path="/invite/:token" element={<InviteConsume />} />
 
-              <Route path="/pendiente" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><PendienteAuditor/></ProtectedRoute>}/> 
-              <Route path="/reporte" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><ReporteAuditor/></ProtectedRoute>}/> 
-              <Route path="/reporte-vista" element={<ProtectedRoute allowedRoles={['auditor', 'administrador']}><VistaReporte/></ProtectedRoute>}/> 
-              <Route path="/informacion" element={<ProtectedRoute><InformacionAuditor/></ProtectedRoute>}/>
-              <Route path="/reporte/:_id" element={<ProtectedRoute><AuditReportPage/></ProtectedRoute>}/>
+          {/* Paginas de error */}
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-              {/*Auditado*/}
-
-              <Route path="/auditado/reporte/:_id" element={<ProtectedRoute><ReporteAuditado/></ProtectedRoute>}/>
-              <Route path="/auditado/ishikawa/:_id/:id/:nombre" element={<ProtectedRoute><IshikawaAuditado/></ProtectedRoute>}/>
-              <Route path="/auditado/diagrama" element={<ProtectedRoute><DiagramaAuditado/></ProtectedRoute>}/>
-              <Route path="/auditado/vistarep" element={<ProtectedRoute><VistaReportesAuditado/></ProtectedRoute>}/>
-              <Route path="/reportes-auditado" element={<ProtectedRoute><Reporte/></ProtectedRoute>}/>
-
-              {/*Ishikawas vacios*/}
-
-              <Route path="/ishikawavacio" element={<ProtectedRoute><DiagramaIshVac/></ProtectedRoute>}/>
-              <Route path="/diagramas" element={<ProtectedRoute><CreacionIshikawa2/></ProtectedRoute>}/>
-              <Route path="/inicio-ishvac" element={<ProtectedRoute><InicioIsh/></ProtectedRoute>}/>
-              <Route path="/ish-vac-esp" element={<ProtectedRoute><GestorIsh/></ProtectedRoute>}/>
-              <Route path="/new" element={<ProtectedRoute><NewIshikawa/></ProtectedRoute>}/>
-
-                {/*Objetivos*/}
-
-              <Route path="/objetivos" element={<ProtectedRoute><Objetivos/></ProtectedRoute>}/>
-              <Route path="/menu" element={<ProtectedRoute><Menu/></ProtectedRoute>}/>
-              
-              {/* RUTA MODIFICADA PARA MANEJAR AMBOS TIPOS DE OBJETIVOS */}
-              <Route path="/objetivos/:label" element={
-                <ProtectedRoute>
-                  {(location.state?.esMultiDepartamento) ? 
-                    <ObjetivosMultiTabla /> : 
-                    <Tabla />
-                  }
-                </ProtectedRoute>
-              }/>
-              
-              {/* Ruta específica para frecuencia - MODIFICADA PARA USAR FrecuenciaMultiTabla */}
-              <Route path="/objetivos/:label/frecuencia/:label" element={
-                <ProtectedRoute>
-                  {(location.state?.esMultiDepartamento) ? 
-                    <FrecuenciaMultiTabla /> : 
-                    <Frecuencia />
-                  }
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/acciones" element={<AccionesCorrectivas />} />
-              <Route path="/acciones-list/:label" element={<AccionesCorrectivasList />} />
-              <Route path="/registro-accion" element={<ProtectedRoute><RegistroAccionCorrectiva/></ProtectedRoute>}/>
-              <Route path="/saefty-goals2" element={<SaeftyGoals />} />
-              <Route path="/concentradon" element={<Concentrado />} />
-
-              {/*Gestion de Cambios*/}
-              <Route path="/gestion-cambio/:id" element={<ProtectedRoute><GestionCambioForm/></ProtectedRoute>}/>
-              <Route path="/gestion-cambio" element={<ProtectedRoute><GestionCambioForm/></ProtectedRoute>}/>
-              <Route path="/solicitud-cambio/:id" element={<ProtectedRoute><GestionList/></ProtectedRoute>}/>
-              <Route path="/gestion" element={<ProtectedRoute><Home/></ProtectedRoute>}/>
-              <Route path="/vista-solictudes" element={<ProtectedRoute><VistaSolicitudesCambios/></ProtectedRoute>}/>
-              <Route path="/vista-solictudes-rev" element={<ProtectedRoute><RevisionSolicitudesCambios/></ProtectedRoute>}/>
-              <Route path="/validacion-form" element={<ProtectedRoute><ValidacionForm/></ProtectedRoute>}/>
-              <Route path="/mobile-sign" element={<MobileSign />} />
-              
-              {/* Invitaciones */}
-              <Route path="/generar-invitacion" element={<ProtectedRoute allowedRoles={["administrador"]}><GenerarInvitacion /></ProtectedRoute>} />
-              <Route path="/invite/:token" element={<InviteConsume />} />
-
-              {/* Rutas protegidas para los componentes de usuario */}
-
-              {/*Paginas de error*/}
-              <Route path="/unauthorized" element={<UnauthorizedPage />} />
-
-              {/* Ruta comodín para rutas no encontradas */}
-              <Route path="*" element={<NotFoundPage />} />
-
-          </Routes>
-        </Suspense>
-      </>
-    );
-  };
+          {/* Ruta comodín para rutas no encontradas */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+    </>
+  );
+};
 
 function App() {
   const [appVersion] = useState('2.1.8');
-
 
   useEffect(() => {
     const showUpdateNotification = async () => {
       const hasUpdate = await checkForUpdate(appVersion);
       const storedVersion = localStorage.getItem('updateShownVersion');
-  
+
       // Mostrar notificación si hay una nueva versión o si la versión no coincide con la guardada
       if (hasUpdate || storedVersion !== appVersion) {
         toast.info(
@@ -273,21 +275,21 @@ function App() {
         localStorage.setItem('updateShownVersion', appVersion);
       }
     };
-  
+
     const interval = setInterval(showUpdateNotification, 60000); // Verifica cada minuto
     return () => clearInterval(interval);
   }, [appVersion]);
 
   return (
     <>
-    <AuthProvider>
-    <ToastContainer />
-      <div className="App">
-        <Router>
-          <MainContent />
-        </Router>
-      </div>
-    </AuthProvider>
+      <AuthProvider>
+        <ToastContainer />
+        <div className="App">
+          <Router>
+            <MainContent />
+          </Router>
+        </div>
+      </AuthProvider>
     </>
   );
 }

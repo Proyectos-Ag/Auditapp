@@ -30,11 +30,19 @@ const AccionCorrectivaSchema = new mongoose.Schema({
   ultimaNotificacion: Date
 }, { _id: true });
 
-// Subdocumento para objetivos específicos por departamento
+// Subdocumento para objetivos detallados dentro de un módulo
+const ObjetivoDetalladoSchema = new mongoose.Schema({
+  descripcion: { type: String, required: true },
+  recursos: { type: String, default: "" },
+  metaFrecuencia: { type: String, default: "" }
+});
+
+// Subdocumento para objetivos específicos por departamento - MODIFICADO
 const ObjetivoEspecificoSchema = new mongoose.Schema({
   departamento: { type: String, required: true },
   area: { type: String, required: true },
-  objetivo: { type: String, required: true },
+  objetivoEspecifico: { type: String, default: "" }, // NUEVO: Nombre del módulo/objetivo específico
+  objetivo: { type: String, required: true }, // Ahora es el objetivo detallado
   recursos: { type: String, default: "" },
   metaFrecuencia: { type: String, default: "" },
   
@@ -75,6 +83,22 @@ const ObjetivoEspecificoSchema = new mongoose.Schema({
   }]
 });
 
+// Schema para estructura jerárquica - CORREGIDO: objetivoEspecificoId como String
+const EstructuraJerarquicaSchema = new mongoose.Schema({
+  objetivosEspecificos: [{
+    nombre: { type: String, required: true },
+    descripcion: { type: String, default: "" },
+    departamento: { type: String, required: true },
+    area: { type: String, required: true },
+    objetivosDetallados: [ObjetivoDetalladoSchema]
+  }],
+  objetivosDetalladosPorModulo: [{
+    objetivoEspecificoId: { type: String }, // Cambiado de ObjectId a String
+    objetivoEspecificoNombre: { type: String },
+    cantidadObjetivosDetallados: { type: Number, default: 0 }
+  }]
+}, { _id: false });
+
 const ObjetivoSchema = new mongoose.Schema({
   // Para objetivos multi-departamento
   nombreObjetivoGeneral: { type: String },
@@ -84,6 +108,9 @@ const ObjetivoSchema = new mongoose.Schema({
   
   // Objetivos específicos por departamento/area
   objetivosEspecificos: [ObjetivoEspecificoSchema],
+  
+  // NUEVO: Estructura jerárquica completa
+  estructuraJerarquica: { type: EstructuraJerarquicaSchema },
   
   // Para objetivos tradicionales
   area: { type: String },
@@ -303,5 +330,97 @@ ObjetivoEspecificoSchema.methods.resetearIndicadores = function() {
     this[campo] = { S1: "", S2: "", S3: "", S4: "", S5: "" };
   });
 };
+
+// Método para generar resumen de estructura jerárquica
+ObjetivoSchema.methods.generarResumenEstructura = function() {
+  if (!this.estructuraJerarquica) {
+    return {
+      totalModulos: 0,
+      totalObjetivosDetallados: 0,
+      areasInvolucradas: [],
+      resumenPorArea: {}
+    };
+  }
+  
+  const resumen = {
+    totalModulos: this.estructuraJerarquica.objetivosEspecificos.length,
+    totalObjetivosDetallados: this.estructuraJerarquica.objetivosEspecificos.reduce(
+      (total, modulo) => total + (modulo.objetivosDetallados?.length || 0), 0
+    ),
+    areasInvolucradas: [...new Set(this.estructuraJerarquica.objetivosEspecificos.map(mod => mod.area))],
+    resumenPorArea: {}
+  };
+  
+  // Calcular resumen por área
+  this.estructuraJerarquica.objetivosEspecificos.forEach(modulo => {
+    if (!resumen.resumenPorArea[modulo.area]) {
+      resumen.resumenPorArea[modulo.area] = {
+        totalModulos: 0,
+        totalObjetivosDetallados: 0,
+        modulos: []
+      };
+    }
+    
+    resumen.resumenPorArea[modulo.area].totalModulos++;
+    resumen.resumenPorArea[modulo.area].totalObjetivosDetallados += modulo.objetivosDetallados?.length || 0;
+    resumen.resumenPorArea[modulo.area].modulos.push({
+      nombre: modulo.nombre,
+      cantidadObjetivos: modulo.objetivosDetallados?.length || 0
+    });
+  });
+  
+  return resumen;
+};
+
+// Método para obtener objetivos detallados por módulo
+ObjetivoSchema.methods.obtenerObjetivosPorModulo = function(moduloNombre) {
+  if (!this.estructuraJerarquica) {
+    return [];
+  }
+  
+  const modulo = this.estructuraJerarquica.objetivosEspecificos.find(
+    mod => mod.nombre === moduloNombre
+  );
+  
+  if (!modulo) {
+    return [];
+  }
+  
+  return modulo.objetivosDetallados || [];
+};
+
+// Método para obtener todos los módulos por área
+ObjetivoSchema.methods.obtenerModulosPorArea = function(area) {
+  if (!this.estructuraJerarquica) {
+    return [];
+  }
+  
+  return this.estructuraJerarquica.objetivosEspecificos.filter(
+    modulo => modulo.area === area
+  );
+};
+
+// Método estático para buscar objetivos por módulo
+ObjetivoSchema.statics.buscarPorModulo = function(moduloNombre) {
+  return this.find({
+    "estructuraJerarquica.objetivosEspecificos.nombre": moduloNombre
+  });
+};
+
+// Método estático para buscar objetivos por área con estructura jerárquica
+ObjetivoSchema.statics.buscarPorAreaConEstructura = function(area) {
+  return this.find({
+    $or: [
+      { "objetivosEspecificos.area": area },
+      { "estructuraJerarquica.objetivosEspecificos.area": area }
+    ],
+    nombreObjetivoGeneral: { $exists: true }
+  });
+};
+
+// Index para búsquedas por estructura jerárquica
+ObjetivoSchema.index({ "estructuraJerarquica.objetivosEspecificos.nombre": 1 });
+ObjetivoSchema.index({ "estructuraJerarquica.objetivosEspecificos.area": 1 });
+ObjetivoSchema.index({ "objetivosEspecificos.objetivoEspecifico": 1 }); // Nuevo índice para búsqueda por módulo
 
 module.exports = mongoose.model("Objetivo", ObjetivoSchema);

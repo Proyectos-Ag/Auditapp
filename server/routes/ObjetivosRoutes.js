@@ -17,7 +17,8 @@ const {
   migrarTodosLosObjetivos,
   actualizarObjetivoEspecifico,
   actualizarIndicadorObjetivoEspecifico,
-  obtenerObjetivosMultiPorArea // ✅ Nueva función
+  obtenerObjetivosMultiPorArea,
+  obtenerEstructuraJerarquica
 } = require("../controllers/ObjetivoController");
 
 // ✅ RUTAS EXISTENTES
@@ -30,6 +31,9 @@ router.get("/multi/area", obtenerObjetivosMultiPorArea);
 
 // GET /api/objetivos/:id - Obtener objetivo por ID
 router.get("/:id", obtenerObjetivoPorId);
+
+// GET /api/objetivos/:id/estructura-jerarquica - Obtener estructura jerárquica
+router.get("/:id/estructura-jerarquica", obtenerEstructuraJerarquica);
 
 // GET /api/objetivos/acciones?area=INGENIERIA
 router.get("/acciones", getAccionesCorrectivasByArea);

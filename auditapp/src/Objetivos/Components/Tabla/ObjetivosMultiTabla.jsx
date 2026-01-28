@@ -5,19 +5,47 @@ import Swal from "sweetalert2";
 import { UserContext } from "../../../App";
 import "./ObjetivosTabla.css";
 
+// Importar componentes de Material-UI necesarios
+import { 
+  Button,
+  IconButton,
+  Tooltip,
+  Chip,
+  Badge,
+  CircularProgress,
+  Box,
+  Typography,
+  Grid,
+  Paper,
+  Avatar,
+  useTheme,
+  useMediaQuery
+} from '@mui/material';
+import {
+  ArrowBack as ArrowBackIcon,
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  History as HistoryIcon,
+  FolderSpecial as FolderSpecialIcon,
+  CalendarToday as CalendarTodayIcon,
+  CollectionsBookmark as CollectionsBookmarkIcon
+} from '@mui/icons-material';
+
 const ObjetivosMultiTabla = () => {
-  const { label } = useParams();
+  const { area } = useParams();
   const { userData } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Extraer datos del estado de navegación
+  // ✅ CORRECCIÓN: Extraer también el módulo y la bandera de filtro
   const { 
-    esMultiDepartamento = false, 
-    objetivoGeneral = '',
-    area = '',
-    departamento = '',
-    objetivoId = label // Usar label si no viene en state
+    esMultiDepartamentoArea = false, 
+    area: areaFromState = '',
+    objetivos: objetivosIniciales = [],
+    objetivosCount = 0,
+    modulo = null, // ✅ NUEVO: Módulo seleccionado
+    mostrarSoloModulo = false // ✅ NUEVO: Si solo mostrar ese módulo
   } = location.state || {};
 
   const [tablaData, setTablaData] = useState([]);
@@ -26,7 +54,25 @@ const ObjetivosMultiTabla = () => {
   const [showHistorial, setShowHistorial] = useState(false);
   const [historialData, setHistorialData] = useState([]);
   const [añoHistorial, setAñoHistorial] = useState(2025);
-  const [objetivoMultiData, setObjetivoMultiData] = useState(null);
+
+  // Variables para el tema y responsive
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Función para extraer ObjectId puro
+  const extraerObjectId = (id) => {
+    if (!id) return null;
+    
+    // Buscar un string de 24 caracteres hexadecimales
+    const objectIdRegex = /[0-9a-fA-F]{24}/;
+    const match = id.match(objectIdRegex);
+    
+    if (match) {
+      return match[0];
+    }
+    
+    return id;
+  };
 
   // Función para calcular promedio por trimestre
   const calcularPromedioTrimestre = (objetivo, campos) => {
@@ -48,87 +94,110 @@ const ObjetivosMultiTabla = () => {
     return (todosLosValores.reduce((acc, val) => acc + val, 0) / todosLosValores.length).toFixed(2);
   };
 
-  // Obtener objetivo específico por área
-  const obtenerObjetivoEspecificoPorArea = async () => {
+  // ✅ CORRECCIÓN: Aplicar filtro de módulo si existe
+  const cargarObjetivosPorArea = async () => {
     try {
       setLoading(true);
       
-      // 1. Obtener el objetivo multi-departamento completo
-      const response = await api.get(`/api/objetivos/${objetivoId}`);
-      const objetivoMulti = response.data;
-      setObjetivoMultiData(objetivoMulti);
+      let objetivosParaMostrar = [];
       
-      console.log('📥 Objetivo multi-departamento obtenido:', objetivoMulti);
-      
-      // 2. Encontrar el objetivo específico para esta área
-      const objetivoEspecifico = objetivoMulti.objetivosEspecificos?.find(
-        obj => obj.area === area || obj.departamento === departamento
-      );
-      
-      if (!objetivoEspecifico) {
-        console.error('❌ No se encontró objetivo específico para:', { area, departamento });
-        Swal.fire({
-          icon: 'error',
-          title: 'Objetivo no encontrado',
-          text: `No se encontró objetivo específico para el área/departamento: ${area || departamento}`,
-          confirmButtonColor: '#3085d6',
+      if (objetivosIniciales && objetivosIniciales.length > 0) {
+        // ✅ Si hay un módulo específico y la bandera está activa, filtrar
+        if (mostrarSoloModulo && modulo) {
+          console.log('🔍 Filtrando objetivos por módulo:', modulo);
+          objetivosParaMostrar = objetivosIniciales.filter(obj => 
+            obj.objetivoEspecifico === modulo
+          );
+          console.log('✅ Objetivos filtrados:', objetivosParaMostrar.length);
+        } else {
+          // Mostrar todos los objetivos del área
+          objetivosParaMostrar = objetivosIniciales;
+        }
+        
+        // Formatear los objetivos
+        const objetivosFormateados = objetivosParaMostrar.map((obj, index) => {
+          const objetivoIdValido = extraerObjectId(obj.objetivoIdMulti || obj.objetivoId || obj._id);
+          const objetivoEspecificoId = obj.objetivoEspecificoId || obj._id;
+          
+          const promedioENEABR = calcularPromedioTrimestre(
+            obj, 
+            ['indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR']
+          );
+          const promedioMAYOAGO = calcularPromedioTrimestre(
+            obj, 
+            ['indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO']
+          );
+          const promedioSEPDIC = calcularPromedioTrimestre(
+            obj, 
+            ['indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC']
+          );
+          
+          return {
+            ...obj,
+            _id: `${objetivoIdValido}_${objetivoEspecificoId}`,
+            objetivoId: objetivoIdValido,
+            objetivoEspecificoId: objetivoEspecificoId,
+            index: index,
+            promedioENEABR,
+            promedioMAYOAGO,
+            promedioSEPDIC
+          };
         });
-        setTablaData([]);
-        return;
+        
+        setTablaData(objetivosFormateados);
+        console.log('✅ Objetivos cargados:', objetivosFormateados.length);
+      } else {
+        // Si no vienen objetivos, obtenerlos de la API
+        const response = await api.get(`/api/objetivos/multi/area?area=${area || areaFromState}`);
+        const objetivos = response.data || [];
+        
+        // ✅ Aplicar filtro de módulo si existe
+        if (mostrarSoloModulo && modulo) {
+          objetivosParaMostrar = objetivos.filter(obj => 
+            obj.objetivoEspecifico === modulo
+          );
+        } else {
+          objetivosParaMostrar = objetivos;
+        }
+        
+        const objetivosFormateados = objetivosParaMostrar.map((obj, index) => {
+          const objetivoIdValido = extraerObjectId(obj.objetivoIdMulti || obj._id);
+          const objetivoEspecificoId = obj.objetivoEspecificoId || obj._id;
+          
+          const promedioENEABR = calcularPromedioTrimestre(
+            obj, 
+            ['indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR']
+          );
+          const promedioMAYOAGO = calcularPromedioTrimestre(
+            obj, 
+            ['indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO']
+          );
+          const promedioSEPDIC = calcularPromedioTrimestre(
+            obj, 
+            ['indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC']
+          );
+          
+          return {
+            ...obj,
+            _id: `${objetivoIdValido}_${objetivoEspecificoId}`,
+            objetivoId: objetivoIdValido,
+            objetivoEspecificoId: objetivoEspecificoId,
+            index: index,
+            promedioENEABR,
+            promedioMAYOAGO,
+            promedioSEPDIC
+          };
+        });
+        
+        setTablaData(objetivosFormateados);
       }
       
-      // 3. Formatear datos para la tabla (solo un objetivo específico)
-      const objetivoFormateado = {
-        _id: `${objetivoMulti._id}-${objetivoEspecifico._id}`,
-        objetivoMultiId: objetivoMulti._id,
-        objetivoEspecificoId: objetivoEspecifico._id,
-        area: objetivoEspecifico.area,
-        departamento: objetivoEspecifico.departamento,
-        objetivo: objetivoEspecifico.objetivo,
-        recursos: objetivoEspecifico.recursos,
-        metaFrecuencia: objetivoEspecifico.metaFrecuencia,
-        indicadorENEABR: objetivoEspecifico.indicadorENEABR || { S1: "", S2: "", S3: "", S4: "", S5: "" },
-        indicadorFEB: objetivoEspecifico.indicadorFEB || { S1: "", S2: "", S3: "", S4: "", S5: "" },
-        indicadorMAR: objetivoEspecifico.indicadorMAR || { S1: "", S2: "", S3: "", S4: "", S5: "" },
-        indicadorABR: objetivoEspecifico.indicadorABR || { S1: "", S2: "", S3: "", S4: "", S5: "" },
-        indicadorMAYOAGO: objetivoEspecifico.indicadorMAYOAGO || { S1: "", S2: "", S3: "", S4: "", S5: "" },
-        indicadorJUN: objetivoEspecifico.indicadorJUN || { S1: "", S2: "", S3: "", S4: "", S5: "" },
-        indicadorJUL: objetivoEspecifico.indicadorJUL || { S1: "", S2: "", S3: "", S4: "", S5: "" },
-        indicadorAGO: objetivoEspecifico.indicadorAGO || { S1: "", S2: "", S3: "", S4: "", S5: "" },
-        indicadorSEPDIC: objetivoEspecifico.indicadorSEPDIC || { S1: "", S2: "", S3: "", S4: "", S5: "" },
-        indicadorOCT: objetivoEspecifico.indicadorOCT || { S1: "", S2: "", S3: "", S4: "", S5: "" },
-        indicadorNOV: objetivoEspecifico.indicadorNOV || { S1: "", S2: "", S3: "", S4: "", S5: "" },
-        indicadorDIC: objetivoEspecifico.indicadorDIC || { S1: "", S2: "", S3: "", S4: "", S5: "" },
-        observaciones: objetivoEspecifico.observaciones || "",
-        accionesCorrectivas: objetivoEspecifico.accionesCorrectivas || [],
-        historialAnual: objetivoEspecifico.historialAnual || [],
-        esMultiDepartamento: true,
-        objetivoGeneral: objetivoMulti.nombreObjetivoGeneral
-      };
-      
-      // 4. Calcular promedios
-      objetivoFormateado.promedioENEABR = calcularPromedioTrimestre(
-        objetivoFormateado, 
-        ['indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR']
-      );
-      objetivoFormateado.promedioMAYOAGO = calcularPromedioTrimestre(
-        objetivoFormateado, 
-        ['indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO']
-      );
-      objetivoFormateado.promedioSEPDIC = calcularPromedioTrimestre(
-        objetivoFormateado, 
-        ['indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC']
-      );
-      
-      setTablaData([objetivoFormateado]);
-      console.log('✅ Objetivo específico formateado:', objetivoFormateado);
-      
     } catch (error) {
-      console.error('❌ Error al obtener objetivo multi-departamento:', error);
+      console.error('❌ Error al cargar objetivos por área:', error);
       Swal.fire({
         icon: 'error',
         title: 'Error de conexión',
-        text: 'No se pudo cargar el objetivo. Por favor, intenta de nuevo.',
+        text: 'No se pudieron cargar los objetivos. Por favor, intenta de nuevo.',
         confirmButtonColor: '#3085d6',
       });
     } finally {
@@ -137,35 +206,59 @@ const ObjetivosMultiTabla = () => {
   };
 
   const cargarHistorial = async () => {
-    if (!tablaData[0]?.objetivoEspecificoId || !objetivoMultiData) return;
-    
     try {
-      const objetivoEspecifico = tablaData[0];
-      const historial = objetivoEspecifico.historialAnual.find(h => h.año === añoHistorial);
+      // Para cada objetivo, cargar su historial
+      const historiales = await Promise.all(
+        tablaData.map(async (objetivo) => {
+          try {
+            // Para objetivos multi-departamento, necesitamos obtener el historial del objetivo específico
+            if (objetivo.esMultiDepartamento && objetivo.objetivoId) {
+              const response = await api.get(`/api/objetivos/${objetivo.objetivoId}`);
+              const objetivoCompleto = response.data;
+              
+              // Buscar el objetivo específico por su ID específico
+              const objetivoEspecifico = objetivoCompleto.objetivosEspecificos?.find(
+                obj => obj._id.toString() === objetivo.objetivoEspecificoId
+              );
+              
+              if (objetivoEspecifico) {
+                const historial = objetivoEspecifico.historialAnual?.find(h => h.año === añoHistorial);
+                if (historial) {
+                  return {
+                    ...objetivo,
+                    historialSeleccionado: historial,
+                    promedioENEABR_hist: calcularPromedioTrimestreHistorial(historial.indicadores, ['indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR']),
+                    promedioMAYOAGO_hist: calcularPromedioTrimestreHistorial(historial.indicadores, ['indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO']),
+                    promedioSEPDIC_hist: calcularPromedioTrimestreHistorial(historial.indicadores, ['indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC']),
+                  };
+                }
+              }
+            }
+            return null;
+          } catch (error) {
+            console.error('Error cargando historial para objetivo:', objetivo.objetivoDescripcion, error);
+            return null;
+          }
+        })
+      );
       
-      if (!historial) {
+      const historialesFiltrados = historiales.filter(h => h !== null);
+      
+      if (historialesFiltrados.length === 0) {
         Swal.fire({
           icon: 'info',
           title: 'Sin datos históricos',
-          text: `No hay datos del año ${añoHistorial} para este objetivo.`,
+          text: `No hay datos del año ${añoHistorial} para estos objetivos.`,
           confirmButtonColor: '#3085d6'
         });
         return;
       }
       
-      const objetivoConHistorial = {
-        ...objetivoEspecifico,
-        historialSeleccionado: historial,
-        promedioENEABR_hist: calcularPromedioTrimestreHistorial(historial.indicadores, ['indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR']),
-        promedioMAYOAGO_hist: calcularPromedioTrimestreHistorial(historial.indicadores, ['indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO']),
-        promedioSEPDIC_hist: calcularPromedioTrimestreHistorial(historial.indicadores, ['indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC']),
-      };
-      
-      setHistorialData([objetivoConHistorial]);
+      setHistorialData(historialesFiltrados);
       setShowHistorial(true);
       
     } catch (error) {
-      console.error('Error al cargar historial:', error);
+      console.error('Error al cargar historial general:', error);
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -195,10 +288,10 @@ const ObjetivosMultiTabla = () => {
   };
 
   useEffect(() => {
-    if (esMultiDepartamento && objetivoId) {
-      obtenerObjetivoEspecificoPorArea();
+    if (esMultiDepartamentoArea) {
+      cargarObjetivosPorArea();
     }
-  }, [esMultiDepartamento, objetivoId, area, departamento]);
+  }, [esMultiDepartamentoArea, area, areaFromState, modulo, mostrarSoloModulo]);
 
   const manejarEditarFila = async (id) => {
     if (userData?.TipoUsuario !== "administrador") {
@@ -216,9 +309,7 @@ const ObjetivosMultiTabla = () => {
 
   const manejarCancelarEdicion = (id) => {
     // Recargar datos originales
-    if (esMultiDepartamento && objetivoId) {
-      obtenerObjetivoEspecificoPorArea();
-    }
+    cargarObjetivosPorArea();
     setModoEdicion((prev) => {
       const { [id]: _, ...rest } = prev;
       return rest;
@@ -238,7 +329,7 @@ const ObjetivosMultiTabla = () => {
 
     const fila = tablaData.find((item) => item._id === id);
 
-    if (!fila.objetivo.trim()) {
+    if (!fila.objetivoDescripcion?.trim()) {
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -250,16 +341,22 @@ const ObjetivosMultiTabla = () => {
 
     try {
       // Para objetivos multi-departamento, actualizar objetivo específico
-      if (esMultiDepartamento) {
+      if (fila.esMultiDepartamento && fila.objetivoId) {
         const datosActualizados = {
           objetivoEspecificoId: fila.objetivoEspecificoId,
-          objetivo: fila.objetivo,
+          objetivo: fila.objetivoDescripcion,
           recursos: fila.recursos,
           metaFrecuencia: fila.metaFrecuencia,
-          observaciones: fila.observaciones
+          observaciones: fila.observaciones,
+          index: fila.index
         };
         
-        await api.put(`/api/objetivos/multi/${fila.objetivoMultiId}/objetivo-especifico`, datosActualizados);
+        console.log('📤 Guardando objetivo:', {
+          objetivoId: fila.objetivoId,
+          datos: datosActualizados
+        });
+        
+        await api.put(`/api/objetivos/multi/${fila.objetivoId}/objetivo-especifico`, datosActualizados);
         
         Swal.fire({
           icon: "success",
@@ -269,18 +366,18 @@ const ObjetivosMultiTabla = () => {
         });
         
         // Recargar datos
-        await obtenerObjetivoEspecificoPorArea();
+        await cargarObjetivosPorArea();
         setModoEdicion((prev) => ({ ...prev, [id]: false }));
       }
       
     } catch (error) {
+      console.error("Error al guardar objetivo:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
         text: "Ha ocurrido un error al guardar. Inténtalo nuevamente.",
         confirmButtonColor: "#3085d6",
       });
-      console.error("Error al guardar objetivo:", error);
     }
   };
 
@@ -294,37 +391,110 @@ const ObjetivosMultiTabla = () => {
     try {
       const fila = tablaData.find((item) => item._id === id);
       
+      if (!fila) {
+        console.error('❌ Fila no encontrada:', id);
+        return;
+      }
+      
+      // ✅ Usar la función extraerObjectId para obtener un ID válido
+      const objetivoIdValido = extraerObjectId(fila.objetivoId);
+      
+      if (!objetivoIdValido) {
+        console.error('❌ No se pudo obtener un objetivoId válido para:', fila);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo identificar el objetivo. Por favor, recarga la página.',
+          confirmButtonColor: '#3085d6',
+        });
+        return;
+      }
+      
+      console.log('🔍 Datos para actualizar indicador:', {
+        objetivoIdValido: objetivoIdValido,
+        objetivoIdOriginal: fila.objetivoId,
+        area: fila.area,
+        campo: campo,
+        semana: semana,
+        valor: valor,
+        objetivoEspecificoId: fila.objetivoEspecificoId,
+        index: fila.index
+      });
+      
       // Actualizar localmente primero
       setTablaData((prevData) =>
         prevData.map((obj) => {
           if (obj._id === id) {
             const nuevosIndicadores = { ...obj[campo] };
             nuevosIndicadores[semana] = valor;
-            return { ...obj, [campo]: nuevosIndicadores };
+            
+            // Recalcular promedios después de cambiar indicador
+            const objActualizado = { ...obj, [campo]: nuevosIndicadores };
+            
+            // Recalcular promedios basado en qué trimestre cambió
+            if (campo.includes('ENE') || campo.includes('FEB') || campo.includes('MAR') || campo.includes('ABR')) {
+              objActualizado.promedioENEABR = calcularPromedioTrimestre(
+                objActualizado, 
+                ['indicadorENEABR', 'indicadorFEB', 'indicadorMAR', 'indicadorABR']
+              );
+            } else if (campo.includes('MAY') || campo.includes('JUN') || campo.includes('JUL') || campo.includes('AGO')) {
+              objActualizado.promedioMAYOAGO = calcularPromedioTrimestre(
+                objActualizado, 
+                ['indicadorMAYOAGO', 'indicadorJUN', 'indicadorJUL', 'indicadorAGO']
+              );
+            } else if (campo.includes('SEP') || campo.includes('OCT') || campo.includes('NOV') || campo.includes('DIC')) {
+              objActualizado.promedioSEPDIC = calcularPromedioTrimestre(
+                objActualizado, 
+                ['indicadorSEPDIC', 'indicadorOCT', 'indicadorNOV', 'indicadorDIC']
+              );
+            }
+            
+            return objActualizado;
           }
           return obj;
         })
       );
       
       // Guardar en el backend para objetivos multi-departamento
-      if (esMultiDepartamento) {
+      if (fila.esMultiDepartamento && objetivoIdValido) {
+        // Obtener los valores actuales del campo
+        const valoresActuales = { ...fila[campo] };
+        valoresActuales[semana] = valor;
+        
+        // Crear ID compuesto para enviar al backend
+        const idCompleto = `${objetivoIdValido}-${fila.area}-${fila.index}`;
+        
         const datosIndicador = {
-          objetivoMultiId: fila.objetivoMultiId,
           area: fila.area,
           campo: campo,
-          valores: { ...fila[campo], [semana]: valor }
+          valores: valoresActuales,
+          objetivoEspecificoId: fila.objetivoEspecificoId,
+          index: fila.index
         };
         
-        await api.put(`/api/objetivos/multi/${fila.objetivoMultiId}/indicador`, datosIndicador);
+        console.log('📤 Enviando datos a API:', {
+          idCompleto: idCompleto,
+          datos: datosIndicador
+        });
+        
+        await api.put(`/api/objetivos/multi/${idCompleto}/indicador`, datosIndicador);
+        
+        console.log('✅ Indicador actualizado exitosamente');
         
         // Actualizar promedios después de guardar
         setTimeout(() => {
-          obtenerObjetivoEspecificoPorArea();
+          cargarObjetivosPorArea();
         }, 100);
       }
       
     } catch (error) {
-      console.error('Error al actualizar indicador:', error);
+      console.error('❌ Error al actualizar indicador:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo guardar el indicador. Por favor, intenta de nuevo.',
+        confirmButtonColor: '#3085d6',
+      });
     }
   };
 
@@ -367,6 +537,7 @@ const ObjetivosMultiTabla = () => {
               onChange={(e) => manejarCambioIndicador(fila._id, campo, semana, e.target.value)}
               placeholder={semana}
               style={{ width: '40px', margin: '2px' }}
+              maxLength="5"
             />
           ))}
         </div>
@@ -390,20 +561,45 @@ const ObjetivosMultiTabla = () => {
     }
   };
 
+  // ✅ CORRECCIÓN CRÍTICA: Pasar los objetivos filtrados y el módulo a frecuencia
+  const handleIrAFrecuencia = () => {
+    const primerObjetivo = tablaData[0];
+    const objetivoIdValido = primerObjetivo ? 
+      extraerObjectId(primerObjetivo.objetivoId) : 
+      null;
+    
+    console.log('🚀 Navegando a frecuencia con:', {
+      area: areaFromState || area,
+      modulo: modulo,
+      mostrarSoloModulo: mostrarSoloModulo,
+      objetivosCount: tablaData.length
+    });
+    
+    navigate(`/objetivos/frecuencia-area/${encodeURIComponent(areaFromState || area)}`, { 
+      state: { 
+        esMultiDepartamentoArea: true,
+        area: areaFromState || area,
+        objetivos: tablaData, // ✅ Pasar los objetivos YA FILTRADOS
+        objetivosCount: tablaData.length,
+        objetivoIdValido: objetivoIdValido,
+        modulo: modulo, // ✅ NUEVO: Pasar el módulo
+        mostrarSoloModulo: mostrarSoloModulo // ✅ NUEVO: Pasar la bandera
+      } 
+    });
+  };
+
   return (
     <div className="objectives-dashboard">
       <div className="dashboard-header">
         <div className="dashboard-title">
           <h1>Objetivos del Sistema de Administración de Calidad</h1>
           <h2>
-            {esMultiDepartamento ? (
-              <>
-                {objetivoGeneral || 'Objetivos Generales'} 
-                <span className="subtitle"> | Área: {area} | Departamento: {departamento}</span>
-              </>
-            ) : (
-              label
+            {areaFromState || area}
+            {/* ✅ Mostrar el módulo si está activo el filtro */}
+            {mostrarSoloModulo && modulo && (
+              <span className="subtitle"> | Módulo: {modulo}</span>
             )}
+            <span className="subtitle"> | {tablaData.length} objetivo(s) multi-departamento</span>
           </h2>
         </div>
         <div className="dashboard-actions">
@@ -413,14 +609,15 @@ const ObjetivosMultiTabla = () => {
           >
             <i className="fas fa-history"></i> Ver Historial {añoHistorial}
           </button>
+          
+          {/* ✅ Botón para ir a frecuencia */}
           <button 
             className="primary-button"
-            onClick={() => navigate(`frecuencia/${label}`, { 
-              state: { esMultiDepartamento, objetivoGeneral, area, departamento, objetivoId }
-            })}
+            onClick={handleIrAFrecuencia}
           >
-            <i className="fas fa-clipboard-list"></i> Registro de Frecuencia
+            <i className="fas fa-calendar-alt"></i> Registro de Frecuencia
           </button>
+          
           <button 
             className="secondary-button"
             onClick={() => navigate('/menu')}
@@ -435,7 +632,7 @@ const ObjetivosMultiTabla = () => {
         <div className="modal-overlay-historia" onClick={() => setShowHistorial(false)}>
           <div className="modal-historial-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-historial-header">
-              <h2>📊 HISTORIAL {añoHistorial} - {area || departamento}</h2>
+              <h2>📊 HISTORIAL {añoHistorial} - {areaFromState || area}</h2>
               <button className="modal-close-btn" onClick={() => setShowHistorial(false)}>✕</button>
             </div>
             <div className="modal-historial-body">
@@ -457,7 +654,12 @@ const ObjetivosMultiTabla = () => {
                     {historialData.map((row, index) => (
                       <tr key={row._id}>
                         <td className="column-centered">{index + 1}</td>
-                        <td><div className="text-content">{row.objetivo}</div></td>
+                        <td>
+                          <div className="text-content">
+                            <strong>{row.objetivoGeneral}</strong><br/>
+                            {row.objetivoDescripcion}
+                          </div>
+                        </td>
                         <td><div className="text-content">{row.recursos}</div></td>
                         <td><div className="text-content text-center">{row.metaFrecuencia}</div></td>
                         <td className="column-centered">
@@ -483,30 +685,20 @@ const ObjetivosMultiTabla = () => {
       {loading ? (
         <div className="loading-container">
           <div className="loader"></div>
-          <p>Cargando objetivo...</p>
+          <p>Cargando objetivos...</p>
         </div>
       ) : tablaData.length === 0 ? (
         <div className="empty-state">
           <i className="fas fa-clipboard-list empty-icon"></i>
-          <h3>No hay objetivo registrado para esta área</h3>
+          <h3>No hay objetivos registrados para esta {mostrarSoloModulo ? 'módulo' : 'área'}</h3>
         </div>
       ) : (
         <div className="objectives-table-container">
-          {/* Nota informativa para objetivos multi-departamento */}
-          {esMultiDepartamento && (
-            <div className="multi-departamento-info">
-              <i className="fas fa-info-circle"></i>
-              <span>
-                Este objetivo es parte de un objetivo general multi-departamento: <strong>{objetivoGeneral}</strong>
-              </span>
-            </div>
-          )}
-          
           <table className="objectives-table">
             <thead>
               <tr>
                 <th className="column-narrow">#</th>
-                <th className="column-wide">Objetivo</th>
+                <th className="column-wide">Objetivo General / Específico</th>
                 <th className="column-medium">Recursos</th>
                 <th className="column-medium">Meta / Frecuencia</th>
                 <th className="column-narrow">ENE - ABR</th>
@@ -526,15 +718,27 @@ const ObjetivosMultiTabla = () => {
                     <td className="column-centered">{index + 1}</td>
                     <td>
                       {editando ? (
-                        <textarea
-                          className="form-control"
-                          value={row.objetivo}
-                          onChange={(e) => manejarCambioCampo(row._id, "objetivo", e.target.value)}
-                          placeholder="Describe el objetivo..."
-                          rows={3}
-                        />
+                        <>
+                          <div className="objetivo-general-label">
+                            <strong>{row.objetivoGeneral}</strong>
+                          </div>
+                          <textarea
+                            className="form-control"
+                            value={row.objetivoDescripcion}
+                            onChange={(e) => manejarCambioCampo(row._id, "objetivoDescripcion", e.target.value)}
+                            placeholder="Describe el objetivo específico..."
+                            rows={3}
+                          />
+                        </>
                       ) : (
-                        <div className="text-content">{row.objetivo}</div>
+                        <div className="text-content">
+                          <div className="objetivo-general-label">
+                            <strong>{row.objetivoGeneral}</strong>
+                          </div>
+                          <div className="objetivo-especifico">
+                            {row.objetivoDescripcion}
+                          </div>
+                        </div>
                       )}
                     </td>
                     <td>
@@ -621,31 +825,88 @@ const ObjetivosMultiTabla = () => {
             </tbody>
           </table>
           
-          {/* Sección de indicadores detallados (solo lectura) */}
+          {/* Sección de indicadores detallados - Ahora con tabs para cada objetivo */}
           <div className="indicadores-detallados">
-            <h3><i className="fas fa-chart-bar"></i> Indicadores Detallados</h3>
-            <div className="indicadores-grid">
-              <div className="indicador-periodo">
-                <h4>ENE - ABR</h4>
-                {renderIndicadorCell(tablaData[0], 'indicadorENEABR')}
-                {renderIndicadorCell(tablaData[0], 'indicadorFEB')}
-                {renderIndicadorCell(tablaData[0], 'indicadorMAR')}
-                {renderIndicadorCell(tablaData[0], 'indicadorABR')}
-              </div>
-              <div className="indicador-periodo">
-                <h4>MAY - AGO</h4>
-                {renderIndicadorCell(tablaData[0], 'indicadorMAYOAGO')}
-                {renderIndicadorCell(tablaData[0], 'indicadorJUN')}
-                {renderIndicadorCell(tablaData[0], 'indicadorJUL')}
-                {renderIndicadorCell(tablaData[0], 'indicadorAGO')}
-              </div>
-              <div className="indicador-periodo">
-                <h4>SEP - DIC</h4>
-                {renderIndicadorCell(tablaData[0], 'indicadorSEPDIC')}
-                {renderIndicadorCell(tablaData[0], 'indicadorOCT')}
-                {renderIndicadorCell(tablaData[0], 'indicadorNOV')}
-                {renderIndicadorCell(tablaData[0], 'indicadorDIC')}
-              </div>
+            <h3><i className="fas fa-chart-bar"></i> Indicadores Detallados por Objetivo</h3>
+            
+            <div className="objetivos-tabs">
+              {tablaData.map((objetivo, index) => (
+                <div key={objetivo._id} className="objetivo-tab-content">
+                  <div className="objetivo-tab-header">
+                    <h4>
+                      <span className="tab-index">{index + 1}.</span> 
+                      {objetivo.objetivoGeneral} - {objetivo.objetivoDescripcion.substring(0, 50)}...
+                    </h4>
+                  </div>
+                  <div className="indicadores-grid">
+                    <div className="indicador-periodo">
+                      <h5>ENE - ABR</h5>
+                      <div className="indicador-meses">
+                        <div className="indicador-mes">
+                          <span className="mes-label">ENE</span>
+                          {renderIndicadorCell(objetivo, 'indicadorENEABR')}
+                        </div>
+                        <div className="indicador-mes">
+                          <span className="mes-label">FEB</span>
+                          {renderIndicadorCell(objetivo, 'indicadorFEB')}
+                        </div>
+                        <div className="indicador-mes">
+                          <span className="mes-label">MAR</span>
+                          {renderIndicadorCell(objetivo, 'indicadorMAR')}
+                        </div>
+                        <div className="indicador-mes">
+                          <span className="mes-label">ABR</span>
+                          {renderIndicadorCell(objetivo, 'indicadorABR')}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="indicador-periodo">
+                      <h5>MAY - AGO</h5>
+                      <div className="indicador-meses">
+                        <div className="indicador-mes">
+                          <span className="mes-label">MAY</span>
+                          {renderIndicadorCell(objetivo, 'indicadorMAYOAGO')}
+                        </div>
+                        <div className="indicador-mes">
+                          <span className="mes-label">JUN</span>
+                          {renderIndicadorCell(objetivo, 'indicadorJUN')}
+                        </div>
+                        <div className="indicador-mes">
+                          <span className="mes-label">JUL</span>
+                          {renderIndicadorCell(objetivo, 'indicadorJUL')}
+                        </div>
+                        <div className="indicador-mes">
+                          <span className="mes-label">AGO</span>
+                          {renderIndicadorCell(objetivo, 'indicadorAGO')}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="indicador-periodo">
+                      <h5>SEP - DIC</h5>
+                      <div className="indicador-meses">
+                        <div className="indicador-mes">
+                          <span className="mes-label">SEP</span>
+                          {renderIndicadorCell(objetivo, 'indicadorSEPDIC')}
+                        </div>
+                        <div className="indicador-mes">
+                          <span className="mes-label">OCT</span>
+                          {renderIndicadorCell(objetivo, 'indicadorOCT')}
+                        </div>
+                        <div className="indicador-mes">
+                          <span className="mes-label">NOV</span>
+                          {renderIndicadorCell(objetivo, 'indicadorNOV')}
+                        </div>
+                        <div className="indicador-mes">
+                          <span className="mes-label">DIC</span>
+                          {renderIndicadorCell(objetivo, 'indicadorDIC')}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
